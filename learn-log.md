@@ -1,6 +1,10 @@
 # learn-log.md — compounding-stack-harness
 
 > 복리식 축적의 활동 원장. 모든 Growth 가 어느 축에 살을 붙였고, 어느 milestone 에 기여했는지 1줄 기록.
+>
+> **Growth-4 이후 (2026-05-29~)**: §6 는 Growth 당 1줄 + 인격 ledger pointer 만. 상세는 각 인격의 `docs/learn-logs/<role>.md` 에 기록. 인격 ledger 목록: [CTO](docs/learn-logs/cto.md) · [Engineer](docs/learn-logs/engineer.md) · [QA](docs/learn-logs/qa.md) · [CMO](docs/learn-logs/cmo.md) · [CDO](docs/learn-logs/cdo.md).
+>
+> **Growth-1~3 (historical)**: 단일-CTO 시대 verbose 포맷 그대로 보존 (retroactive 분리 안 함).
 
 ## §0 — Axis Ownership Card (7축)
 
@@ -138,3 +142,18 @@
 - **Decision log**:
   - Task #6 실행 순서: positioning.md (CMO) → roadmap 패치 (CTO) → G-7 PASS — CEO 추천안 승인 (2026-05-29 "추천안으로 하자")
   - G-7 regex 약화 금지 + 한국어 표현 정밀화 — CTO 단독 결정 ("guards-must-work" 원칙의 두 번째 적용)
+
+---
+
+**Growth-4 부터 1줄 + pointer 포맷**:
+
+### Growth-4 (2026-05-29) — 4-인격 → 6-인격 확장 + learn-log per-agent 분리
+
+- **인격**: CEO (제안) + CTO (수용·설계)
+- **Axis touched**: creater (agent 인격 2 신설), 헌장 (CLAUDE.md §1 + AGENTS.md + partnership-charter §1·§2·§8)
+- **Milestone**: M0 마무리 (팀 구조 재설계)
+- **Revenue/cost**: infra only / 본 세션 1회 Opus 4.7
+- **Why (1줄)**: learn-log 무거워져 main context 가 goal 보다 디테일에 빠짐 — 인격별 ledger 로 상세 분리, main 은 1줄 rollup 으로 유지
+- **상세**: [cto.md#Growth-4](docs/learn-logs/cto.md)
+- **결정 (CEO 직접)**: 인격 분리 트리거. CTO 가 수용·설계로 미러
+- **Open loops**: trade-off 보강 토론 (G-9 후보 — main learn-log 행 길이/수 가드), engineer/QA 첫 spawn 은 M1 진입 시
