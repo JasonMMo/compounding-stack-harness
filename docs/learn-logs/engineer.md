@@ -40,9 +40,20 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
   4. `auth` 블록을 customer profile `secrets` 섹션으로 분리할지 — 현재 auth.sso_client_secret이 auth 블록에 있음. 별도 `secrets:` 키 추가는 schema v2 변경.
 - Cost: ~12 turns / ~$0.5 추정
 
+### Growth-7 (2026-05-29) — 첫 backend adapter springboot-jakarta + G-1 가드 구현 + paging 버그수정
+
+- **Built**: `backend/adapters/springboot-jakarta/` — Spring Boot 3.2.5 Jakarta, 8 wire key REST, generic in-memory store, `ContractLoader` 런타임 contract 로드 (G-1 준수 — code set/status 하드코딩 0), error envelope 매핑. BUILD SUCCESSFUL, smoke 8/8, gradle wrapper 포함.
+- **wire-v1.yaml fix**: 응답 error 필드 8곳 string→envelope object (codes.yaml 정합). error_envelope 공통 블록 추가.
+- **G-1 활성**: `diagnose.py::g1` 본문 — codes.yaml code→http_status 쌍 로드 후 adapter 소스에서 동일줄 재선언 검출. ALLOW 필터 (주석/`andExpect`/`description`/`message`/import). springboot adapter PASS. False-negative 기록: 인접 2줄 분할 재선언 (v1 단일줄만).
+- **버그수정 (QA BLOCK 환류)**: BUG-1 `list()` params null-guard 누락 → `emptyMap()` 정규화. BUG-2 cursor mode silent 200 → BAD_REQUEST (ContractLoader 경유). 회귀 테스트 3종.
+- **Catch (CTO escalation)**: paging HTTP 직렬화 키 — Spring MVC 가 `paging.mode` dot-notation 을 param Map 에 누락 → CTO 가 flat-underscore (`paging_mode`) 표준 결정.
+- **Cost**: ~3 round Sonnet / ~30 commits
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~M1 진입 시 첫 spawn — `middle/contract/` 첫 wire 키 schema 파일 작성~~ ✅ Growth-5d 완료
-- `scripts/diagnose.py` G-1 SPEC → PASS 전환 — yaml-key extractor + adapter grep 함수 본문 작성 (CTO 가 G-1 활성화 시점 결정 후)
+- ~~`scripts/diagnose.py` G-1 SPEC → PASS 전환~~ ✅ Growth-7 완료 (code→status 재선언 검출)
+- adapter `paging.mode` fallback 제거 — flat-underscore 단일 표준 정착 시 (Growth-8 후보)
+- frontend vanilla-htmx adapter 구현 (Growth-8) + CDO tokens.md → tokens JSON 생성
 - `scripts/diagnose.py` G-2 SPEC → 활성 전환 시 함수 본문 보강 (profile path extractor)
 - CTO escalation 4건 응답 대기 (Growth-5d Decision Log 참조)
