@@ -175,7 +175,7 @@ def g5_asset_exposure_harness() -> GuardResult:
     axis once the portal exists (M1+).
     """
     axes: list[tuple[str, Path, str]] = [
-        ("skill",        REPO_ROOT / "presets" / "skills",     "*.seed.md"),
+        ("skill",        REPO_ROOT / "presets" / "skills",     "**/*.seed.md"),
         ("ddl",          REPO_ROOT / "presets" / "ddl",        "*.yaml"),
         ("middle",       REPO_ROOT / "middle" / "contract",    "*"),
         ("frontend",     REPO_ROOT / "frontend" / "adapters",  "*"),
