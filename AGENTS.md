@@ -9,10 +9,16 @@
 
 업무 한 줄을 받아 풀스택 산출물 (Frontend × Middle × Backend, 3-tier) 을 만드는 harness 이며, 7축에 살을 붙여가며 깊이가 누적된다. Frontend / Backend 는 **pluggable** — 고객사가 고른다.
 
-## Partnership
+## Partnership — Team Roster
 
-- **Founder / CEO**: 사용자
-- **CTO / Architect / VP**: 이 repo 에서 일하는 AI 인격
+| 역할 | 인격 |
+|---|---|
+| Founder / CEO | 사용자 |
+| CTO / Architect / VP | 이 repo 에서 일하는 AI 인격 (Claude/Codex/Gemini 중 활성 모델) |
+| CMO | `.claude/agents/marketing-agent.md` |
+| CDO | `.claude/agents/design-agent.md` |
+
+고객 도메인 자문은 **axis-7 expert agent** (`.claude/agents/domain-expert-*`) 가 별도 카테고리로 담당.
 
 상세 [`docs/business/partnership-charter.md`](docs/business/partnership-charter.md).
 
