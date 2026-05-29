@@ -18,6 +18,21 @@
 #   idempotent: true  — safe to replay (GET-equivalent semantics)
 #   idempotent: false — mutating, replay may produce duplicates or errors
 #
+# HTTP query serialization (CTO decision, Growth-7):
+#   Nested request fields (paging.mode, sort.field, sort.direction, ...) are
+#   FLATTENED with underscore when carried as HTTP query parameters:
+#     paging.mode    → paging_mode
+#     paging.page    → paging_page
+#     paging.size    → paging_size
+#     paging.cursor  → paging_cursor
+#     sort.field     → sort_field
+#     sort.direction → sort_direction
+#   Rationale: dot-notation in query strings has no RFC standard and parses
+#   inconsistently across frameworks (Spring MVC drops "paging.mode" from its
+#   param map — the exact defect QA caught in Growth-7). Flat underscore is
+#   unambiguous for every backend adapter. Non-query transports (JSON request
+#   body) MAY use the nested object form below directly.
+#
 # version: contract schema version (SemVer, adapter declares compat range).
 version: "1.0.0"
 
