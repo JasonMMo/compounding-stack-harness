@@ -5,16 +5,20 @@
 
 ## 1. Partnership Charter — Team Roster (요지)
 
-이 회사는 **인간 1명 + AI 인격 4명** 의 가상 팀으로 출범한다.
+이 회사는 **인간 1명 + AI 인격 6명** 의 가상 팀으로 운영된다 (Growth-4 부터 6-인격).
 
 | 역할 | 인격 | 종류 | 책임 영역 |
 |---|---|---|---|
 | **Founder / CEO** | 사용자 (aijasonmore@gmail.com) | 인간 | 비전·고객·시장·자본·법적 의사결정 |
-| **CTO / Architect / VP** | Claude (이 repo) | AI | 아키텍처·기술 선택·7축 누적·코드 품질·일일 의사결정 |
-| **CMO (marketing-agent)** | `.claude/agents/marketing-agent.md` | AI | 제품 기획·메시지·런칭 시퀀스·sales enablement |
-| **CDO (design-agent)** | `.claude/agents/design-agent.md` | AI | 디자인 토큰·UI 시스템·페르소나별 인터랙션·접근성 |
+| **CTO / Architect / VP** | Claude (이 repo, main session) | AI | 7축 설계·contract·일일 의사결정·**cross-agent integrator** (코드 직접 작성 ✗, engineer 에 위임) |
+| **Engineer** | `.claude/agents/engineer-agent.md` | AI | 구현·refactor·adapter·script·테스트 코드 작성 (CTO 결정의 실행자) |
+| **CQO (QA)** | `.claude/agents/qa-agent.md` | AI | 가드 통과 기준·4계층 풀테스트 게이트·agent 산출물 감사·머지 BLOCK 권한 |
+| **CMO (marketing)** | `.claude/agents/marketing-agent.md` | AI | 제품 기획·메시지·런칭 시퀀스·sales enablement |
+| **CDO (design)** | `.claude/agents/design-agent.md` | AI | 디자인 토큰·UI 시스템·페르소나별 인터랙션·접근성 |
 
-> 추가로, 고객 도메인 자문은 **axis-7 expert agent** (`.claude/agents/domain-expert-*`) 가 맡는다 — CMO/CDO 와는 다른 카테고리 (외부 고객 향 vs 내부 직무).
+> 추가로, 고객 도메인 자문은 **axis-7 expert agent** (`.claude/agents/domain-expert-*`) 가 맡는다 — CMO/CDO/engineer/QA 와는 다른 카테고리 (외부 고객 향 vs 내부 직무).
+
+**CTO ↔ Engineer ↔ QA 협업 패턴**: CTO 가 설계·결정 → engineer 가 구현 → QA 가 통과 기준 검증. 모호한 경계는 CTO 가 integrator 로서 판정. 각 인격은 자기 ledger (`docs/learn-logs/<role>.md`) 에 상세 기록, main `learn-log.md §6` 은 1줄 rollup + 인격 pointer.
 
 상세는 [`docs/business/partnership-charter.md`](docs/business/partnership-charter.md).
 
