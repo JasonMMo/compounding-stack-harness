@@ -37,6 +37,16 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **Cost**: 0 turns (CTO 가 위임 권한으로 박음)
 - **Note**: 본 엔트리는 *위임 결정 기록* 으로, QA agent 가 M1 진입 시 첫 가동되면 본 통과 기준을 인수·재평가한다.
 
+### Growth-7 (2026-05-29) — QA 첫 실전 가동: springboot-jakarta compliance 게이트 BLOCK→PASS
+
+- **Audit target**: 첫 backend adapter (springboot-jakarta) — swappable-layers §6 4-dimension compliance 게이트
+- **Pass criteria defined**: black-box HTTP compliance suite (`tests/adapters/springboot-jakarta/`, pytest, `ADAPTER_BASE_URL` 파라미터화 — 모든 backend adapter 재사용 가능). 23 test = DIM-1 contract round-trip(8) + DIM-2 error envelope(5) + DIM-3 paging(6) + DIM-4 Growth-5d 표준(4). http_status 는 codes.yaml 에서 읽어 대조 (테스트도 single-source 준수, 하드코딩 금지).
+- **False PASS / False FAIL risks**: cursor 요청 키 `mode` vs adapter `paging_mode` 불일치 적발 → contract HTTP 직렬화 컨벤션 미정 issue 를 CTO 에 에스컬레이션 (flat-underscore 표준으로 해소).
+- **Regression cases**: 초기 BLOCK 2건 사후분석 — 일부는 테스트측 결함 (autouse fixture 가 entity_type 누적 오염, cursor 키 불일치). 테스트 수정 + adapter 수정 양측 환류 후 23/23 green.
+- **Blocks issued**: 1 (DIM-3 2 FAIL → engineer 수정 → 재검증 해제). CQO 머지 BLOCK 권한 첫 행사.
+- **G-9 통과 기준 인수**: CTO 임시 박음 (Growth-5a) → QA 정식 인수, 현행 cap (본문 10 / §6 200) 유지 판정.
+- **Cost**: ~2 round Sonnet
+
 ## §3 — Open Loops (이 인격 책임)
 
 - 현행 가드 9개 (G-1~G-9) 의 거짓 PASS / 거짓 FAIL 위험 평가 — 첫 가동 시
