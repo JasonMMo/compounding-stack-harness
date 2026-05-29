@@ -51,8 +51,25 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
   - Infra: 0 (diagnose.py 함수 1 추가 + 6 파일 갱신·생성)
   - 향후 비용 영향: G-9 가 매 PR 마다 학습 비용 0 으로 main §6 비대를 막음 — 인격 분리 ROI 의 보험
 
+### Growth-5b (2026-05-29) — charter v1.3 (private master push 자동화) + GitHub 첫 등재
+
+- **Role here**: VP (charter §3 #3 조건부화 설계) + Integrator (3 파일 동기화 + repo 외부 등재)
+- **Decisions made**:
+  - CEO 직접 제안 "master 푸시를 자동으로" 수용. 단, **public 전환 시 사전 확인 룰 자동 재발효** 조건부 룰로 박음 — reversibility 보존
+  - Repo visibility: **private** (CMO 회수 #3 OSS/상용 분리선 미정 — public 전환은 cheap, private→public 후엔 인덱싱 회수 비쌈)
+  - Repo 이름: `compounding-stack-harness` (로컬과 동일)
+  - Description: "Expert-agent-driven self-host full-stack codegen harness. 7-axis compounding..." — positioning.md 한 줄 약속 압축
+  - 3 파일 동기화 순서: charter (근거 문서) → CLAUDE.md → AGENTS.md (각 파일당 별도 커밋)
+- **Cross-agent catches**: CMO 회수 질문 #3 (OSS/상용 분리선) 이 public 전환 시점을 결정한다 — 두 결정이 묶임
+- **Escalations**: 없음 — CEO 가 먼저 제안한 변경
+- **Cost of my decisions**:
+  - LLM: 본 세션 turns ~10, Opus 4.7 단독
+  - Infra: github.com private repo 1개 (free tier)
+  - 향후: public 전환 즉시 charter §3 #3 룰 자동 재발효 — 코드 변경 0, 의미론적 게이팅
+
 ## §3 — Open Loops (이 인격 책임)
 
 - **Cross-agent Growth 의 main 행 포맷**: 인격이 2개 이상 닿은 Growth 의 main §6 1줄 표기 컨벤션 (예: `Growth-N — CMO+CTO`) — 첫 cross-agent Growth 도착 시 결정
 - **engineer-agent / qa-agent 첫 가동**: M1 진입 시 첫 spawn — 실전 협업 패턴 검증
 - **첫 분기 synthesis**: 2026-Q3 마지막 주 (Growth-1~ 누적 통합) — 템플릿 실전 검증
+- **public 전환 게이트**: CMO 회수 #3 (OSS/상용 분리선) 결정 후 visibility 전환 + 그 즉시 charter §3 #3 사전 확인 룰 의식 (push 룰 변경 X)
