@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Java / Maven / Gradle
+target/
+build/
+*.class
+.gradle/
+
+# Node
+node_modules/
+dist/
+.next/
+.nuxt/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project artifacts
+out/
+docs/scaffolds/
+*.local.yaml
+*.local.json
+.env
+.env.local
+
+# Cost / metrics tracking (local only)
+metrics/local/
+cost-reports/local/
