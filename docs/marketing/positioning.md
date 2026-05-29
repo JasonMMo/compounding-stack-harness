@@ -137,6 +137,15 @@ M5 — Multi-Tenant SaaS
 
 ---
 
+## CEO 회수 질문 답변 (Growth-5e, 2026-05-29)
+
+- **Q1 (가격대)**: $10k~$30k self-host license 옵션을 선호하나 **시스템 성숙도가 고객 기대치를 넘을 때까지 공개 보류** (CEO 결정, 2026-05-29). M2 첫 paid customer 협의 진입 시 CEO 가 maturity threshold 평가 → 공개 게이트.
+- **Q2 (첫 vertical)**: 첫 paid customer 의 산업 = 첫 vertical (charter §2 게이트 이미 합의). 사전 선택 없음.
+- **Q3 (OSS/상용 분리선)**: M2 첫 고객 협의 종료 후 결정 — charter v1.3 의 public 전환 게이트와 자연 정렬.
+- **Q4 (M3 vertical landing 책임자)**: CMO copy + CDO visual 협업. charter §2 decision matrix 의 `landing/portal 비주얼 = CDO` + `sales enablement = CMO (CDO 협업)` 매핑 활용.
+
+---
+
 ## 6. Open Questions for CEO
 
 - **가격 앵커 (anchor pricing)**: 연간 라이선스 "\$10K~" 에서 "\$10K" 가 anchor 인가 "\$30K" 가 anchor 인가. 첫 고객사와의 협상 직전까지는 공개 페이지에 숫자를 노출하지 않는 것이 유리할 수 있다. "가격 문의" CTA 전략과 비교해 CEO 가 결정.
