@@ -116,12 +116,15 @@
 - `--no-verify` / `--no-gpg-sign` 금지
 - master 푸시는 사용자가 수동
 
-## 10. 컨벤션 (이전 repo 계승)
+## 10. 컨벤션
 
-- **G-1 (재번호)**: 모든 파일/디렉터리명은 ASCII slug. 한글 파일명 금지.
-- **G-2 (재번호)**: profile YAML 의 `${ENV_VAR}` 는 round-trip 시 보존.
+가드 카탈로그 (G-N) 의 단일 진실은 [`learn-log.md §2`](learn-log.md) — 본 섹션은 컨벤션 prose 만 둔다.
+
+- **G-1 ~ G-7**: [`docs/inherited-wisdom/README.md`](docs/inherited-wisdom/README.md) 의 7 메타 교훈 1:1 매핑. `${ENV_VAR}` round-trip 은 **G-4** (Lesson 4) 에 박혀 있음.
+- **G-8**: 모든 파일/디렉터리명은 ASCII slug. 한글 파일명 금지. (`scripts/diagnose.py::g8_ascii_slug`)
 - 풀테스트 산출물 (`docs/scaffolds/`, `out/`) 은 `.gitignore` 대상.
-- 새 cross-layer 결합이 생기면 `diagnose.py` 에 가드 추가 (G-N+).
+- 새 cross-layer 결합이 생기면 `scripts/diagnose.py` 에 가드 추가 + §2 카탈로그 행 추가 + §4 counter 갱신 (G-N+).
+- 가드 실행: `python scripts/diagnose.py` (모두), `... G-1,G-7` (부분), `--list`, `--json`.
 
 ## 11. 참조
 
