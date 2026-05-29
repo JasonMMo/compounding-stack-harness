@@ -1,0 +1,49 @@
+{
+  "_meta": {
+    "persona": "ceo",
+    "description": "CEO persona overrides. Information density: LOW. CEO sees summarized cards, KPI numbers, status indicators — not raw data tables or dense forms. Larger spacing, larger text, fewer visible fields.",
+    "merge_order": "raw.json -> semantic.json -> this file. Only keys listed here differ from semantic.json defaults."
+  },
+
+  "space": {
+    "inset-md":   "20px",
+    "inset-lg":   "28px",
+    "inset-xl":   "36px",
+    "gap-md":     "16px",
+    "gap-lg":     "24px",
+    "stack-md":   "24px",
+    "stack-lg":   "36px",
+    "page-gutter": "32px"
+  },
+
+  "font": {
+    "size-md":   "15px",
+    "size-lg":   "17px",
+    "size-xl":   "20px",
+    "size-2xl":  "24px",
+    "size-3xl":  "30px",
+    "line-md":   "24px",
+    "line-lg":   "28px"
+  },
+
+  "color": {
+    "border-input": "{color.gray.300}",
+    "_border-input-note": "Documented WCAG 1.4.11 exemption — gray.300 (#D1D5DB) is 1.87:1 vs surface-1. Justified by CEO low-density layout: every input is accompanied by a visible label and surrounding chrome that provides shape context. ops and it personas use gray.400 (3.05:1) and remain compliant."
+  },
+
+  "radius": {
+    "card":   "8px",
+    "modal":  "12px"
+  },
+
+  "shadow": {
+    "card": "0 2px 8px 0 rgba(0,0,0,0.08), 0 1px 2px 0 rgba(0,0,0,0.06)"
+  },
+
+  "_density": {
+    "table_rows_default": 10,
+    "form_fields_visible": "summary_only",
+    "nav_style": "top_bar",
+    "note": "CEO layout uses top navigation bar (not sidebar). Table pagination default 10 rows. Forms show summary view by default, detail on drill-down."
+  }
+}
