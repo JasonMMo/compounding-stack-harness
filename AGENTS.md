@@ -70,7 +70,7 @@ Middle layer (wire-protocol) 는 single source. Frontend / Backend adapter 는 c
 - 커밋 메시지 trailer: `Co-Authored-By: <model-name> <noreply@anthropic.com>` (Codex/Gemini 등은 자기 모델명)
 - HEREDOC 으로 메시지 작성
 - `--no-verify` / `--no-gpg-sign` 금지
-- master 푸시는 사용자가 수동
+- master 푸시는 CTO 자동 (Growth-5b 변경, charter v1.3) — private repo 한정. public 전환 후 사전 확인 룰 자동 재발효
 
 ## 컨벤션
 
