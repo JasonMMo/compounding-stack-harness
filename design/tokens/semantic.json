@@ -1,0 +1,141 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "layer": "semantic",
+    "description": "Semantic token layer. Components reference ONLY these keys, never raw values directly. Values use {category.path} reference syntax resolved against raw.json — see design/tokens/README.md for generator spec.",
+    "reference_syntax": "{category.subcategory.key} resolves to the value at that path in raw.json. Example: {color.accent.600} resolves to raw.json color.accent.600 = #2563EB.",
+    "merge_order": "raw → semantic → persona override. Persona files in design/tokens/persona/ only declare keys that differ from this semantic layer."
+  },
+
+  "color": {
+
+    "primary":          "{color.accent.600}",
+    "primary-hover":    "{color.accent.700}",
+    "primary-active":   "{color.accent.800}",
+    "primary-subtle":   "{color.accent.050}",
+    "primary-border":   "{color.accent.300}",
+
+    "danger":           "{color.red.600}",
+    "danger-hover":     "{color.red.700}",
+    "danger-subtle":    "{color.red.050}",
+    "danger-border":    "{color.red.400}",
+
+    "success":          "{color.green.600}",
+    "success-subtle":   "{color.green.050}",
+
+    "warning":          "{color.yellow.500}",
+    "warning-subtle":   "{color.yellow.050}",
+    "warning-text":     "{color.yellow.700}",
+
+    "surface-1":        "{color.white}",
+    "surface-2":        "{color.gray.050}",
+    "surface-3":        "{color.gray.100}",
+    "surface-overlay":  "rgba(17,24,39,0.50)",
+
+    "border":           "{color.gray.200}",
+    "border-strong":    "{color.gray.300}",
+    "border-input":     "{color.gray.400}",
+    "border-focus":     "{color.accent.500}",
+
+    "text-1":           "{color.gray.900}",
+    "text-2":           "{color.gray.700}",
+    "text-3":           "{color.gray.500}",
+    "text-disabled":    "{color.gray.400}",
+    "text-inverse":     "{color.white}",
+    "text-on-primary":  "{color.white}",
+    "text-on-danger":   "{color.white}",
+    "text-link":        "{color.accent.600}",
+    "text-link-hover":  "{color.accent.700}",
+
+    "status-ok":        "{color.green.600}",
+    "status-degraded":  "{color.yellow.500}",
+    "status-down":      "{color.red.600}"
+  },
+
+  "font": {
+    "family-body":  "{type.family.sans}",
+    "family-mono":  "{type.family.mono}",
+
+    "size-xs":   "{type.scale.xs.size}",
+    "size-sm":   "{type.scale.sm.size}",
+    "size-md":   "{type.scale.md.size}",
+    "size-lg":   "{type.scale.lg.size}",
+    "size-xl":   "{type.scale.xl.size}",
+    "size-2xl":  "{type.scale.2xl.size}",
+    "size-3xl":  "{type.scale.3xl.size}",
+
+    "line-xs":   "{type.scale.xs.line_height}",
+    "line-sm":   "{type.scale.sm.line_height}",
+    "line-md":   "{type.scale.md.line_height}",
+    "line-lg":   "{type.scale.lg.line_height}",
+    "line-xl":   "{type.scale.xl.line_height}",
+
+    "weight-body":     "{type.weight.regular}",
+    "weight-label":    "{type.weight.medium}",
+    "weight-heading":  "{type.weight.semibold}",
+    "weight-strong":   "{type.weight.bold}",
+
+    "body":      "size-md / weight-body / family-body",
+    "label":     "size-sm / weight-label / family-body",
+    "caption":   "size-xs / weight-body / family-body",
+    "heading-1": "size-3xl / weight-heading / family-body",
+    "heading-2": "size-2xl / weight-heading / family-body",
+    "heading-3": "size-xl  / weight-heading / family-body",
+    "code":      "size-sm  / weight-body / family-mono"
+  },
+
+  "space": {
+    "inset-xs":   "{space.2}",
+    "inset-sm":   "{space.4}",
+    "inset-md":   "{space.8}",
+    "inset-lg":   "{space.12}",
+    "inset-xl":   "{space.16}",
+
+    "gap-xs":     "{space.2}",
+    "gap-sm":     "{space.4}",
+    "gap-md":     "{space.8}",
+    "gap-lg":     "{space.12}",
+    "gap-xl":     "{space.16}",
+    "gap-2xl":    "{space.24}",
+
+    "stack-sm":   "{space.6}",
+    "stack-md":   "{space.12}",
+    "stack-lg":   "{space.20}",
+    "stack-xl":   "{space.32}",
+
+    "page-gutter": "{space.24}",
+    "sidebar-width": "240px",
+    "sidebar-width-collapsed": "56px",
+    "content-max": "1280px"
+  },
+
+  "radius": {
+    "control":  "{radius.md}",
+    "card":     "{radius.lg}",
+    "modal":    "{radius.xl}",
+    "badge":    "{radius.full}",
+    "input":    "{radius.md}"
+  },
+
+  "shadow": {
+    "card":     "{shadow.sm}",
+    "dropdown": "{shadow.md}",
+    "modal":    "{shadow.lg}",
+    "focus-ring": "0 0 0 3px rgba(59,130,246,0.40)"
+  },
+
+  "motion": {
+    "transition-control": "{motion.duration.normal} {motion.easing.standard}",
+    "transition-enter":   "{motion.duration.enter} {motion.easing.decelerate}",
+    "transition-exit":    "{motion.duration.exit} {motion.easing.accelerate}",
+    "transition-fast":    "{motion.duration.fast} {motion.easing.standard}"
+  },
+
+  "zindex": {
+    "dropdown":  "100",
+    "sticky":    "200",
+    "modal-backdrop": "300",
+    "modal":     "400",
+    "toast":     "500"
+  }
+}
