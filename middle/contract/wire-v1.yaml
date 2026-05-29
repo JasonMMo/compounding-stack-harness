@@ -1,0 +1,278 @@
+# wire-v1.yaml — Middle wire-protocol contract v1
+# Single source of truth for all adapter request/response schemas.
+# Frontend and Backend adapters READ this file only — no redeclaration.
+#
+# Format choice: plain YAML with inline JSON-Schema-style type annotations.
+# Rationale: OpenAPI 3.1 is the long-term target (see swappable-layers.md §8),
+# but this first draft uses self-contained YAML to avoid toolchain dependency
+# before adapters exist. Migration to OpenAPI 3.1 components/ is a CTO
+# decision when the first adapter lands (M1).
+#
+# Key namespace: <domain>.<verb> — two-segment dotted path.
+#   domain: auth | entity | status
+#   verb:   login | logout | read | list | create | update | delete | health
+# Rationale: short enough to grep, long enough to be self-documenting.
+# New domains added here as presets/skills/<industry> warrant.
+#
+# Idempotency column:
+#   idempotent: true  — safe to replay (GET-equivalent semantics)
+#   idempotent: false — mutating, replay may produce duplicates or errors
+#
+# version: contract schema version (SemVer, adapter declares compat range).
+version: "1.0.0"
+
+keys:
+
+  # ── auth domain ────────────────────────────────────────────────────────────
+
+  auth.login:
+    idempotent: false
+    description: "Authenticate a user and issue a session token."
+    request:
+      fields:
+        username:
+          type: string
+          required: true
+          description: "Login identifier (email or username)."
+        password:
+          type: string
+          required: true
+          format: password
+          description: "Plaintext credential — adapter MUST transmit over TLS."
+        remember_me:
+          type: boolean
+          required: false
+          default: false
+    response:
+      fields:
+        token:
+          type: string
+          description: "Opaque session token. Adapter stores in secure storage."
+        expires_at:
+          type: string
+          format: iso8601
+          description: "UTC expiry timestamp."
+        user_id:
+          type: string
+          description: "Stable user identifier."
+        error:
+          type: string
+          required: false
+          description: "Non-null on failure. Maps to error/codes.yaml."
+
+  auth.logout:
+    idempotent: true
+    description: "Invalidate the current session token."
+    request:
+      fields:
+        token:
+          type: string
+          required: true
+          description: "Session token to invalidate."
+    response:
+      fields:
+        success:
+          type: boolean
+        error:
+          type: string
+          required: false
+
+  # ── entity domain ──────────────────────────────────────────────────────────
+  # Generic CRUD over a named entity type. `entity_type` is resolved by the
+  # adapter against the customer profile domains list.
+
+  entity.read:
+    idempotent: true
+    description: "Fetch a single entity instance by primary key."
+    request:
+      fields:
+        entity_type:
+          type: string
+          required: true
+          description: "Slug matching profiles/<slug>.yaml domains[].slug."
+        id:
+          type: string
+          required: true
+          description: "Primary key value (string-serialised)."
+    response:
+      fields:
+        entity_type:
+          type: string
+        id:
+          type: string
+        data:
+          type: object
+          description: "Entity field map. Shape defined by presets/ddl catalog."
+        error:
+          type: string
+          required: false
+
+  entity.list:
+    idempotent: true
+    description: "Paginated list of entity instances, with optional filter."
+    request:
+      fields:
+        entity_type:
+          type: string
+          required: true
+        filter:
+          type: object
+          required: false
+          description: "Key=value pairs applied as WHERE conditions."
+        paging:
+          type: object
+          required: false
+          description: "See middle/contract/paging/ specs. Default: offset page 1 size 20."
+          fields:
+            mode:
+              type: string
+              enum: [offset, cursor]
+              default: offset
+            page:
+              type: integer
+              required: false
+            size:
+              type: integer
+              required: false
+              default: 20
+            cursor:
+              type: string
+              required: false
+        sort:
+          type: object
+          required: false
+          fields:
+            field:
+              type: string
+            direction:
+              type: string
+              enum: [asc, desc]
+              default: asc
+    response:
+      fields:
+        entity_type:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+        total:
+          type: integer
+          description: "Total matching records (offset mode only)."
+        next_cursor:
+          type: string
+          required: false
+          description: "Cursor for next page (cursor mode only)."
+        error:
+          type: string
+          required: false
+
+  entity.create:
+    idempotent: false
+    description: "Insert a new entity instance."
+    request:
+      fields:
+        entity_type:
+          type: string
+          required: true
+        data:
+          type: object
+          required: true
+          description: "Field map. Adapter validates against DDL catalog schema."
+    response:
+      fields:
+        entity_type:
+          type: string
+        id:
+          type: string
+          description: "Generated primary key of the new record."
+        data:
+          type: object
+          description: "Persisted entity with server-populated defaults."
+        error:
+          type: string
+          required: false
+
+  entity.update:
+    idempotent: false
+    description: "Partial update (PATCH semantics) of an existing entity."
+    # CTO standard (Growth-5d): PATCH semantics 표준. PUT full-replace 가 필요한 adapter 는 wrapper 패턴으로 contract 변경 없이 구현.
+    request:
+      fields:
+        entity_type:
+          type: string
+          required: true
+        id:
+          type: string
+          required: true
+        data:
+          type: object
+          required: true
+          description: "Only the fields to change. Absent fields are unchanged."
+    response:
+      fields:
+        entity_type:
+          type: string
+        id:
+          type: string
+        data:
+          type: object
+          description: "Full entity after update."
+        error:
+          type: string
+          required: false
+
+  entity.delete:
+    idempotent: true
+    description: "Remove an entity instance by primary key."
+    # CTO standard (Growth-5d): idempotent 표준 — 404 → success 매핑. adapter compliance test 가 "2회 호출 둘 다 success" 검증.
+    request:
+      fields:
+        entity_type:
+          type: string
+          required: true
+        id:
+          type: string
+          required: true
+    response:
+      fields:
+        success:
+          type: boolean
+        error:
+          type: string
+          required: false
+
+  # ── status domain ──────────────────────────────────────────────────────────
+
+  status.health:
+    idempotent: true
+    description: "Liveness probe. Returns adapter + backend service health."
+    request:
+      fields: {}
+      description: "No request parameters required."
+    response:
+      fields:
+        status:
+          type: string
+          enum: [ok, degraded, down]
+        version:
+          type: string
+          description: "Deployed contract version the adapter is serving."
+        checks:
+          type: array
+          required: false
+          description: "Optional per-component health sub-checks."
+          items:
+            type: object
+            fields:
+              name:
+                type: string
+              status:
+                type: string
+                enum: [ok, degraded, down]
+              message:
+                type: string
+                required: false
+        error:
+          type: string
+          required: false
