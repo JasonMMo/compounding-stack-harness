@@ -1,0 +1,122 @@
+# codes.yaml — Standard error code catalog (Middle contract)
+# Single source of truth for the `error` field referenced across wire-v1.yaml.
+# Every adapter MAPS these codes to its framework's error mechanism — it does
+# NOT redeclare the catalog (G-1: contract single-source).
+#
+# Envelope shape (how an adapter returns an error):
+#   { "error": { "code": "NOT_FOUND", "message": "...", "details": {...}? } }
+# When `error` is null/absent the response succeeded. wire-v1.yaml response
+# `error` fields point here for the closed code set.
+#
+# i18n policy (Growth-5c Q2 = "i18n is adapter responsibility"):
+#   `message` (English) is the DEFAULT the adapter MAY surface as-is.
+#   `message_ko` is a provided baseline Korean string. The adapter OWNS final
+#   localization and MAY override either via its own i18n layer. The `code` is
+#   the only stable, non-localized contract token — clients branch on `code`,
+#   never on message text.
+#
+# http_status: suggested HTTP mapping for HTTP-transport adapters. Non-HTTP
+#   adapters (e.g. a desktop bridge) ignore it and map `code` to their own
+#   transport. It is advisory, not part of the wire payload.
+#
+# retriable: true  — caller MAY replay the same request (transient condition).
+#            false — replay will fail the same way (caller must change input).
+#
+# version: catalog SemVer. Adapters declare the range they support.
+version: "1.0.0"
+
+codes:
+
+  # ── auth domain ──────────────────────────────────────────────────────────
+  AUTH_FAILED:
+    http_status: 401
+    retriable: false
+    message: "Authentication failed. Check your credentials."
+    message_ko: "인증에 실패했습니다. 자격 증명을 확인하세요."
+    description: "auth.login: username/password mismatch or unknown user."
+
+  AUTH_EXPIRED:
+    http_status: 401
+    retriable: false
+    message: "Session has expired. Please sign in again."
+    message_ko: "세션이 만료되었습니다. 다시 로그인하세요."
+    description: "Token past expires_at. Caller must re-run auth.login."
+
+  AUTH_REQUIRED:
+    http_status: 401
+    retriable: false
+    message: "Authentication is required for this operation."
+    message_ko: "이 작업에는 인증이 필요합니다."
+    description: "Protected key called without a valid token."
+
+  FORBIDDEN:
+    http_status: 403
+    retriable: false
+    message: "You do not have permission to perform this action."
+    message_ko: "이 작업을 수행할 권한이 없습니다."
+    description: "Authenticated but the principal lacks the required role/scope."
+
+  # ── request/validation ───────────────────────────────────────────────────
+  VALIDATION_ERROR:
+    http_status: 422
+    retriable: false
+    message: "The request failed validation."
+    message_ko: "요청 검증에 실패했습니다."
+    description: >-
+      entity.create/update: a field violated the DDL catalog schema or a
+      domain business rule. `details` SHOULD carry per-field messages:
+      { "details": { "fields": { "<name>": "<reason>" } } }.
+
+  BAD_REQUEST:
+    http_status: 400
+    retriable: false
+    message: "The request was malformed."
+    message_ko: "잘못된 요청입니다."
+    description: "Missing required wire field, wrong type, or unparseable body."
+
+  # ── resource state ─────────────────────────────────────────────────────────
+  NOT_FOUND:
+    http_status: 404
+    retriable: false
+    message: "The requested resource was not found."
+    message_ko: "요청한 리소스를 찾을 수 없습니다."
+    description: >-
+      entity.read/update: no instance for the given id. NOTE: entity.delete
+      maps 404 → success (idempotent standard, wire-v1.yaml Growth-5d), so a
+      missing target on delete MUST NOT surface this code.
+
+  CONFLICT:
+    http_status: 409
+    retriable: false
+    message: "The request conflicts with the current state of the resource."
+    message_ko: "현재 리소스 상태와 충돌하는 요청입니다."
+    description: >-
+      Unique constraint violation, duplicate create, or an illegal state
+      transition (e.g. a domain status machine rejecting the change).
+
+  # ── cost / rate (Cost-aware design, CLAUDE.md §5) ───────────────────────────
+  RATE_LIMITED:
+    http_status: 429
+    retriable: true
+    message: "Too many requests. Please retry later."
+    message_ko: "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
+    description: >-
+      Per-tenant throttle or LLM/infra cost hedge tripped. `details.retry_after`
+      MAY carry seconds to wait. Caller MAY replay after backoff.
+
+  # ── server / downstream ─────────────────────────────────────────────────────
+  INTERNAL:
+    http_status: 500
+    retriable: true
+    message: "An unexpected error occurred."
+    message_ko: "예기치 않은 오류가 발생했습니다."
+    description: "Unhandled adapter or backend fault. Caller MAY retry once."
+
+  UNAVAILABLE:
+    http_status: 503
+    retriable: true
+    message: "The service is temporarily unavailable."
+    message_ko: "서비스를 일시적으로 사용할 수 없습니다."
+    description: >-
+      status.health would report down/degraded. Backend dependency unreachable.
+      Caller SHOULD retry with backoff.
