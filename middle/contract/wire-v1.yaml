@@ -21,6 +21,31 @@
 # version: contract schema version (SemVer, adapter declares compat range).
 version: "1.0.0"
 
+# ── Error Envelope (shared definition) ────────────────────────────────────────
+# Shape returned in every response `error` field on failure.
+# Source of truth for code→http_status mapping: error/codes.yaml.
+# On success the `error` field is null or absent.
+#
+#   error_envelope:
+#     code:     string  — one of the code keys in error/codes.yaml (e.g. NOT_FOUND)
+#     message:  string  — human-readable English text (adapter may localise)
+#     details:  object  — optional, code-specific payload (e.g. field errors)
+#
+error_envelope:
+  fields:
+    code:
+      type: string
+      description: "Stable error token — clients branch on this, never on message text. Closed set defined in error/codes.yaml."
+      required: true
+    message:
+      type: string
+      description: "Human-readable description (English default). Adapter may override for i18n."
+      required: true
+    details:
+      type: object
+      required: false
+      description: "Code-specific supplemental payload. Shape varies by code (see error/codes.yaml descriptions)."
+
 keys:
 
   # ── auth domain ────────────────────────────────────────────────────────────
@@ -56,9 +81,9 @@ keys:
           type: string
           description: "Stable user identifier."
         error:
-          type: string
+          type: object
           required: false
-          description: "Non-null on failure. Maps to error/codes.yaml."
+          description: "Standard error envelope — see error_envelope and error/codes.yaml. Null on success."
 
   auth.logout:
     idempotent: true
@@ -74,8 +99,9 @@ keys:
         success:
           type: boolean
         error:
-          type: string
+          type: object
           required: false
+          description: "Standard error envelope — see error_envelope and error/codes.yaml. Null on success."
 
   # ── entity domain ──────────────────────────────────────────────────────────
   # Generic CRUD over a named entity type. `entity_type` is resolved by the
@@ -104,8 +130,9 @@ keys:
           type: object
           description: "Entity field map. Shape defined by presets/ddl catalog."
         error:
-          type: string
+          type: object
           required: false
+          description: "Standard error envelope — see error_envelope and error/codes.yaml. Null on success."
 
   entity.list:
     idempotent: true
@@ -164,8 +191,9 @@ keys:
           required: false
           description: "Cursor for next page (cursor mode only)."
         error:
-          type: string
+          type: object
           required: false
+          description: "Standard error envelope — see error_envelope and error/codes.yaml. Null on success."
 
   entity.create:
     idempotent: false
@@ -190,8 +218,9 @@ keys:
           type: object
           description: "Persisted entity with server-populated defaults."
         error:
-          type: string
+          type: object
           required: false
+          description: "Standard error envelope — see error_envelope and error/codes.yaml. Null on success."
 
   entity.update:
     idempotent: false
@@ -219,8 +248,9 @@ keys:
           type: object
           description: "Full entity after update."
         error:
-          type: string
+          type: object
           required: false
+          description: "Standard error envelope — see error_envelope and error/codes.yaml. Null on success."
 
   entity.delete:
     idempotent: true
@@ -239,8 +269,9 @@ keys:
         success:
           type: boolean
         error:
-          type: string
+          type: object
           required: false
+          description: "Standard error envelope — see error_envelope and error/codes.yaml. Null on success."
 
   # ── status domain ──────────────────────────────────────────────────────────
 
@@ -274,5 +305,6 @@ keys:
                 type: string
                 required: false
         error:
-          type: string
+          type: object
           required: false
+          description: "Standard error envelope — see error_envelope and error/codes.yaml. Null on success."
