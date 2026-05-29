@@ -35,8 +35,24 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
   - Infra: 0 (.claude/agents 2 파일 + docs/learn-logs 5 파일 + 헌장 3 파일 갱신)
   - 향후 비용 영향: agent 분리 후 subagent 호출 패턴 변경 — 예상 budget engineer \$100/월 + QA \$40/월 (per agent file 추정치)
 
+### Growth-5a (2026-05-29) — Growth-4 trade-off 4 항목 잠금
+
+- **Role here**: Integrator (인격 분리의 후속 위험 잠금) + Architect (G-9 + 슬림 spec 박기) + VP (charter §3 #5 정식화)
+- **Decisions made (CEO 위임 "추천안으로 가자")**:
+  - (a) 슬림 포맷 spec block 박음 — divider 직후 7-field 코드 펜스, 각 Growth 가 "어디서 시작·뭐가 들어가야 하는지" 시각적 가이드
+  - (c) `docs/learn-logs/synthesis-template.md` 박음 — 분기당 1 페이지 cross-인격 narrative 복원소
+  - (d) G-9 가드 박음 — 본문 비-blank ≤10행/엔트리, 슬림 §6 전체 ≤200행. 코드 펜스는 검출 제외 (spec template 자체가 자기 가드에 안 걸리도록)
+  - (f) charter §3 #5 "Integrator 마무리 step" 추가 — main §6 슬림 엔트리는 *CTO 단독 작성*. 인격 ledger 상세는 각자 쓰되 main rollup 은 한 손이 잡는다
+  - charter §8 v1.2 row 추가 — Growth-5a 변경 이력
+- **Cross-agent catches**: 없음 (CTO 자기 영역 잠금)
+- **Escalations**: 없음 — CEO 가 "추천안" 으로 위임함
+- **Cost of my decisions**:
+  - LLM: 본 세션 turns ~30, Opus 4.7 단독 (subagent 호출 0)
+  - Infra: 0 (diagnose.py 함수 1 추가 + 6 파일 갱신·생성)
+  - 향후 비용 영향: G-9 가 매 PR 마다 학습 비용 0 으로 main §6 비대를 막음 — 인격 분리 ROI 의 보험
+
 ## §3 — Open Loops (이 인격 책임)
 
-- **G-9 후보**: main learn-log §6 의 행당 길이 / 행 수 가드 (trade-off 보강 토론 후 결정)
-- **Cross-agent Growth 의 main 행 포맷**: 인격이 2개 이상 닿은 Growth 의 main §6 1줄 표기 컨벤션 (예: `Growth-N — CMO+CTO`)
+- **Cross-agent Growth 의 main 행 포맷**: 인격이 2개 이상 닿은 Growth 의 main §6 1줄 표기 컨벤션 (예: `Growth-N — CMO+CTO`) — 첫 cross-agent Growth 도착 시 결정
 - **engineer-agent / qa-agent 첫 가동**: M1 진입 시 첫 spawn — 실전 협업 패턴 검증
+- **첫 분기 synthesis**: 2026-Q3 마지막 주 (Growth-1~ 누적 통합) — 템플릿 실전 검증
