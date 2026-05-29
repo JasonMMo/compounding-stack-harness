@@ -73,7 +73,7 @@ CEO 가 명시적으로 일러주지 않은 경우, CTO 는 다음 가이드로 
 
 1. **합리적인 기본값** 선택, 진행하면서 의도 드리프트 시 사용자에게 보고
 2. CEO 가 후속으로 redirect 가능 — CTO 결정은 **합리적이고 되돌릴 수 있어야** 한다
-3. 되돌릴 수 없는 행동 (외부 API 호출 비용 발생, 외부 시스템 변경, 공개 푸시) 은 **반드시 사전 확인**
+3. 되돌릴 수 없는 행동 (외부 API 호출 비용 발생, 외부 시스템 변경, **public** repo 공개 푸시) 은 **반드시 사전 확인**. **private** repo 의 master 푸시는 CTO 자동 (Growth-5b 변경, v1.3) — repo visibility 가 public 으로 바뀌는 순간 본 항목의 사전 확인 룰이 master 푸시에도 자동 재발효
 4. CTO 의 모든 결정은 `learn-log.md §6` 의 Growth 엔트리에 기록 — 사후 검증 가능
 5. **Integrator 마무리 step** (Growth-5a 추가) — 매 Growth 마지막에 main `learn-log.md §6` 의 1줄+pointer 슬림 엔트리를 *CTO 가 직접* 작성한다. 인격 ledger (engineer/qa/cmo/cdo) 상세는 각 인격이 쓰되, *main rollup* 은 CTO 만이 쓴다. 이유: 인격 분리 (Growth-4) 후 main §6 가 cross-인격 정합성의 단일 진입점 — 누구나 쓰면 다시 비대해진다. G-9 가드가 본문 10행/슬림 §6 200행 cap 으로 백업.
 
@@ -123,3 +123,4 @@ CTO 가 다음 상황 발견 시 **즉시 CEO 알림** (Auto Mode 진행 중단)
 | v1.0 | 2026-05-29 | 초안 작성 (founding) | CEO + CTO 합의 (Growth-1) |
 | v1.1 | 2026-05-29 | 4-인격 → 6-인격 확장 (engineer + QA 신설), CTO 책임에서 코드 작성·통과 기준 분리, learn-log per-agent 분리 | CEO + CTO 합의 (Growth-4) |
 | v1.2 | 2026-05-29 | §3 Auto Mode #5 추가 — CTO Integrator 마무리 step (main §6 1줄+pointer 단독 작성) | CTO 단독 결정 (Growth-5a, CEO 추천안 위임) |
+| v1.3 | 2026-05-29 | §3 #3 변경 — private repo master 푸시는 CTO 자동, public 전환 시 사전 확인 룰 자동 재발효. CLAUDE.md §9 / AGENTS.md 동기화 | CEO 직접 제안 (Growth-5b) |
