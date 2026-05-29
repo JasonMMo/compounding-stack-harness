@@ -49,40 +49,59 @@ public class EntityController {
     }
 
     // ── entity.list ───────────────────────────────────────────────────────────
-    // Paging: offset mode supported. Cursor mode returns BAD_REQUEST (documented gap).
-    // Filter: all query params except paging/sort params are treated as field filters.
+    // Paging: offset mode supported (page, size). Cursor mode returns BAD_REQUEST.
+    // Filter: query params not in the reserved set are applied as field=value filters.
+    //
+    // BUG-1 fix: null-guard params before any access. Spring injects null (not empty
+    //   map) when @RequestParam(required=false) Map receives zero query parameters.
+    //   Without the guard, params.getOrDefault() throws NPE before page/size parse.
+    //
+    // BUG-2 fix: cursor mode detection reads the dedicated query param "paging_mode"
+    //   (underscore, not dot). Spring MVC flattens "paging.mode=cursor" into the Map
+    //   under key "paging.mode" only when the servlet container does NOT interpret the
+    //   dot as a nested-property separator. In practice several containers (and some
+    //   test clients) strip or ignore keys containing dots, so the cursor branch was
+    //   never reached — callers saw a silent 200 instead of the documented BAD_REQUEST.
+    //   Solution: accept BOTH "paging_mode" (preferred, dot-free) AND "paging.mode"
+    //   (legacy) so the guard is container-agnostic and never silently falls through.
 
     @GetMapping("/{entity_type}")
     public ResponseEntity<Map<String, Object>> list(
             @PathVariable("entity_type") String entityType,
             @RequestParam(required = false) Map<String, String> params) {
 
-        // Detect cursor mode — not implemented, return BAD_REQUEST
-        String pagingMode = params.getOrDefault("paging.mode", "offset");
+        // Normalise: treat null params identically to an empty map.
+        final Map<String, String> p = (params != null) ? params : Collections.emptyMap();
+
+        // ── BUG-2 fix: cursor mode detection (dot-free key takes priority) ──────
+        // Accept "paging_mode" (dot-free, reliable across all containers) and
+        // "paging.mode" (original wire-v1 name, works when container preserves dots).
+        String pagingMode = p.getOrDefault("paging_mode",
+                            p.getOrDefault("paging.mode", "offset"));
         if ("cursor".equals(pagingMode)) {
             return WireResponse.error(contractLoader, "BAD_REQUEST",
-                Map.of("reason", "cursor paging not yet implemented; use paging.mode=offset"));
+                Map.of("reason", "cursor paging not yet implemented; use paging_mode=offset"));
         }
 
-        // Parse paging params
-        int page = parseIntParam(params, "page", 1);
-        int size = parseIntParam(params, "size", 20);
+        // ── BUG-1 fix: paging param parse now uses null-safe `p` ─────────────────
+        int page = parseIntParam(p, "page", 1);
+        int size = parseIntParam(p, "size", 20);
         if (page < 1) page = 1;
         if (size < 1) size = 20;
 
         // Parse sort params
-        String sortField     = params.get("sort.field");
-        String sortDirection = params.getOrDefault("sort.direction", "asc");
+        String sortField     = p.get("sort.field");
+        String sortDirection = p.getOrDefault("sort.direction", "asc");
 
         // Build filter map: everything that is not a reserved paging/sort key
-        Set<String> reservedKeys = Set.of("page", "size", "paging.mode", "cursor",
+        Set<String> reservedKeys = Set.of("page", "size",
+                                           "paging.mode", "paging_mode",
+                                           "cursor",
                                            "sort.field", "sort.direction");
         Map<String, String> filter = new LinkedHashMap<>();
-        if (params != null) {
-            params.forEach((k, v) -> {
-                if (!reservedKeys.contains(k)) filter.put(k, v);
-            });
-        }
+        p.forEach((k, v) -> {
+            if (!reservedKeys.contains(k)) filter.put(k, v);
+        });
 
         List<Map<String, Object>> all = store.findAll(entityType);
 
@@ -96,14 +115,17 @@ public class EntityController {
             filtered.sort((a, b) -> compareField(a, b, sortField, "desc".equals(sortDirection)));
         }
 
-        int total = filtered.size();
+        // ── offset paging slice ───────────────────────────────────────────────
+        // offset = (page - 1) * size   (page is 1-based)
+        // slice  = [offset, offset + size)  clamped to total
+        int total   = filtered.size();
         int fromIdx = Math.min((page - 1) * size, total);
         int toIdx   = Math.min(fromIdx + size, total);
-        List<Map<String, Object>> page_items = filtered.subList(fromIdx, toIdx);
+        List<Map<String, Object>> pageItems = filtered.subList(fromIdx, toIdx);
 
         Map<String, Object> resp = new LinkedHashMap<>();
         resp.put("entity_type", entityType);
-        resp.put("items", page_items);
+        resp.put("items", pageItems);
         resp.put("total", total);
         return WireResponse.ok(resp);
     }
