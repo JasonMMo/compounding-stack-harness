@@ -103,8 +103,25 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Escalations**: 없음 (CEO 가 직접 답함)
 - **Cost of my decisions**: LLM ~3 turns Opus 4.7. Infra 0. 향후: maturity threshold 측정 정의가 M1 마무리 게이트 하나 추가.
 
+### Growth-5f (2026-05-29) — colbymchenry/codegraph 설치 (2-step gate + tenant 분리 요구)
+
+- **Role here**: VP (외부 시스템 도입 결정) + Integrator (자산 정착 위치 + tenant 분리 설계 open loop)
+- **Decisions made**:
+  - **(a) Upstream colbymchenry/codegraph 채택 (NOT JasonMMo fork)** — fork 는 0 stars + 변경점 불명, upstream 은 v0.9.7 active maintainer. CEO 직접 지정.
+  - **(b) 2-step gate adoption** — install 즉시 (이번 Growth) + measurement 는 M1 첫 adapter Growth 마무리에. 4-measurement: (1) 질문 답변율 (예: "어느 인격이 wire.entity.update 결정 owner?") (2) 7축 환류 자동화 (catalog/preset 누락 탐지) (3) 고객 가치 (lock-in 회피 — `.codegraph/` rebuildable from source) (4) 유지 비용 (인덱싱 turns·시간). 통과 못하면 `codegraph uninit` 으로 reversible 종료.
+  - **(c) 누적 데이터 정책 — project 자산 + 고객별 분리 가능** — CEO 직접 박음. `.codegraph/` 는 우리 자산 (지식 누적), 단 고객사 self-host 시 그 고객의 `.codegraph/` 는 그 고객 데이터. 즉 tenant scope = per-repo (codegraph 의 기본 동작과 일치). 별도 export/sanitize API 필요 여부는 M2 첫 고객 협의 시 재평가.
+  - **(d) 정착 위치 — axis 등록은 보류** — 7축 (skill/ddl/middle/frontend/backend/creater/customer/expert-agent) 중 어디에도 안 들어감. codegraph 는 "축을 운용하는 메타 도구" 이지 축 자체가 아님. M1 마무리 measurement 후 채택 확정 시 docs/architecture/ 에 별도 문서.
+  - **(e) install 형태** — local (project-scoped `.mcp.json` + `.claude/settings.json`) NOT global. 이유: 다른 repo 와 격리, charter 의 reversibility 원칙 부합.
+- **Cross-agent catches**: 없음 (인프라 결정, 인격 산출물 영향 없음)
+- **Escalations**: 없음 (CEO 가 "CTO 권고안으로 진행" 직접 위임)
+- **Cost of my decisions**:
+  - LLM: install·결정 ~5 turns Opus 4.7. measurement Growth 별도.
+  - Infra: codegraph npm global 1 binary (~44 KB 패키지 + deps 0 + sqlite native), `.codegraph/` DB local 만 (gitignore), MCP stdio 1 server. 외부 호출 0 (local-first).
+  - 향후: M1 첫 adapter Growth 에 측정 0.5 day. 채택 시 tenant 분리 메커니즘 설계 +1 day. 거부 시 `codegraph uninit` ~10 min.
+
 ## §3 — Open Loops (이 인격 책임)
 
+- **codegraph 2-step gate measurement (Growth-5f, M1 첫 adapter Growth 마감 시점)**: 4-measurement 결과 + adopt/reject 결정 + (adopt 시) tenant 분리 메커니즘 설계 + axis 또는 docs/architecture 정착 위치
 - **Cross-agent Growth 의 main 행 포맷 (Growth-5c 박음)**: `### Growth-N (...) — <제목>` 본문 `**인격**: <주도> (+ <보조>)`. 본 Growth-5c/5d/5e 가 첫 적용 — Open loop 해소.
 - **engineer-agent / qa-agent 첫 가동**: Engineer Growth-5d 에서 첫 가동 완료. QA 첫 가동은 M1 adapter compliance test 작성 시점.
 - **첫 분기 synthesis**: 2026-Q3 마지막 주 (Growth-1~ 누적 통합) — 템플릿 실전 검증
