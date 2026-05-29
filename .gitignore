@@ -38,3 +38,6 @@ docs/scaffolds/
 # Cost / metrics tracking (local only)
 metrics/local/
 cost-reports/local/
+
+# CodeGraph index (local-first, tenant-scoped — rebuildable from source)
+.codegraph/
