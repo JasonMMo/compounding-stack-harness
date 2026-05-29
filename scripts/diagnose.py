@@ -275,7 +275,12 @@ def g6_self_host_single_mode() -> GuardResult:
 
 
 _PERSONA_PAT = re.compile(r"\b(CEO|업무담당자|IT-?담당자)\b")
-_TIME_PAT = re.compile(r"\b\d+\s*(분|시간|일|주|min|hour|hr|day|week)s?\b", re.IGNORECASE)
+# Alternation order matters: longer Korean tokens first so e.g. "1주일" matches
+# "주일" rather than greedy-matching "주" and leaving "일" without a boundary.
+_TIME_PAT = re.compile(
+    r"\b\d+\s*(주일|시간|개월|분|일|주|년|min|hour|hr|day|week)s?\b",
+    re.IGNORECASE,
+)
 
 
 def g7_persona_driven_gating() -> GuardResult:
