@@ -26,6 +26,7 @@
 - **목표**: 헌장·아키텍처·비즈니스 로드맵 정렬
 - **deliverable**: 이 문서들 (CLAUDE.md, AGENTS.md, README.md, 4 docs/ 문서, learn-log §0~§6 골격)
 - **revenue trigger**: 없음
+- **페르소나 인수**: CEO 와 IT-담당자 역할을 겸하는 창업 팀이 헌장·아키텍처·비용 모니터링 문서를 읽고 7축 구조와 revenue gate 를 30분 안에 설명할 수 있다.
 - **gating → M1**: 7축 모두 owner 디렉터리 존재 + L1 풀테스트 골격 작동 + 첫 commit log 가 per-file 규칙 준수
 
 ---
@@ -41,6 +42,7 @@
   - **Backend adapter 2개**: springboot-jakarta + fastapi
   - `domain-expert-generic` agent 가 profile 작성 도움 demo
 - **revenue trigger**: 없음 (그러나 sales lead 수집 시작)
+- **페르소나 인수**: IT-담당자 가 ops pack (docker-compose + Vault + SSO) 을 처음 받아 사내 Linux 서버에 배포하고, 14 도메인 중 1개 데모 화면에 SSO 로그인으로 접속하는 전 과정을 2시간 안에 완료한다.
 - **gating → M2**: 14 도메인 풀테스트 4계층 그린 + 첫 demo 영상 + lead 5건
 
 ---
@@ -54,6 +56,7 @@
   - ops pack (docker-compose + Vault + SSO) 그 회사 환경 적용
   - 결제 영수증 발행
 - **revenue trigger**: **첫 self-host license 매출 발생** (예: \$10K)
+- **페르소나 인수**: 업무담당자 가 domain-expert agent 와 인터뷰 세션 1회 (최대 2시간) 를 완료하고, 자기 회사 핵심 도메인 1개의 CRUD 화면 초안을 당일 수령하여 실제 업무 데이터를 입력해 본다.
 - **gating → M3**: 첫 고객 사례 공개 가능 + 그 회사 산업이 무엇인지 데이터로 확정
 
 ---
@@ -68,6 +71,7 @@
   - 산업별 컨벤션 (예: 의료 ICD-10, 금융 회계계정과목) 가드
   - **expert-agent SaaS landing page** (해당 산업 한정)
 - **revenue trigger**: **첫 per-agent SaaS 구독 발생** (예: \$300/월 × 2개사)
+- **페르소나 인수**: 특정 산업의 업무담당자 가 해당 산업 전용 domain-expert agent 와 인터뷰 후, 산업 특화 필드 (예: 의료 ICD-10 코드, 금융 계정과목) 가 포함된 화면 초안을 1주일 안에 수령하고 "기존 업무 방식과 맞다"고 확인한다.
 - **gating → M4**: 2 vertical 동시 매출 발생 + customer 누적 5개사 + L1~L4 풀테스트 자동화
 
 ---
@@ -81,6 +85,7 @@
   - PR 리뷰 자동화 (4계층 풀테스트 + diagnose guards + 산업 컨벤션 가드)
   - 30% revenue share 정책 + Stripe Connect (혹은 동등) 구현
 - **revenue trigger**: **첫 marketplace 외부 contributor PR 머지 + 그 contributor 에게 첫 share 송금**
+- **페르소나 인수**: 외부 contributor (IT-담당자 또는 도메인 전문가) 가 새 industry preset PR 을 제출하고, 4계층 자동 테스트 + 산업 컨벤션 가드를 통과하여 머지 승인을 3일 안에 받는다.
 - **gating → M5**: 외부 contributor 누적 10명 + customer 누적 20개사 + Growth-73 4-조건 점검
 
 ---
@@ -94,6 +99,7 @@
   - SOC2 / ISO 27001 트랙 진입
   - SaaS pricing tier 공개
 - **revenue trigger**: **첫 SaaS 테넌트 결제**
+- **페르소나 인수**: CEO 가 SaaS 플랜 landing page 에서 trial 신청 후, IT-담당자 개입 없이 테넌트 프로비저닝이 완료되고 업무담당자 가 첫 로그인해서 도메인 선택 화면을 보는 전 과정이 1시간 안에 끝난다.
 - **gating**: 종착점 (v3.0 은 별도 결정)
 
 ## Growth Entry Format (learn-log §6 의무)
