@@ -355,6 +355,98 @@ def g8_ascii_slug() -> GuardResult:
     )
 
 
+_LEARNLOG = REPO_ROOT / "learn-log.md"
+_SLIM_DIVIDER = "**Growth-4 부터 1줄 + pointer 포맷**"
+_SLIM_ENTRY_MAX_BODY_LINES = 10
+_SLIM_SECTION_MAX_LINES = 200
+
+
+def g9_main_log_slim() -> GuardResult:
+    """G-9 / learn-log.md §6 slim format — post-divider Growth entries are thin.
+
+    Per Growth-4 charter: main §6 keeps 1-line rollup + pointer per Growth entry;
+    detail lives in `docs/learn-logs/<role>.md`. This guard enforces:
+      (a) every `### Growth-N` heading after the slim divider has at most
+          {max_body} non-blank body lines (heading line itself excluded).
+      (b) the slim section as a whole stays under {max_section} non-blank lines.
+
+    Drift here means main context bloats again — defeats Growth-4's reason.
+    """
+    if not _LEARNLOG.exists():
+        return GuardResult(
+            "G-9", "main learn-log §6 slim", "Growth-4 charter",
+            status="SKIP",
+            notes="learn-log.md not found.",
+        )
+    text = _LEARNLOG.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    divider_idx: int | None = None
+    for i, line in enumerate(lines):
+        if _SLIM_DIVIDER in line:
+            divider_idx = i
+            break
+    if divider_idx is None:
+        return GuardResult(
+            "G-9", "main learn-log §6 slim", "Growth-4 charter",
+            status="SKIP",
+            notes=f"Slim divider marker not found yet: {_SLIM_DIVIDER!r}.",
+        )
+
+    post = lines[divider_idx + 1:]
+    violations: list[str] = []
+
+    # Mark lines inside fenced code blocks so they are excluded from both
+    # entry detection and non-blank counts (spec templates live in fences).
+    in_fence = False
+    fence_mask: list[bool] = []
+    for ln in post:
+        if ln.lstrip().startswith("```"):
+            fence_mask.append(True)  # the fence line itself is excluded
+            in_fence = not in_fence
+            continue
+        fence_mask.append(in_fence)
+
+    def is_active(i: int) -> bool:
+        return not fence_mask[i]
+
+    # (b) aggregate cap (ignore fenced lines)
+    non_blank_total = sum(1 for i, ln in enumerate(post) if is_active(i) and ln.strip())
+    if non_blank_total > _SLIM_SECTION_MAX_LINES:
+        violations.append(
+            f"slim §6 has {non_blank_total} non-blank lines (cap {_SLIM_SECTION_MAX_LINES})"
+        )
+
+    # (a) per-entry cap — walk Growth headings outside code fences
+    entry_starts: list[tuple[int, str]] = []
+    for i, ln in enumerate(post):
+        if not is_active(i):
+            continue
+        stripped = ln.lstrip()
+        if stripped.startswith("### Growth-"):
+            title = stripped[4:].strip()
+            entry_starts.append((i, title))
+
+    for idx, (start, title) in enumerate(entry_starts):
+        end = entry_starts[idx + 1][0] if idx + 1 < len(entry_starts) else len(post)
+        body_non_blank = sum(
+            1 for j in range(start + 1, end) if is_active(j) and post[j].strip()
+        )
+        if body_non_blank > _SLIM_ENTRY_MAX_BODY_LINES:
+            violations.append(
+                f"{title}: {body_non_blank} non-blank body lines (cap {_SLIM_ENTRY_MAX_BODY_LINES})"
+            )
+
+    notes = (
+        f"Scanned {len(entry_starts)} slim entries, {non_blank_total} non-blank §6 lines."
+    )
+    return GuardResult(
+        "G-9", "main learn-log §6 slim", "Growth-4 charter",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=notes,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
@@ -368,6 +460,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-6": g6_self_host_single_mode,
     "G-7": g7_persona_driven_gating,
     "G-8": g8_ascii_slug,
+    "G-9": g9_main_log_slim,
 }
 
 
