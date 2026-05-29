@@ -57,25 +57,207 @@ GuardFn = Callable[[], GuardResult]
 def g1_wire_protocol_single_source() -> GuardResult:
     """G-1 / Lesson 1 — wire-protocol single source of truth.
 
-    Detection: enumerate top-level keys declared in middle/contract/, then grep
-    frontend/adapters and backend/adapters for files that *redeclare* those
-    keys (not merely reference them). At M0 the contract directory is empty.
+    Detection: load codes.yaml code→http_status pairs (single source).
+    Scan backend/adapters and frontend/adapters source files.
+    FLAG when a single line contains BOTH a code key string AND its
+    http_status integer — that is the "code→status re-declaration" drift
+    pattern (e.g. `NOT_FOUND(404)` or `if code == "NOT_FOUND": status = 404`).
+
+    ALLOW: lines that carry a code string alone (reference/forwarding pattern)
+    or an HTTP status alone. The springboot-jakarta adapter calls
+    WireResponse.error(loader, "NOT_FOUND") — code string with no hardcoded
+    status — so it passes cleanly.
+
+    Adapter directories with zero contract references emit a WARN note
+    (potential silent re-declaration), but do NOT raise a FAIL by themselves
+    to avoid false-positives on adapters that are pure pass-through shims.
     """
-    contract_dir = REPO_ROOT / "middle" / "contract"
-    if not contract_dir.exists() or not any(contract_dir.iterdir()):
+    # ── 1. load contract (single source) ──────────────────────────────────────
+    codes_yaml = REPO_ROOT / "middle" / "contract" / "error" / "codes.yaml"
+    if not codes_yaml.exists():
         return GuardResult(
-            "G-1",
-            "wire-protocol single source",
-            "Lesson 1",
+            "G-1", "wire-protocol single source", "Lesson 1",
             status="SPEC",
-            notes="middle/contract/ not yet populated — detection activates in M1.",
+            notes="middle/contract/error/codes.yaml not found — detection activates once contract lands.",
         )
 
-    # M1+: extract keys from yaml/json contracts, grep adapter trees.
+    # Minimal inline YAML parse — only need the flat `codes:` map.
+    # We deliberately avoid importing pyyaml at module level so diagnose.py
+    # has zero mandatory dependencies beyond stdlib.
+    try:
+        import yaml as _yaml  # type: ignore[import]
+        _raw = _yaml.safe_load(codes_yaml.read_text(encoding="utf-8"))
+        _codes_map: dict = _raw.get("codes", {}) if isinstance(_raw, dict) else {}
+    except Exception:
+        # pyyaml unavailable — fall back to a simple regex parse good enough
+        # for the flat codes.yaml structure.
+        _codes_map = {}
+        _code_key_re = re.compile(r"^([A-Z][A-Z0-9_]+):\s*$", re.MULTILINE)
+        _http_re = re.compile(r"^\s+http_status:\s*(\d+)", re.MULTILINE)
+        _text = codes_yaml.read_text(encoding="utf-8")
+        for _m in _code_key_re.finditer(_text):
+            _key = _m.group(1)
+            _after = _text[_m.end():]
+            _hm = _http_re.search(_after.split("\n\n")[0])
+            if _hm:
+                _codes_map[_key] = int(_hm.group(1))
+
+    if not _codes_map:
+        return GuardResult(
+            "G-1", "wire-protocol single source", "Lesson 1",
+            status="SPEC",
+            notes="codes.yaml parsed but 'codes' map is empty — cannot detect violations.",
+        )
+
+    # Build lookup: code_string -> http_status int
+    # Only include entries that actually have an http_status (non-HTTP adapters
+    # that omit it should not produce false-positives).
+    code_to_status: dict[str, int] = {}
+    for code_key, entry in _codes_map.items():
+        if isinstance(entry, dict) and "http_status" in entry:
+            code_to_status[code_key] = int(entry["http_status"])
+
+    if not code_to_status:
+        return GuardResult(
+            "G-1", "wire-protocol single source", "Lesson 1",
+            status="SPEC",
+            notes="No code→http_status pairs found in codes.yaml.",
+        )
+
+    # ── 2. locate adapter directories ─────────────────────────────────────────
+    adapter_roots = [
+        REPO_ROOT / "backend"  / "adapters",
+        REPO_ROOT / "frontend" / "adapters",
+    ]
+    existing_adapter_roots = [r for r in adapter_roots if r.exists()]
+
+    if not existing_adapter_roots:
+        return GuardResult(
+            "G-1", "wire-protocol single source", "Lesson 1",
+            status="SPEC",
+            notes="No adapter directories found yet (backend/adapters, frontend/adapters).",
+        )
+
+    # Build per-adapter directory list (one level down from adapter root)
+    adapter_dirs: list[Path] = []
+    for root in existing_adapter_roots:
+        for child in root.iterdir():
+            if child.is_dir():
+                adapter_dirs.append(child)
+
+    # Excluded directories inside adapter trees (build artefacts)
+    _SKIP_DIR_PARTS = {"build", ".gradle", "node_modules", "__pycache__", "target", ".venv"}
+
+    # Source file extensions to scan
+    _SOURCE_EXTS = {".java", ".kt", ".py", ".ts", ".tsx", ".js", ".go", ".cs"}
+
+    # Files to exclude from scanning (this guard file itself, and codes.yaml)
+    _self_path = Path(__file__).resolve()
+    _codes_path = codes_yaml.resolve()
+
+    # ── 3. scan ───────────────────────────────────────────────────────────────
+    violations: list[str] = []
+    scanned_files = 0
+    adapter_ref_counts: dict[str, int] = {}  # adapter_name -> contract reference count
+
+    # Strings that indicate the adapter IS loading the contract at runtime.
+    _contract_ref_tokens = ("ContractLoader", "wire-v1", "codes.yaml", "contract/error")
+
+    for adapter_dir in adapter_dirs:
+        adapter_name = adapter_dir.name
+        ref_count = 0
+
+        for src_file in adapter_dir.rglob("*"):
+            if not src_file.is_file():
+                continue
+            # Skip build artefact directories
+            if any(part in _SKIP_DIR_PARTS for part in src_file.relative_to(adapter_dir).parts):
+                continue
+            if src_file.suffix not in _SOURCE_EXTS:
+                continue
+            if src_file.resolve() in (_self_path, _codes_path):
+                continue
+
+            scanned_files += 1
+            try:
+                lines = src_file.read_text(encoding="utf-8", errors="ignore").splitlines()
+            except OSError:
+                continue
+
+            # Count contract references (positive-evidence tracking)
+            file_text_joined = " ".join(lines)
+            if any(tok in file_text_joined for tok in _contract_ref_tokens):
+                ref_count += 1
+
+            # Per-line FLAG check: code key AND its http_status on same line.
+            # We want to catch re-declaration patterns like:
+            #   NOT_FOUND(404)          ← enum constant with hardcoded status
+            #   "NOT_FOUND" -> 404      ← Map/switch mapping
+            #   if code == "NOT_FOUND": return 404   ← branch mapping
+            #
+            # We must NOT flag:
+            #   comments / doc strings
+            #   @DisplayName / @Test annotation strings (human-readable description)
+            #   assertion/expectation lines (.value(404), andExpect, assertEquals)
+            #   description fields, message text, or log strings
+            #   import / package lines
+
+            # Tokens that identify a line as test-assertion / doc / comment context:
+            _SAFE_TOKENS = (
+                "@DisplayName", "andExpect", ".value(", "assertEquals",
+                "assertThat", "contains(", "description", "message",
+                "\"returns ", "\"with ", "// ", "# ", " * ", "/*",
+                "import ", "package ", "@Test", "log.", "logger.",
+                "println", "print(", ".info(", ".warn(", ".error(",
+                "notes=", "note:", "README", "description:",
+            )
+
+            for lineno, line in enumerate(lines, start=1):
+                stripped = line.strip()
+
+                # Skip blank lines
+                if not stripped:
+                    continue
+
+                # Skip comment-only lines
+                if (stripped.startswith("//")
+                        or stripped.startswith("#")
+                        or stripped.startswith("*")
+                        or stripped.startswith("/*")):
+                    continue
+
+                # Skip lines that are clearly in a safe (non-mapping) context
+                if any(tok in line for tok in _SAFE_TOKENS):
+                    continue
+
+                for code_key, http_status in code_to_status.items():
+                    status_str = str(http_status)
+                    if code_key in line and status_str in line:
+                        rel = src_file.relative_to(REPO_ROOT)
+                        violations.append(
+                            f"{rel}:{lineno} — '{code_key}' + '{status_str}' "
+                            f"on same line (code→status re-declaration drift)"
+                        )
+
+        adapter_ref_counts[adapter_name] = ref_count
+
+    # ── 4. no-reference WARN note (not a FAIL) ────────────────────────────────
+    no_ref_adapters = [name for name, count in adapter_ref_counts.items() if count == 0]
+    note_parts = [
+        f"Scanned {len(adapter_dirs)} adapter(s), {scanned_files} source file(s). "
+        f"Contract: {len(code_to_status)} code→status pairs from codes.yaml."
+    ]
+    if no_ref_adapters:
+        note_parts.append(
+            f"WARN: adapter(s) with zero contract references "
+            f"(potential silent re-declaration): {', '.join(no_ref_adapters)}."
+        )
+
     return GuardResult(
         "G-1", "wire-protocol single source", "Lesson 1",
-        status="SPEC",
-        notes="Implementation pending: yaml-key extractor + adapter grep.",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=" ".join(note_parts),
     )
 
 
