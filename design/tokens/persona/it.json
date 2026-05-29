@@ -1,0 +1,50 @@
+{
+  "_meta": {
+    "persona": "it",
+    "description": "IT administrator persona overrides. Information density: HIGH. IT users monitor system health, inspect raw data, run bulk operations, read logs. Compact spacing, monospace emphasis, more data per screen.",
+    "merge_order": "raw.json -> semantic.json -> this file. Only keys listed here differ from semantic.json defaults."
+  },
+
+  "space": {
+    "inset-md":   "6px",
+    "inset-lg":   "10px",
+    "inset-xl":   "14px",
+    "gap-md":     "6px",
+    "gap-lg":     "10px",
+    "stack-md":   "10px",
+    "stack-lg":   "16px",
+    "page-gutter": "16px"
+  },
+
+  "font": {
+    "size-md":   "13px",
+    "size-sm":   "11px",
+    "size-xs":   "10px",
+    "line-md":   "18px",
+    "line-sm":   "16px",
+    "family-body": "{type.family.mono}",
+    "weight-body": "400",
+    "code":      "size-sm / weight-body / family-mono"
+  },
+
+  "radius": {
+    "control": "2px",
+    "card":    "2px",
+    "input":   "2px"
+  },
+
+  "color": {
+    "surface-2": "#F0F0F0",
+    "surface-3": "#E8E8E8"
+  },
+
+  "_density": {
+    "table_rows_default": 50,
+    "form_fields_visible": "all_including_system",
+    "nav_style": "sidebar",
+    "sidebar_collapsed_default": false,
+    "show_raw_ids": true,
+    "show_timestamps": true,
+    "note": "IT layout: sidebar always expanded, raw IDs visible, all system fields visible including audit timestamps. Table default 50 rows. Status.health screen is primary landing page, not entity dashboard."
+  }
+}
