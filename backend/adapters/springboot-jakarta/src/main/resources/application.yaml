@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: springboot-jakarta-adapter
+
+# Contract version this adapter serves (must match middle/contract/wire-v1.yaml version).
+adapter:
+  contract-version: "1.0.0"
+
+logging:
+  level:
+    com.compounding.adapter: INFO
