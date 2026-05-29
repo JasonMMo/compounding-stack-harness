@@ -118,7 +118,7 @@
 - 커밋 메시지 끝에 `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`
 - HEREDOC 으로 메시지 작성
 - `--no-verify` / `--no-gpg-sign` 금지
-- master 푸시는 사용자가 수동
+- master 푸시는 CTO 가 자동 (Growth-5b 변경, charter v1.3) — private repo 한정. public 전환 후엔 charter §3 #3 "공개 푸시 사전 확인" 룰이 자동 재발효
 
 ## 10. 컨벤션
 
