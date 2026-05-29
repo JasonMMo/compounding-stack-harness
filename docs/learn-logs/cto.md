@@ -119,6 +119,16 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
   - Infra: codegraph npm global 1 binary (~44 KB 패키지 + deps 0 + sqlite native), `.codegraph/` DB local 만 (gitignore), MCP stdio 1 server. 외부 호출 0 (local-first).
   - 향후: M1 첫 adapter Growth 에 측정 0.5 day. 채택 시 tenant 분리 메커니즘 설계 +1 day. 거부 시 `codegraph uninit` ~10 min.
 
+### Growth-6 (2026-05-29) — 14 generic skill seed + _seed-format.md spec
+
+- **역할**: Architect (포맷 설계) + Integrator (engineer 위임·커밋 체인 검증)
+- **산출물**: `presets/skills/generic/_seed-format.md` + 14 `*.seed.md` (hr/finance/logistics/inventory/sales/crm/procurement/production/quality/project/asset/document/approval/reporting)
+- **Seed 포맷 결정**: YAML frontmatter (domain/label/version/entities/wire_keys) + 5-section MD (Purpose/Core Entities/Domain Operations/Business Rules/Integration Points). Karpathy 원칙: minimal, machine-parseable, wire-aware, compound-friendly.
+- **Engineer 위임**: Sonnet 4.6 subagent 1회 — 14 파일 생성 + 14 커밋 (파일당). 품질 검증: hr.seed.md spot-check → 4 entities, 4 business rules, 3 domain ops, 2 integration points. 포맷 100% 준수.
+- **Guard result**: G-8 53→70 entries (seed 파일 반영). G-9 7→8 slim entries, 64→73/200 lines. 전체 9 가드 PASS.
+- **Cross-agent catch**: engineer.md Growth-6 엔트리 위임 대상.
+- **Open loops resolved**: M1 Priority 1 완료. M2 acme-erp demo prerequisite 충족.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - **codegraph 2-step gate measurement (Growth-5f, M1 첫 adapter Growth 마감 시점)**: 4-measurement 결과 + adopt/reject 결정 + (adopt 시) tenant 분리 메커니즘 설계 + axis 또는 docs/architecture 정착 위치
