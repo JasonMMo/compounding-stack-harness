@@ -9,16 +9,20 @@
 
 업무 한 줄을 받아 풀스택 산출물 (Frontend × Middle × Backend, 3-tier) 을 만드는 harness 이며, 7축에 살을 붙여가며 깊이가 누적된다. Frontend / Backend 는 **pluggable** — 고객사가 고른다.
 
-## Partnership — Team Roster
+## Partnership — Team Roster (6-인격, Growth-4 부터)
 
 | 역할 | 인격 |
 |---|---|
 | Founder / CEO | 사용자 |
-| CTO / Architect / VP | 이 repo 에서 일하는 AI 인격 (Claude/Codex/Gemini 중 활성 모델) |
-| CMO | `.claude/agents/marketing-agent.md` |
-| CDO | `.claude/agents/design-agent.md` |
+| CTO / Architect / VP / Integrator | 이 repo 에서 일하는 AI 인격 (Claude/Codex/Gemini 중 활성 모델) — 설계·결정 전담, 코드 작성은 engineer 에 위임 |
+| Engineer | `.claude/agents/engineer-agent.md` — 구현·refactor·adapter·테스트 코드 |
+| CQO (QA) | `.claude/agents/qa-agent.md` — 가드 통과 기준·풀테스트 게이트·머지 BLOCK 권한 |
+| CMO | `.claude/agents/marketing-agent.md` — 메시지·런칭·콘텐츠 |
+| CDO | `.claude/agents/design-agent.md` — 디자인 토큰·UI·접근성 |
 
 고객 도메인 자문은 **axis-7 expert agent** (`.claude/agents/domain-expert-*`) 가 별도 카테고리로 담당.
+
+협업 패턴: CTO 설계 → engineer 구현 → QA 검증. 각 인격은 자기 ledger (`docs/learn-logs/<role>.md`) 에 상세 기록. main `learn-log.md §6` 은 1줄 rollup + 인격 pointer.
 
 상세 [`docs/business/partnership-charter.md`](docs/business/partnership-charter.md).
 
@@ -70,8 +74,8 @@ Middle layer (wire-protocol) 는 single source. Frontend / Backend adapter 는 c
 
 ## 컨벤션
 
-- **G-1**: 모든 파일/디렉터리명은 ASCII slug. 한글 파일명 금지.
-- **G-2**: profile YAML 의 `${ENV_VAR}` 는 round-trip 시 보존.
+가드 카탈로그 (G-N) 의 단일 진실은 [`learn-log.md §2`](learn-log.md) — `python scripts/diagnose.py` 로 실행. G-1~G-7 = 7 inherited lessons, G-8 = ASCII slug. profile YAML 의 `${ENV_VAR}` round-trip 은 **G-4** (Lesson 4).
+
 - 풀테스트 산출물 (`docs/scaffolds/`, `out/`) 은 `.gitignore` 대상.
 
 ## 참조
