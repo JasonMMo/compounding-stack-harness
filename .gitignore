@@ -11,6 +11,8 @@ target/
 build/
 *.class
 .gradle/
+# Gradle wrapper jar (binary) — regenerate with: gradle wrapper
+gradle/wrapper/gradle-wrapper.jar
 
 # Node
 node_modules/
