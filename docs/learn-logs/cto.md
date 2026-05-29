@@ -129,6 +129,16 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Cross-agent catch**: engineer.md Growth-6 엔트리 위임 대상.
 - **Open loops resolved**: M1 Priority 1 완료. M2 acme-erp demo prerequisite 충족.
 
+### Growth-7 (2026-05-29) — 첫 backend adapter 통합 + G-1 활성 + contract 정합 결정 4건
+
+- **역할**: Architect (adapter 설계 제약·contract 결정) + Integrator (engineer·qa 위임·검증 체인 마무리)
+- **산출물 (CTO 직접)**: `error/codes.yaml` (11 코드) · wire-v1.yaml paging flat-underscore 직렬화 컨벤션 · `middle/contract/README.md` + `presets/skills/INDEX.md` (G-5 manifest) · G-5 glob `**/*.seed.md` 강화
+- **결정 4건**: (1) error envelope = object `{code,message,details}` (2) paging HTTP 직렬화 = nested→flat underscore (`paging.mode`→`paging_mode`; QA 가 dot-notation drift 적발) (3) gradle-wrapper.jar **추적** — engineer 의 ignore 결정 뒤집음 (self-host "dev 환경 없이 빌드" 가치) (4) G-1 검출 정책 = code→http_status 재선언 FLAG, 문자열 참조 ALLOW
+- **위임**: engineer (adapter 19커밋 + 버그수정 + G-1 구현) / qa (compliance 첫 실전 가동)
+- **Cross-agent catch**: G-5 가 middle 자산 2개 도달로 **FAIL** 발화 → manifest 로 해소. 동시에 skill axis glob 이 `generic/` 하위 14 seed 를 못 보던 **갭** 발견 → 강화 (가드 약화 아닌 강화, feedback: guards-must-work). QA **BLOCK 2건**이 paging 진짜 버그 적발 → engineer 환류 → 23/23.
+- **Guard 상태**: 9 가드 0 FAIL. G-1 SPEC→PASS, G-4·G-5 카탈로그 동기화. §2/§4 갱신.
+- **Open loops resolved**: M1 Priority 2 절반 (backend). G-1 활성화 open loop 해소.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - **codegraph 2-step gate measurement (Growth-5f, M1 첫 adapter Growth 마감 시점)**: 4-measurement 결과 + adopt/reject 결정 + (adopt 시) tenant 분리 메커니즘 설계 + axis 또는 docs/architecture 정착 위치
