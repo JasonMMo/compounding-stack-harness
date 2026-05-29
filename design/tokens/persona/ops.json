@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "persona": "ops",
+    "description": "Ops (operations / business worker) persona overrides. Information density: MEDIUM. Ops users fill forms, process records, manage entity lists. Standard spacing — comfortable for 4-6 hour continuous sessions. No overrides needed for most tokens: this persona IS the baseline semantic layer.",
+    "merge_order": "raw.json -> semantic.json -> this file. Minimal overrides — ops is the design baseline."
+  },
+
+  "_density": {
+    "table_rows_default": 20,
+    "form_fields_visible": "all",
+    "nav_style": "sidebar",
+    "note": "Ops layout uses collapsible left sidebar. Full form fields always visible. Table default 20 rows per page. Focus on task completion flow: list -> detail -> edit -> save."
+  }
+}
