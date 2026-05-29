@@ -44,6 +44,7 @@
 | **G-6** | 다테넌트/SaaS 힌트가 M5 게이트 전에 코드 진입 | Lesson 6 | `scripts/diagnose.py::g6_self_host_single_mode` (PASS, `.m5-saas-gate-open` 로 해제) |
 | **G-7** | 매출 로드맵 milestone 에 페르소나·시간 표현 누락 | Lesson 7 | `scripts/diagnose.py::g7_persona_driven_gating` (PASS 2026-05-29 Growth-3: positioning.md → roadmap 페르소나 인수 라인으로 해소) |
 | **G-8** | 파일/디렉터리명에 비-ASCII 또는 unsafe 문자 | CLAUDE.md §10 | `scripts/diagnose.py::g8_ascii_slug` (PASS) |
+| **G-9** | main §6 슬림 엔트리가 본문 10행 초과 또는 슬림 §6 200행 초과 | Growth-4 charter | `scripts/diagnose.py::g9_main_log_slim` (PASS, Growth-5a 박힘) |
 
 상태 코드: **PASS** 통과 / **FAIL** 위반 검출 / **SKIP** 검사 대상 부재 (이 시점) / **SPEC** 검출 로직 다음 milestone 에 박힘.
 
@@ -56,6 +57,7 @@
 | 2026-05-29 (M0 founding) | 0 | 이전 repo 18개와 무관 |
 | 2026-05-29 (Growth-2 G-1~G-8 박기) | 8 | G-1~G-3 SPEC / G-4 SKIP / G-5 SKIP / G-6 PASS / G-7 **FAIL** (M0~M5 페르소나 누락 6건) / G-8 PASS |
 | 2026-05-29 (Growth-3 G-7 해소) | 8 | G-1~G-3 SPEC / G-4~G-6 SKIP / **G-7 PASS** (M0~M5 6 milestone 페르소나+시간 박힘) / G-8 PASS |
+| 2026-05-29 (Growth-5a G-9 박음) | 9 | + **G-9 PASS** (Growth-4 슬림 엔트리 9 non-blank lines, cap 10) — 인격 분리 후 main 비대 가드 |
 
 ## §5 — Environment Notes
 
@@ -145,7 +147,21 @@
 
 ---
 
-**Growth-4 부터 1줄 + pointer 포맷**:
+**Growth-4 부터 1줄 + pointer 포맷** (G-9 가드: 본문 비-blank ≤10행/엔트리, 슬림 §6 전체 ≤200행):
+
+```
+### Growth-N (YYYY-MM-DD) — <한 줄 제목>
+- **인격**: <주도 인격> (+ 합의 인격)
+- **Axis touched**: <축 / 헌장 / 인격 변경 중>
+- **Milestone**: <M0~M5 중>
+- **Revenue/cost**: <매출 영향> / <세션 비용 추정 — 모델·turns>
+- **Why (1줄)**: <왜 이 Growth 가 발생했는가>
+- **상세**: [<role>.md#Growth-N](docs/learn-logs/<role>.md)  ← 인격 ledger pointer (필수)
+- **결정**: <CEO 직접 / CTO Auto / 양자 합의> + 1줄 근거
+- **Open loops**: <남은 일·다음 Growth 후보>
+```
+
+CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+pointer entry 를 main §6 에 직접 작성 (integrator 마무리).
 
 ### Growth-4 (2026-05-29) — 4-인격 → 6-인격 확장 + learn-log per-agent 분리
 
@@ -157,3 +173,14 @@
 - **상세**: [cto.md#Growth-4](docs/learn-logs/cto.md)
 - **결정 (CEO 직접)**: 인격 분리 트리거. CTO 가 수용·설계로 미러
 - **Open loops**: trade-off 보강 토론 (G-9 후보 — main learn-log 행 길이/수 가드), engineer/QA 첫 spawn 은 M1 진입 시
+
+### Growth-5a (2026-05-29) — Growth-4 trade-off 보강 (G-9 + 슬림 spec + Integrator 의무 + 분기 synthesis)
+
+- **인격**: CTO (단독, CEO 추천안 위임)
+- **Axis touched**: creater (G-9 가드), 헌장 (charter §3 #5), learn-logs (synthesis-template)
+- **Milestone**: M0 완전 마무리 (Growth-4 trade-off 4 항목 잠금)
+- **Revenue/cost**: infra only / 본 세션 turns ~30, Opus 4.7 단독
+- **Why (1줄)**: 인격 분리 trade-off (narrative 손실 + discovery 비용) 를 main §6 슬림 cap + 분기 synthesis + CTO Integrator 의무로 묶어 구조적으로 잠금
+- **상세**: [cto.md#Growth-5a](docs/learn-logs/cto.md), [qa.md#Growth-5a](docs/learn-logs/qa.md)
+- **결정 (CTO Auto, CEO 위임 "추천안으로 가자")**: (a) 슬림 포맷 spec + (c) 분기 synthesis 템플릿 + (d) G-9 가드 + (f) charter §3 Integrator step
+- **Open loops**: CEO 회수 질문 4건 (Growth-5b), M1 entry (G-1/G-2 활성화), CDO tokens.md
