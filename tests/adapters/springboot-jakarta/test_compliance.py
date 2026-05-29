@@ -243,8 +243,13 @@ class TestPaging:
     _TOTAL_ENTITIES = 7   # > 2 * PAGE_SIZE
 
     @pytest.fixture(autouse=True)
-    def _seed_entities(self, adapter_base_url):
-        self._et = _et("paging")
+    def _seed_entities(self, adapter_base_url, request):
+        # Use a per-test unique entity_type so repeated fixture invocations
+        # across TestPaging methods do NOT accumulate into the same store bucket.
+        # _RUN_TAG keeps runs isolated; request.node.name keeps tests isolated
+        # within the same run.
+        test_slug = request.node.name.replace("[", "-").replace("]", "")[:20]
+        self._et = f"ctest-{_RUN_TAG}-pg-{test_slug}"
         self._ids = []
         for i in range(self._TOTAL_ENTITIES):
             _, body = _request(
@@ -306,10 +311,17 @@ class TestPaging:
         )
 
     def test_cursor_mode_returns_bad_request(self):
-        # Per README Known Gaps: cursor paging not implemented; must return BAD_REQUEST
+        # Per README Known Gaps: cursor paging not implemented; must return BAD_REQUEST.
+        #
+        # Query key used: paging_mode=cursor  (dot-free form, adapter preferred key).
+        # The engineer fix (BUG-2) accepts both paging_mode= and paging.mode= .
+        # wire-v1.yaml defines paging as a nested object (paging.mode), but HTTP
+        # query serialisation of nested keys is not yet standardised in this project.
+        # OPEN ISSUE (CTO decision): decide canonical HTTP serialisation of paging.*
+        # query params (paging_mode vs paging.mode vs JSON body).
         status, body = _request(
             self._base, "GET",
-            f"/api/entities/{self._et}?mode=cursor&cursor=some-opaque-value",
+            f"/api/entities/{self._et}?paging_mode=cursor&cursor=some-opaque-value",
         )
         expected_code = "BAD_REQUEST"
         _assert_error_envelope(
