@@ -1,0 +1,78 @@
+# profiles/acme-erp.yaml — Sample customer profile (schema v1)
+# Fictional mid-size ERP customer. Used as reference / smoke-test target.
+# ${ENV_VAR} placeholders are G-4 round-trip preserved — do NOT load/dump
+# this file through a plain YAML parser dump pipeline.
+# Always route through the round-trip safe helper (G-4 requirement).
+
+version: 1
+
+customer:
+  slug: acme-erp
+  display: "ACME ERP Corporation"
+  status: active
+  contact: ops@acme-erp.example
+  industry: generic
+
+# ── Pluggable Frontend/Backend ──────────────────────────────────────────────
+stack:
+  frontend: vanilla-htmx
+  backend: springboot
+  backend_options:
+    spring_lane: jakarta
+    persistence: mybatis
+    runner: boot
+
+# ── DDL ──────────────────────────────────────────────────────────────────────
+ddl:
+  dialect: postgres
+  schema: acme_erp
+  idempotent_strategy: on_conflict
+
+# ── Domains ──────────────────────────────────────────────────────────────────
+domains:
+  - slug: customer
+    display: "Customer"
+    entities: [customer, contact, address]
+    seen_at: 2026-06-01
+  - slug: order
+    display: "Order"
+    entities: [order, order_line, fulfillment]
+    seen_at: 2026-06-01
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+auth:
+  method: session-token
+  sso_provider: keycloak
+  sso_realm: acme-erp
+  sso_client_id: acme-erp-portal
+  sso_client_secret: ${ACME_SSO_CLIENT_SECRET}
+
+# ── Datasource (secrets use ${ENV_VAR} — G-4 round-trip safe) ────────────────
+datasource:
+  username: ${ACME_DB_USER}
+  password: ${ACME_DB_PASSWORD}
+  url_template: "jdbc:postgresql://{host}:{port}/{db}"
+  host: db.acme-erp.internal
+  port: 5432
+  db: acme_erp_prod
+
+# ── Overlay ──────────────────────────────────────────────────────────────────
+overlay:
+  target_pkg_prefix: com.acme.erp
+  shell_app_id: acme-erp-portal
+  maven:
+    group_id: com.acme
+    artifact_id_template: "{slug}-shell"
+    version: 1.0.0-SNAPSHOT
+  vault_agent: false
+  sso_keycloak: false
+
+# ── Defaults ─────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: America/New_York
+
+# ── Cost tracking ─────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 100
+  prepaid_credits_usd: 0
