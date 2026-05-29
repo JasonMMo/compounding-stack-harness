@@ -137,7 +137,61 @@ class EntitySmokeTest {
             .andExpect(jsonPath("$.error.message").isString());
     }
 
-    // ── 5. Health check ───────────────────────────────────────────────────────
+    // ── 5. Paging: last page returns remainder (BUG-1 regression) ────────────
+
+    @Test
+    @DisplayName("entity.list page=3 size=3 with 7 items returns 1-item remainder")
+    void lastPageReturnsRemainder() throws Exception {
+        // Seed 7 items
+        for (int i = 1; i <= 7; i++) {
+            mvc.perform(post("/api/entities/item")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"data\":{\"seq\":" + i + "}}"))
+                .andExpect(status().isCreated());
+        }
+
+        // page=3, size=3 → offset=6, items[6:7] = 1 record
+        mvc.perform(get("/api/entities/item")
+                .param("page", "3")
+                .param("size", "3"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(7))
+            .andExpect(jsonPath("$.items").isArray())
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.error").doesNotExist());
+    }
+
+    // ── 6. Paging: list with no query params (null params guard) ─────────────
+
+    @Test
+    @DisplayName("entity.list with no query params does not throw NPE — returns page 1 defaults")
+    void listNoParams() throws Exception {
+        mvc.perform(post("/api/entities/widget")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"data\":{\"name\":\"A\"}}"))
+            .andExpect(status().isCreated());
+
+        mvc.perform(get("/api/entities/widget"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(1))
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.error").doesNotExist());
+    }
+
+    // ── 7. Cursor mode returns BAD_REQUEST (BUG-2 regression) ─────────────────
+
+    @Test
+    @DisplayName("entity.list paging_mode=cursor returns 400 BAD_REQUEST error envelope")
+    void cursorModeReturnsBadRequest() throws Exception {
+        mvc.perform(get("/api/entities/anything")
+                .param("paging_mode", "cursor"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").exists())
+            .andExpect(jsonPath("$.error.code").value("BAD_REQUEST"))
+            .andExpect(jsonPath("$.error.message").isString());
+    }
+
+    // ── 8. Health check ───────────────────────────────────────────────────────
 
     @Test
     @DisplayName("status.health returns ok with contract version")
