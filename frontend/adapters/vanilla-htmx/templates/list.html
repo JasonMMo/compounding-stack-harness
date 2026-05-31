@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}{{ entity_type }} 목록{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{{ entity_type | title }}</h1>
+  <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}" class="btn btn-primary btn-md">
+    + 새로 만들기
+  </a>
+</div>
+
+{# Search / filter toolbar #}
+<form method="get" action="{{ url_for('entity_list', entity_type=entity_type) }}" class="toolbar">
+  <label for="search-input" class="sr-only">검색</label>
+  <input
+    id="search-input"
+    name="search"
+    type="search"
+    class="form-input toolbar-search"
+    placeholder="검색..."
+    value="{{ search }}"
+  >
+  {# Preserve paging_mode and paging_size on search #}
+  <input type="hidden" name="paging_mode" value="{{ paging_mode }}">
+  <input type="hidden" name="paging_size" value="{{ paging_size }}">
+  <button type="submit" class="btn btn-secondary btn-sm">검색</button>
+  {% if search %}
+  <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-ghost btn-sm">초기화</a>
+  {% endif %}
+</form>
+
+{# Paging mode switcher #}
+<div class="paging-mode-switcher">
+  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset', paging_size=paging_size) }}"
+     class="btn btn-sm {% if paging_mode == 'offset' %}btn-primary{% else %}btn-secondary{% endif %}">
+    페이지 이동
+  </a>
+  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='cursor', paging_size=paging_size) }}"
+     class="btn btn-sm {% if paging_mode == 'cursor' %}btn-primary{% else %}btn-secondary{% endif %}">
+    커서 로드
+  </a>
+</div>
+
+{# Table #}
+{% if items %}
+<div class="table-wrapper" role="region" aria-label="{{ entity_type }} 목록">
+  <table class="data-table" aria-label="{{ entity_type }} 목록">
+    <caption class="sr-only">{{ entity_type }} 전체 목록 (총 {{ total }}건)</caption>
+    <thead>
+      <tr>
+        {% for col in columns %}
+        <th scope="col"
+            class="th {% if sort_field == col %}th--sorted{% endif %}"
+            aria-sort="{% if sort_field == col %}{{ 'descending' if sort_direction == 'desc' else 'ascending' }}{% else %}none{% endif %}">
+          <a href="{{ url_for('entity_list', entity_type=entity_type,
+                              paging_mode=paging_mode, paging_page=1, paging_size=paging_size,
+                              sort_field=col,
+                              sort_direction='desc' if (sort_field == col and sort_direction == 'asc') else 'asc',
+                              search=search) }}"
+             class="th-sort-link">
+            {{ col }}
+            {% if sort_field == col %}
+              {% if sort_direction == 'asc' %}↑{% else %}↓{% endif %}
+            {% else %}↕{% endif %}
+          </a>
+        </th>
+        {% endfor %}
+        <th scope="col" class="th th--actions">작업</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr class="tr {% if loop.index % 2 == 0 %}tr--alt{% endif %}">
+        {% for col in columns %}
+        <td class="td" data-label="{{ col }}">
+          {% set val = item[col] %}
+          {% if val is none or val == '' %}
+            <span class="text-empty">—</span>
+          {% else %}
+            {{ val }}
+          {% endif %}
+        </td>
+        {% endfor %}
+        <td class="td td--actions">
+          <a href="{{ url_for('entity_detail', entity_type=entity_type, entity_id=item.get('id', '')) }}"
+             class="btn btn-ghost btn-sm">편집</a>
+          <a href="{{ url_for('entity_delete_confirm', entity_type=entity_type, entity_id=item.get('id', '')) }}"
+             class="btn btn-ghost btn-sm btn-danger-ghost">삭제</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Pagination bar #}
+{% if paging_mode == 'offset' %}
+<nav class="pagination" aria-label="페이지 탐색">
+  <span class="pagination-count">{{ total }}건 중 {{ (paging_page - 1) * paging_size + 1 }}–{{ [paging_page * paging_size, total] | min }}건 표시</span>
+
+  {% if paging_page > 1 %}
+  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
+                      paging_page=paging_page - 1, paging_size=paging_size,
+                      sort_field=sort_field, sort_direction=sort_direction, search=search) }}"
+     class="btn btn-secondary btn-sm" aria-label="이전 페이지">&lt; 이전</a>
+  {% else %}
+  <button class="btn btn-secondary btn-sm" disabled>&lt; 이전</button>
+  {% endif %}
+
+  {# Page number buttons — show up to 7, first/last + ellipsis for larger sets #}
+  {% set page_range = range(1, total_pages + 1) %}
+  {% for p in page_range %}
+    {% if total_pages <= 7 or p == 1 or p == total_pages or (p >= paging_page - 2 and p <= paging_page + 2) %}
+      {% if loop.changed(p != 1 and p != total_pages and (p < paging_page - 2 or p > paging_page + 2)) %}
+        <span class="pagination-ellipsis">…</span>
+      {% endif %}
+      <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
+                          paging_page=p, paging_size=paging_size,
+                          sort_field=sort_field, sort_direction=sort_direction, search=search) }}"
+         class="btn btn-sm {% if p == paging_page %}btn-primary{% else %}btn-secondary{% endif %}"
+         {% if p == paging_page %}aria-current="page"{% endif %}
+         aria-label="페이지 {{ p }}">{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if paging_page < total_pages %}
+  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
+                      paging_page=paging_page + 1, paging_size=paging_size,
+                      sort_field=sort_field, sort_direction=sort_direction, search=search) }}"
+     class="btn btn-secondary btn-sm" aria-label="다음 페이지">다음 &gt;</a>
+  {% else %}
+  <button class="btn btn-secondary btn-sm" disabled>다음 &gt;</button>
+  {% endif %}
+</nav>
+
+{% elif paging_mode == 'cursor' %}
+{# F-2: cursor mode — Load more button #}
+<div class="cursor-pagination">
+  {% if next_cursor %}
+  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='cursor',
+                      paging_cursor=next_cursor, paging_size=paging_size, search=search) }}"
+     class="btn btn-secondary btn-md">
+    {{ paging_size }}건 더 불러오기
+  </a>
+  {% else %}
+  <p class="text-empty">모든 데이터를 불러왔습니다.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+{# Empty state #}
+<div class="empty-state" role="status">
+  <p class="empty-state__message">등록된 {{ entity_type }} 데이터가 없습니다.</p>
+  <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}" class="btn btn-primary btn-md">
+    + 첫 번째 레코드 만들기
+  </a>
+</div>
+{% endif %}
+{% endblock %}
