@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}오류 — {{ code }}{% endblock %}
+
+{% block content %}
+<div class="card card--centered">
+  <h1 class="page-title">오류 발생</h1>
+
+  {#
+    F-3: branch on error.code (never on message text).
+    message_ko comes from codes.yaml via contract_loader.
+  #}
+  <div role="alert" aria-live="assertive" class="error-banner error-banner--page">
+    <p class="error-message">{{ message_ko }}</p>
+    <p class="error-code text-caption">코드: {{ code }}</p>
+  </div>
+
+  {% if details %}
+  <details class="error-details-block">
+    <summary>상세 정보</summary>
+    <pre class="code-block">{{ details | tojson(indent=2) }}</pre>
+  </details>
+  {% endif %}
+
+  {% if retriable %}
+  <p class="retry-hint">잠시 후 다시 시도하세요.</p>
+  {% endif %}
+
+  <div class="form-actions form-actions--center">
+    {% if entity_type %}
+    <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-secondary btn-md">목록으로</a>
+    {% endif %}
+    <a href="{{ url_for('index') }}" class="btn btn-primary btn-md">홈으로</a>
+  </div>
+</div>
+{% endblock %}
