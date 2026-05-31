@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ entity_type }} 편집 — {{ entity_id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{{ entity_type | title }} 편집</h1>
+  <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-ghost btn-sm">← 목록으로</a>
+</div>
+
+{% if error %}
+<div role="alert" aria-live="assertive" class="error-banner" id="form-error">
+  {{ error }}
+  {% if error_details and error_details.fields %}
+  <ul class="error-details">
+    {% for field, msg in error_details.fields.items() %}
+    <li><strong>{{ field }}</strong>: {{ msg }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+  <form method="post"
+        action="{{ url_for('entity_update', entity_type=entity_type, entity_id=entity_id) }}"
+        novalidate>
+
+    {% for key, value in data.items() %}
+    {% set is_system = key in ('id', 'created_at', 'updated_at', 'created_by') %}
+    <div class="form-field {% if is_system %}form-field--system{% endif %}"
+         {% if is_system and persona | default('ops') != 'it' %}data-system-field="true"{% endif %}>
+      <label for="field-{{ key }}" class="form-label">{{ key }}</label>
+      {% if is_system %}
+      {# System fields: always readonly for ops/ceo, editable only for IT #}
+      <input
+        id="field-{{ key }}"
+        name="{{ key }}"
+        type="text"
+        class="form-input form-input--readonly"
+        value="{{ value if value is not none else '' }}"
+        readonly
+        aria-readonly="true"
+      >
+      {% else %}
+      <input
+        id="field-{{ key }}"
+        name="{{ key }}"
+        type="text"
+        class="form-input"
+        value="{{ value if value is not none else '' }}"
+      >
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="form-actions">
+      <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-secondary btn-md">취소</a>
+      <button type="submit" class="btn btn-primary btn-md">저장</button>
+    </div>
+  </form>
+
+  <div class="detail-footer">
+    <a href="{{ url_for('entity_delete_confirm', entity_type=entity_type, entity_id=entity_id) }}"
+       class="btn btn-danger btn-sm">삭제</a>
+  </div>
+</div>
+{% endblock %}
