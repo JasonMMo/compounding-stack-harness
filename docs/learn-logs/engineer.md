@@ -49,11 +49,58 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **Catch (CTO escalation)**: paging HTTP 직렬화 키 — Spring MVC 가 `paging.mode` dot-notation 을 param Map 에 누락 → CTO 가 flat-underscore (`paging_mode`) 표준 결정.
 - **Cost**: ~3 round Sonnet / ~30 commits
 
+### Growth-8 (2026-05-29) — 첫 frontend adapter: vanilla-htmx
+
+- Files touched:
+  - `frontend/adapters/vanilla-htmx/contract_loader.py` (신규 — ContractLoader.java 동형 Python 구현)
+  - `frontend/adapters/vanilla-htmx/token_css_generator.py` (신규 — design/tokens/*.json → CSS custom props 생성기)
+  - `frontend/adapters/vanilla-htmx/build_tokens.py` (신규 — L3 build step, tokens.css 출력)
+  - `frontend/adapters/vanilla-htmx/server.py` (신규 — Flask thin server, 6 화면, reverse proxy, F-1~F-4)
+  - `frontend/adapters/vanilla-htmx/templates/base.html` (신규 — persona switcher 포함 base layout)
+  - `frontend/adapters/vanilla-htmx/templates/login.html` (신규)
+  - `frontend/adapters/vanilla-htmx/templates/list.html` (신규 — offset/cursor 페이징 both modes)
+  - `frontend/adapters/vanilla-htmx/templates/detail.html` (신규 — detail+edit form)
+  - `frontend/adapters/vanilla-htmx/templates/create.html` (신규)
+  - `frontend/adapters/vanilla-htmx/templates/delete_confirm.html` (신규 — 2단계 확인)
+  - `frontend/adapters/vanilla-htmx/templates/delete_success.html` (신규 — F-4 idempotent success)
+  - `frontend/adapters/vanilla-htmx/templates/error.html` (신규 — F-3 error.code 분기)
+  - `frontend/adapters/vanilla-htmx/templates/health.html` (신규)
+  - `frontend/adapters/vanilla-htmx/static/css/app.css` (신규 — semantic token var() 전용, hex 0개)
+  - `frontend/adapters/vanilla-htmx/static/css/tokens.css` (생성물 — build_tokens.py 산출, 245 lines, 227 props)
+  - `frontend/adapters/vanilla-htmx/tests/test_contract_loader.py` (신규 — L1 38개 중 일부)
+  - `frontend/adapters/vanilla-htmx/tests/test_token_css_generator.py` (신규 — L1 38개 중 일부)
+  - `frontend/adapters/vanilla-htmx/requirements.txt` (신규)
+  - `frontend/adapters/vanilla-htmx/README.md` (신규 — backend adapter README 구조 mirror)
+  - `docs/learn-logs/engineer.md` (this ledger)
+
+- Implementation choices:
+  - **Stack: Python + Flask** — stdlib http.server는 Jinja2 없어 템플릿 직접 구현 필요. Flask는 pip 1개, Jinja2 번들 포함, pytest repo와 언어 일관성. Heavy deps (Django, FastAPI) 없음. "single language for thin server" 충족.
+  - **contract_loader.py**: ContractLoader.java 동형 — 생성자에서 YAML 로드, `get_loader()` 싱글턴. `message_ko(code)`, `is_retriable(code)`, `http_status_for(code)`, `wire_keys()` helpers. G-1: 에러 코드 문자열 하드코딩 0.
+  - **F-1 flat-underscore**: `entity_list` route에서 `params` dict를 `paging_mode`, `paging_page`, `paging_size`, `paging_cursor`, `sort_field`, `sort_direction` 키로 직접 구성. `_proxy_request`는 pass-through. dot-notation 없음.
+  - **F-2 paging**: offset 기본, cursor 모드 UI toggle. `next_cursor` 응답 → 다음 요청 `paging_cursor` 파라미터.
+  - **F-3 error envelope**: `_render_error()` — `payload["error"]["code"]`로 분기, `loader.message_ko(code)` 사용. message text 분기 0. retriable 코드에 retry hint 렌더.
+  - **F-4 idempotent delete**: `_proxy_request()` 에서 `method == "DELETE" and status == 404` → `{"success": True}` 200 합성. api_proxy pass-through도 동일 처리.
+  - **CSS generator**: `_flatten_raw()` / `_flatten_semantic()` / `_flatten_persona()` 3개 walker. 참조 해소: `_resolve_ref()` — `{color.accent.600}` → raw dict traverse → "#2563EB". font shorthand 5종 skip (`_FONT_SHORTHAND_KEYS`). `_meta`/`_density`/`note`/`_`-prefix key strip. persona 파일의 `_border-input-note` key → strip 처리 (`key.startswith("_")`). 생성 결과: 245 lines, 227 CSS custom properties.
+  - **app.css**: semantic var() 전용 — raw hex 0. G-1 analog (CDO 원칙 #1 준수). test_app_css_contains_no_raw_hex 으로 자동 검증.
+  - **두 단계 delete 확인**: button.md a11y 요건 (KWCAG 3.3.4) — GET /delete → 확인 폼 → POST /delete → success.
+
+- Tests added:
+  - **L1** 38 tests PASS — `test_contract_loader.py` (startup, error code helpers, wire keys, G-1 spot-check), `test_token_css_generator.py` (raw layer, semantic resolution, persona overrides, strip rules, ref resolver unit, app.css hex check)
+  - **L3** PASS — `python build_tokens.py` → tokens.css 생성 exit 0
+
+- Catches surfaced (CTO 에스컬레이션 없음):
+  - ops.json에 CSS override 키가 없음 (ops IS semantic baseline per persona meta). persona block 생성 시 빈 pairs → block 생략. 정상 동작.
+  - `font.size-4xl` raw key 없음 → success icon에 fallback value `30px` 사용. semantic에 4xl 없으므로 app.css에서 var(--font-size-4xl, 30px) 방어적 처리.
+  - htmx inline partial update는 M1 범위 외 (full page reload 방식). README Known Gaps 기록.
+  - CSRF protection 미구현 — M1 dev-mode 한정. README Known Gaps 기록. Production 전 추가 필요 — CTO/QA 인지.
+
+- Cost: ~30 turns / ~$2 추정
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~M1 진입 시 첫 spawn — `middle/contract/` 첫 wire 키 schema 파일 작성~~ ✅ Growth-5d 완료
 - ~~`scripts/diagnose.py` G-1 SPEC → PASS 전환~~ ✅ Growth-7 완료 (code→status 재선언 검출)
 - adapter `paging.mode` fallback 제거 — flat-underscore 단일 표준 정착 시 (Growth-8 후보)
-- frontend vanilla-htmx adapter 구현 (Growth-8) + CDO tokens.md → tokens JSON 생성
+- ~~frontend vanilla-htmx adapter 구현 (Growth-8) + CDO tokens.md → tokens JSON 생성~~ ✅ Growth-8 완료
 - `scripts/diagnose.py` G-2 SPEC → 활성 전환 시 함수 본문 보강 (profile path extractor)
 - CTO escalation 4건 응답 대기 (Growth-5d Decision Log 참조)
