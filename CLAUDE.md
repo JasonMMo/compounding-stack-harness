@@ -115,7 +115,7 @@
 ## 9. Git Commit Rules (이전 repo 계승)
 
 - **파일당 별도 커밋** — `git add -A` / `git add .` 금지
-- 커밋 메시지 끝에 `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`
+- 커밋 메시지 끝에 `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>` (Growth-8 부터 4.7→4.8 — trailer 는 실제 co-author 모델 반영. Growth-7 이전 history 는 4.7 유지, mixed 이력은 모델 전환의 정직한 기록)
 - HEREDOC 으로 메시지 작성
 - `--no-verify` / `--no-gpg-sign` 금지
 - master 푸시는 CTO 가 자동 (Growth-5b 변경, charter v1.3) — private repo 한정. public 전환 후엔 charter §3 #3 "공개 푸시 사전 확인" 룰이 자동 재발효
