@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko" data-persona="{{ persona | default('ops') }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Compounding Stack{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <!-- htmx: loaded from CDN for zero-build simplicity; pin to a specific version for production -->
+  <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2uH1/8X4vFg8FVGerPTuRNeIPQMNqNZI5cN" crossorigin="anonymous"></script>
+</head>
+<body>
+  {% block nav %}
+  <nav class="top-nav" aria-label="주 탐색">
+    <div class="nav-brand">
+      <a href="{{ url_for('index') }}" class="nav-logo">Compounding Stack</a>
+    </div>
+    <div class="nav-actions">
+      {% if session.get('user_id') %}
+      <span class="nav-user">{{ session.get('user_id') }}</span>
+      <form method="post" action="{{ url_for('logout') }}" style="display:inline">
+        <button type="submit" class="btn btn-ghost btn-sm">로그아웃</button>
+      </form>
+      {% endif %}
+      <div class="persona-switcher">
+        <label for="persona-select" class="sr-only">페르소나</label>
+        <select id="persona-select" class="persona-select" onchange="document.documentElement.dataset.persona = this.value">
+          <option value="ops" {% if (persona | default('ops')) == 'ops' %}selected{% endif %}>Ops</option>
+          <option value="ceo" {% if (persona | default('ops')) == 'ceo' %}selected{% endif %}>CEO</option>
+          <option value="it"  {% if (persona | default('ops')) == 'it'  %}selected{% endif %}>IT</option>
+        </select>
+      </div>
+    </div>
+  </nav>
+  {% endblock %}
+
+  <main class="main-content" id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="app-footer">
+    <span class="footer-version">wire contract {{ wire_version | default('unknown') }}</span>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
