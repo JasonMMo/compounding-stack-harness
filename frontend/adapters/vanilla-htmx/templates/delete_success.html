@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ entity_type }} 삭제 완료{% endblock %}
+
+{% block content %}
+<div class="card card--centered">
+  <div class="success-icon" aria-hidden="true">✓</div>
+  <h1 class="page-title">
+    {% if already_deleted %}
+    이미 삭제된 레코드입니다
+    {% else %}
+    삭제 완료
+    {% endif %}
+  </h1>
+  {#
+    F-4: both first-call and idempotent second-call render as success.
+    "already_deleted=True" means the GET /confirm step found NOT_FOUND —
+    the UI does NOT display this as an error.
+  #}
+  <p class="text-secondary">
+    {{ entity_type }} (ID: {{ entity_id }}) 가 성공적으로 삭제되었습니다.
+  </p>
+  <div class="form-actions form-actions--center">
+    <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-primary btn-md">목록으로</a>
+  </div>
+</div>
+{% endblock %}
