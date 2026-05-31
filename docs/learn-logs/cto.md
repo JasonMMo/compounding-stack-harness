@@ -139,6 +139,16 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Guard 상태**: 9 가드 0 FAIL. G-1 SPEC→PASS, G-4·G-5 카탈로그 동기화. §2/§4 갱신.
 - **Open loops resolved**: M1 Priority 2 절반 (backend). G-1 활성화 open loop 해소.
 
+### Growth-8 (2026-06-01) — 첫 frontend adapter 통합 + frontend 계약 박기 + CDO 첫 가동 통합
+
+- **역할**: Architect (frontend-adapter 계약 설계) + Integrator (CDO·engineer·qa 3-인격 체인 마무리·border-input 판정)
+- **산출물 (CTO 직접)**: `docs/architecture/frontend-adapter-contract.md` — backend 의 응답-서버 compliance 와 다른 **요청-발신자** 계약. F-1 (flat-underscore 직렬화) / F-2 (paging 2모드) / F-3 (error envelope code 분기·message_ko) / F-4 (idempotent delete) 4 준수점 + frontend 판 compliance 게이트 (FRONTEND_BASE_URL+BACKEND_BASE_URL) 정의. react/vue/nexacro 미래 adapter 의 단일 기준.
+- **결정 4건**: (1) frontend adapter 정체 = thin self-host proxy server (htmx 템플릿 + wire reverse-proxy), backend 무관 (2) `color.border-input` 독립 semantic 토큰 = gray.400 (3.05:1, WCAG 1.4.11 통과) — CDO escalation 판정, CEO 페르소나만 문서화된 예외 (3) `tokens.css` gitignore — `build_tokens.py` 가 JSON 단일 진실에서 재생성하는 파생 산출물 (gradle-wrapper.jar 와 대비: 후자는 repo 소스에서 비-파생이라 추적) (4) commit trailer 4.7→4.8 동기화 (실제 co-author 모델 반영, mixed history 는 정직한 전환 기록)
+- **위임**: CDO (토큰 raw/semantic/persona×3 + 컴포넌트 표준 3 + a11y, 첫 실전 가동) / engineer (adapter 22 파일 + CSS 생성기 + contract_loader) / qa (frontend compliance 게이트, 2번째 가동)
+- **Cross-agent catch**: CDO 가 input border 1.52:1 (WCAG 1.4.11 미달) 적발 → CTO 가 border-input 독립 토큰으로 해소 (가드 약화 아님 — 토큰 분리로 ops/it 컴플라이언스 + CEO 의도적 예외 양립). QA first-pass PASS (Growth-7 의 BLOCK→fix 와 달리 결함 0) — engineer 가 contract 문서를 정확히 구현한 결과.
+- **Guard 상태**: 9 가드 0 FAIL. G-1 이 2 adapter (backend+frontend) 스캔, frontend contract_loader.py 가 재선언 0 으로 PASS.
+- **Open loops resolved**: M1 Priority 2 완료 (frontend). CDO 첫 가동·codegraph measurement 시점 도달.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - **codegraph 2-step gate measurement (Growth-5f, M1 첫 adapter Growth 마감 시점)**: 4-measurement 결과 + adopt/reject 결정 + (adopt 시) tenant 분리 메커니즘 설계 + axis 또는 docs/architecture 정착 위치
