@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ entity_type }} 삭제 확인{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{{ entity_type | title }} 삭제</h1>
+  <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-ghost btn-sm">← 목록으로</a>
+</div>
+
+<div class="card">
+  <div class="delete-warning" role="alert">
+    <p><strong>이 작업은 되돌릴 수 없습니다.</strong></p>
+    <p>아래 레코드를 삭제하시겠습니까?</p>
+  </div>
+
+  <dl class="detail-list">
+    <dt class="detail-term">ID</dt>
+    <dd class="detail-value">{{ entity_id }}</dd>
+    {% for key, value in data.items() %}
+    {% if key != 'id' %}
+    <dt class="detail-term">{{ key }}</dt>
+    <dd class="detail-value">{{ value if value is not none else '—' }}</dd>
+    {% endif %}
+    {% endfor %}
+  </dl>
+
+  {# Two-step confirm — button.md a11y: delete requires confirmation before final action #}
+  <form method="post"
+        action="{{ url_for('entity_delete_post', entity_type=entity_type, entity_id=entity_id) }}"
+        class="form-actions">
+    <a href="{{ url_for('entity_detail', entity_type=entity_type, entity_id=entity_id) }}"
+       class="btn btn-secondary btn-md">취소</a>
+    <button type="submit" class="btn btn-danger btn-md">삭제 확인</button>
+  </form>
+</div>
+{% endblock %}
