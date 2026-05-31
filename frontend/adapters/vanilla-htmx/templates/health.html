@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}시스템 상태{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">시스템 상태</h1>
+</div>
+
+{% set status_val = health.get('status', 'unknown') %}
+
+<div class="card">
+  <div class="health-summary">
+    <span class="health-badge health-badge--{{ status_val }}" role="status">
+      {% if status_val == 'ok' %}● 정상
+      {% elif status_val == 'degraded' %}⚠ 저하
+      {% else %}✕ 중단
+      {% endif %}
+    </span>
+    <span class="health-version text-caption">version: {{ health.get('version', wire_version) }}</span>
+  </div>
+
+  {% if health.get('error') %}
+  <div role="alert" class="error-banner">
+    {{ health.error.get('message_ko') or health.error.get('message') or '상태 조회 오류' }}
+  </div>
+  {% endif %}
+
+  {% set checks = health.get('checks', []) %}
+  {% if checks %}
+  <table class="data-table" aria-label="서비스 컴포넌트 상태">
+    <caption class="sr-only">개별 컴포넌트 상태</caption>
+    <thead>
+      <tr>
+        <th scope="col" class="th">컴포넌트</th>
+        <th scope="col" class="th">상태</th>
+        <th scope="col" class="th">메시지</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for check in checks %}
+      <tr class="tr">
+        <td class="td">{{ check.get('name', '—') }}</td>
+        <td class="td">
+          <span class="status-badge status-badge--{{ check.get('status', 'unknown') }}">
+            {{ check.get('status', '—') }}
+          </span>
+        </td>
+        <td class="td">{{ check.get('message', '—') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}
