@@ -47,6 +47,28 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **G-9 통과 기준 인수**: CTO 임시 박음 (Growth-5a) → QA 정식 인수, 현행 cap (본문 10 / §6 200) 유지 판정.
 - **Cost**: ~2 round Sonnet
 
+
+### Growth-8 (2026-05-29) — QA 두 번째 실전 가동: vanilla-htmx frontend adapter compliance 게이트 PASS
+
+- **Audit target**: 첫 frontend adapter (vanilla-htmx) — frontend-adapter-contract.md §3~4 4-dimension compliance 게이트
+- **Pass criteria defined**:
+  - DIM-1 (F-1): entity_list route 가 _proxy_request 에 넘기는 params dict 에 flat-underscore 키 (paging_mode, paging_page, paging_size, paging_cursor, sort_field, sort_direction) 만 포함. dot-notation 키 (paging.mode 등) 부재 필수. 5개 test.
+  - DIM-2 (F-3): codes.yaml 의 11개 코드 전부에 대해 mock _proxy_request -> 해당 code 반환 시, 렌더 HTML 에 codes.yaml 의 message_ko 포함. AUTH_REQUIRED/AUTH_EXPIRED 는 /login redirect 검증. retriable 플래그 -> 재시도 힌트 표시/비표시. 22개 test (2개 skip = AUTH redirect codes).
+  - DIM-3 (F-2): offset 마지막 페이지 disabled Next 버튼 확인, 비마지막 페이지 Next 링크 확인, cursor 모드 next_cursor 있을 때 Load-more 링크, 없을 때 end 메시지. 4개 test.
+  - DIM-4 (F-4): 첫 DELETE 200 -> 삭제 완료 렌더, 두 번째 DELETE (F-4 mapped success) -> 삭제 완료 렌더, _proxy_request unit (404+DELETE -> {success:True}/200), 음성 (404+GET 미재매핑), GET confirm+NOT_FOUND -> success 페이지. 5개 test.
+  - L1: frontend/adapters/vanilla-htmx/tests/ subprocess rc=0. 1개 test.
+  - L3: build_tokens.py exits 0, tokens.css >= 5 CSS custom property. 2개 test.
+  - L4: live adapter /health + /login 검증 (optional, skip if not running). 2개 test (skipped).
+  - **총 41개 collected / 37 PASSED / 4 SKIPPED (AUTH redirect x2 + L4 live x2) / 0 FAILED / RC=0**
+- **Single-source 준수**: message_ko / retriable / http_status 모두 ContractLoader().codes() 에서 런타임 로드. 코드 문자열 하드코딩 없음. 템플릿 실제 문자열은 template 파일 파싱으로 추출 후 assertion 에 삽입.
+- **False PASS / False FAIL risks**:
+  - 거짓 PASS 위험: flask_client fixture 가 importlib.reload(server) 로 app 재생성 — 픽스처 간 상태 누적 방지 (Growth-7 교훈 적용). FakeHTTPError 가 b{} 빈 바디 반환 -> _proxy_request 가 {} 를 파싱, 404+DELETE 는 mapping 전에 분기되므로 payload 검사 불필요. 검증됨.
+  - 거짓 FAIL 위험: conftest flask_client 가 session token 자동 주입 — _require_login 데코레이터 우회. 없으면 모든 entity route 가 redirect 해 F-1/F-2/F-3/F-4 테스트 전부 false-FAIL.
+- **CSRF 부재 (Known Gap)**: engineer README.md 가 M1 dev-mode known-gap 으로 명시. 생산 hardening (flask-wtf 또는 custom CSRF) 는 M1 이후 Growth. 이 게이트의 범위 밖 — CSRF 는 wire-protocol compliance (F-1~F-4) 와 무관한 보안 레이어. QA 스코프: contract compliance. CSRF 는 보안 audit (별도 게이트 예정).
+- **Regression cases**: 없음 (신설)
+- **Blocks issued**: 0 (37/37 green, 4 explicit skip)
+- **Cost**: ~3 round Sonnet
+
 ## §3 — Open Loops (이 인격 책임)
 
 - 현행 가드 9개 (G-1~G-9) 의 거짓 PASS / 거짓 FAIL 위험 평가 — 첫 가동 시
