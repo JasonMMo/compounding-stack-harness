@@ -134,6 +134,7 @@
 
 - 활동 원장: `learn-log.md` — Growth 카운터는 **이 repo 의 Growth-1 부터** 시작 (이전 repo Growth-79 와 무관)
 - self-improve 검색 인덱스: `scripts/ledger-index.py` — 원장을 심볼-앵커 역인덱스로 (`--symbol <name>` scoped 조회, 전체 원장 read 대체). 설계: [`docs/architecture/ledger-index.md`](docs/architecture/ledger-index.md)
+- creater(orchestrator) 축: `scripts/workflow/scaffold.py` — profile → catalog 검증 → DDL(render.py) + screen-manifest 산출 (`python scripts/workflow/scaffold.py --profile <slug>`). manifest 가 frontend typed-form 구동. 설계: [`docs/architecture/screen-manifest.md`](docs/architecture/screen-manifest.md) (Growth-14, 7축 end-to-end 엮기)
 - 이전 repo 유산: [`docs/inherited-wisdom/`](docs/inherited-wisdom/) — 7 메타 교훈
 - 옛 Growth (참조 전용): `business-fullstack-creater/learn-log.md` (별도 repo)
 - profile schema: `profiles/_README.md`
