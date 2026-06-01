@@ -30,13 +30,17 @@ ddl:
 
 # ── Domains ──────────────────────────────────────────────────────────────────
 domains:
-  - slug: customer
-    display: "Customer"
-    entities: [customer, contact, address]
+  - slug: crm
+    display: "거래처 / 고객 관리"
+    entities: [contact]
     seen_at: 2026-06-01
-  - slug: order
-    display: "Order"
-    entities: [order, order_line, fulfillment]
+  - slug: sales
+    display: "주문 관리"
+    entities: [sales-order, sales-order-line]
+    seen_at: 2026-06-01
+  - slug: finance
+    display: "청구 / 결제"
+    entities: [invoice, payment]
     seen_at: 2026-06-01
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
