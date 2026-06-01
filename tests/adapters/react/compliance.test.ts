@@ -33,6 +33,9 @@ import {
 // ── Import buildListParams for F-1 serialization test ─────────────────────
 import { buildListParams } from '../../../frontend/adapters/react/src/api/wire'
 
+// ── Import paging predicate for F-2 real-behavior tests ───────────────────
+import { hasMorePages } from '../../../frontend/adapters/react/src/api/paging'
+
 // ────────────────────────────────────────────────────────────────────────────
 // Contract codegen sanity
 // ────────────────────────────────────────────────────────────────────────────
@@ -266,14 +269,28 @@ describe('F-4 — idempotent delete (unit: mock fetch)', () => {
 // ────────────────────────────────────────────────────────────────────────────
 
 describe('F-2 — paging (unit)', () => {
-  it('offset paging: last page detection (total / size)', () => {
-    const total = 45
-    const size = 20
-    const totalPages = Math.ceil(total / size)
-    expect(totalPages).toBe(3)
-    // Page 3 is last
-    expect(3 >= totalPages).toBe(true)
-    expect(4 > totalPages).toBe(true)
+  // ── hasMorePages: offset mid-list ──────────────────────────────────────
+  it('offset mid-list: hasMorePages returns true when page < totalPages', () => {
+    // total=45 size=20 → totalPages=3; page 2 is NOT the last page
+    expect(hasMorePages({ mode: 'offset', page: 2, size: 20, total: 45 })).toBe(true)
+  })
+
+  // ── hasMorePages: offset last page ────────────────────────────────────
+  it('offset last page: hasMorePages returns false when page === totalPages', () => {
+    // total=45 size=20 → totalPages=3; page 3 IS the last page
+    expect(hasMorePages({ mode: 'offset', page: 3, size: 20, total: 45 })).toBe(false)
+  })
+
+  // ── hasMorePages: cursor with next_cursor ──────────────────────────────
+  it('cursor with next_cursor: hasMorePages returns true', () => {
+    expect(hasMorePages({ mode: 'cursor', nextCursor: 'eyJpZCI6MTAwfQ' })).toBe(true)
+  })
+
+  // ── hasMorePages: cursor without next_cursor ───────────────────────────
+  it('cursor without next_cursor: hasMorePages returns false (last page)', () => {
+    expect(hasMorePages({ mode: 'cursor', nextCursor: null })).toBe(false)
+    expect(hasMorePages({ mode: 'cursor', nextCursor: '' })).toBe(false)
+    expect(hasMorePages({ mode: 'cursor', nextCursor: undefined })).toBe(false)
   })
 
   it('cursor paging: next_cursor forwarded as paging_cursor', () => {
