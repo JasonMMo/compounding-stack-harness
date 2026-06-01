@@ -32,14 +32,19 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-// ── Contract file copy (G-1 single-source principle) ──────────────────────────
-// Copies middle/contract/ from the repo root into the build classpath at
-// resources/contract/. The adapter READS these files at runtime; it does NOT
-// redeclare their contents as Java constants.
+// ── Contract + Catalog file copy (G-1 single-source principle) ───────────────
+// Copies middle/contract/ into resources/contract/ — adapter reads at runtime,
+// no Java constants redeclare the contract.
+// Also copies presets/ddl/catalog.yaml into resources/catalog/ so
+// CatalogValidator loads it via ClassPathResource("catalog/catalog.yaml").
 // Path is relative to this subproject: ../../.. = repo root.
 tasks.named<ProcessResources>("processResources") {
     from("../../../middle/contract") {
         into("contract")
+    }
+    from("../../../presets/ddl") {
+        include("catalog.yaml")
+        into("catalog")
     }
 }
 
