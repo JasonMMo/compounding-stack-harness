@@ -25,9 +25,32 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 import wire_response
+from catalog_validator import catalog_validator
 from store import entity_store
 
 router = APIRouter(prefix="/api/entities", tags=["entity"])
+
+
+def _build_validation_error(errors: list) -> JSONResponse:
+    """
+    Split FieldErrors by kind and delegate to wire_response.error() for status resolution.
+    UNIQUE errors take priority: if any exist, return CONFLICT with those fields.
+    Otherwise return VALIDATION_ERROR with all INVALID fields.
+    HTTP status for both codes is resolved from codes.yaml via contract_loader (G-1).
+    Mirrors EntityController.java::buildValidationError exactly.
+    """
+    unique_fields: dict[str, str] = {}
+    invalid_fields: dict[str, str] = {}
+    for e in errors:
+        if e.kind == "UNIQUE":
+            unique_fields[e.field] = e.reason
+        else:
+            invalid_fields[e.field] = e.reason
+
+    if unique_fields:
+        return wire_response.error("CONFLICT", {"fields": unique_fields})
+    return wire_response.error("VALIDATION_ERROR", {"fields": invalid_fields})
+
 
 # Query params that are reserved for paging/sort (not passed to filter)
 _RESERVED_KEYS = frozenset(
@@ -149,6 +172,11 @@ async def create(entity_type: str, body: dict[str, Any] | None = None) -> JSONRe
     if not data:
         return wire_response.error("BAD_REQUEST", {"reason": "'data' field is required"})
 
+    # ── catalog validation (full — create) ───────────────────────────────────
+    errors = catalog_validator.validate(entity_type, data, partial=False, store=entity_store)
+    if errors:
+        return _build_validation_error(errors)
+
     created = entity_store.create(entity_type, data)
 
     return JSONResponse(
@@ -174,6 +202,13 @@ async def update(entity_type: str, id: str, body: dict[str, Any] | None = None) 
             "BAD_REQUEST",
             {"reason": "'data' field with at least one field to update is required"},
         )
+
+    # ── catalog validation (partial — update/PATCH) ──────────────────────────
+    patch_errors = catalog_validator.validate(
+        entity_type, patch_data, partial=True, current_id=id, store=entity_store
+    )
+    if patch_errors:
+        return _build_validation_error(patch_errors)
 
     updated = entity_store.patch(entity_type, id, patch_data)
     if updated is None:
