@@ -211,6 +211,19 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Escalations (CEO 향)**: acme-erp 비호환 — 삭제 vs catalog 실키로 수정. demo 는 shop-demo/smallmfg-demo 로 대체했으므로 비차단이나 첫 sample profile 이 깨진 상태로 남는 건 정직하지 않음 → CEO 결정 요청.
 - **Open loops resolved**: creater 축 공백(7축 중 마지막 빈 축) / DDL-axis frontend 통합(README known gap) / agent-catalog baseline 불일치. 남은: acme-erp CEO 결정 / FK 참조무결성(G-12 후보, `customer_id` 실증) / react adapter / `--serve`.
 
+### Growth-15 (2026-06-01) — FK 참조 무결성: catalog hygiene + G-12 + runtime 양 backend
+
+- **역할**: Architect (3-part 설계 + dangling/polymorphic 분류 기준) + Integrator (phase 게이트 + agent 중단 재개 + QA caveat 수용).
+- **계기**: Growth-14 가 `sales-order.customer_id` 가 catalog fk 블록 없어 text 분류됨을 실증 → handoff 후보 #2. CEO 가 "#2→#1 순서" 지시.
+- **조사**: catalog 74 fk 선언 + `*_id`-no-fk 10개. 핵심 발견 — 단순 "모든 _id 에 fk" 가드는 **polymorphic 컬럼(reference_id+reference_type, subject_id+subject_type, principal_id, counterparty_id, current_version_id 순환회피)에서 false-positive**. 그래서 비자명.
+- **3-part 설계**: A(catalog hygiene 주석 — fk-exempt 마커로 의도 표시 + customer_id→contact fk) → B(G-12 마커 기반 가드) → C(runtime FK 검증, 양 backend, DIM-6 — §5 deferred 해소).
+- **핵심 결정**: (1) dangling 10개 분류 — polymorphic/circular 7 = `fk-exempt:` 마커, genuine-fixable 1(customer_id→contact, contact 실재·의미 정합), genuine-missing-entity 2(machine_id/period_id = entity 미존재 → `fk-exempt: external ref backlog`, **catalog 성장은 domain-expert 영역이라 비포함**). (2) G-12 = 마커 기반(fk OR fk-exempt) → polymorphic 안전. (3) runtime FK = `fk:` 선언 컬럼만 enforce(exempt skip 자동), nullable/absent skip, VALIDATION_ERROR 재사용(신규 error code 0, codes.yaml http_status). (4) G-12 확정 → ledger-index `--check` 는 G-13 후보로 (번호는 구현 시점).
+- **공격검증**: 전제붕괴(polymorphic 오분류) → fk-exempt 마커 화이트리스트로 방어. 롤백 — A 주석+1fk, C additive(DIM-1~5 무회귀), 전부 revert 가능.
+- **Integrator/재개**: Part C agent 가 16 tool-use 후 조사 중 silent 중단(커밋 0) → SendMessage 로 동일 컨텍스트 재개 → 완료. customer_id fk 추가가 manifest fk-text + DDL FK + 검증 ripple 로 파이프라인 일관성 증명.
+- **Escalations / caveat 수용 (QA)**: **Java live DIM-6 미실행** (이 환경 JDK/Gradle 부재). QA 가 양 validator 5조건 로직 패리티를 적대적 read 로 동일 확인 → **PASS-WITH-CAVEAT** 수용. Java live 37 green 확인은 M1 sign-off 전 필수 게이트로 carry (qa.md regression checkpoint).
+- **Cross-agent catch**: Engineer 가 CTO 목록 밖 `report-output.triggered_by_id` 발견·분류 + `inspection-plan`(내 오기 inspection-result) 교정 → integrator 승인. QA 가 DIM-5 fake department_id 회귀를 정당 수정으로 판정.
+- **Open loops resolved**: FK 참조 무결성(Growth-12 §5 deferred), catalog dangling hygiene(Growth-14 발견). 남은: Java DIM-6 live / machine·accounting-period entity(domain-expert) / G-13 후보.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
