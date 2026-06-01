@@ -198,6 +198,19 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Escalations**: 없음 (CEO Option A 위임 선택).
 - **Open loops resolved**: self-improve context-weight (CEO 제기). 남은: `--check`→G-11 승격 여부, `/contribute-back` 인덱스 재빌드 hook, (선택) Obsidian `--md` 시각화.
 
+### Growth-14 (2026-06-01) — expert-agent end-to-end demo: creater 축 첫 채움 + 화면 초안 실증
+
+- **역할**: Architect (7축 결합 설계 + 옵션 4-각도 공격검증) + Integrator (phase 게이트 + 페르소나 위임) + axis-7 큐레이션 실행자 (live agent 호출).
+- **계기**: HANDOFF 후보 #1 — 6축(skill/ddl/middle/frontend/backend/customer)은 자산화됐으나 **creater(orchestrator) 축이 비어** end-to-end 증명 불가. M2 "당일 화면 초안" 인수조건의 핵심 (CMO 경고: 이 자동화 없이는 M2 못 지킴).
+- **조사 발견 2건 (설계 전)**: (1) `profiles/acme-erp.yaml` 이 catalog 비호환 — domains `customer`/`order`, entities `customer/contact/address/order/...` 가 catalog 14 도메인(hr/finance/.../sales/crm)에 거의 부재. 근본원인 = `domain-expert-generic.md` 의 14-baseline 표가 **catalog 와 다른 추상 목록**이라 agent 가 phantom entity 로 큐레이션. (2) frontend create 폼이 generic key/value (catalog 56 entity 풍부한 컬럼 정의 미사용) — README "Known Gaps: DDL-axis integration" 미해소. 이 둘이 정확히 M2 를 막던 것.
+- **옵션 공격검증**: A(wiring-only, generic 폼) — 노력 낮으나 비전문가에 가치 미증명(CMO 거부). B(field-aware, catalog→manifest→typed 폼) ★ — 차별화 그 자체. C(LLM 인터뷰를 결정적 경로에) — 비결정적, 가드/테스트 불가. **전제 붕괴 공격**: "catalog 컬럼만으로 의미있는 폼이 되나" → FK/시스템 컬럼 그대로 노출 시 깨짐 → **변형**: 컬럼 분류(id/created/updated 숨김, enum→select, fk→id-text+갭명시, scalar→타입) 추가로 성립. → B 채택.
+- **핵심 결정**: (1) manifest = catalog 파생 **derived artifact** (`out/<slug>/`, gitignore) — **wire contract 불변** (프로토콜은 entity-agnostic 유지가 옳음; 고객 entity 를 stable 층에 넣으면 결합). frontend 는 manifest 를 **읽기만** (단일-진실 G-1 계열). (2) demo profile 은 catalog-grounded 신규(`shop-demo`), 깨진 acme-erp 는 미수정·CEO 결정 보류. (3) agent baseline 표를 catalog 14 에 1:1 동기화 + "catalog 에서 큐레이션" 원칙 — phantom 근본원인 제거. (4) G-11(creater single-source) 은 구현이 이미 깨끗할 때 박음(guards-must-work).
+- **3-phase + 게이트**: P1(orchestrator+manifest, QA PASS — 25 test, 결정성 byte-identical, validation fails-closed rc=1) → P2(frontend typed 폼, 69 test green, fallback 보존) → P3(agent catalog-aware + G-11 + live demo).
+- **Integrator/live 실행**: 신규 needs("중소제조 인사+설비")로 domain-expert-generic 직접 호출 → agent 가 hr/approval/asset 11 entity 큐레이션(`smallmfg-demo.yaml`) → `scaffold.py` rc=0 + manifest/DDL 산출 = **7축 end-to-end 실증**. agent 가 `attendance`(catalog 미구현)를 스스로 잡아 escalation 보류 — catalog-aware 작동 확인.
+- **G-11 vs Growth-13 후보 충돌 해소**: Growth-13 이 `--check`→G-11 후보로 적어뒀으나 미구현이었음. creater single-source 가 먼저 구현돼 **G-11 확정**, ledger-index `--check` 승격은 **G-12 후보 재배치** (번호는 구현 시점 확정 — 예약 아님).
+- **Escalations (CEO 향)**: acme-erp 비호환 — 삭제 vs catalog 실키로 수정. demo 는 shop-demo/smallmfg-demo 로 대체했으므로 비차단이나 첫 sample profile 이 깨진 상태로 남는 건 정직하지 않음 → CEO 결정 요청.
+- **Open loops resolved**: creater 축 공백(7축 중 마지막 빈 축) / DDL-axis frontend 통합(README known gap) / agent-catalog baseline 불일치. 남은: acme-erp CEO 결정 / FK 참조무결성(G-12 후보, `customer_id` 실증) / react adapter / `--serve`.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
