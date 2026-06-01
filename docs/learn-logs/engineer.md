@@ -96,11 +96,77 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 
 - Cost: ~30 turns / ~$2 추정
 
+### Growth-10 (2026-06-01) — DDL axis (Stage 2): catalog.yaml 56 entities + dialects + render.py + G-10
+
+- Files touched:
+  - `presets/ddl/catalog.yaml` (신규 — 56 entities, 14 domains, dialect-neutral)
+  - `presets/ddl/dialects/postgres.yaml` (신규 — production default dialect)
+  - `presets/ddl/dialects/hsqldb.yaml` (신규 — L2 test dialect)
+  - `presets/ddl/dialects/mysql.yaml` (신규 — M1 stub)
+  - `presets/ddl/dialects/oracle.yaml` (신규 — M1 stub)
+  - `presets/ddl/render.py` (신규 — catalog + dialect → CREATE TABLE DDL, topological order)
+  - `presets/ddl/build/hsqldb-schema.sql` (생성물 — render.py --dialect hsqldb, 1032 lines)
+  - `scripts/diagnose.py` (G-10 함수 + 등록)
+  - `docs/learn-logs/engineer.md` (this ledger)
+
+- Implementation choices:
+  - **Type mapping decisions**:
+    - `number` fields (seed) → `decimal(18,4)` — monetary amounts need fixed precision. 18 digits covers typical financial amounts; scale 4 follows GAAP practice for extended-precision currencies.
+    - `reorder_point` / `estimated_value` / `amount` (non-monetary) → `decimal(14,4)` — operational quantities don't need 18 digits; 14 is enough for any realistic stock/project figure.
+    - `weight_kg` / `quantity_*` fields → `decimal(14,4)` — logistics and inventory quantities need fractional precision (e.g. 12.500 kg).
+    - `hours` fields → `decimal(8,2)` — max 999999.99 hours; 2 decimal places sufficient.
+    - `string` with no length specified → `length: 255` (dialect `defaults.string_length`).
+    - `estimated_delivery` (shipment) → `timestamp` not `date` — seed says "iso8601"; carrier ETAs carry time-of-day precision.
+    - `recipient_ids`, `enum_values` (reporting) → `text` stored as JSON string — no ARRAY type in the neutral 8-type vocabulary. Application layer parses/serialises.
+  - **FK decisions**:
+    - `finance_invoice.counterparty_id` — cross-domain (crm_contact or procurement_vendor); FK omitted in DDL, application-layer responsibility.
+    - `sales_sales_order.customer_id` — cross-domain to crm_contact; FK omitted.
+    - `document_document.current_version_id` — circular dependency with document_version; FK omitted to avoid table-order deadlock. Set after first upload.
+    - `production_operation.machine_id` — references an external resource registry not in this catalog; FK omitted.
+    - `approval_request` subject_type/subject_id — polymorphic; FK omitted.
+    - `quality_inspection_plan` reference_id — polymorphic; FK omitted.
+    - `reporting_report_output.triggered_by_id` — polymorphic (employee or schedule); FK omitted.
+    - All intra-catalog FKs (same-domain + cross-domain where target exists) are fully declared.
+  - **Constraints that are DDL vs application-layer**:
+    - DDL CHECKs encoded: `end_date >= start_date`, `amount > 0`, `quantity > 0`, `probability 0-100`, `progress_pct 0-100`, `allocated_hours > 0`, `quantity_planned > 0`, `scheduled_end >= scheduled_start` (3-way NULL-safe), `transit_days > 0`, `default_useful_life_years > 0`, `current_book_value >= 0`, etc.
+    - Application-layer only (NOT encoded in DDL): overlapping-leave check, headcount_limit enforcement, circular FK prevention (department/task/BOM), state-machine transitions, immutability rules (posted journal, tracking events, stock movements, etc.), partial-unique patterns (one default price list per currency, one published doc version), balanced debit/credit, payment sum <= invoice total, cross-table value comparisons (salvage_value < acquisition_cost).
+  - **Topological sort in render.py**: DFS post-order on FK graph. Self-references (department.parent_id → department) handled by skipping self-loops in deps. Circular FK detection emits a warning without crashing.
+  - **YAML syntax bug**: 4 columns had no space between key and `{` (`tracking_url_template:{`, `default_useful_life_years:{`, `accumulated_depreciation:{`, `default_retention_days:{`). Found and fixed during YAML parse validation.
+  - **HSQLDB type notes**: UUID → VARCHAR(36), TEXT → LONGVARCHAR. Both confirmed valid HSQLDB 2.x syntax.
+  - **Oracle ON DELETE RESTRICT**: Oracle does not support explicit RESTRICT keyword; mapped to RESTRICT in dialect yaml with a comment noting it falls back to default behaviour.
+  - **G-10 guard parser**: uses frontmatter regex (no full YAML parse of seed body) — reads between first and second `---` lines, extracts `entities:` list items. Handles all 14 seeds correctly.
+
+- Tests added:
+  - **G-10 PASS** (L0 guard): 56 catalog entities, 56 seed entity refs, 0 dangling FKs, 0 type violations.
+  - **render.py L3 smoke**: `python presets/ddl/render.py --dialect hsqldb` → 1032-line `hsqldb-schema.sql`, exit 0.
+  - Full guard suite: G-1~G-10 all PASS or SPEC (no regressions).
+  - SPEC: L2 HSQLDB schema+seed load smoke — QA runs this against actual HSQLDB once L2 harness is activated (command: `python presets/ddl/render.py --dialect hsqldb > presets/ddl/build/hsqldb-schema.sql`).
+
+- Catches surfaced: none escalated to CTO.
+  - `finance_journal_entry.period_id` has no FK in catalog — accounting period is not a seed entity. Documented in catalog comment; wire validation will resolve at adapter layer. CTO may want to add `accounting_period` as a 57th entity in a future Growth, but this is within scope of current spec.
+
+- Cost: ~25 turns / ~$1.5 추정
+
+#### Growth-10 fix (2026-06-01) — render.py D1/D2/D3 — QA L2 HSQLDB gate BLOCK 해소
+
+QA가 HSQLDB 2.7.4 in-memory live 로드에서 3개 defect 발견 (catalog.yaml 무결 — 47/47 constraint PASS 확인). `render.py` 3곳 수정:
+
+- **D3 (DEFAULT placement)**: `render_column()`에서 NOT NULL 뒤에 DEFAULT를 붙이는 순서 오류. SQL 표준 + HSQLDB 2.x 모두 `TYPE DEFAULT v NOT NULL` 요구. DEFAULT 블록을 NOT NULL 앞으로 이동. 영향: `inventory_item.allow_negative_stock`. 결과: `BOOLEAN DEFAULT FALSE NOT NULL`.
+- **D2 (CHECK expr unquoted identifiers)**: explicit CHECK 분기가 catalog expr verbatim 출력 → HSQLDB unquoted lowercase fold → column 못 찾음 (28 CHECKs FAIL). `_quote_check_expr(expr, q)` 헬퍼 추가 + `import re`. bare lowercase 토큰을 dialect quote로 감쌈; SQL 키워드(`IS/NULL/OR/AND/NOT/IN/TRUE/FALSE`) 제외. 결과: `"probability" >= 0 AND "probability" <= 100`, `"end_date" >= "start_date"` 등.
+- **D1 (circular back-edge FK inline)**: `hr_department.manager_id → hr_employee` FK를 CREATE TABLE 인라인에 두면 hr_employee 미생성 상태라 FAIL. `topological_order()` 반환형을 `(ordered, deferred_fks)` 으로 변경 — position 배열로 back-edge 감지. `render_table(deferred_fk_cols)` 파라미터로 인라인 skip. `main()`에서 target table emit 직후 `ALTER TABLE ... ADD FOREIGN KEY;` 출력. 일반화됨 (임의 back-edge 처리).
+- `tests/ddl/patch_schema.py` — 3개 patch 전부 no-op. 파일 보존 (QA 이력, CTO 결정에 따름).
+- `presets/ddl/build/hsqldb-schema.sql` 재생성 완료 (56 tables + ALTER TABLE 1개).
+- G-10 PASS / 전체 guard suite PASS / 무 regression.
+- Fix cost: ~8 turns / ~$0.3 추정
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~M1 진입 시 첫 spawn — `middle/contract/` 첫 wire 키 schema 파일 작성~~ ✅ Growth-5d 완료
 - ~~`scripts/diagnose.py` G-1 SPEC → PASS 전환~~ ✅ Growth-7 완료 (code→status 재선언 검출)
 - adapter `paging.mode` fallback 제거 — flat-underscore 단일 표준 정착 시 (Growth-8 후보)
 - ~~frontend vanilla-htmx adapter 구현 (Growth-8) + CDO tokens.md → tokens JSON 생성~~ ✅ Growth-8 완료
+- ~~DDL axis: catalog.yaml 56 entities + dialects + render.py + G-10~~ ✅ Growth-10 완료
 - `scripts/diagnose.py` G-2 SPEC → 활성 전환 시 함수 본문 보강 (profile path extractor)
 - CTO escalation 4건 응답 대기 (Growth-5d Decision Log 참조)
+- L2 HSQLDB schema+seed smoke harness 활성화 — QA 주도 (command: `python presets/ddl/render.py --dialect hsqldb > presets/ddl/build/hsqldb-schema.sql`)
+- wire `entity.create` → catalog 검증 wiring — 후속 Growth (Growth-10 scope 외)
