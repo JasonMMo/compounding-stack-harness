@@ -1,0 +1,1326 @@
+version: "1.0"
+# DDL Catalog — 56 entities (14 domains x 4).
+# Dialect-neutral schema; render.py + dialects/<d>.yaml emit target DDL.
+# Multi-tenancy (tenant_id / RLS) is M5-gated — NOT present here.
+# Type vocabulary: uuid | string | text | integer | decimal | boolean | date | timestamp | enum
+
+entities:
+
+  # ─────────────────────────────────────────────
+  # HR (human resources)
+  # ─────────────────────────────────────────────
+
+  employee:
+    domain: hr
+    table: hr_employee
+    primary_key: id
+    columns:
+      id:              { type: uuid,      nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      employee_number: { type: string,    length: 64,  nullable: false, unique: true }
+      full_name:       { type: string,    nullable: false }
+      department_id:   { type: uuid,      nullable: false,
+                         fk: { entity: department, column: id, on_delete: restrict } }
+      position_id:     { type: uuid,      nullable: true,
+                         fk: { entity: position,   column: id, on_delete: set_null } }
+      hire_date:       { type: date,      nullable: false }
+      status:          { type: enum,      values: [active, on-leave, terminated], nullable: false }
+    constraints: []
+    indexes:
+      - { columns: [department_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   status state-machine (active→on-leave→active, active→terminated) — application layer.
+    #   Terminated soft-delete (status change only) — application layer.
+
+  department:
+    domain: hr
+    table: hr_department
+    primary_key: id
+    columns:
+      id:         { type: uuid,   nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      code:       { type: string, length: 32, nullable: false, unique: true }
+      name:       { type: string, nullable: false }
+      parent_id:  { type: uuid,   nullable: true,
+                    fk: { entity: department, column: id, on_delete: set_null } }
+      manager_id: { type: uuid,   nullable: true,
+                    fk: { entity: employee,   column: id, on_delete: set_null } }
+    constraints: []
+    indexes:
+      - { columns: [parent_id] }
+    # DDL notes:
+    #   Circular parent references / depth-10 limit — application layer.
+    #   Cannot delete while active employees exist — application layer (FK restrict on hr_employee).
+
+  position:
+    domain: hr
+    table: hr_position
+    primary_key: id
+    columns:
+      id:              { type: uuid,    nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      title:           { type: string,  nullable: false }
+      grade:           { type: string,  length: 32, nullable: true }
+      department_id:   { type: uuid,    nullable: true,
+                         fk: { entity: department, column: id, on_delete: set_null } }
+      headcount_limit: { type: integer, nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [department_id] }
+    # DDL notes:
+    #   headcount_limit enforcement — application layer (not a DB CHECK; requires counting rows).
+
+  leave-request:
+    domain: hr
+    table: hr_leave_request
+    primary_key: id
+    columns:
+      id:          { type: uuid,  nullable: false }
+      created_at:  { type: timestamp, nullable: false }
+      updated_at:  { type: timestamp, nullable: false }
+      employee_id: { type: uuid,  nullable: false,
+                     fk: { entity: employee, column: id, on_delete: restrict } }
+      leave_type:  { type: enum,  values: [annual, sick, unpaid, maternity, paternity], nullable: false }
+      start_date:  { type: date,  nullable: false }
+      end_date:    { type: date,  nullable: false }
+      status:      { type: enum,  values: [draft, pending, approved, rejected, cancelled], nullable: false }
+      reason:      { type: string, nullable: true }
+    constraints:
+      - { type: check, expr: "end_date >= start_date" }
+    indexes:
+      - { columns: [employee_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   Non-overlapping active leave check — application layer (requires row scan).
+
+  # ─────────────────────────────────────────────
+  # FINANCE
+  # ─────────────────────────────────────────────
+
+  account:
+    domain: finance
+    table: finance_account
+    primary_key: id
+    columns:
+      id:         { type: uuid,    nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      code:       { type: string,  length: 32, nullable: false, unique: true }
+      name:       { type: string,  nullable: false }
+      type:       { type: enum,    values: [asset, liability, equity, revenue, expense], nullable: false }
+      currency:   { type: string,  length: 8,  nullable: false }
+      is_active:  { type: boolean, nullable: false }
+    constraints: []
+    indexes:
+      - { columns: [type] }
+    # DDL notes:
+    #   Inactive-account new-posting block — application layer.
+    #   Delete-with-entries block — application layer (FK cascade-less restrict).
+
+  journal-entry:
+    domain: finance
+    table: finance_journal_entry
+    primary_key: id
+    columns:
+      id:          { type: uuid,    nullable: false }
+      created_at:  { type: timestamp, nullable: false }
+      updated_at:  { type: timestamp, nullable: false }
+      entry_date:  { type: date,    nullable: false }
+      reference:   { type: string,  nullable: true }
+      description: { type: string,  nullable: false }
+      status:      { type: enum,    values: [draft, posted, reversed], nullable: false }
+      period_id:   { type: uuid,    nullable: false }
+      # lines is a child table (finance_journal_entry_line); not a column here.
+    constraints: []
+    indexes:
+      - { columns: [entry_date] }
+      - { columns: [status] }
+      - { columns: [period_id] }
+    # DDL notes:
+    #   "lines" array → separate child table; not in this entity schema.
+    #   Balanced debit/credit invariant — application layer.
+    #   Posted-immutable rule — application layer.
+    #   period_id FK omitted: accounting period is not a seed entity in this catalog.
+    #     Wire validation will resolve it at adapter layer.
+
+  invoice:
+    domain: finance
+    table: finance_invoice
+    primary_key: id
+    columns:
+      id:               { type: uuid,    nullable: false }
+      created_at:       { type: timestamp, nullable: false }
+      updated_at:       { type: timestamp, nullable: false }
+      invoice_number:   { type: string,  nullable: false, unique: true }
+      counterparty_id:  { type: uuid,    nullable: false }
+      issue_date:       { type: date,    nullable: false }
+      due_date:         { type: date,    nullable: false }
+      total_amount:     { type: decimal, precision: 18, scale: 4, nullable: false }
+      currency:         { type: string,  length: 8, nullable: false }
+      status:           { type: enum,    values: [draft, issued, partially-paid, paid, overdue, cancelled], nullable: false }
+    constraints:
+      - { type: check, expr: "due_date >= issue_date" }
+    indexes:
+      - { columns: [status] }
+      - { columns: [counterparty_id] }
+    # DDL notes:
+    #   counterparty_id resolves to crm_contact or procurement_vendor — cross-domain;
+    #     FK omitted (application layer responsibility).
+    #   paid/cancelled immutability — application layer.
+    #   Payment sum <= total_amount — application layer.
+
+  payment:
+    domain: finance
+    table: finance_payment
+    primary_key: id
+    columns:
+      id:           { type: uuid,    nullable: false }
+      created_at:   { type: timestamp, nullable: false }
+      updated_at:   { type: timestamp, nullable: false }
+      invoice_id:   { type: uuid,    nullable: false,
+                      fk: { entity: invoice, column: id, on_delete: restrict } }
+      payment_date: { type: date,    nullable: false }
+      amount:       { type: decimal, precision: 18, scale: 4, nullable: false }
+      method:       { type: enum,    values: [bank-transfer, card, cash, cheque], nullable: false }
+      reference:    { type: string,  nullable: true }
+    constraints:
+      - { type: check, expr: "amount > 0" }
+    indexes:
+      - { columns: [invoice_id] }
+      - { columns: [payment_date] }
+    # DDL notes:
+    #   Sum-of-payments <= invoice.total_amount — application layer.
+
+  # ─────────────────────────────────────────────
+  # LOGISTICS
+  # ─────────────────────────────────────────────
+
+  carrier:
+    domain: logistics
+    table: logistics_carrier
+    primary_key: id
+    columns:
+      id:                   { type: uuid,    nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      code:                 { type: string,  length: 32, nullable: false, unique: true }
+      name:                 { type: string,  nullable: false }
+      tracking_url_template: { type: string,  nullable: true }
+      is_active:            { type: boolean, nullable: false }
+    constraints: []
+    indexes: []
+
+  route:
+    domain: logistics
+    table: logistics_route
+    primary_key: id
+    columns:
+      id:              { type: uuid,    nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      name:            { type: string,  nullable: false }
+      carrier_id:      { type: uuid,    nullable: false,
+                         fk: { entity: carrier, column: id, on_delete: restrict } }
+      origin_hub:      { type: string,  nullable: false }
+      destination_hub: { type: string,  nullable: false }
+      transit_days:    { type: integer, nullable: false }
+      is_active:       { type: boolean, nullable: false }
+    constraints:
+      - { type: check, expr: "transit_days > 0" }
+    indexes:
+      - { columns: [carrier_id] }
+    # DDL notes:
+    #   Route must reference active carrier — application layer.
+
+  shipment:
+    domain: logistics
+    table: logistics_shipment
+    primary_key: id
+    columns:
+      id:                   { type: uuid,    nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      shipment_number:      { type: string,  nullable: false, unique: true }
+      carrier_id:           { type: uuid,    nullable: false,
+                              fk: { entity: carrier, column: id, on_delete: restrict } }
+      route_id:             { type: uuid,    nullable: true,
+                              fk: { entity: route,   column: id, on_delete: set_null } }
+      origin_address:       { type: string,  nullable: false }
+      destination_address:  { type: string,  nullable: false }
+      status:               { type: enum,    values: [draft, dispatched, in-transit, out-for-delivery, delivered, returned, cancelled], nullable: false }
+      estimated_delivery:   { type: timestamp, nullable: true }
+      weight_kg:            { type: decimal, precision: 10, scale: 3, nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [carrier_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   Terminal-state transitions (delivered/returned → no further) — application layer.
+
+  tracking-event:
+    domain: logistics
+    table: logistics_tracking_event
+    primary_key: id
+    columns:
+      id:          { type: uuid,      nullable: false }
+      created_at:  { type: timestamp, nullable: false }
+      updated_at:  { type: timestamp, nullable: false }
+      shipment_id: { type: uuid,      nullable: false,
+                     fk: { entity: shipment, column: id, on_delete: cascade } }
+      event_time:  { type: timestamp, nullable: false }
+      event_code:  { type: string,    length: 64, nullable: false }
+      location:    { type: string,    nullable: true }
+      message:     { type: string,    nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [shipment_id] }
+      - { columns: [event_time] }
+    # DDL notes:
+    #   Append-only (no update/delete) — application layer.
+
+  # ─────────────────────────────────────────────
+  # INVENTORY
+  # ─────────────────────────────────────────────
+
+  item:
+    domain: inventory
+    table: inventory_item
+    primary_key: id
+    columns:
+      id:                   { type: uuid,    nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      sku:                  { type: string,  length: 128, nullable: false, unique: true }
+      name:                 { type: string,  nullable: false }
+      unit_of_measure:      { type: string,  length: 16, nullable: false }
+      reorder_point:        { type: decimal, precision: 14, scale: 4, nullable: true }
+      allow_negative_stock: { type: boolean, nullable: false, default: false }
+    constraints: []
+    indexes: []
+
+  warehouse:
+    domain: inventory
+    table: inventory_warehouse
+    primary_key: id
+    columns:
+      id:         { type: uuid,    nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      code:       { type: string,  length: 32, nullable: false, unique: true }
+      name:       { type: string,  nullable: false }
+      address:    { type: string,  nullable: true }
+      is_active:  { type: boolean, nullable: false }
+    constraints: []
+    indexes: []
+
+  stock-level:
+    domain: inventory
+    table: inventory_stock_level
+    primary_key: id
+    columns:
+      id:                 { type: uuid,    nullable: false }
+      created_at:         { type: timestamp, nullable: false }
+      updated_at:         { type: timestamp, nullable: false }
+      item_id:            { type: uuid,    nullable: false,
+                            fk: { entity: item,      column: id, on_delete: restrict } }
+      warehouse_id:       { type: uuid,    nullable: false,
+                            fk: { entity: warehouse, column: id, on_delete: restrict } }
+      quantity_on_hand:   { type: decimal, precision: 14, scale: 4, nullable: false }
+      quantity_reserved:  { type: decimal, precision: 14, scale: 4, nullable: false }
+      quantity_available: { type: decimal, precision: 14, scale: 4, nullable: false }
+    constraints:
+      - { type: unique, columns: [item_id, warehouse_id] }
+    indexes:
+      - { columns: [item_id] }
+      - { columns: [warehouse_id] }
+    # DDL notes:
+    #   quantity_available is derived (on_hand - reserved). Adapter must maintain it.
+    #   quantity_on_hand >= 0 unless item.allow_negative_stock — application layer.
+
+  stock-movement:
+    domain: inventory
+    table: inventory_stock_movement
+    primary_key: id
+    columns:
+      id:             { type: uuid,      nullable: false }
+      created_at:     { type: timestamp, nullable: false }
+      updated_at:     { type: timestamp, nullable: false }
+      item_id:        { type: uuid,      nullable: false,
+                        fk: { entity: item,      column: id, on_delete: restrict } }
+      warehouse_id:   { type: uuid,      nullable: false,
+                        fk: { entity: warehouse, column: id, on_delete: restrict } }
+      movement_type:  { type: enum,      values: [receipt, issue, transfer, adjustment, return], nullable: false }
+      quantity:       { type: decimal,   precision: 14, scale: 4, nullable: false }
+      reference_id:   { type: uuid,      nullable: true }
+      reference_type: { type: string,    length: 64, nullable: true }
+      moved_at:       { type: timestamp, nullable: false }
+    constraints: []
+    indexes:
+      - { columns: [item_id] }
+      - { columns: [warehouse_id] }
+      - { columns: [moved_at] }
+    # DDL notes:
+    #   Append-only — application layer.
+
+  # ─────────────────────────────────────────────
+  # SALES
+  # ─────────────────────────────────────────────
+
+  price-list:
+    domain: sales
+    table: sales_price_list
+    primary_key: id
+    columns:
+      id:         { type: uuid,    nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      name:       { type: string,  nullable: false }
+      currency:   { type: string,  length: 8, nullable: false }
+      valid_from: { type: date,    nullable: false }
+      valid_to:   { type: date,    nullable: true }
+      is_default: { type: boolean, nullable: false }
+    constraints:
+      - { type: check, expr: "valid_to IS NULL OR valid_to >= valid_from" }
+    indexes:
+      - { columns: [currency] }
+      - { columns: [is_default] }
+    # DDL notes:
+    #   One default per currency uniqueness — application layer (cannot express
+    #   partial-unique with IS TRUE portably across all dialects).
+
+  discount:
+    domain: sales
+    table: sales_discount
+    primary_key: id
+    columns:
+      id:               { type: uuid,    nullable: false }
+      created_at:       { type: timestamp, nullable: false }
+      updated_at:       { type: timestamp, nullable: false }
+      code:             { type: string,  length: 64, nullable: false, unique: true }
+      discount_type:    { type: enum,    values: [percentage, fixed-amount], nullable: false }
+      value:            { type: decimal, precision: 10, scale: 4, nullable: false }
+      valid_from:       { type: date,    nullable: false }
+      valid_to:         { type: date,    nullable: true }
+      min_order_amount: { type: decimal, precision: 18, scale: 4, nullable: true }
+    constraints:
+      - { type: check, expr: "valid_to IS NULL OR valid_to >= valid_from" }
+      - { type: check, expr: "value >= 0" }
+    indexes:
+      - { columns: [discount_type] }
+    # DDL notes:
+    #   Percentage 0-100 check — only lower bound (>= 0) encoded as CHECK;
+    #     upper bound (< 100) requires knowing discount_type which crosses columns —
+    #     enforced at application layer.
+    #   Fixed-amount <= line_total — application layer.
+
+  sales-order:
+    domain: sales
+    table: sales_sales_order
+    primary_key: id
+    columns:
+      id:            { type: uuid,    nullable: false }
+      created_at:    { type: timestamp, nullable: false }
+      updated_at:    { type: timestamp, nullable: false }
+      order_number:  { type: string,  nullable: false, unique: true }
+      customer_id:   { type: uuid,    nullable: false }
+      order_date:    { type: date,    nullable: false }
+      status:        { type: enum,    values: [draft, confirmed, partially-fulfilled, fulfilled, cancelled], nullable: false }
+      currency:      { type: string,  length: 8, nullable: false }
+      total_amount:  { type: decimal, precision: 18, scale: 4, nullable: false }
+      price_list_id: { type: uuid,    nullable: true,
+                       fk: { entity: price-list, column: id, on_delete: set_null } }
+    constraints: []
+    indexes:
+      - { columns: [customer_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   customer_id resolves to crm_contact — cross-domain; FK omitted.
+    #   fulfilled/cancelled immutability — application layer.
+    #   total_amount == sum of lines — application layer.
+
+  sales-order-line:
+    domain: sales
+    table: sales_sales_order_line
+    primary_key: id
+    columns:
+      id:              { type: uuid,    nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      order_id:        { type: uuid,    nullable: false,
+                         fk: { entity: sales-order, column: id, on_delete: cascade } }
+      item_id:         { type: uuid,    nullable: false,
+                         fk: { entity: item,        column: id, on_delete: restrict } }
+      quantity:        { type: decimal, precision: 14, scale: 4, nullable: false }
+      unit_price:      { type: decimal, precision: 18, scale: 4, nullable: false }
+      discount_id:     { type: uuid,    nullable: true,
+                         fk: { entity: discount, column: id, on_delete: set_null } }
+      discount_amount: { type: decimal, precision: 18, scale: 4, nullable: true }
+      line_total:      { type: decimal, precision: 18, scale: 4, nullable: false }
+    constraints:
+      - { type: check, expr: "quantity > 0" }
+      - { type: check, expr: "unit_price >= 0" }
+    indexes:
+      - { columns: [order_id] }
+    # DDL notes:
+    #   line_total is derived — adapter must recompute on quantity/price/discount change.
+
+  # ─────────────────────────────────────────────
+  # CRM
+  # ─────────────────────────────────────────────
+
+  contact:
+    domain: crm
+    table: crm_contact
+    primary_key: id
+    columns:
+      id:           { type: uuid,   nullable: false }
+      created_at:   { type: timestamp, nullable: false }
+      updated_at:   { type: timestamp, nullable: false }
+      full_name:    { type: string, nullable: false }
+      email:        { type: string, nullable: true, unique: true }
+      phone:        { type: string, length: 32, nullable: true }
+      company_name: { type: string, nullable: true }
+      contact_type: { type: enum,   values: [prospect, customer, partner, vendor], nullable: false }
+      owner_id:     { type: uuid,   nullable: true,
+                      fk: { entity: employee, column: id, on_delete: set_null } }
+    constraints: []
+    indexes:
+      - { columns: [contact_type] }
+    # DDL notes:
+    #   At-least-one-of (email or phone) — application layer (can't express OR NOT NULL in standard CHECK).
+
+  lead:
+    domain: crm
+    table: crm_lead
+    primary_key: id
+    columns:
+      id:              { type: uuid,    nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      contact_id:      { type: uuid,    nullable: true,
+                         fk: { entity: contact, column: id, on_delete: set_null } }
+      source:          { type: enum,    values: [web, referral, event, cold-call, other], nullable: false }
+      status:          { type: enum,    values: [new, contacted, qualified, converted, disqualified], nullable: false }
+      estimated_value: { type: decimal, precision: 18, scale: 4, nullable: true }
+      assigned_to:     { type: uuid,    nullable: true,
+                         fk: { entity: employee, column: id, on_delete: set_null } }
+    constraints: []
+    indexes:
+      - { columns: [status] }
+    # DDL notes:
+    #   converted→opportunity linkage check — application layer.
+    #   disqualified reason stored in activity — application layer.
+
+  opportunity:
+    domain: crm
+    table: crm_opportunity
+    primary_key: id
+    columns:
+      id:                  { type: uuid,    nullable: false }
+      created_at:          { type: timestamp, nullable: false }
+      updated_at:          { type: timestamp, nullable: false }
+      contact_id:          { type: uuid,    nullable: false,
+                             fk: { entity: contact, column: id, on_delete: restrict } }
+      lead_id:             { type: uuid,    nullable: true,
+                             fk: { entity: lead,    column: id, on_delete: set_null } }
+      name:                { type: string,  nullable: false }
+      stage:               { type: enum,    values: [prospecting, qualification, proposal, negotiation, closed-won, closed-lost], nullable: false }
+      amount:              { type: decimal, precision: 18, scale: 4, nullable: false }
+      probability:         { type: integer, nullable: false }
+      expected_close_date: { type: date,    nullable: false }
+      owner_id:            { type: uuid,    nullable: false,
+                             fk: { entity: employee, column: id, on_delete: restrict } }
+    constraints:
+      - { type: check, expr: "probability >= 0 AND probability <= 100" }
+      - { type: check, expr: "amount >= 0" }
+    indexes:
+      - { columns: [stage] }
+      - { columns: [owner_id] }
+
+  activity:
+    domain: crm
+    table: crm_activity
+    primary_key: id
+    columns:
+      id:             { type: uuid,      nullable: false }
+      created_at:     { type: timestamp, nullable: false }
+      updated_at:     { type: timestamp, nullable: false }
+      activity_type:  { type: enum,      values: [call, email, meeting, note, task], nullable: false }
+      contact_id:     { type: uuid,      nullable: false,
+                        fk: { entity: contact,     column: id, on_delete: restrict } }
+      opportunity_id: { type: uuid,      nullable: true,
+                        fk: { entity: opportunity, column: id, on_delete: set_null } }
+      lead_id:        { type: uuid,      nullable: true,
+                        fk: { entity: lead,        column: id, on_delete: set_null } }
+      performed_by:   { type: uuid,      nullable: false,
+                        fk: { entity: employee,    column: id, on_delete: restrict } }
+      performed_at:   { type: timestamp, nullable: false }
+      summary:        { type: string,    nullable: false }
+      outcome:        { type: string,    nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [contact_id] }
+      - { columns: [opportunity_id] }
+      - { columns: [performed_at] }
+    # DDL notes:
+    #   Append-only for audit — application layer.
+
+  # ─────────────────────────────────────────────
+  # PROCUREMENT
+  # ─────────────────────────────────────────────
+
+  vendor:
+    domain: procurement
+    table: procurement_vendor
+    primary_key: id
+    columns:
+      id:             { type: uuid,    nullable: false }
+      created_at:     { type: timestamp, nullable: false }
+      updated_at:     { type: timestamp, nullable: false }
+      code:           { type: string,  length: 32, nullable: false, unique: true }
+      name:           { type: string,  nullable: false }
+      contact_email:  { type: string,  nullable: true }
+      payment_terms:  { type: string,  length: 32, nullable: true }
+      is_approved:    { type: boolean, nullable: false }
+    constraints: []
+    indexes: []
+
+  requisition:
+    domain: procurement
+    table: procurement_requisition
+    primary_key: id
+    columns:
+      id:              { type: uuid,    nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      requester_id:    { type: uuid,    nullable: false,
+                         fk: { entity: employee,   column: id, on_delete: restrict } }
+      department_id:   { type: uuid,    nullable: false,
+                         fk: { entity: department, column: id, on_delete: restrict } }
+      status:          { type: enum,    values: [draft, pending, approved, rejected, converted], nullable: false }
+      total_estimated: { type: decimal, precision: 18, scale: 4, nullable: false }
+      required_by:     { type: date,    nullable: false }
+      description:     { type: string,  nullable: false }
+    constraints: []
+    indexes:
+      - { columns: [requester_id] }
+      - { columns: [status] }
+
+  purchase-order:
+    domain: procurement
+    table: procurement_purchase_order
+    primary_key: id
+    columns:
+      id:                { type: uuid,    nullable: false }
+      created_at:        { type: timestamp, nullable: false }
+      updated_at:        { type: timestamp, nullable: false }
+      po_number:         { type: string,  nullable: false, unique: true }
+      vendor_id:         { type: uuid,    nullable: false,
+                           fk: { entity: vendor,      column: id, on_delete: restrict } }
+      requisition_id:    { type: uuid,    nullable: true,
+                           fk: { entity: requisition, column: id, on_delete: set_null } }
+      order_date:        { type: date,    nullable: false }
+      expected_delivery: { type: date,    nullable: true }
+      status:            { type: enum,    values: [draft, issued, partially-received, received, cancelled], nullable: false }
+      total_amount:      { type: decimal, precision: 18, scale: 4, nullable: false }
+      currency:          { type: string,  length: 8, nullable: false }
+    constraints: []
+    indexes:
+      - { columns: [vendor_id] }
+      - { columns: [status] }
+
+  purchase-order-line:
+    domain: procurement
+    table: procurement_purchase_order_line
+    primary_key: id
+    columns:
+      id:                { type: uuid,    nullable: false }
+      created_at:        { type: timestamp, nullable: false }
+      updated_at:        { type: timestamp, nullable: false }
+      po_id:             { type: uuid,    nullable: false,
+                           fk: { entity: purchase-order, column: id, on_delete: cascade } }
+      item_id:           { type: uuid,    nullable: false,
+                           fk: { entity: item,           column: id, on_delete: restrict } }
+      quantity_ordered:  { type: decimal, precision: 14, scale: 4, nullable: false }
+      quantity_received: { type: decimal, precision: 14, scale: 4, nullable: false }
+      unit_price:        { type: decimal, precision: 18, scale: 4, nullable: false }
+      line_total:        { type: decimal, precision: 18, scale: 4, nullable: false }
+    constraints:
+      - { type: check, expr: "quantity_ordered > 0" }
+      - { type: check, expr: "quantity_received >= 0" }
+    indexes:
+      - { columns: [po_id] }
+
+  # ─────────────────────────────────────────────
+  # PRODUCTION
+  # ─────────────────────────────────────────────
+
+  bom:
+    domain: production
+    table: production_bom
+    primary_key: id
+    columns:
+      id:          { type: uuid,    nullable: false }
+      created_at:  { type: timestamp, nullable: false }
+      updated_at:  { type: timestamp, nullable: false }
+      item_id:     { type: uuid,    nullable: false,
+                     fk: { entity: item, column: id, on_delete: restrict } }
+      version:     { type: string,  length: 32, nullable: false }
+      is_active:   { type: boolean, nullable: false }
+      description: { type: string,  nullable: true }
+    constraints:
+      - { type: unique, columns: [item_id, version] }
+    indexes:
+      - { columns: [item_id] }
+
+  bom-line:
+    domain: production
+    table: production_bom_line
+    primary_key: id
+    columns:
+      id:                { type: uuid,    nullable: false }
+      created_at:        { type: timestamp, nullable: false }
+      updated_at:        { type: timestamp, nullable: false }
+      bom_id:            { type: uuid,    nullable: false,
+                           fk: { entity: bom,  column: id, on_delete: cascade } }
+      component_item_id: { type: uuid,    nullable: false,
+                           fk: { entity: item, column: id, on_delete: restrict } }
+      quantity_per:      { type: decimal, precision: 14, scale: 4, nullable: false }
+      unit_of_measure:   { type: string,  length: 16, nullable: false }
+      is_critical:       { type: boolean, nullable: false }
+    constraints:
+      - { type: check, expr: "quantity_per > 0" }
+    indexes:
+      - { columns: [bom_id] }
+    # DDL notes:
+    #   Self-referential BOM / circular BOM — application layer.
+
+  work-order:
+    domain: production
+    table: production_work_order
+    primary_key: id
+    columns:
+      id:                { type: uuid,      nullable: false }
+      created_at:        { type: timestamp, nullable: false }
+      updated_at:        { type: timestamp, nullable: false }
+      wo_number:         { type: string,    nullable: false, unique: true }
+      bom_id:            { type: uuid,      nullable: false,
+                           fk: { entity: bom,  column: id, on_delete: restrict } }
+      item_id:           { type: uuid,      nullable: false,
+                           fk: { entity: item, column: id, on_delete: restrict } }
+      quantity_planned:  { type: decimal,   precision: 14, scale: 4, nullable: false }
+      quantity_produced: { type: decimal,   precision: 14, scale: 4, nullable: false }
+      status:            { type: enum,      values: [draft, released, in-progress, completed, cancelled], nullable: false }
+      scheduled_start:   { type: timestamp, nullable: true }
+      scheduled_end:     { type: timestamp, nullable: true }
+    constraints:
+      - { type: check, expr: "quantity_planned > 0" }
+      - { type: check, expr: "scheduled_end IS NULL OR scheduled_start IS NULL OR scheduled_end >= scheduled_start" }
+    indexes:
+      - { columns: [status] }
+
+  operation:
+    domain: production
+    table: production_operation
+    primary_key: id
+    columns:
+      id:            { type: uuid,      nullable: false }
+      created_at:    { type: timestamp, nullable: false }
+      updated_at:    { type: timestamp, nullable: false }
+      work_order_id: { type: uuid,      nullable: false,
+                       fk: { entity: work-order, column: id, on_delete: cascade } }
+      name:          { type: string,    nullable: false }
+      sequence:      { type: integer,   nullable: false }
+      status:        { type: enum,      values: [pending, in-progress, completed, skipped], nullable: false }
+      machine_id:    { type: uuid,      nullable: true }
+      actual_start:  { type: timestamp, nullable: true }
+      actual_end:    { type: timestamp, nullable: true }
+    constraints:
+      - { type: unique, columns: [work_order_id, sequence] }
+      - { type: check, expr: "actual_end IS NULL OR actual_start IS NULL OR actual_end >= actual_start" }
+    indexes:
+      - { columns: [work_order_id] }
+    # DDL notes:
+    #   machine_id resolves to an external resource registry; FK omitted (not a seed entity).
+    #   Sequence-order enforcement — application layer.
+
+  # ─────────────────────────────────────────────
+  # QUALITY
+  # ─────────────────────────────────────────────
+
+  inspection-plan:
+    domain: quality
+    table: quality_inspection_plan
+    primary_key: id
+    columns:
+      id:             { type: uuid,   nullable: false }
+      created_at:     { type: timestamp, nullable: false }
+      updated_at:     { type: timestamp, nullable: false }
+      name:           { type: string, nullable: false }
+      reference_type: { type: enum,   values: [work-order, shipment, vendor, process], nullable: false }
+      reference_id:   { type: uuid,   nullable: false }
+      status:         { type: enum,   values: [pending, in-progress, passed, failed, cancelled], nullable: false }
+      assigned_to:    { type: uuid,   nullable: true,
+                        fk: { entity: employee, column: id, on_delete: set_null } }
+      due_date:       { type: date,   nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [reference_type, reference_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   reference_id is polymorphic (work-order/shipment/vendor/process) — FK omitted.
+
+  inspection-result:
+    domain: quality
+    table: quality_inspection_result
+    primary_key: id
+    columns:
+      id:                  { type: uuid,      nullable: false }
+      created_at:          { type: timestamp, nullable: false }
+      updated_at:          { type: timestamp, nullable: false }
+      inspection_plan_id:  { type: uuid,      nullable: false,
+                             fk: { entity: inspection-plan, column: id, on_delete: cascade } }
+      checkpoint:          { type: string,    nullable: false }
+      result:              { type: enum,      values: [pass, fail, observation], nullable: false }
+      measured_value:      { type: string,    nullable: true }
+      expected_value:      { type: string,    nullable: true }
+      inspector_id:        { type: uuid,      nullable: false,
+                             fk: { entity: employee, column: id, on_delete: restrict } }
+      recorded_at:         { type: timestamp, nullable: false }
+    constraints: []
+    indexes:
+      - { columns: [inspection_plan_id] }
+    # DDL notes:
+    #   Append-only — application layer.
+    #   Auto-trigger defect on fail result — application layer.
+
+  defect:
+    domain: quality
+    table: quality_defect
+    primary_key: id
+    columns:
+      id:                   { type: uuid,   nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      inspection_result_id: { type: uuid,   nullable: false,
+                              fk: { entity: inspection-result, column: id, on_delete: restrict } }
+      defect_code:          { type: string, length: 64, nullable: false }
+      severity:             { type: enum,   values: [critical, major, minor], nullable: false }
+      description:          { type: text,   nullable: false }
+      status:               { type: enum,   values: [open, under-review, corrective-action-raised, closed], nullable: false }
+      disposition:          { type: enum,   values: [rework, scrap, accept-with-deviation, pending], nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [severity] }
+      - { columns: [status] }
+    # DDL notes:
+    #   critical defect → parent plan failed — application layer.
+    #   Cannot close without closed corrective-action — application layer.
+
+  corrective-action:
+    domain: quality
+    table: quality_corrective_action
+    primary_key: id
+    columns:
+      id:                 { type: uuid,      nullable: false }
+      created_at:         { type: timestamp, nullable: false }
+      updated_at:         { type: timestamp, nullable: false }
+      defect_id:          { type: uuid,      nullable: false,
+                            fk: { entity: defect,   column: id, on_delete: restrict } }
+      root_cause:         { type: text,      nullable: false }
+      action_description: { type: text,      nullable: false }
+      owner_id:           { type: uuid,      nullable: false,
+                            fk: { entity: employee, column: id, on_delete: restrict } }
+      due_date:           { type: date,      nullable: false }
+      status:             { type: enum,      values: [open, in-progress, verification-pending, closed], nullable: false }
+      verified_by:        { type: uuid,      nullable: true,
+                            fk: { entity: employee, column: id, on_delete: set_null } }
+      verified_at:        { type: timestamp, nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [defect_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   Cannot close without verified_by + verified_at — application layer.
+
+  # ─────────────────────────────────────────────
+  # PROJECT
+  # ─────────────────────────────────────────────
+
+  project:
+    domain: project
+    table: project_project
+    primary_key: id
+    columns:
+      id:         { type: uuid,    nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      code:       { type: string,  length: 32, nullable: false, unique: true }
+      name:       { type: string,  nullable: false }
+      owner_id:   { type: uuid,    nullable: false,
+                    fk: { entity: employee, column: id, on_delete: restrict } }
+      status:     { type: enum,    values: [planning, active, on-hold, completed, cancelled], nullable: false }
+      start_date: { type: date,    nullable: false }
+      end_date:   { type: date,    nullable: false }
+      budget:     { type: decimal, precision: 18, scale: 4, nullable: true }
+    constraints:
+      - { type: check, expr: "end_date >= start_date" }
+    indexes:
+      - { columns: [status] }
+      - { columns: [owner_id] }
+
+  task:
+    domain: project
+    table: project_task
+    primary_key: id
+    columns:
+      id:              { type: uuid,    nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      project_id:      { type: uuid,    nullable: false,
+                         fk: { entity: project, column: id, on_delete: cascade } }
+      parent_task_id:  { type: uuid,    nullable: true,
+                         fk: { entity: task,    column: id, on_delete: set_null } }
+      name:            { type: string,  nullable: false }
+      status:          { type: enum,    values: [todo, in-progress, blocked, done, cancelled], nullable: false }
+      assignee_id:     { type: uuid,    nullable: true,
+                         fk: { entity: employee, column: id, on_delete: set_null } }
+      due_date:        { type: date,    nullable: true }
+      estimated_hours: { type: decimal, precision: 8, scale: 2, nullable: true }
+      actual_hours:    { type: decimal, precision: 8, scale: 2, nullable: true }
+      progress_pct:    { type: integer, nullable: false }
+    constraints:
+      - { type: check, expr: "progress_pct >= 0 AND progress_pct <= 100" }
+    indexes:
+      - { columns: [project_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   Circular parent-task — application layer.
+    #   done → progress_pct == 100 — application layer.
+
+  milestone:
+    domain: project
+    table: project_milestone
+    primary_key: id
+    columns:
+      id:          { type: uuid,      nullable: false }
+      created_at:  { type: timestamp, nullable: false }
+      updated_at:  { type: timestamp, nullable: false }
+      project_id:  { type: uuid,      nullable: false,
+                     fk: { entity: project, column: id, on_delete: cascade } }
+      name:        { type: string,    nullable: false }
+      due_date:    { type: date,      nullable: false }
+      status:      { type: enum,      values: [pending, achieved, missed, cancelled], nullable: false }
+      achieved_at: { type: timestamp, nullable: true }
+      description: { type: string,    nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [project_id] }
+    # DDL notes:
+    #   achieved → achieved_at set — application layer.
+
+  resource-assignment:
+    domain: project
+    table: project_resource_assignment
+    primary_key: id
+    columns:
+      id:              { type: uuid,    nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      project_id:      { type: uuid,    nullable: false,
+                         fk: { entity: project,  column: id, on_delete: cascade } }
+      employee_id:     { type: uuid,    nullable: false,
+                         fk: { entity: employee, column: id, on_delete: restrict } }
+      role:            { type: string,  nullable: false }
+      allocated_hours: { type: decimal, precision: 8, scale: 2, nullable: false }
+      start_date:      { type: date,    nullable: false }
+      end_date:        { type: date,    nullable: false }
+    constraints:
+      - { type: unique, columns: [project_id, employee_id] }
+      - { type: check, expr: "end_date >= start_date" }
+      - { type: check, expr: "allocated_hours > 0" }
+    indexes:
+      - { columns: [project_id] }
+      - { columns: [employee_id] }
+
+  # ─────────────────────────────────────────────
+  # ASSET
+  # ─────────────────────────────────────────────
+
+  asset-category:
+    domain: asset
+    table: asset_category
+    primary_key: id
+    columns:
+      id:                       { type: uuid,    nullable: false }
+      created_at:               { type: timestamp, nullable: false }
+      updated_at:               { type: timestamp, nullable: false }
+      code:                     { type: string,  length: 32, nullable: false, unique: true }
+      name:                     { type: string,  nullable: false }
+      default_useful_life_years: { type: integer, nullable: false }
+      depreciation_method:      { type: enum,    values: [straight-line, declining-balance, units-of-production], nullable: false }
+    constraints:
+      - { type: check, expr: "default_useful_life_years > 0" }
+    indexes: []
+    # DDL notes:
+    #   Changing depreciation_method when assets exist — application layer.
+
+  asset:
+    domain: asset
+    table: asset_asset
+    primary_key: id
+    columns:
+      id:                 { type: uuid,    nullable: false }
+      created_at:         { type: timestamp, nullable: false }
+      updated_at:         { type: timestamp, nullable: false }
+      asset_number:       { type: string,  nullable: false, unique: true }
+      name:               { type: string,  nullable: false }
+      category_id:        { type: uuid,    nullable: false,
+                            fk: { entity: asset-category, column: id, on_delete: restrict } }
+      acquisition_date:   { type: date,    nullable: false }
+      acquisition_cost:   { type: decimal, precision: 18, scale: 4, nullable: false }
+      current_book_value: { type: decimal, precision: 18, scale: 4, nullable: false }
+      status:             { type: enum,    values: [active, under-maintenance, disposed, written-off], nullable: false }
+      location:           { type: string,  nullable: true }
+      serial_number:      { type: string,  nullable: true }
+    constraints:
+      - { type: check, expr: "current_book_value >= 0" }
+      - { type: check, expr: "acquisition_cost >= 0" }
+    indexes:
+      - { columns: [category_id] }
+      - { columns: [status] }
+
+  depreciation-schedule:
+    domain: asset
+    table: asset_depreciation_schedule
+    primary_key: id
+    columns:
+      id:                      { type: uuid,    nullable: false }
+      created_at:              { type: timestamp, nullable: false }
+      updated_at:              { type: timestamp, nullable: false }
+      asset_id:                { type: uuid,    nullable: false,
+                                 fk: { entity: asset, column: id, on_delete: restrict } }
+      method:                  { type: enum,    values: [straight-line, declining-balance, units-of-production], nullable: false }
+      useful_life_years:       { type: integer, nullable: false }
+      salvage_value:           { type: decimal, precision: 18, scale: 4, nullable: false }
+      start_date:              { type: date,    nullable: false }
+      annual_depreciation:     { type: decimal, precision: 18, scale: 4, nullable: false }
+      accumulated_depreciation: { type: decimal, precision: 18, scale: 4, nullable: false }
+    constraints:
+      - { type: check, expr: "useful_life_years > 0" }
+      - { type: check, expr: "salvage_value >= 0" }
+      - { type: check, expr: "accumulated_depreciation >= 0" }
+    indexes:
+      - { columns: [asset_id] }
+    # DDL notes:
+    #   One active schedule per asset — application layer.
+    #   salvage_value < acquisition_cost — cross-table; application layer.
+    #   accumulated_depreciation <= (acquisition_cost - salvage_value) — cross-table; app layer.
+
+  maintenance-record:
+    domain: asset
+    table: asset_maintenance_record
+    primary_key: id
+    columns:
+      id:               { type: uuid,      nullable: false }
+      created_at:       { type: timestamp, nullable: false }
+      updated_at:       { type: timestamp, nullable: false }
+      asset_id:         { type: uuid,      nullable: false,
+                          fk: { entity: asset, column: id, on_delete: restrict } }
+      maintenance_type: { type: enum,      values: [preventive, corrective, inspection, upgrade], nullable: false }
+      performed_at:     { type: timestamp, nullable: false }
+      performed_by:     { type: string,    nullable: false }
+      cost:             { type: decimal,   precision: 18, scale: 4, nullable: true }
+      description:      { type: text,      nullable: false }
+      next_due_date:    { type: date,      nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [asset_id] }
+    # DDL notes:
+    #   Append-only — application layer.
+    #   next_due_date >= performed_at.date — cross-type comparison; application layer.
+
+  # ─────────────────────────────────────────────
+  # DOCUMENT
+  # ─────────────────────────────────────────────
+
+  document-category:
+    domain: document
+    table: document_category
+    primary_key: id
+    columns:
+      id:                    { type: uuid,    nullable: false }
+      created_at:            { type: timestamp, nullable: false }
+      updated_at:            { type: timestamp, nullable: false }
+      code:                  { type: string,  length: 32, nullable: false, unique: true }
+      name:                  { type: string,  nullable: false }
+      parent_id:             { type: uuid,    nullable: true,
+                               fk: { entity: document-category, column: id, on_delete: set_null } }
+      default_retention_days: { type: integer, nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [parent_id] }
+    # DDL notes:
+    #   Circular parent — application layer.
+    #   Cannot delete with documents — application layer.
+
+  document:
+    domain: document
+    table: document_document
+    primary_key: id
+    columns:
+      id:                 { type: uuid,   nullable: false }
+      created_at:         { type: timestamp, nullable: false }
+      updated_at:         { type: timestamp, nullable: false }
+      title:              { type: string, nullable: false }
+      category_id:        { type: uuid,   nullable: false,
+                            fk: { entity: document-category, column: id, on_delete: restrict } }
+      owner_id:           { type: uuid,   nullable: false,
+                            fk: { entity: employee, column: id, on_delete: restrict } }
+      status:             { type: enum,   values: [draft, published, archived, deleted], nullable: false }
+      current_version_id: { type: uuid,   nullable: true }
+      retention_date:     { type: date,   nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [category_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   current_version_id FK to document-version creates a circular dependency;
+    #     set after first upload — FK enforced at application layer (not DDL).
+    #   deleted = soft delete — application layer.
+
+  document-version:
+    domain: document
+    table: document_version
+    primary_key: id
+    columns:
+      id:              { type: uuid,    nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      document_id:     { type: uuid,    nullable: false,
+                         fk: { entity: document, column: id, on_delete: cascade } }
+      version_number:  { type: string,  length: 32, nullable: false }
+      uploaded_by:     { type: uuid,    nullable: false,
+                         fk: { entity: employee, column: id, on_delete: restrict } }
+      file_name:       { type: string,  nullable: false }
+      file_size_bytes: { type: integer, nullable: false }
+      mime_type:       { type: string,  length: 128, nullable: false }
+      storage_key:     { type: string,  nullable: false }
+      checksum:        { type: string,  length: 64, nullable: false }
+      is_published:    { type: boolean, nullable: false }
+    constraints:
+      - { type: unique, columns: [document_id, version_number] }
+    indexes:
+      - { columns: [document_id] }
+    # DDL notes:
+    #   Immutable once uploaded — application layer.
+    #   Only one is_published per document — application layer (partial unique).
+
+  access-rule:
+    domain: document
+    table: document_access_rule
+    primary_key: id
+    columns:
+      id:             { type: uuid,   nullable: false }
+      created_at:     { type: timestamp, nullable: false }
+      updated_at:     { type: timestamp, nullable: false }
+      document_id:    { type: uuid,   nullable: false,
+                        fk: { entity: document, column: id, on_delete: cascade } }
+      principal_type: { type: enum,   values: [employee, department, role], nullable: false }
+      principal_id:   { type: uuid,   nullable: false }
+      permission:     { type: enum,   values: [read, edit, admin], nullable: false }
+      expires_at:     { type: timestamp, nullable: true }
+    constraints:
+      - { type: unique, columns: [document_id, principal_type, principal_id] }
+    indexes:
+      - { columns: [document_id] }
+    # DDL notes:
+    #   Expired rule treated as non-existent at read time — application layer.
+
+  # ─────────────────────────────────────────────
+  # APPROVAL
+  # ─────────────────────────────────────────────
+
+  approval-request:
+    domain: approval
+    table: approval_request
+    primary_key: id
+    columns:
+      id:           { type: uuid,      nullable: false }
+      created_at:   { type: timestamp, nullable: false }
+      updated_at:   { type: timestamp, nullable: false }
+      subject_type: { type: string,    length: 64, nullable: false }
+      subject_id:   { type: uuid,      nullable: false }
+      requester_id: { type: uuid,      nullable: false,
+                      fk: { entity: employee, column: id, on_delete: restrict } }
+      status:       { type: enum,      values: [pending, in-progress, approved, rejected, cancelled, expired], nullable: false }
+      title:        { type: string,    nullable: false }
+      expires_at:   { type: timestamp, nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [subject_type, subject_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   Unique among non-terminal requests for (subject_type, subject_id) — partial unique;
+    #     application layer.
+
+  approval-step:
+    domain: approval
+    table: approval_step
+    primary_key: id
+    columns:
+      id:           { type: uuid,    nullable: false }
+      created_at:   { type: timestamp, nullable: false }
+      updated_at:   { type: timestamp, nullable: false }
+      request_id:   { type: uuid,    nullable: false,
+                      fk: { entity: approval-request, column: id, on_delete: cascade } }
+      sequence:     { type: integer, nullable: false }
+      name:         { type: string,  nullable: false }
+      status:       { type: enum,    values: [pending, active, approved, rejected, skipped], nullable: false }
+      requires_all: { type: boolean, nullable: false }
+    constraints:
+      - { type: unique, columns: [request_id, sequence] }
+    indexes:
+      - { columns: [request_id] }
+
+  approver:
+    domain: approval
+    table: approval_approver
+    primary_key: id
+    columns:
+      id:           { type: uuid,      nullable: false }
+      created_at:   { type: timestamp, nullable: false }
+      updated_at:   { type: timestamp, nullable: false }
+      step_id:      { type: uuid,      nullable: false,
+                      fk: { entity: approval-step, column: id, on_delete: cascade } }
+      employee_id:  { type: uuid,      nullable: false,
+                      fk: { entity: employee,      column: id, on_delete: restrict } }
+      notified_at:  { type: timestamp, nullable: true }
+      responded_at: { type: timestamp, nullable: true }
+    constraints:
+      - { type: unique, columns: [step_id, employee_id] }
+    indexes:
+      - { columns: [step_id] }
+
+  approval-decision:
+    domain: approval
+    table: approval_decision
+    primary_key: id
+    columns:
+      id:          { type: uuid,      nullable: false }
+      created_at:  { type: timestamp, nullable: false }
+      updated_at:  { type: timestamp, nullable: false }
+      step_id:     { type: uuid,      nullable: false,
+                     fk: { entity: approval-step, column: id, on_delete: restrict } }
+      approver_id: { type: uuid,      nullable: false,
+                     fk: { entity: approver,      column: id, on_delete: restrict } }
+      decision:    { type: enum,      values: [approved, rejected], nullable: false }
+      comment:     { type: string,    nullable: true }
+      decided_at:  { type: timestamp, nullable: false }
+    constraints:
+      - { type: unique, columns: [step_id, approver_id] }
+    indexes:
+      - { columns: [step_id] }
+    # DDL notes:
+    #   Immutable once recorded — application layer.
+
+  # ─────────────────────────────────────────────
+  # REPORTING
+  # ─────────────────────────────────────────────
+
+  report-definition:
+    domain: reporting
+    table: reporting_report_definition
+    primary_key: id
+    columns:
+      id:            { type: uuid,    nullable: false }
+      created_at:    { type: timestamp, nullable: false }
+      updated_at:    { type: timestamp, nullable: false }
+      code:          { type: string,  length: 64, nullable: false, unique: true }
+      name:          { type: string,  nullable: false }
+      domain:        { type: string,  length: 32, nullable: false }
+      description:   { type: text,    nullable: true }
+      output_format: { type: enum,    values: [table, chart, pivot, export-csv, export-xlsx], nullable: false }
+      is_active:     { type: boolean, nullable: false }
+      owner_id:      { type: uuid,    nullable: false,
+                       fk: { entity: employee, column: id, on_delete: restrict } }
+    constraints: []
+    indexes:
+      - { columns: [domain] }
+      - { columns: [is_active] }
+
+  report-schedule:
+    domain: reporting
+    table: reporting_report_schedule
+    primary_key: id
+    columns:
+      id:                   { type: uuid,      nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      report_definition_id: { type: uuid,      nullable: false,
+                              fk: { entity: report-definition, column: id, on_delete: cascade } }
+      cron_expression:      { type: string,    length: 64, nullable: false }
+      is_active:            { type: boolean,   nullable: false }
+      recipient_ids:        { type: text,      nullable: false }
+      next_run_at:          { type: timestamp, nullable: true }
+      last_run_at:          { type: timestamp, nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [report_definition_id] }
+    # DDL notes:
+    #   recipient_ids is a JSON array stored as text (no ARRAY type in neutral vocab);
+    #     adapter must parse/serialise. At least one entry — application layer.
+    #   cron_expression syntax validation — application layer.
+
+  report-parameter:
+    domain: reporting
+    table: reporting_report_parameter
+    primary_key: id
+    columns:
+      id:                   { type: uuid,    nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      report_definition_id: { type: uuid,    nullable: false,
+                              fk: { entity: report-definition, column: id, on_delete: cascade } }
+      name:                 { type: string,  length: 64, nullable: false }
+      label:                { type: string,  nullable: false }
+      data_type:            { type: enum,    values: [string, integer, number, boolean, date, enum], nullable: false }
+      is_required:          { type: boolean, nullable: false }
+      default_value:        { type: string,  nullable: true }
+      enum_values:          { type: text,    nullable: true }
+    constraints:
+      - { type: unique, columns: [report_definition_id, name] }
+    indexes:
+      - { columns: [report_definition_id] }
+    # DDL notes:
+    #   enum_values stored as JSON text array; when data_type=enum, non-empty — application layer.
+
+  report-output:
+    domain: reporting
+    table: reporting_report_output
+    primary_key: id
+    columns:
+      id:                   { type: uuid,      nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      report_definition_id: { type: uuid,      nullable: false,
+                              fk: { entity: report-definition, column: id, on_delete: restrict } }
+      triggered_by:         { type: enum,      values: [manual, schedule], nullable: false }
+      triggered_by_id:      { type: uuid,      nullable: true }
+      status:               { type: enum,      values: [queued, running, completed, failed], nullable: false }
+      started_at:           { type: timestamp, nullable: true }
+      completed_at:         { type: timestamp, nullable: true }
+      storage_key:          { type: string,    nullable: true }
+      row_count:            { type: integer,   nullable: true }
+      error_message:        { type: text,      nullable: true }
+    constraints:
+      - { type: check, expr: "completed_at IS NULL OR started_at IS NULL OR completed_at >= started_at" }
+    indexes:
+      - { columns: [report_definition_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   Append-only once completed/failed — application layer.
