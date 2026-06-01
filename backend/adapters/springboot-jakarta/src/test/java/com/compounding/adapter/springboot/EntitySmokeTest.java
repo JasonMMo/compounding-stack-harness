@@ -142,16 +142,19 @@ class EntitySmokeTest {
     @Test
     @DisplayName("entity.list page=3 size=3 with 7 items returns 1-item remainder")
     void lastPageReturnsRemainder() throws Exception {
-        // Seed 7 items
+        // Seed 7 items using a non-catalog entity type (schema-less pass-through).
+        // "page-test-item" is not in catalog.yaml → no required-field validation.
+        // Growth-12: catalog entity types (e.g. "item") now enforce required fields,
+        // so paging fixtures must use a non-catalog type to stay schema-free.
         for (int i = 1; i <= 7; i++) {
-            mvc.perform(post("/api/entities/item")
+            mvc.perform(post("/api/entities/page-test-item")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"data\":{\"seq\":" + i + "}}"))
                 .andExpect(status().isCreated());
         }
 
         // page=3, size=3 → offset=6, items[6:7] = 1 record
-        mvc.perform(get("/api/entities/item")
+        mvc.perform(get("/api/entities/page-test-item")
                 .param("page", "3")
                 .param("size", "3"))
             .andExpect(status().isOk())
