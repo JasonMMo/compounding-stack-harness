@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { apiEntityList, type ListResponse, type ListParams } from '../api/wire'
+import { hasMorePages, totalPageCount } from '../api/paging'
 import ErrorBanner from '../components/ErrorBanner'
 import type { WireError } from '../api/wire'
 import { WIRE_VERSION } from '../contract/contract.gen'
@@ -114,7 +115,7 @@ export default function ListScreen() {
   const items = data?.items ?? []
   const total = data?.total ?? 0
   const columns = items.length > 0 ? Object.keys(items[0]) : []
-  const totalPages = Math.max(1, Math.ceil(total / pagingSize))
+  const totalPages = totalPageCount(total, pagingSize)
 
   return (
     <div>
@@ -251,7 +252,7 @@ export default function ListScreen() {
               })}
               <button
                 className="page-btn"
-                disabled={pagingPage >= totalPages}
+                disabled={!hasMorePages({ mode: 'offset', page: pagingPage, size: pagingSize, total })}
                 onClick={() => handlePageChange(pagingPage + 1)}
               >
                 다음
@@ -260,14 +261,14 @@ export default function ListScreen() {
           )}
 
           {/* F-2: cursor "Load more" button */}
-          {pagingMode === 'cursor' && data?.next_cursor && (
+          {pagingMode === 'cursor' && hasMorePages({ mode: 'cursor', nextCursor: data?.next_cursor }) && (
             <div className="pagination">
               <button className="btn btn-secondary" onClick={handleCursorNext}>
-                더 보기 (cursor: {data.next_cursor.substring(0, 12)}...)
+                더 보기 (cursor: {data!.next_cursor!.substring(0, 12)}...)
               </button>
             </div>
           )}
-          {pagingMode === 'cursor' && !data?.next_cursor && items.length > 0 && (
+          {pagingMode === 'cursor' && !hasMorePages({ mode: 'cursor', nextCursor: data?.next_cursor }) && items.length > 0 && (
             <div className="pagination">
               <span className="pagination-info">마지막 페이지</span>
             </div>
