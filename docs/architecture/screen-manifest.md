@@ -36,12 +36,12 @@
           "options": ["draft", "confirmed", "partially-fulfilled", "fulfilled", "cancelled"]
         },
         {
-          "name": "customer_id",
+          "name": "order_id",
           "type": "uuid",
           "required": true,
-          "label": "Customer Id",
+          "label": "Order Id",
           "control": "fk-text",
-          "fk_entity": "contact",
+          "fk_entity": "sales-order",
           "note": "FK dropdown deferred (M1)"
         }
       ],
@@ -72,6 +72,8 @@ These rules live in `manifest.py::_classify_column()` — do not reimplement els
 **`required`**: `true` when `nullable: false` in catalog.
 
 **`unique`**: carried as `true` when catalog column sets `unique: true`; omitted otherwise.
+
+**`max_length`**: present on `text` controls only when the catalog column sets a `length`. Absent means no limit — the frontend must not impose one.
 
 **`label`**: column name with underscores → spaces, each word Title-cased.
 
