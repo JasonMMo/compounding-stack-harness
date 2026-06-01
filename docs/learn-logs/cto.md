@@ -168,6 +168,15 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Escalation 수신**: engineer 가 `finance_journal_entry.period_id` FK 부재 (accounting_period 미존재) 보고 → application-layer 검증으로 충분, 57번째 entity 는 period-close DB 가드 필요 시 후속 Growth 후보로 deferred.
 - **Open loops resolved**: ddl 축 첫 채움 (M2 prereq 1개 충족). G-10 신설로 가드 10개.
 
+### Growth-11 (2026-06-01) — 2nd backend (fastapi) 통합 + 공유 suite 단일화 + adapter-agnostic 실증
+
+- **역할**: Architect (fastapi 픽 + backend 축 manifest + suite 단일화 설계) + Integrator (engineer·qa 체인 + G-5 해소)
+- **결정**: (1) **fastapi 픽** (CEO "react 또는 fastapi" 위임 → CTO 선택) — backend swap 이 "한 contract 가 Java↔Python 구동" 차별화를 직접 실증하고, black-box compliance suite 의 **첫 재사용**으로 suite 의 adapter-agnostic 설계를 검증하며, axis-7 domain-expert 와 Python 결합이 자연. react(2nd frontend)는 M1 잔여로 후순위. (2) **G-5 해소** — fastapi 가 backend 축을 2-asset 으로 만들어 manifest 트리거 → `backend/adapters/INDEX.md` 작성 (Growth-7 middle/contract/README.md 와 동형, feedback_guards_must_work). (3) **compliance suite 단일화** — QA 가 `tests/adapters/_shared/` 로 옮겼으나 springboot 에 identical copy 잔존 → CTO 가 import shim 으로 진짜 단일 진실 지시 (테스트 코드도 single-source dogma 적용; "3rd adapter 시 정리" deferral 거부).
+- **산출물 (CTO 직접)**: `backend/adapters/INDEX.md` — backend 축 manifest (등록 adapter 표 + 공통 8 wire key 계약 + 공유 suite 재사용 절차 + 새 adapter 추가 절차).
+- **Cross-agent catch / Integrator**: engineer 의 G-5 FAIL 보고를 manifest 로, QA 의 중복 copy 를 shim 으로 — 두 인격의 부산물을 single-source 로 수렴. **adapter-agnostic 주장 검증 완료**: 동일 23-test suite 가 Spring Boot(Growth-7)·FastAPI(Growth-11) 양쪽 assertion 변경 0 으로 green. CLAUDE.md §4 pluggable backend 가 테스트 layer 에서 증명됨.
+- **Escalations**: 없음 (CEO "1→2→3" 위임 범위 내, fastapi 픽은 VP 권한).
+- **Open loops resolved**: M1 backend 축 2번째 + 공유 suite 검증. 남은: react adapter, adapter 검증 wiring (catalog→store).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
