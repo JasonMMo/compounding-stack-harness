@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{ entity_type }} 신규 생성{% endblock %}
+{% block title %}{{ entity_label | default(entity_type) }} 신규 생성{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h1 class="page-title">{{ entity_type | title }} 신규 생성</h1>
+  <h1 class="page-title">{{ entity_label | default(entity_type | title) }} 신규 생성</h1>
   <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-ghost btn-sm">← 목록으로</a>
 </div>
 
@@ -21,22 +21,125 @@
 {% endif %}
 
 <div class="card">
-  <p class="form-hint">
-    필드명을 직접 입력하세요. 엔티티 스키마는 도메인 seed 파일에서 관리됩니다.
-  </p>
-
-  {#
-    Generic create form: entity_type drives the shape.
-    For M1 demo, we render a dynamic "key/value" row builder with htmx.
-    Backend accepts any field map — schema validation is DDL-axis (future Growth).
-  #}
   <form method="post"
         action="{{ url_for('entity_create_post', entity_type=entity_type) }}"
         id="create-form"
         novalidate>
 
+    {% if manifest_fields %}
+    {# ── Manifest-driven typed form (Phase 2) ──────────────────────────── #}
+    {% for field in manifest_fields %}
+    {% set field_id = "field-" ~ field.name %}
+    {% set cur_val = (form_data or {})[field.name] if form_data and field.name in (form_data or {}) else "" %}
+    <div class="form-field">
+      <label for="{{ field_id }}" class="form-label">
+        {{ field.label }}
+        {% if field.required %}<span aria-hidden="true" class="required-marker">*</span>{% endif %}
+      </label>
+
+      {% if field.control == "textarea" %}
+      <textarea
+        id="{{ field_id }}"
+        name="{{ field.name }}"
+        class="form-input"
+        {% if field.required %}required aria-required="true"{% endif %}
+        rows="4"
+      >{{ cur_val }}</textarea>
+
+      {% elif field.control == "number" %}
+      <input
+        id="{{ field_id }}"
+        name="{{ field.name }}"
+        type="number"
+        class="form-input"
+        value="{{ cur_val }}"
+        {% if field.required %}required aria-required="true"{% endif %}
+      >
+
+      {% elif field.control == "date" %}
+      <input
+        id="{{ field_id }}"
+        name="{{ field.name }}"
+        type="date"
+        class="form-input"
+        value="{{ cur_val }}"
+        {% if field.required %}required aria-required="true"{% endif %}
+      >
+
+      {% elif field.control == "datetime" %}
+      <input
+        id="{{ field_id }}"
+        name="{{ field.name }}"
+        type="datetime-local"
+        class="form-input"
+        value="{{ cur_val }}"
+        {% if field.required %}required aria-required="true"{% endif %}
+      >
+
+      {% elif field.control == "checkbox" %}
+      <input
+        id="{{ field_id }}"
+        name="{{ field.name }}"
+        type="checkbox"
+        class="form-checkbox"
+        value="true"
+        {% if cur_val in ("true", "True", "1") %}checked{% endif %}
+        {% if field.required %}required aria-required="true"{% endif %}
+      >
+
+      {% elif field.control == "select" %}
+      <select
+        id="{{ field_id }}"
+        name="{{ field.name }}"
+        class="form-select"
+        {% if field.required %}required aria-required="true"{% endif %}
+      >
+        <option value="">— 선택하세요 —</option>
+        {% for opt in field.options | default([]) %}
+        <option value="{{ opt }}" {% if cur_val == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+
+      {% elif field.control == "fk-text" %}
+      {#
+        FK text input: plain <input type=text> for M1.
+        Full FK dropdown is gated to M2+ per screen-manifest.md §5.
+      #}
+      <input
+        id="{{ field_id }}"
+        name="{{ field.name }}"
+        type="text"
+        class="form-input"
+        value="{{ cur_val }}"
+        {% if field.required %}required aria-required="true"{% endif %}
+        aria-describedby="{{ field_id }}-hint"
+      >
+      <span id="{{ field_id }}-hint" class="form-hint form-hint--fk">
+        {{ field.fk_entity | default("") }} — {{ field.note | default("FK dropdown deferred (M1)") }}
+      </span>
+
+      {% else %}
+      {# default: text — includes max_length only when present #}
+      <input
+        id="{{ field_id }}"
+        name="{{ field.name }}"
+        type="text"
+        class="form-input"
+        value="{{ cur_val }}"
+        {% if field.required %}required aria-required="true"{% endif %}
+        {% if field.max_length is defined and field.max_length %}maxlength="{{ field.max_length }}"{% endif %}
+      >
+      {% endif %}
+
+    </div>
+    {% endfor %}
+
+    {% else %}
+    {# ── Generic fallback (no manifest or entity absent from manifest) ──── #}
+    <p class="form-hint">
+      필드명을 직접 입력하세요. 엔티티 스키마는 도메인 seed 파일에서 관리됩니다.
+    </p>
     <div id="fields-container">
-      {# Pre-populate if form_data exists (re-render after error) #}
       {% if form_data %}
         {% for key, value in form_data.items() %}
         <div class="form-field form-field--dynamic">
@@ -46,7 +149,6 @@
         </div>
         {% endfor %}
       {% else %}
-        {# Default empty field row #}
         <div class="form-field">
           <label for="field-name" class="form-label">이름 <span aria-hidden="true" class="required-marker">*</span></label>
           <input id="field-name" name="name" type="text" class="form-input"
@@ -59,6 +161,7 @@
         </div>
       {% endif %}
     </div>
+    {% endif %}
 
     <div class="form-actions">
       <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-secondary btn-md">취소</a>
