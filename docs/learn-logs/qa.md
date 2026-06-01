@@ -139,6 +139,40 @@ L2 gate result on raw schema (2026-06-01):
 **VERDICT: PASS. Merge gate cleared.**
 
 patch_schema.py disposition: KEEP as audit record -- see QA recommendation below.
+
+
+### Growth-11 (2026-06-01) -- fastapi adapter shared-suite gate: PASS + single-source refactor
+
+- **Audit target**: 두 번째 backend adapter (fastapi) — shared black-box compliance suite, adapter-agnostic claim 검증
+- **Pass criteria (shared, inherited from Growth-7)**: 동일 suite (`test_compliance.py` 23 tests, DIM-1~DIM-4), `ADAPTER_BASE_URL=http://localhost:8081` 로 타겟 변경. 모든 assertions 무변경. 0 SKIP / 0 FAIL / RC=0 이면 PASS.
+- **Suite execution result (live run 2026-06-01)**:
+  - Adapter launched: uvicorn 8081, health OK
+  - DIM-1 Contract round-trip (8 tests): 8/8 PASSED
+    - status.health, auth.login, auth.logout, entity.create, entity.read, entity.list, entity.update(PATCH), entity.delete
+  - DIM-2 Error envelope (5 tests): 5/5 PASSED
+    - NOT_FOUND (read + update missing id), AUTH_FAILED (bad creds), BAD_REQUEST (missing fields), envelope shape
+  - DIM-3 Paging (6 tests): 6/6 PASSED
+    - page1 count, page2 count, last-page remainder (7 items / size 3 = 1 remainder), no overlap, total consistency, cursor=BAD_REQUEST
+  - DIM-4 Standards (4 tests): 4/4 PASSED
+    - idempotent double-delete, cold delete never-created id, PATCH partial field update, PATCH read-back no nullification
+  - **Total: 23/23 PASSED. RC=0. 0 FAILED. 0 SKIPPED.**
+- **Adapter-agnostic claim verdict**: HELD. Identical suite (zero assertion changes), Java SpringBoot and Python FastAPI both 23/23. One wire contract drives two backend runtimes identically.
+- **False PASS / False FAIL risks**:
+  - False PASS guard: in-memory store is test-session-scoped; each test uses `_RUN_TAG` + test-name prefix to isolate entity_types. No cross-test contamination observed (DIM-3 paging seed fixture uses per-test `_et` suffix — Growth-7 isolation fix carries over correctly).
+  - False FAIL risk: none identified. Fastapi error codes and http_status are resolved at runtime from `codes.yaml` via `ContractLoader` (G-1). No hardcoded status divergence possible.
+  - cursor BAD_REQUEST test: fastapi accepts `paging_mode=cursor` (flat-underscore, preferred key, same as springboot BUG-2 fix). No springboot-specific coupling found.
+- **Single-source decision (QA test-policy call)**: OPTION (b) — refactor to adapter-neutral location.
+  - Canonical file moved to: `tests/adapters/_shared/test_compliance.py`
+  - Parent conftest added: `tests/adapters/conftest.py` — URL-only `adapter_base_url` fixture (reads ADAPTER_BASE_URL env var). Picked up by `_shared/` tests via directory ancestry.
+  - FastAPI gate conftest added: `tests/adapters/fastapi/conftest.py` — uvicorn auto-launch, mirrors springboot conftest structure.
+  - Shared suite verified: `ADAPTER_BASE_URL=http://localhost:8081 pytest tests/adapters/_shared/ -v` -> 23/23 PASSED. RC=0.
+  - Rationale for (b): a test file named after one adapter but gating all backends is a naming lie that will cause future engineer confusion and drift. Two adapters justify the refactor. Cost: low (parent conftest 30 lines, new dirs + README).
+  - Dedup CLOSED (Growth-11 follow-up, CTO instruction): `tests/adapters/springboot-jakarta/test_compliance.py` replaced with a 1-line import-star shim: `from tests.adapters._shared.test_compliance import *  # noqa: F401,F403`. Assertions now exist in exactly ONE file. Shim surfaces all 23 test classes under the springboot-jakarta path so the gradle conftest fixture applies; `_shared/` is the canonical source. Both dirs collect 23 (verified `--collect-only`). Live run vs fastapi: 23/23 PASSED RC=0.
+  - springboot collect verified post-refactor: 23 tests collected, RC=0. No regression.
+- **Regression cases**: none (new adapter, no prior gate)
+- **Blocks issued**: 0. 23/23 green on first live run. No defects found.
+- **Cost**: ~1 round Sonnet
+
 ## §3 — Open Loops (이 인격 책임)
 
 - 현행 가드 9개 (G-1~G-9) 의 거짓 PASS / 거짓 FAIL 위험 평가 — 첫 가동 시
