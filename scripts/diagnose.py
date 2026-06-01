@@ -145,8 +145,8 @@ def g1_wire_protocol_single_source() -> GuardResult:
             if child.is_dir():
                 adapter_dirs.append(child)
 
-    # Excluded directories inside adapter trees (build artefacts)
-    _SKIP_DIR_PARTS = {"build", ".gradle", "node_modules", "__pycache__", "target", ".venv"}
+    # Excluded directories inside adapter trees (build artefacts) — shared constant.
+    _SKIP_DIR_PARTS = _GENERATED_DIR_PARTS
 
     # Source file extensions to scan
     _SOURCE_EXTS = {".java", ".kt", ".py", ".ts", ".tsx", ".js", ".go", ".cs"}
@@ -395,6 +395,15 @@ def g5_asset_exposure_harness() -> GuardResult:
     )
 
 
+# Directories that are generated/gitignored artefacts — excluded from ALL source
+# scans (G-1 already used this set; G-6 and G-8 now share it for consistency).
+# Guards scan SOURCE, not build output.
+_GENERATED_DIR_PARTS = frozenset({
+    "build", ".gradle", "node_modules", "__pycache__", "target",
+    ".venv", "venv", "out", "dist", ".pytest_cache",
+    ".git", ".codegraph", ".context",
+})
+
 _SAAS_HINTS = (
     "tenant_id",
     "tenant-id",
@@ -435,6 +444,9 @@ def g6_self_host_single_mode() -> GuardResult:
             if not path.is_file() or path.suffix not in {".py", ".ts", ".tsx", ".js", ".java", ".kt", ".go", ".yaml", ".yml"}:
                 continue
             if path.resolve() == self_path:
+                continue
+            # Skip generated/build artefact directories (same set as G-1).
+            if any(part in _GENERATED_DIR_PARTS for part in path.relative_to(root).parts):
                 continue
             scanned += 1
             try:
@@ -506,7 +518,8 @@ def g7_persona_driven_gating() -> GuardResult:
 
 
 _ASCII_SAFE = re.compile(r"^[A-Za-z0-9._\-/]+$")
-_PATH_IGNORE_PARTS = {".git", "node_modules", "out", "target", "__pycache__", ".venv", "venv"}
+# _PATH_IGNORE_PARTS uses the shared _GENERATED_DIR_PARTS set (defined above G-6)
+# so G-8 skips the same build/artefact directories as G-1 and G-6.
 _PATH_IGNORE_PREFIX = ("docs/scaffolds",)
 
 
@@ -515,12 +528,13 @@ def g8_ascii_slug() -> GuardResult:
 
     Detection: walk the repo, flag any file or directory whose name contains
     non-ASCII characters or characters outside [A-Za-z0-9._-].
+    Generated/build directories are excluded (same set as G-1/G-6).
     """
     violations: list[str] = []
     checked = 0
     for path in REPO_ROOT.rglob("*"):
         rel_parts = path.relative_to(REPO_ROOT).parts
-        if any(part in _PATH_IGNORE_PARTS for part in rel_parts):
+        if any(part in _GENERATED_DIR_PARTS for part in rel_parts):
             continue
         rel_str = "/".join(rel_parts)
         if any(rel_str.startswith(prefix) for prefix in _PATH_IGNORE_PREFIX):
