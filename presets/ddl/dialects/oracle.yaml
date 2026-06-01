@@ -1,0 +1,32 @@
+dialect: oracle
+# M1 type-map stub — type mapping only.
+# Full dialect support pending M1.
+# Oracle notes:
+#   UUID — no native UUID; use VARCHAR2(36) or RAW(16).
+#     VARCHAR2(36) chosen for readability and JDBC compatibility.
+#   BOOLEAN — Oracle 23c+ has native BOOLEAN; older versions use NUMBER(1).
+#     Using NUMBER(1) for broadest compatibility (Oracle 12c+).
+#   TEXT — Oracle uses CLOB for unbounded text.
+#   INTEGER — Oracle NUMBER(10,0) is the portable integer equivalent.
+#   DECIMAL — NUMBER(p,s).
+#   TIMESTAMP — TIMESTAMP supported natively.
+#   Identifier quoting — double-quote (ANSI mode).
+type_map:
+  uuid:      VARCHAR2(36)
+  string:    VARCHAR2
+  text:      CLOB
+  integer:   NUMBER(10)
+  decimal:   NUMBER
+  boolean:   NUMBER(1)
+  date:      DATE
+  timestamp: TIMESTAMP
+  enum:      VARCHAR2   # rendered as VARCHAR2(255) CHECK (col IN (...))
+defaults:
+  string_length: 255
+  enum_length: 255
+quote: '"'
+on_delete_map:
+  restrict:  RESTRICT    # Oracle: default FK behaviour; explicit RESTRICT not supported — app layer
+  cascade:   CASCADE
+  set_null:  SET NULL
+  no_action: NO ACTION
