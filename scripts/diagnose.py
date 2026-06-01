@@ -891,6 +891,97 @@ def g11_creater_catalog_single_source() -> GuardResult:
 
 
 # ---------------------------------------------------------------------------
+# G-12 Catalog FK hygiene
+# ---------------------------------------------------------------------------
+
+# Regex: column name ends with _id (but not just "id" alone).
+_ID_COL_NAME_RE = re.compile(r"^\s{6,}([a-z][a-z0-9_]*_id)\s*:")
+
+# Marker token that whitelists an intentional fk-less _id column.
+_FK_EXEMPT_TOKEN = "fk-exempt:"
+
+
+def g12_catalog_fk_hygiene() -> GuardResult:
+    """G-12 / Growth-15 — every *_id column (non-PK) has fk: or fk-exempt: marker.
+
+    For each column whose name matches *_id (not the bare 'id' primary key),
+    one of the following must hold:
+      (a) the column definition contains 'fk:' (a real FK block), OR
+      (b) the column line itself OR the immediately preceding line contains
+          'fk-exempt:' (intentional / backlog marker).
+
+    FAIL names every entity.column that satisfies neither condition.
+    PASS after Part A annotations in Growth-15.
+    """
+    if not _CATALOG_PATH.exists():
+        return GuardResult(
+            "G-12", "catalog FK hygiene", "Growth-15",
+            status="SPEC",
+            notes="presets/ddl/catalog.yaml not found — guard activates once ddl axis lands.",
+        )
+
+    try:
+        raw_lines = _CATALOG_PATH.read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        return GuardResult(
+            "G-12", "catalog FK hygiene", "Growth-15",
+            status="FAIL",
+            violations=[f"Could not read catalog.yaml: {exc}"],
+        )
+
+    # Walk lines; track current entity key for error messages.
+    violations: list[str] = []
+    current_entity: str = ""
+    _entity_key_re = re.compile(r"^  ([a-z][a-z0-9_-]+):\s*$")
+    checked = 0
+
+    for lineno, line in enumerate(raw_lines):
+        # Track entity headings (2-space indent, ends with colon, no leading spaces
+        # beyond 2, and the name uses slug chars).
+        entity_m = _entity_key_re.match(line)
+        if entity_m:
+            current_entity = entity_m.group(1)
+            continue
+
+        # Check for *_id columns (6+ spaces indent to avoid matching entity keys).
+        col_m = _ID_COL_NAME_RE.match(line)
+        if not col_m:
+            continue
+
+        col_name = col_m.group(1)
+        checked += 1
+
+        # The catalog uses two FK formats:
+        #   (inline)     col_id: { type: uuid, ..., fk: { entity: foo, ... } }
+        #   (multi-line) col_id: { type: uuid, ...,
+        #                          fk: { entity: foo, ... } }
+        # So we must check the column line AND the immediately following line for
+        # "fk:" — the continuation line is always more deeply indented and is the
+        # only next-line that could contain fk: for this column.
+        next_line = raw_lines[lineno + 1] if lineno + 1 < len(raw_lines) else ""
+
+        # (a) Does this column line or its immediate continuation contain fk:?
+        if "fk:" in line or "fk:" in next_line:
+            continue
+
+        # (b) Does this line or the immediately preceding line contain fk-exempt:?
+        prev_line = raw_lines[lineno - 1] if lineno > 0 else ""
+        if _FK_EXEMPT_TOKEN in line or _FK_EXEMPT_TOKEN in prev_line:
+            continue
+
+        violations.append(
+            f"{current_entity}.{col_name}: no fk: block and no fk-exempt: marker"
+        )
+
+    return GuardResult(
+        "G-12", "catalog FK hygiene", "Growth-15",
+        status="FAIL" if violations else ("PASS" if checked else "SKIP"),
+        violations=violations,
+        notes=f"Scanned {checked} *_id column(s) across all entities.",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 
@@ -906,6 +997,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-9": g9_main_log_slim,
     "G-10": g10_ddl_catalog_integrity,
     "G-11": g11_creater_catalog_single_source,
+    "G-12": g12_catalog_fk_hygiene,
 }
 
 
