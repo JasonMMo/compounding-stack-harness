@@ -322,8 +322,21 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **Catches surfaced (CTO 향)**: `sales-order.customer_id` 가 catalog fk 블록 없어 `text` 분류 — manifest 는 catalog 충실 반영(결함 아님), FK 무결성 갭 백로그. G-4 round-trip helper 모듈 부재 — scaffold 는 read-only 라 안전하나 helper 자체는 미존재(추후 과제).
 - **Cost**: 3 round / 약 $4 추정.
 
+### Growth-15 (2026-06-01) — FK 참조 무결성: catalog hygiene 주석 + G-12 + runtime 양 backend
+
+- **위임 계약 (CTO)**: A(catalog hygiene + customer_id fk) + B(G-12 가드) / C(runtime FK 양 backend + DIM-6) — 2 task 로 분리 위임.
+- **Part A 산출** (`catalog.yaml`): `*_id`-no-fk 10개 전수 분류. polymorphic/circular 7개 = `fk-exempt:` 주석 (stock-movement/inspection-plan.reference_id, approval-request.subject_id, access-rule.principal_id, invoice.counterparty_id, document.current_version_id, **report-output.triggered_by_id — CTO 목록 밖 자체 발견**). customer_id → `fk: {entity: contact}` 실연결. machine_id/period_id → `fk-exempt: external ref backlog`. CTO 오기(inspection-result→실제 inspection-plan) 교정 보고.
+- **Part B 산출** (`diagnose.py`): **G-12** — `*_id`(PK 제외)는 fk 블록 OR fk-exempt 마커(동일/직전/직후 행). fails-closed: machine_id 마커 임시제거 → FAIL rc=1 naming → 복원 PASS. `--list` 12 가드. customer_id fk 후 manifest `fk-text`/fk_entity:contact 확인, render FK 제약 emit.
+- **Part C 산출** (6 파일): fastapi `_check_fk()` + springboot `checkFk()` — **동형 로직**: fk-블록 없으면 skip(exempt), null/absent skip, `store.find_by_id/findById(ref_entity, id)` 부재 → `FieldError.invalid(col, "referenced <entity> not found")`, errors 결합(non fail-fast), http_status codes.yaml(하드코딩 0). 단위테스트 +9(py)/+7(java). `test_compliance.py` DIM-6(F1~F6) + DIM-5 `_ensure_department()` 픽스(FK 활성으로 fake uuid → 실 department 생성).
+- **검증**: fastapi L1 28 pass / live DIM-1~6 **37 pass**. springboot **미실행** (이 환경 JDK/Gradle 부재 — 정직 보고; 코드는 checkUnique 동일 패턴, Optional.isEmpty() 기반, py 와 1:1). diagnose 12 가드 0 FAIL, G-1 PASS.
+- **중단·재개**: Part C 첫 turn 이 조사 중 silent 종료(커밋 0) → CTO SendMessage 재개로 완료. 교훈: 장시간 task 는 중간 커밋 체크포인트 고려.
+- **Catches surfaced (CTO 향)**: report-output.triggered_by_id 추가 발견. Java live 미검증 — JDK 환경 필요.
+- **Cost**: 2 round(+1 재개) / 약 $7 추정.
+
 ## §3 — Open Loops (이 인격 책임)
 
+- **Java DIM-6 live 미실행** — JDK/Gradle 환경서 `pytest tests/adapters/springboot-jakarta/` 37 green 확인 (M1 sign-off 전 필수, QA caveat)
+- ~~FK 참조 무결성 (Growth-15 A+B+C)~~ ✅ 완료 (fastapi live 검증, java 코드 패리티)
 - ~~creater axis: scaffold.py/manifest.py + frontend typed-form + G-11 (Growth-14)~~ ✅ 완료
 - ~~M1 진입 시 첫 spawn — `middle/contract/` 첫 wire 키 schema 파일 작성~~ ✅ Growth-5d 완료
 - ~~`scripts/diagnose.py` G-1 SPEC → PASS 전환~~ ✅ Growth-7 완료 (code→status 재선언 검출)
