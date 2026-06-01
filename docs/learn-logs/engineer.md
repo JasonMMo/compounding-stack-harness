@@ -307,8 +307,24 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 
 - Cost: ~15 turns / ~$0.8 추정
 
+### Growth-14 (2026-06-01) — creater 축 구현: scaffold/manifest + frontend typed-form + G-11
+
+- **위임 계약 (CTO)**: 3-phase. P1 = orchestrator+manifest(결정적 backbone), P2 = frontend field-aware 렌더, P3 = agent catalog-aware + G-11 가드.
+- **P1 산출 (5 파일)**:
+  - `scripts/workflow/manifest.py` — `build_manifest()` 순수함수 + thin CLI. 9-rule 컬럼 분류기: id/created_at/updated_at→hidden_fields, fk→`fk-text`+fk_entity+note, enum→`select`+options, string→text(+max_length), text→textarea, int/decimal→number, bool→checkbox, date→date, timestamp→datetime. required=not nullable. 결정성: catalog 컬럼 순서 보존, build 2회 byte-identical.
+  - `scripts/workflow/scaffold.py` — creater orchestrator. profile(G-4 safe `yaml.safe_load`, write-back 없음) → entity 수집 → catalog 검증(render.py `load_catalog` import, 미존재 시 rc=1 + 키 명시) → DDL emit(render.py subprocess) → manifest emit. **단일-진실**: catalog/render 로직 재구현 0.
+  - `profiles/shop-demo.yaml` — catalog-grounded(crm.contact, sales.sales-order/sales-order-line).
+  - `docs/architecture/screen-manifest.md` — manifest 계약(JSON 형상·9 rule·결정성·derived/gitignore·frontend 읽기전용).
+  - `scripts/workflow/tests/test_scaffold.py` — 25 test (분류 규칙·gate rc=1·결정성·dogfood).
+- **P2 산출 (6 파일)**: `manifest_loader.py`(PROFILE_MANIFEST env, 미설정→None→generic fallback), `server.py`(4 route 에 manifest_fields/label/hidden 주입, F-1~F-4·auth 무회귀), `create.html`/`detail.html`(8 control 타입 typed input + fallback 분기 보존, design-token CSS), `test_manifest_loader.py`(21 test). screen-manifest.md doc 예시 수정(customer_id→order_id fk-text 실례, max_length optional). 합계 69 test green / 21 skip(L4).
+- **P3 산출 (2 파일)**: `domain-expert-generic.md` 14-baseline 표를 catalog 1:1 동기화(hr/finance/.../reporting + 실 entity 키) + "catalog 에서 큐레이션" 원칙. `scripts/diagnose.py` **G-11**(creater catalog single-source) — `scripts/workflow/*.py` 의 로컬 `load_catalog`/catalog `yaml.safe_load` 재선언 검출. **fails-closed 증명**: 임시 위반파일 2 패턴 주입→FAIL rc=1 확인→삭제→PASS 복귀.
+- **검증**: L1 pytest 69 pass/0 fail. `build_tokens.py` rc=0(227 CSS prop). diagnose 11 가드 0 real FAIL(G-2/G-3 SPEC). shop-demo+smallmfg-demo scaffold rc=0.
+- **Catches surfaced (CTO 향)**: `sales-order.customer_id` 가 catalog fk 블록 없어 `text` 분류 — manifest 는 catalog 충실 반영(결함 아님), FK 무결성 갭 백로그. G-4 round-trip helper 모듈 부재 — scaffold 는 read-only 라 안전하나 helper 자체는 미존재(추후 과제).
+- **Cost**: 3 round / 약 $4 추정.
+
 ## §3 — Open Loops (이 인격 책임)
 
+- ~~creater axis: scaffold.py/manifest.py + frontend typed-form + G-11 (Growth-14)~~ ✅ 완료
 - ~~M1 진입 시 첫 spawn — `middle/contract/` 첫 wire 키 schema 파일 작성~~ ✅ Growth-5d 완료
 - ~~`scripts/diagnose.py` G-1 SPEC → PASS 전환~~ ✅ Growth-7 완료 (code→status 재선언 검출)
 - adapter `paging.mode` fallback 제거 — flat-underscore 단일 표준 정착 시 (Growth-8 후보)
