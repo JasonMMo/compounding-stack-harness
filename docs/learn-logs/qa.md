@@ -69,9 +69,79 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **Blocks issued**: 0 (37/37 green, 4 explicit skip)
 - **Cost**: ~3 round Sonnet
 
+
+### Growth-10 (2026-06-01) -- L2 HSQLDB gate: DDL catalog smoke, BLOCK (3 renderer defects)
+
+- **Audit target**: DDL axis (Stage 2) -- presets/ddl/catalog.yaml (56 entities, 14 domains) + render.py
+- **Runner**: Java + HSQLDB 2.7.4 in-memory JDBC (canonical L2 per CLAUDE.md par-8). No external framework.
+  - Entry: python tests/ddl/run_l2.py (generates schema + patches + compiles + runs)
+  - Harness: tests/ddl/L2HsqldbSmokeTest.java (47 assertions, single-class)
+  - Patch script: tests/ddl/patch_schema.py (3 renderer defect workarounds)
+- **Pass criteria (L2 PASS = 의도된 violation 외 0 error)**:
+  - S0: All 56 CREATE TABLE DDL loads into HSQLDB in-memory with 0 errors.
+  - S1: 30 positive inserts across 14 domains succeed (valid rows only).
+  - V1-V11: Each intended violation raises a JDBC SQLException (never silently succeeds).
+  - OD1-OD3: ON DELETE SET NULL/RESTRICT/CASCADE behave per catalog declaration.
+  - Unintended error on positive insert = BLOCK. Intended violation that does not fire = BLOCK.
+
+- **Smoke matrix result (live run 2026-06-01)**:
+  - S0 raw schema: 11 OK / 125 errors -- BLOCK (3 renderer defects)
+  - S0 patched: 137 OK / 0 errors -- schema loads cleanly after patch
+  - S1 positive inserts: 30/30 PASS
+  - V1-V11 violations: 11/11 PASS (PK, UNIQUE, FK-restrict, enum-CHECK, range-CHECK, NOT-NULL, composite-UNIQUE all fire)
+  - OD1-OD3 on_delete: 6/6 PASS (SET NULL verified by column value query, RESTRICT by blocked delete, CASCADE by row count)
+  - Total: 47 PASS / 3 DEFECT (all renderer bugs, not catalog or test bugs)
+
+- **3 renderer defects found (all in render.py, NOT catalog.yaml)**:
+  1. **S0-D1 (forward-FK)**: topological sort emits hr_department before hr_employee, keeping manager_id FK inline. HSQLDB rejects FK to non-existent table at CREATE TABLE time. Fix: detect circular back-edges and defer as ALTER TABLE ADD CONSTRAINT after both tables exist.
+  2. **S0-D2 (unquoted CHECK cols)**: render_table() passes catalog constraints[].expr literally without quoting column names. Unquoted identifiers fold to uppercase and fail against quoted lowercase column names. Affects 28 of 72 CHECK constraints. Fix: render.py must parse expr tokens and wrap column names in dialect identifier-quote char.
+  3. **S0-D3 (DEFAULT order)**: render_column() emits TYPE NOT NULL DEFAULT value. HSQLDB requires TYPE DEFAULT value NOT NULL (DEFAULT before constraints). Affects 1 column (inventory_item.allow_negative_stock). Fix: render_column() must place DEFAULT before NOT NULL.
+
+- **Scope boundary (DDL vs application layer)**:
+  - L2 scope: PK, UNIQUE, FK/on_delete, enum CHECK, range CHECK, NOT NULL. All DDL-encoded per catalog.
+  - Out of L2 scope (app layer, per engineer Growth-10): overlapping-leave, headcount enforcement, circular FK prevention, state-machine, immutability, balanced debit/credit, cross-table value comparisons.
+  - finance_journal_entry.period_id FK omission: accounting_period not in catalog. Deferred catalog-scope item, not an L2 concern.
+
+- **False PASS / False FAIL risks**:
+  - False PASS guard: harness always runs raw schema first, records all 3 defects, exits RC=1 (BLOCK) even when patched load succeeds. Prevents silent acceptance of broken DDL.
+  - False FAIL guard: patch_schema.py uses surgical string substitutions tested against 72 CHECK constraints and all known column patterns. No over-patching observed.
+  - Known harness limitation: split on ; does not handle semicolons inside DDL string literals. Acceptable for current catalog DDL (no such patterns exist).
+
+- **Regression policy**: when engineer fixes a renderer defect, remove the corresponding patch from patch_schema.py. L2 gate must re-run against raw schema to confirm S0 passes without that patch.
+- **Blocks issued**: 1 (L2 BLOCK -- 3 renderer defects in render.py, routed to engineer)
+- **Cost**: ~40 turns Sonnet
+
+#### Re-verification (2026-06-01) -- engineer fix applied, verdict flips to PASS
+
+Engineer fixed all 3 renderer defects in render.py:
+- D1: topological_order() detects circular back-edges, emits deferred ALTER TABLE after target table.
+- D2: _quote_check_expr() added; wraps bare lowercase column tokens in dialect quote char for all constraints[].expr.
+- D3: DEFAULT moved before NOT NULL in render_column() parts list.
+
+Re-verification on raw schema (no patch_schema.py applied):
+- render.py regenerated: 1034 lines, 0 WARNING in stdout.
+- hr_department CREATE TABLE: manager_id FK line ABSENT (column stays, constraint deferred to ALTER TABLE at line 69, after hr_employee at line 50).
+- CHECK constraints: CHECK (transit_days > 0 quoted), CHECK (probability >= 0 quoted) -- all column names now use identifier quotes.
+- allow_negative_stock: BOOLEAN DEFAULT FALSE NOT NULL -- correct order.
+
+Patch no-op confirmation (all 3 True):
+- Patch 1 no-op: True -- inline manager_id FK line absent from raw schema.
+- Patch 2 no-op: True -- 0 unquoted-identifier CHECK constraints in raw schema.
+- Patch 3 no-op: True -- 0 NOT-NULL-before-DEFAULT occurrences in raw schema.
+
+L2 gate result on raw schema (2026-06-01):
+- S0: 137 OK / 0 errors -- PASS (key flip from 11 OK / 125 errors in Growth-10 original run)
+- S1: 30/30 PASS
+- V1-V11: 11/11 PASS
+- OD1-OD3: 6/6 PASS
+- Total: 48 PASS / 0 FAIL / 0 DEFECT. RC=0.
+
+**VERDICT: PASS. Merge gate cleared.**
+
+patch_schema.py disposition: KEEP as audit record -- see QA recommendation below.
 ## §3 — Open Loops (이 인격 책임)
 
 - 현행 가드 9개 (G-1~G-9) 의 거짓 PASS / 거짓 FAIL 위험 평가 — 첫 가동 시
 - G-9 통과 기준 인수·재평가 (CTO 임시 박음 → QA 정식 검토)
-- M1 진입 게이트 통과 기준 문서화 — L1~L4 각각의 PASS 정의
+- ~~M1 진입 게이트 통과 기준 문서화 — L1~L4 각각의 PASS 정의~~ PARTIAL: L2 PASS 기준 Growth-10 에서 정의됨. L1/L3/L4 는 M1 진입 시 해소 예정.
 - regression 이력 섹션 초기화 (이 파일 §4 로 분리 예정)
