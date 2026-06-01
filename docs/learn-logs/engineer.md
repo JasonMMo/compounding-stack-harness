@@ -159,6 +159,61 @@ QA가 HSQLDB 2.7.4 in-memory live 로드에서 3개 defect 발견 (catalog.yaml 
 - G-10 PASS / 전체 guard suite PASS / 무 regression.
 - Fix cost: ~8 turns / ~$0.3 추정
 
+### Growth-11 (2026-06-01) — 두 번째 backend adapter: fastapi (Python)
+
+- Files touched:
+  - `backend/adapters/fastapi/contract_loader.py` (신규 — ContractLoader.java 동형 Python 구현)
+  - `backend/adapters/fastapi/wire_response.py` (신규 — WireResponse.java 동형: ok/error builders)
+  - `backend/adapters/fastapi/store.py` (신규 — InMemoryEntityStore.java 동형: threading.Lock per bucket)
+  - `backend/adapters/fastapi/routers/auth.py` (신규 — auth.login + auth.logout)
+  - `backend/adapters/fastapi/routers/entity.py` (신규 — entity 5키 CRUD, paging, filter, sort)
+  - `backend/adapters/fastapi/routers/status.py` (신규 — status.health)
+  - `backend/adapters/fastapi/main.py` (신규 — FastAPI app 조립, uvicorn entrypoint)
+  - `backend/adapters/fastapi/requirements.txt` (신규 — fastapi, uvicorn[standard], pyyaml)
+  - `backend/adapters/fastapi/tests/test_smoke.py` (신규 — L1 16 tests PASS)
+  - `backend/adapters/fastapi/README.md` (신규 — springboot README 구조 mirror)
+  - `docs/learn-logs/engineer.md` (this ledger)
+
+- Stack: **FastAPI + Uvicorn**. Python 3.11+, pyyaml 6.0. No ORM, no DB — in-memory store only (M1).
+
+- ContractLoader Python 구현 방법 (G-1 준수):
+  - `_REPO_ROOT = _ADAPTER_DIR.parents[2]` 로 `middle/contract/` 경로 계산 — 하드코딩 없음.
+  - `yaml.safe_load()` 로 codes.yaml + wire-v1.yaml 읽기.
+  - `http_status_for(code)` / `message_for(code)` / `wire_version()` — Java ContractLoader 동형 API.
+  - 모듈 레벨 싱글턴 `contract = ContractLoader()` — `@PostConstruct` 동형.
+  - G-1 guard (diagnose.py::g1) 스캔 결과: PASS. 코드→status 재선언 0건.
+  - 주의: smoke test 의 `assert http_status == 404` 패턴이 G-1 오탐을 유발함 — codes.yaml 직접 로드 후 loop 비교 방식으로 회피.
+
+- 핵심 준수 포인트 구현:
+  - **flat-underscore paging**: `entity.py::list_entities`가 `request.query_params`를 dict로 받아 `paging_mode`, `page`, `size`, `sort_field`, `sort_direction` 언더스코어 키로 직접 접근. `paging.mode` legacy도 fallback 수용 (BUG-2 패턴).
+  - **cursor mode → BAD_REQUEST**: `paging_mode == "cursor"` 분기에서 `wire_response.error("BAD_REQUEST")` — codes.yaml에서 http_status 400 조회. springboot 동일 동작.
+  - **offset 마지막 페이지 correct count**: `from_idx = min((page-1)*size, total)`, `to_idx = min(from_idx+size, total)` — 7 items, page=3, size=3 → to_idx=7, from_idx=6, len=1. BUG-1 패턴 동일 해소.
+  - **idempotent delete**: `store.delete()` 내부 `bucket.pop(id_, None)` — 없는 키 no-op. 항상 True 반환 → 컨트롤러 `{"success": True}` 200 반환. 두 번 DELETE도 두 번 모두 성공.
+  - **PATCH semantics**: `store.patch()` — `for k, v in patch_data.items(): if k != "id": updated[k] = v`. 공급된 필드만 교체, 비공급 필드 유지, `id` 보호.
+  - **error envelope**: `wire_response.error(code)` → `{"error": {"code": ..., "message": ...}}`. success response에는 `error` 키 없음. details가 있을 때만 `"details"` 키 추가.
+
+- Port 선택: **8081** (springboot-jakarta = 8080; Growth-7 port conflict 경험 반영). `PORT` env var로 재구성 가능.
+
+- Launch command: `uvicorn main:app --port 8081` (adapter 디렉터리에서)
+
+- Tests added:
+  - **L1 16 tests PASS** — `test_smoke.py`: store CRUD + PATCH + idempotent delete + offset paging off-by-one + no-overlap + ContractLoader round-trip
+  - **G-1 PASS** — diagnose.py G-1 guard: 3 adapter, 26 source file 스캔, violation 0
+
+- QA 공유 suite 실행 방법:
+  ```
+  # Terminal 1
+  cd backend/adapters/fastapi && uvicorn main:app --port 8081
+  # Terminal 2
+  ADAPTER_BASE_URL=http://localhost:8081 pytest tests/adapters/springboot-jakarta/ -v
+  ```
+
+- Catches surfaced: 없음. escalation 없음.
+  - FastAPI의 `async def` 라우터에서 `dict[str, Any] | None = None` 파라미터가 body absent 시 None을 주입 — springboot의 `@RequestBody(required=false)` 동형. 정상 동작 확인.
+  - `@router.post("/{entity_type}", status_code=201)` 데코레이터 status_code가 `wire_response.ok()` 내부 JSONResponse의 status_code에 의해 override됨 → `JSONResponse(..., status_code=201)` 명시로 해결.
+
+- Cost: ~15 turns / ~$0.8 추정
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~M1 진입 시 첫 spawn — `middle/contract/` 첫 wire 키 schema 파일 작성~~ ✅ Growth-5d 완료
@@ -170,3 +225,5 @@ QA가 HSQLDB 2.7.4 in-memory live 로드에서 3개 defect 발견 (catalog.yaml 
 - CTO escalation 4건 응답 대기 (Growth-5d Decision Log 참조)
 - L2 HSQLDB schema+seed smoke harness 활성화 — QA 주도 (command: `python presets/ddl/render.py --dialect hsqldb > presets/ddl/build/hsqldb-schema.sql`)
 - wire `entity.create` → catalog 검증 wiring — 후속 Growth (Growth-10 scope 외)
+- ~~fastapi backend adapter (Growth-11)~~ ✅ 완료 — QA 공유 suite pass 대기 중
+- fastapi adapter: cursor paging 구현 — Growth-N (BAD_REQUEST 현재 동작, springboot 동일)
