@@ -45,6 +45,9 @@ cost-reports/local/
 # CodeGraph index (local-first, tenant-scoped — rebuildable from source)
 .codegraph/
 
+# Local tooling artifact (observation/memory vault — not repo state)
+.context/
+
 # Generated design-token CSS (build artifact — single source = design/tokens/*.json).
 # build_tokens.py regenerates it; tracking it would risk drift from the JSON source.
 # (Contrast: gradle-wrapper.jar above is tracked because it is NOT derivable from repo source.)
