@@ -173,6 +173,39 @@ patch_schema.py disposition: KEEP as audit record -- see QA recommendation below
 - **Blocks issued**: 0. 23/23 green on first live run. No defects found.
 - **Cost**: ~1 round Sonnet
 
+
+### Growth-12 (2026-06-01) -- DIM-5 Validation gate: PASS (both adapters identical)
+
+- **Audit target**: DIM-5 validation dimension added to shared compliance suite -- both springboot-jakarta and fastapi must pass identically. Validates that catalog-driven validation (validation-contract.md §3/§4) is correctly wired in both adapter implementations.
+- **Pass criteria (QA definition)**:
+  - S1 (missing required): POST /api/entities/employee without full_name => VALIDATION_ERROR 422, details.fields contains full_name key.
+  - S2 (bad enum): status=bogus => VALIDATION_ERROR 422, details.fields.status present.
+  - S3 (length exceeded): employee_number > 64 chars => VALIDATION_ERROR 422, details.fields.employee_number present.
+  - S4 (type mismatch): headcount_limit=abc on position (integer field) => VALIDATION_ERROR 422, details.fields.headcount_limit present.
+  - S5 (unique collision): same employee_number twice => CONFLICT 409 (NOT VALIDATION_ERROR), details.fields.employee_number present.
+  - S6 (schema-less pass-through): entity_type=product (not in catalog) => 201 success, no validation. Backward-compat guard.
+  - S7a (PATCH bad enum): PATCH status=bogus => VALIDATION_ERROR 422. Validates partial-update validation path.
+  - S7b (PATCH omit required): PATCH body omitting full_name (required on create) => 200 OK. Required check skipped on PATCH (PATCH semantics).
+  - http_status for VALIDATION_ERROR and CONFLICT read from codes.yaml via _http_status() -- no hardcoding. Single-source discipline maintained.
+  - Run-unique employee_number tags (via _RUN_TAG) prevent cross-test unique collisions. Follows Growth-7 isolation lesson.
+- **Suite result -- fastapi (live run 2026-06-01)**:
+  - S1 PASSED, S2 PASSED, S3 PASSED, S4 PASSED, S5 PASSED, S6 PASSED, S7a PASSED, S7b PASSED
+  - Prior DIM-1~4: 23/23 PASSED (regression: 0)
+  - Total: 31/31 PASSED. RC=0. Runtime: ~183s (session-scoped paging fixture creates many entities).
+- **Suite result -- springboot-jakarta (live run 2026-06-01)**:
+  - S1 PASSED, S2 PASSED, S3 PASSED, S4 PASSED, S5 PASSED, S6 PASSED, S7a PASSED, S7b PASSED
+  - Prior DIM-1~4: 23/23 PASSED (regression: 0)
+  - Total: 31/31 PASSED. RC=0. Runtime: ~25s (in-memory JVM, already warm).
+- **Adapter-agnostic claim for DIM-5**: HELD. Identical 8 assertions, zero divergence between Java SpringBoot and Python FastAPI. Both catalogs loaded at runtime from presets/ddl/catalog.yaml (G-1 compliant). Both error envelopes produce VALIDATION_ERROR/CONFLICT with details.fields per codes.yaml contract.
+- **False PASS / False FAIL risks**:
+  - False PASS guard: S5 checks CONFLICT (409), not VALIDATION_ERROR (422). The validators correctly split UNIQUE-kind errors (CONFLICT) from INVALID-kind errors (VALIDATION_ERROR). Both adapters implement this split identically. Assertion checks the code string from codes.yaml, not the integer status.
+  - False PASS guard: S6 (schema-less) verifies entity_type=product passes THROUGH validation entirely (201), not that it fails silently. If the catalog unexpectedly contained a product entity, this test would act as a regression detector.
+  - False FAIL risk: department_id is uuid type (FK existence NOT checked per section 5 scope). Tests supply a random uuid4() value -- both adapters accept any string for uuid fields. No FK validation means the test does not depend on a pre-existing department record.
+  - False FAIL risk: S5 unique collision requires the first create to succeed (201). Each test run gets a fresh _RUN_TAG prefix, so no cross-run collision. The UNIQ- prefix is different from the EMP- prefix used in S1~S3, S7a, S7b -- no intra-run collision either.
+- **Regression cases**: none. DIM-1~4 all PASSED on both adapters post DIM-5 addition (no suite interference).
+- **Blocks issued**: 0. Both adapters passed DIM-5 on first live run. No defects found in either implementation.
+- **Cost**: ~3 round Sonnet (significant time spent on bash quoting issue for file append; resolved via triple-single-quote in double-quoted python -c)
+
 ## §3 — Open Loops (이 인격 책임)
 
 - 현행 가드 9개 (G-1~G-9) 의 거짓 PASS / 거짓 FAIL 위험 평가 — 첫 가동 시
