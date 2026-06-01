@@ -402,3 +402,80 @@ class TestStandards:
             f"PATCH must not nullify absent field_a. Got: {data}"
         )
         assert data.get("field_b") == "changed", f"field_b should be updated: {data}"
+
+import uuid as _uuid_module
+def _valid_employee_data(tag):
+    return {
+        'employee_number': ('EMP-' + _RUN_TAG + '-' + tag)[:64],
+        'full_name': 'Test Employee ' + tag,
+        'department_id': str(_uuid_module.uuid4()),
+        'hire_date': '2024-01-15',
+        'status': 'active',
+    }
+class TestValidation:
+    def test_create_missing_required_returns_validation_error(self, adapter_base_url):
+        data = _valid_employee_data('s1')
+        del data['full_name']
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
+        expected_code = 'VALIDATION_ERROR'
+        _assert_error_envelope(body, expected_code, http_status=_http_status(expected_code), actual_status=status)
+        fields = body.get('error', {}).get('details', {}).get('fields', {})
+        assert 'full_name' in fields, ('S1: ' + str(fields))
+    def test_create_bad_enum_returns_validation_error(self, adapter_base_url):
+        data = _valid_employee_data('s2')
+        data['status'] = 'bogus'
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
+        expected_code = 'VALIDATION_ERROR'
+        _assert_error_envelope(body, expected_code, http_status=_http_status(expected_code), actual_status=status)
+        fields = body.get('error', {}).get('details', {}).get('fields', {})
+        assert 'status' in fields, ('S2: ' + str(fields))
+    def test_create_length_exceeded_returns_validation_error(self, adapter_base_url):
+        data = _valid_employee_data('s3')
+        data['employee_number'] = 'E' * 65
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
+        expected_code = 'VALIDATION_ERROR'
+        _assert_error_envelope(body, expected_code, http_status=_http_status(expected_code), actual_status=status)
+        fields = body.get('error', {}).get('details', {}).get('fields', {})
+        assert 'employee_number' in fields, ('S3: ' + str(fields))
+    def test_create_type_mismatch_returns_validation_error(self, adapter_base_url):
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/position', body={'data': {'title': 'Analyst-' + _RUN_TAG, 'headcount_limit': 'abc'}})
+        expected_code = 'VALIDATION_ERROR'
+        _assert_error_envelope(body, expected_code, http_status=_http_status(expected_code), actual_status=status)
+        fields = body.get('error', {}).get('details', {}).get('fields', {})
+        assert 'headcount_limit' in fields, ('S4: ' + str(fields))
+    def test_create_duplicate_unique_returns_conflict(self, adapter_base_url):
+        emp_number = 'UNIQ-' + _RUN_TAG + '-s5'
+        data = _valid_employee_data('s5')
+        data['employee_number'] = emp_number
+        s1, b1 = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
+        assert s1 == 201, ('S5 first: ' + str(b1))
+        data2 = _valid_employee_data('s5b')
+        data2['employee_number'] = emp_number
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data2})
+        expected_code = 'CONFLICT'
+        _assert_error_envelope(body, expected_code, http_status=_http_status(expected_code), actual_status=status)
+        fields = body.get('error', {}).get('details', {}).get('fields', {})
+        assert 'employee_number' in fields, ('S5: ' + str(fields))
+    def test_create_non_catalog_entity_passes_through(self, adapter_base_url):
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/product', body={'data': {'name': 'Widget-' + _RUN_TAG, 'price': 99.99}})
+        assert status == 201, ('S6: Got ' + str(status) + str(body))
+        assert 'id' in body and body['id'], ('S6 id: ' + str(body))
+        assert 'error' not in body, ('S6 err: ' + str(body))
+    def test_patch_bad_enum_returns_validation_error(self, adapter_base_url):
+        data = _valid_employee_data('s7a')
+        s_create, b_create = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
+        assert s_create == 201, ('S7a setup: ' + str(b_create))
+        eid = b_create['id']
+        status, body = _request(adapter_base_url, 'PATCH', '/api/entities/employee/' + eid, body={'data': {'status': 'bogus'}})
+        expected_code = 'VALIDATION_ERROR'
+        _assert_error_envelope(body, expected_code, http_status=_http_status(expected_code), actual_status=status)
+        fields = body.get('error', {}).get('details', {}).get('fields', {})
+        assert 'status' in fields, ('S7a: ' + str(fields))
+    def test_patch_omitting_required_field_is_success(self, adapter_base_url):
+        data = _valid_employee_data('s7b')
+        s_create, b_create = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
+        assert s_create == 201, ('S7b setup: ' + str(b_create))
+        eid = b_create['id']
+        status, body = _request(adapter_base_url, 'PATCH', '/api/entities/employee/' + eid, body={'data': {'hire_date': '2025-06-01'}})
+        assert status == 200, ('S7b: must return 200. Got ' + str(status) + str(body))
+        assert 'error' not in body, ('S7b err: ' + str(body))
