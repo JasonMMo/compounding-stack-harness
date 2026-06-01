@@ -334,3 +334,152 @@ def test_validate_without_store_skips_unique(validator):
     assert unique_errors == [], (
         f"Without store, no UNIQUE errors should be produced. Got: {unique_errors}"
     )
+
+
+# ── FK referential integrity (§5) ────────────────────────────────────────────
+
+def test_fk_col_bogus_id_returns_invalid(validator, store):
+    """Non-existent FK target → INVALID error with 'not found' message."""
+    # route.carrier_id → carrier; no carrier seeded → must fail
+    data = {
+        "name":             "Test Route",
+        "carrier_id":       "00000000-0000-0000-0000-000000000099",  # not in store
+        "origin_hub":       "HUB-A",
+        "destination_hub":  "HUB-B",
+        "transit_days":     3,
+        "is_active":        True,
+    }
+    errors = validator.validate("route", data, partial=False, store=store)
+    fk_errors = [e for e in errors if e.field == "carrier_id" and e.kind == "INVALID"]
+    assert fk_errors, (
+        f"Bogus carrier_id must produce INVALID FK error. Got: {errors}"
+    )
+    assert "not found" in fk_errors[0].reason, (
+        f"FK error message must contain 'not found'. Got: {fk_errors[0].reason!r}"
+    )
+
+
+def test_fk_col_valid_id_no_error(validator, store):
+    """Existing FK target → no error."""
+    # Seed a carrier
+    carrier = store.create("carrier", {
+        "code":      "CAR-UNIT-01",
+        "name":      "Unit Test Carrier",
+        "is_active": True,
+    })
+    data = {
+        "name":             "Test Route Valid",
+        "carrier_id":       carrier["id"],
+        "origin_hub":       "HUB-A",
+        "destination_hub":  "HUB-B",
+        "transit_days":     2,
+        "is_active":        True,
+    }
+    errors = validator.validate("route", data, partial=False, store=store)
+    fk_errors = [e for e in errors if e.field == "carrier_id"]
+    assert fk_errors == [], (
+        f"Valid FK must produce no error. Got: {fk_errors}"
+    )
+
+
+def test_fk_nullable_absent_no_error(validator, store):
+    """Nullable FK column absent from payload → no FK error."""
+    # position.department_id is nullable: true — omitting it must not produce FK error
+    data = {
+        "title": "Test Position",
+        # department_id intentionally absent (nullable fk)
+    }
+    errors = validator.validate("position", data, partial=False, store=store)
+    fk_errors = [e for e in errors if e.field == "department_id"]
+    assert fk_errors == [], (
+        f"Absent nullable FK must produce no FK error. Got: {fk_errors}"
+    )
+
+
+def test_fk_nullable_null_no_error(validator, store):
+    """Nullable FK column explicitly null → no FK error."""
+    data = {
+        "title":         "Test Position Null FK",
+        "department_id": None,  # explicit null on nullable fk col
+    }
+    errors = validator.validate("position", data, partial=False, store=store)
+    fk_errors = [e for e in errors if e.field == "department_id"]
+    assert fk_errors == [], (
+        f"Explicit null on nullable FK must produce no FK error. Got: {fk_errors}"
+    )
+
+
+def test_fk_exempt_col_no_fk_error(validator, store):
+    """FK-exempt column (no fk: block in catalog) → no FK check performed."""
+    # journal-entry.period_id has type: uuid but NO fk: block (fk-exempt)
+    data = {
+        "entry_date":  "2024-06-01",
+        "description": "Test Entry",
+        "status":      "draft",
+        "period_id":   "00000000-0000-0000-0000-000000000099",  # arbitrary, no carrier in store
+    }
+    errors = validator.validate("journal-entry", data, partial=False, store=store)
+    fk_errors = [e for e in errors if e.field == "period_id"]
+    assert fk_errors == [], (
+        f"FK-exempt period_id must not produce FK error. Got: {fk_errors}"
+    )
+
+
+def test_patch_fk_col_bogus_id_returns_invalid(validator, store):
+    """PATCH: supplied fk col with bogus id → INVALID error."""
+    patch = {"carrier_id": "00000000-0000-0000-0000-000000000099"}
+    errors = validator.validate("route", patch, partial=True, store=store)
+    fk_errors = [e for e in errors if e.field == "carrier_id" and e.kind == "INVALID"]
+    assert fk_errors, (
+        f"PATCH with bogus FK must produce INVALID error. Got: {errors}"
+    )
+
+
+def test_patch_fk_col_absent_no_error(validator, store):
+    """PATCH: fk col absent → no FK check (absent = no change)."""
+    # Only transit_days supplied — carrier_id absent, must not be checked
+    patch = {"transit_days": 5}
+    errors = validator.validate("route", patch, partial=True, store=store)
+    fk_errors = [e for e in errors if e.field == "carrier_id"]
+    assert fk_errors == [], (
+        f"PATCH with fk col absent must not produce FK error. Got: {fk_errors}"
+    )
+
+
+def test_fk_error_collected_with_other_errors(validator, store):
+    """FK error is collected alongside other INVALID errors (not fail-fast)."""
+    # route: bogus carrier_id (FK error) + transit_days wrong type (type error)
+    data = {
+        "name":             "Multi-Error Route",
+        "carrier_id":       "00000000-0000-0000-0000-000000000099",  # bogus fk
+        "origin_hub":       "HUB-A",
+        "destination_hub":  "HUB-B",
+        "transit_days":     "bad",   # type error: should be integer
+        "is_active":        True,
+    }
+    errors = validator.validate("route", data, partial=False, store=store)
+    invalid_errors = [e for e in errors if e.kind == "INVALID"]
+    fields_with_errors = {e.field for e in invalid_errors}
+    assert "carrier_id" in fields_with_errors, (
+        f"FK error must be collected. Got: {errors}"
+    )
+    assert "transit_days" in fields_with_errors, (
+        f"Type error must also be collected. Got: {errors}"
+    )
+
+
+def test_validate_without_store_skips_fk(validator):
+    """Without store, FK check is also skipped (same guard as unique)."""
+    data = {
+        "name":             "No-Store Route",
+        "carrier_id":       "00000000-0000-0000-0000-000000000099",  # bogus, but no store
+        "origin_hub":       "HUB-A",
+        "destination_hub":  "HUB-B",
+        "transit_days":     1,
+        "is_active":        True,
+    }
+    errors = validator.validate("route", data, partial=False)  # no store kwarg
+    fk_errors = [e for e in errors if e.field == "carrier_id"]
+    assert fk_errors == [], (
+        f"Without store, FK errors must not be produced. Got: {fk_errors}"
+    )
