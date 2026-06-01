@@ -43,26 +43,70 @@ catalog entity 의 각 컬럼에 대해, 순서대로:
 - **required 는 적용 안 함** (부재 필드 = 변경 없음, PATCH semantics).
 - `id` 변경 불가 (기존 동작 유지).
 
-## 5. FK 참조 무결성 — 후속 (Growth-12 제외)
+## 5. FK 참조 무결성 — Growth-15 Part C 구현
 
-`fk` 컬럼의 참조 대상 존재 검증 (예: `department_id` 가 실재 department 를 가리키는가) 은 **이번 범위 제외**. 이유: in-memory store 의 cross-type 조회 + 생성 순서 의존이라 별도 설계 필요. 실 backend 는 L2 DDL FK 가 DB layer 에서 강제 (Growth-10). adapter-layer FK 검증은 후속 Growth 후보. catalog 의 `fk` 정의는 이미 존재하므로 후속 작업이 추가 스키마 없이 가능.
+`fk:` 블록이 선언된 컬럼에 대해 런타임 참조 대상 존재 검증을 수행한다 (entity.create AND entity.update 양쪽).
 
-## 6. Compliance 게이트 (DIM-5)
+**체크 규칙**:
 
-공유 suite `tests/adapters/_shared/test_compliance.py` 에 **DIM-5 validation** 차원 추가. catalog entity (예: `employee`)로:
+| 조건 | 동작 |
+|---|---|
+| 컬럼에 `fk:` 블록 없음 (fk-exempt, polymorphic 포함) | **skip** — 강제 안 함 |
+| nullable fk 컬럼이 null 이거나 absent | **skip** — 검증 대상 없음 |
+| non-null fk 값 공급됨 | store 에서 `fk.entity` 타입으로 해당 id lookup |
+| lookup 결과 없음 | `VALIDATION_ERROR` (422), `details.fields.<col> = "referenced <fk.entity> not found"` |
+| lookup 결과 있음 | 통과 |
+
+**추가 규칙**:
+- update(PATCH): 공급된 fk 컬럼만 검증; absent = 변경 없음 = skip.
+- FK 오류는 다른 field 오류와 동일한 `details.fields` 맵에 수집 (collect-all, fail-fast 아님).
+- 오류 코드는 **VALIDATION_ERROR** (dangling fk 는 field violation — 새 코드 불필요).
+- http_status 는 codes.yaml 로더에서 읽음 (G-1: 422 하드코딩 금지).
+- 단일 진실: fk 대상은 catalog 에서 읽음. 관계를 코드에 하드코딩하지 않는다.
+- store 접근은 validator 에 주입된 store 참조를 통해 cross-type lookup.
+  - Python: `store.find_by_id(ref_entity, ref_id)` (None → not found)
+  - Java: `store.findById(refEntity, refId).isEmpty()` (Optional → empty → not found)
+
+**구현 위치**:
+- Python: `backend/adapters/fastapi/catalog_validator.py` → `CatalogValidator._check_fk()`
+- Java: `backend/adapters/springboot-jakarta/…/contract/CatalogValidator.java` → `checkFk()`
+- 양 어댑터에서 `validate()` 의 unique check 직후, collect-all 루프 안에서 호출.
+
+**fk-exempt 컬럼 (강제 안 함)**:
+- `journal-entry.period_id` — `accounting-period` entity 가 catalog 에 없음 (외부 ref)
+- `invoice.counterparty_id` — polymorphic (crm_contact or procurement_vendor)
+- 기타 `fk:` 블록이 없는 모든 uuid 컬럼
+
+## 6. Compliance 게이트 (DIM-5 + DIM-6)
+
+공유 suite `tests/adapters/_shared/test_compliance.py`. springboot·fastapi 양쪽 동일 통과해야 머지 (adapter-agnostic 일관).
+
+### DIM-5 — 스키마 검증 (Growth-12)
+
+catalog entity (예: `employee`)로:
 
 - 누락 required (full_name 없이 create) → VALIDATION_ERROR + details.fields.full_name
 - 잘못된 enum (status="bogus") → VALIDATION_ERROR + details.fields.status
 - length 초과 (employee_number > 64) → VALIDATION_ERROR
 - type 불일치 (headcount_limit="abc" on position) → VALIDATION_ERROR
 - unique 중복 (동일 employee_number 2회) → **CONFLICT**
-- schema-less entity_type (`product`) → 검증 통과 (하위호환 — 기존 DIM-1~4 가 이미 커버)
+- schema-less entity_type (`product`) → 검증 통과 (하위호환)
 - PATCH 로 잘못된 enum → VALIDATION_ERROR / PATCH 로 required 누락 → **통과** (부분갱신)
 
-DIM-5 는 ADAPTER_BASE_URL 파라미터화로 **springboot·fastapi 양쪽** 동일 통과해야 머지 (adapter-agnostic 일관).
+### DIM-6 — FK 참조 무결성 (Growth-15 Part C)
+
+parent=`carrier`, child=`route` (carrier_id → carrier, required), nullable FK=`position.department_id`, fk-exempt=`journal-entry.period_id`:
+
+- F1: child create with bogus parent id → VALIDATION_ERROR + details.fields.carrier_id = "referenced carrier not found"
+- F2: create parent first, then child with real parent id → 201 success
+- F3: nullable FK (position.department_id) omitted → 201 success (no FK error)
+- F4: PATCH fk col to bogus id → VALIDATION_ERROR + details.fields.carrier_id
+- F5: PATCH unrelated field, fk col absent → 200 success (absent fk not re-checked)
+- F6: fk-exempt col (journal-entry.period_id, no `fk:` block) with arbitrary id → 201 success (not enforced)
 
 ## 7. 구현 형태
 
-- adapter 내 `CatalogValidator` (springboot: Java 클래스 / fastapi: Python 모듈) — catalog 로드 + `validate(entity_type, data, partial: bool) → list[FieldError]`.
+- adapter 내 `CatalogValidator` (springboot: Java 클래스 / fastapi: Python 모듈) — catalog 로드 + `validate(entity_type, data, partial: bool, current_id, store) → list[FieldError]`.
 - create/update 컨트롤러가 store 쓰기 **전에** 호출. 위반 시 wire error 반환 (VALIDATION_ERROR / CONFLICT, http_status 는 codes.yaml).
 - catalog 경로 해소: repo-root 기준 `presets/ddl/catalog.yaml` (contract loader 의 경로 해소 패턴 재사용).
+- FK check: `_check_fk` / `checkFk` 메서드가 unique check 직후 실행. store 는 validator 에 주입.
