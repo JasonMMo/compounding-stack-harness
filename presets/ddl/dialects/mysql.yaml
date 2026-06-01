@@ -1,0 +1,28 @@
+dialect: mysql
+# M1 type-map stub — type mapping only.
+# Full dialect support (on_delete, identifier quoting, DDL generation) pending M1.
+# MySQL notes:
+#   UUID — no native UUID; use CHAR(36).
+#   BOOLEAN — TINYINT(1) is the MySQL canonical form.
+#   TEXT — TEXT (up to 65535 bytes); use LONGTEXT for large payloads.
+#   NUMERIC — DECIMAL in MySQL.
+#   Identifier quoting — backtick.
+type_map:
+  uuid:      CHAR(36)
+  string:    VARCHAR
+  text:      TEXT
+  integer:   INT
+  decimal:   DECIMAL
+  boolean:   TINYINT(1)
+  date:      DATE
+  timestamp: DATETIME
+  enum:      VARCHAR   # rendered as VARCHAR(255) CHECK (col IN (...))
+defaults:
+  string_length: 255
+  enum_length: 255
+quote: '`'
+on_delete_map:
+  restrict:  RESTRICT
+  cascade:   CASCADE
+  set_null:  SET NULL
+  no_action: NO ACTION
