@@ -4,21 +4,29 @@ catalog_validator.py — Runtime DDL catalog-driven input validator.
 G-1 compliant: reads presets/ddl/catalog.yaml from the repo root at startup.
 No schema data is hardcoded; the catalog is the single source of truth.
 
-Contract (validation-contract.md §2, §3, §4):
-    entity_type ∈ catalog  →  enforce schema (required/type/enum/length/unique)
+Contract (validation-contract.md §2, §3, §4, §5):
+    entity_type ∈ catalog  →  enforce schema (required/type/enum/length/unique/fk)
     entity_type ∉ catalog  →  schema-less pass-through (backward-compat, returns [])
 
-validate(entity_type, data, partial, current_id=None) → list[FieldError]
-    partial=False (create): required + type + enum + length + unique
-    partial=True  (update): type + enum + length + unique only (no required check)
+validate(entity_type, data, partial, current_id=None, store=None) → list[FieldError]
+    partial=False (create): required + type + enum + length + unique + fk
+    partial=True  (update): type + enum + length + unique + fk (supplied cols only)
 
 Server-populated columns never required from client: id, created_at, updated_at.
 
 FieldError.kind:
-    "INVALID" → caller maps to VALIDATION_ERROR — type/enum/length/required violations
+    "INVALID" → caller maps to VALIDATION_ERROR — type/enum/length/required/fk violations
     "UNIQUE"  → caller maps to CONFLICT         — unique constraint collision
 
 Callers collect ALL errors before responding (not fail-fast, per UX contract).
+
+FK check (validation-contract.md §5):
+    Only columns with an explicit `fk:` block are enforced (fk-exempt columns skipped).
+    Nullable fk column absent or null → skipped (no reference to verify).
+    Non-null fk value → look up fk.entity in store; not found → INVALID error.
+    Error message: "referenced <fk.entity> not found".
+    Error code stays VALIDATION_ERROR (dangling FK is a field violation, not CONFLICT).
+    Single-source: fk targets read from catalog; no relationships hardcoded here.
 
 Type vocabulary (catalog neutral 8-type system):
     uuid      → any str  (format not enforced — FK UUIDs come as strings)
@@ -131,7 +139,7 @@ class CatalogValidator:
             data:        client-supplied field map
             partial:     True = PATCH (skip required); False = create (full)
             current_id:  id being updated — excluded from unique collision scan
-            store:       InMemoryEntityStore instance for unique checks
+            store:       InMemoryEntityStore instance for unique + fk checks
 
         Returns:
             List of FieldError; empty = pass.
@@ -192,6 +200,13 @@ class CatalogValidator:
         if store is not None:
             unique_errors = self._check_unique(entity_type, columns, data, current_id, store)
             errors.extend(unique_errors)
+
+        # ── FK referential integrity (§5) ─────────────────────────────────────
+        # Only columns with an explicit `fk:` block; fk-exempt columns skipped.
+        # Runs after unique so all field violations are collected together.
+        if store is not None:
+            fk_errors = self._check_fk(columns, data, store)
+            errors.extend(fk_errors)
 
         return errors
 
@@ -270,6 +285,53 @@ class CatalogValidator:
 
         # Unknown type: pass through (forward-compat)
         return None
+
+    def _check_fk(
+        self,
+        columns: dict[str, Any],
+        data: dict[str, Any],
+        store: Any,
+    ) -> list[FieldError]:
+        """
+        Check FK referential integrity for columns that have an explicit `fk:` block.
+
+        Rules (validation-contract.md §5):
+        - Only columns with `fk:` key are checked — fk-exempt columns are skipped.
+        - Value absent or null → skip (no reference to verify).
+        - Non-null value → look up fk.entity in store by id; not found → INVALID.
+        - Error message: "referenced <fk.entity> not found".
+        - Returns INVALID-kind errors (VALIDATION_ERROR, not CONFLICT).
+        - Single-source: fk.entity read from catalog, never hardcoded.
+        """
+        errors: list[FieldError] = []
+
+        for col_name, col_def in columns.items():
+            if col_name in _SERVER_COLUMNS:
+                continue
+            if not isinstance(col_def, dict):
+                continue
+
+            fk_block = col_def.get("fk")
+            if not fk_block or not isinstance(fk_block, dict):
+                # No fk: block → fk-exempt; skip regardless of type.
+                continue
+
+            value = data.get(col_name)
+            if value is None or col_name not in data:
+                # Absent or null → nothing to verify.
+                continue
+
+            ref_entity: str = fk_block.get("entity", "")
+            if not ref_entity:
+                continue  # malformed catalog entry; skip safely
+
+            ref_id = str(value)
+            if store.find_by_id(ref_entity, ref_id) is None:
+                errors.append(FieldError.invalid(
+                    col_name, f"referenced {ref_entity} not found"
+                ))
+
+        return errors
 
     def _check_unique(
         self,
