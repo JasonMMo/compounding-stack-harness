@@ -177,6 +177,16 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Escalations**: 없음 (CEO "1→2→3" 위임 범위 내, fastapi 픽은 VP 권한).
 - **Open loops resolved**: M1 backend 축 2번째 + 공유 suite 검증. 남은: react adapter, adapter 검증 wiring (catalog→store).
 
+### Growth-12 (2026-06-01) — 검증 계약 + 양 adapter wiring + 가드 회귀 진단·라우팅
+
+- **역할**: Architect (validation 계약 설계) + Integrator (engineer·qa 체인 + 3-가드 회귀 진단)
+- **산출물 (CTO 직접)**: `docs/architecture/validation-contract.md` — 단일진실(catalog 런타임 읽기), backward-compat entity_type 해소(catalog∈→enforce, ∉→schema-less 통과 = 기존 23-test 무파손 핵심), 체크표(required/type/enum/length→VALIDATION_ERROR 422, unique→CONFLICT 409), 서버컬럼 제외, PATCH 부분검증, FK 후속, DIM-5 게이트.
+- **결정**: VALIDATION_ERROR vs CONFLICT 분리 (codes.yaml 준수 — unique 는 409) / 서버생성 컬럼 검증 제외 / lenient entity_type (additive, not breaking) / FK 참조검증은 Growth-12 제외 (in-memory cross-type 조회 별도 설계).
+- **Cross-agent catch (2단)**: (1) **DIM-5 31/31 양 adapter PASS, adapter-agnostic HELD** — 한 catalog 가 Java·Python 검증을 동일 구동. (2) PASS 직후 **가드 3개 회귀를 CTO 가 진단·격리**: G-1 = fastapi 가 422/409 를 코드명 옆에 하드코딩 (springboot 는 loader 경유라 clean) → 진짜 패리티 위반, loader 경유 수정 라우팅. G-6+G-8 = gradle `build/` 생성물 스캔 오탐 (catalog build-copy 주석의 'tenant_id', 컴파일 `.class` 의 `$`) → G-1 과 동일 제외셋으로 스코프 정정. **둘 다 약화 아님**: G-1 은 실버그 수정, G-6/G-8 은 소스 아닌 생성물 제외 (소스 검출 능력 유지). feedback_guards_must_work 의 정밀 적용 — "진짜 issue(G-1) 는 고치고, 오탐(G-6/8) 은 스코프로 정정".
+- **Integrator 판단**: 가드 body 의 build-제외는 CTO 가 정의(intent)·engineer 가 구현(body) — 페르소나 경계 유지. QA 통과기준(DIM-5)은 행동 보존(같은 422/409 값) 확인으로 재가동 불요.
+- **Escalations**: 없음.
+- **Open loops resolved**: catalog→adapter 검증 link (Growth-10/11 의 명시적 후속). 남은: FK 참조 무결성, react adapter.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
