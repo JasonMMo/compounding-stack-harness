@@ -206,8 +206,19 @@ patch_schema.py disposition: KEEP as audit record -- see QA recommendation below
 - **Blocks issued**: 0. Both adapters passed DIM-5 on first live run. No defects found in either implementation.
 - **Cost**: ~3 round Sonnet (significant time spent on bash quoting issue for file append; resolved via triple-single-quote in double-quoted python -c)
 
+### Growth-15 (2026-06-01) — DIM-6 FK 참조 무결성 감사 (PASS-WITH-CAVEAT)
+
+- **감사 대상**: runtime FK 검증 (양 backend CatalogValidator `_check_fk`/`checkFk`) + DIM-6 suite + G-12 가드 + catalog hygiene. push 전 감사.
+- **로직 패리티 (Java live 불가 → 적대적 read)**: Python `_check_fk` vs Java `checkFk` 5조건 전수 대조 — (A) fk 블록 없으면 skip(구조적 게이트, 컬럼명/하드리스트 아님), (B) null/absent skip, (C) 부재 참조 → `FieldError.invalid(col, "referenced <entity> not found")` 동일 메시지·INVALID kind, (D) errors 결합 non-fail-fast, (E) http_status codes.yaml 경유(하드코딩 0). **5/5 IDENTICAL, divergence 0**.
+- **DIM-5 회귀 수정 판정**: 이전 DIM-5 가 `department_id` 에 fake uuid4() 사용 — 본 ledger Growth-12 엔트리의 "False FAIL risk: FK existence NOT checked per §5" 가정이 **Growth-15 로 뒤집힘** (이제 FK enforce). `_ensure_department()` 로 실 department 생성·id 사용 = **정당 수정** (employee.department_id 는 catalog fk 블록 보유, fake uuid 는 no-FK 시절에만 유효했던 latent 결함). 마스킹 아님 (`s==201` assert 로 setup 실패 시 loud).
+- **DIM-6 진정성**: F1~F6 전부 distinct path. F1(negative — bogus carrier_id → 422 + fields.carrier_id "not found", 2-layer assert), F6(fk-exempt journal-entry.period_id → 201, exempt 경계 canary) 이 핵심. hollow 0.
+- **재현**: diagnose 12 가드 0 FAIL, G-1/G-12 PASS 확인. fastapi live 37(DIM-1~6)은 implementer 보고치 — 본 세션 server 미기동으로 독립 재현 불가(로직 정확하므로 plausible).
+- **Blocks issued**: 0. **CAVEAT carry (regression checkpoint)**: Java `checkFk`+DIM-6 는 live 미실행 (JDK/Gradle 환경 부재). M1 sign-off 전 JDK 환경서 `ADAPTER_BASE_URL=http://localhost:8080 pytest tests/adapters/springboot-jakarta/ -q` → 37 test rc=0 확인 후 이 ledger 에 기록 필수. = 검증 갭(코드는 read 로 정확 증명), 결함 아님.
+- **Cost**: ~1 round.
+
 ## §3 — Open Loops (이 인격 책임)
 
+- **[Growth-15 carry] Java DIM-6 live 미실행** — JDK 환경서 springboot-jakarta 37 test rc=0 확인 + 본 ledger 기록 (M1 sign-off 게이트)
 - 현행 가드 9개 (G-1~G-9) 의 거짓 PASS / 거짓 FAIL 위험 평가 — 첫 가동 시
 - G-9 통과 기준 인수·재평가 (CTO 임시 박음 → QA 정식 검토)
 - ~~M1 진입 게이트 통과 기준 문서화 — L1~L4 각각의 PASS 정의~~ PARTIAL: L2 PASS 기준 Growth-10 에서 정의됨. L1/L3/L4 는 M1 진입 시 해소 예정.
