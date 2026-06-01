@@ -31,7 +31,7 @@ import { fileURLToPath } from 'url'
 import yaml from 'js-yaml'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const REPO_ROOT = resolve(__dirname, '..', '..', '..', '..', '..')
+const REPO_ROOT = resolve(__dirname, '..', '..', '..', '..')
 const CONTRACT_DIR = resolve(REPO_ROOT, 'middle', 'contract')
 const OUT_FILE = resolve(__dirname, '..', 'src', 'contract', 'contract.gen.ts')
 

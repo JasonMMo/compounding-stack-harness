@@ -25,7 +25,7 @@ import { resolve, dirname, basename } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const REPO_ROOT = resolve(__dirname, '..', '..', '..', '..', '..')
+const REPO_ROOT = resolve(__dirname, '..', '..', '..', '..')
 const TOKENS_DIR = resolve(REPO_ROOT, 'design', 'tokens')
 const OUT_FILE = resolve(__dirname, '..', 'src', 'tokens', 'tokens.gen.css')
 
@@ -49,12 +49,27 @@ function getNested(obj, dottedPath) {
   }, obj)
 }
 
+// Matches any {dotted.path} segment — used for compound values like "{a} {b}"
+const REF_GLOBAL_RE = /\{([^}]+)\}/g
+
 function resolveRef(value, raw) {
+  // Fast path: single ref with no other content
   const m = REF_RE.exec(value)
-  if (!m) return value
-  const resolved = getNested(raw, m[1])
-  if (resolved == null) throw new Error(`Unresolvable token reference: {${m[1]}}`)
-  return String(resolved)
+  if (m) {
+    const resolved = getNested(raw, m[1])
+    if (resolved == null) throw new Error(`Unresolvable token reference: {${m[1]}}`)
+    return String(resolved)
+  }
+  // Compound value: replace each {ref} inline (e.g. "{a} {b}" → "200ms ease-in-out")
+  if (!value.includes('{')) return value
+  return value.replace(REF_GLOBAL_RE, (_, path) => {
+    const resolved = getNested(raw, path)
+    if (resolved == null) {
+      console.warn(`[build-tokens] Unresolvable compound ref: {${path}} — keeping as-is`)
+      return `{${path}}`
+    }
+    return String(resolved)
+  })
 }
 
 function rawCssName(parts) {
