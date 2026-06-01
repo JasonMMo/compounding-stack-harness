@@ -630,6 +630,158 @@ def g9_main_log_slim() -> GuardResult:
 
 
 # ---------------------------------------------------------------------------
+# G-10 DDL catalog integrity
+# ---------------------------------------------------------------------------
+
+_CATALOG_PATH = REPO_ROOT / "presets" / "ddl" / "catalog.yaml"
+_SEEDS_DIR = REPO_ROOT / "presets" / "skills" / "generic"
+
+# Closed set of neutral types from _catalog-format.md §2.
+_NEUTRAL_TYPES = frozenset([
+    "uuid", "string", "text", "integer", "decimal",
+    "boolean", "date", "timestamp", "enum",
+])
+
+
+def _parse_seed_entities(seed_path: Path) -> list[str]:
+    """Extract entity slugs from a seed file's YAML frontmatter `entities:` list."""
+    text = seed_path.read_text(encoding="utf-8")
+    # Frontmatter is between the first and second '---' lines.
+    lines = text.splitlines()
+    in_front = False
+    front_lines: list[str] = []
+    found_open = False
+    for line in lines:
+        if line.strip() == "---":
+            if not found_open:
+                found_open = True
+                in_front = True
+                continue
+            else:
+                break  # closing ---
+        if in_front:
+            front_lines.append(line)
+
+    # Find `entities:` block — collect indented list items.
+    entities: list[str] = []
+    in_entities = False
+    for line in front_lines:
+        stripped = line.strip()
+        if stripped == "entities:":
+            in_entities = True
+            continue
+        if in_entities:
+            if stripped.startswith("-"):
+                entities.append(stripped.lstrip("- ").strip())
+            elif stripped and not stripped.startswith("-"):
+                break  # next key
+    return entities
+
+
+def g10_ddl_catalog_integrity() -> GuardResult:
+    """G-10 / Growth-10 — DDL catalog integrity: seed coverage, FK validity, type closure.
+
+    Three checks (per _catalog-format.md §7):
+      (a) seed entities subset of catalog — every entity declared in a *.seed.md
+          frontmatter must have a matching key in catalog.yaml.
+      (b) no dangling FKs — every fk.entity reference in catalog.yaml must point
+          to a real catalog entity key.
+      (c) type closure — every column `type` in catalog.yaml must be in the 8-type
+          neutral vocabulary (uuid/string/text/integer/decimal/boolean/date/timestamp/enum).
+    """
+    if not _CATALOG_PATH.exists():
+        return GuardResult(
+            "G-10", "DDL catalog integrity", "Growth-10",
+            status="SPEC",
+            notes="presets/ddl/catalog.yaml not found — guard activates once ddl axis lands.",
+        )
+
+    # Load catalog with PyYAML (already a dependency used by G-1).
+    try:
+        import yaml as _yaml  # type: ignore[import]
+        _raw = _yaml.safe_load(_CATALOG_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return GuardResult(
+            "G-10", "DDL catalog integrity", "Growth-10",
+            status="FAIL",
+            violations=[f"catalog.yaml failed to parse: {exc}"],
+        )
+
+    if not isinstance(_raw, dict) or "entities" not in _raw:
+        return GuardResult(
+            "G-10", "DDL catalog integrity", "Growth-10",
+            status="FAIL",
+            violations=["catalog.yaml missing top-level 'entities' key."],
+        )
+
+    catalog_entities: dict = _raw["entities"]
+    catalog_keys: set[str] = set(catalog_entities.keys())
+
+    violations: list[str] = []
+
+    # ── (a) seed entities ⊆ catalog entities ─────────────────────────────────
+    seed_files = sorted(_SEEDS_DIR.glob("*.seed.md"))
+    seed_entity_count = 0
+    for seed_path in seed_files:
+        try:
+            seed_ents = _parse_seed_entities(seed_path)
+        except Exception as exc:
+            violations.append(f"Failed to parse seed {seed_path.name}: {exc}")
+            continue
+        for ent in seed_ents:
+            seed_entity_count += 1
+            if ent not in catalog_keys:
+                violations.append(
+                    f"(a) seed '{seed_path.stem}' declares entity '{ent}' "
+                    f"but it is missing from catalog.yaml."
+                )
+
+    # ── (b) no dangling FK references ────────────────────────────────────────
+    for entity_key, ent_def in catalog_entities.items():
+        if not isinstance(ent_def, dict):
+            continue
+        columns = ent_def.get("columns") or {}
+        for col_key, col_def in columns.items():
+            if not isinstance(col_def, dict):
+                continue
+            fk = col_def.get("fk")
+            if not fk or not isinstance(fk, dict):
+                continue
+            target = fk.get("entity")
+            if target and target not in catalog_keys:
+                violations.append(
+                    f"(b) {entity_key}.{col_key}: fk.entity '{target}' "
+                    f"not found in catalog (dangling FK)."
+                )
+
+    # ── (c) type closure (8-type neutral vocabulary) ──────────────────────────
+    for entity_key, ent_def in catalog_entities.items():
+        if not isinstance(ent_def, dict):
+            continue
+        columns = ent_def.get("columns") or {}
+        for col_key, col_def in columns.items():
+            if not isinstance(col_def, dict):
+                continue
+            col_type = col_def.get("type")
+            if col_type and col_type not in _NEUTRAL_TYPES:
+                violations.append(
+                    f"(c) {entity_key}.{col_key}: type '{col_type}' is not in "
+                    f"the 8-type neutral vocabulary."
+                )
+
+    notes = (
+        f"Catalog: {len(catalog_keys)} entities. "
+        f"Seed files: {len(seed_files)}, seed entity refs: {seed_entity_count}."
+    )
+    return GuardResult(
+        "G-10", "DDL catalog integrity", "Growth-10",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=notes,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 
@@ -643,6 +795,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-7": g7_persona_driven_gating,
     "G-8": g8_ascii_slug,
     "G-9": g9_main_log_slim,
+    "G-10": g10_ddl_catalog_integrity,
 }
 
 
