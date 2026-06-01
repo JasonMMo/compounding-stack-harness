@@ -149,9 +149,18 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Guard 상태**: 9 가드 0 FAIL. G-1 이 2 adapter (backend+frontend) 스캔, frontend contract_loader.py 가 재선언 0 으로 PASS.
 - **Open loops resolved**: M1 Priority 2 완료 (frontend). CDO 첫 가동·codegraph measurement 시점 도달.
 
+### Growth-9 (2026-06-01) — codegraph 2-step gate measurement → 조건부 ADOPT
+
+- **역할**: VP (외부 도구 채택 판정) + Architect (scope 경계 박기)
+- **산출물 (CTO 직접)**: `docs/architecture/codegraph-adoption.md` — 4-measurement 실측 + 판정.
+- **실측**: 32 files/511 nodes/855 edges, reindex 780ms. **언어 = python/java/yaml/kotlin/properties 만 — markdown·json 인덱스 0** (skill seed·learn-logs·design tokens 불가시). canonical 질문 2종 실측: 코드구조형 GOOD / 인격-결정-owner형 (Growth-5f 원래 동기) **FAIL** (답이 markdown ledger 거주).
+- **판정 (조건부 ADOPT)**: (1) 코드 네비게이션 도구로만 채택 — adapter 작업 심볼탐색·call path·impact (2) **거버넌스/결정-ownership 용도 DESCOPE** — 그건 diagnose.py 가드 + per-agent ledger 단일 진실 (3) axis 미등록 (메타도구, Growth-5f lean 확정) (4) 정착 = docs/architecture (5) 운영룰 = 큰 변경·세션재개 후 `codegraph sync` (stale 리스크 차단) (6) tenant 분리 = per-repo gitignore 재생성으로 이미 충족 (7) reversibility = `codegraph uninit` 보존.
+- **Cross-agent catch**: M-2 (7축 환류 자동화) 에서 codegraph 가 diagnose.py 보다 약함 확인 — 가드가 전 파일타입 grep 으로 이미 우위. 도구 중복 회피 결정.
+- **Open loops resolved**: Growth-5f 2-step gate 2번째 step 종결. codegraph 거취 확정.
+
 ## §3 — Open Loops (이 인격 책임)
 
-- **codegraph 2-step gate measurement (Growth-5f, M1 첫 adapter Growth 마감 시점)**: 4-measurement 결과 + adopt/reject 결정 + (adopt 시) tenant 분리 메커니즘 설계 + axis 또는 docs/architecture 정착 위치
+- ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
 - **Cross-agent Growth 의 main 행 포맷 (Growth-5c 박음)**: `### Growth-N (...) — <제목>` 본문 `**인격**: <주도> (+ <보조>)`. 본 Growth-5c/5d/5e 가 첫 적용 — Open loop 해소.
 - **engineer-agent / qa-agent 첫 가동**: Engineer Growth-5d 에서 첫 가동 완료. QA 첫 가동은 M1 adapter compliance test 작성 시점.
 - **첫 분기 synthesis**: 2026-Q3 마지막 주 (Growth-1~ 누적 통합) — 템플릿 실전 검증
