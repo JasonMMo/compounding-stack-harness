@@ -284,4 +284,108 @@ class CatalogValidatorTest {
         assertTrue(invalidCount >= 2,
             "Must collect all field violations, not fail-fast. Expected >= 2 INVALID, got: " + errors);
     }
+
+    // ── FK referential integrity (§5) ─────────────────────────────────────────
+
+    @Test
+    void fkCol_bogusId_returnsInvalidError() {
+        // route.carrier_id → carrier; no carrier seeded → must fail
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("name",            "Test Route");
+        data.put("carrier_id",      "00000000-0000-0000-0000-000000000099");
+        data.put("origin_hub",      "HUB-A");
+        data.put("destination_hub", "HUB-B");
+        data.put("transit_days",    3);
+        data.put("is_active",       true);
+        List<FieldError> errors = validator.validate("route", data, false);
+        assertTrue(errors.stream().anyMatch(e ->
+            "carrier_id".equals(e.field)
+            && e.kind == FieldError.Kind.INVALID
+            && e.reason.contains("not found")),
+            "Bogus carrier_id must produce INVALID FK error with 'not found'. Got: " + errors);
+    }
+
+    @Test
+    void fkCol_validId_noError() {
+        // Seed a carrier, then validate a route that references it
+        java.util.Map<String, Object> carrier = store.create("carrier", Map.of(
+            "code",      "CAR-UNIT-01",
+            "name",      "Unit Test Carrier",
+            "is_active", true
+        ));
+        String carrierId = (String) carrier.get("id");
+
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("name",            "Test Route Valid");
+        data.put("carrier_id",      carrierId);
+        data.put("origin_hub",      "HUB-A");
+        data.put("destination_hub", "HUB-B");
+        data.put("transit_days",    2);
+        data.put("is_active",       true);
+        List<FieldError> errors = validator.validate("route", data, false);
+        assertFalse(errors.stream().anyMatch(e -> "carrier_id".equals(e.field)),
+            "Valid FK must produce no carrier_id error. Got: " + errors);
+    }
+
+    @Test
+    void fkNullable_absent_noError() {
+        // position.department_id is nullable: true — omitting it must not produce FK error
+        Map<String, Object> data = Map.of("title", "Test Position");
+        List<FieldError> errors = validator.validate("position", data, false);
+        assertFalse(errors.stream().anyMatch(e -> "department_id".equals(e.field)),
+            "Absent nullable FK must produce no FK error. Got: " + errors);
+    }
+
+    @Test
+    void fkExempt_col_noFkError() {
+        // journal-entry.period_id: type uuid, NO fk: block → fk-exempt, never enforced
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("entry_date",  "2024-06-01");
+        data.put("description", "Test Entry");
+        data.put("status",      "draft");
+        data.put("period_id",   "00000000-0000-0000-0000-000000000099");
+        List<FieldError> errors = validator.validate("journal-entry", data, false);
+        assertFalse(errors.stream().anyMatch(e -> "period_id".equals(e.field)),
+            "FK-exempt period_id must not produce FK error. Got: " + errors);
+    }
+
+    @Test
+    void patch_fkCol_bogusId_returnsInvalidError() {
+        // PATCH: supplied fk col with bogus id → INVALID
+        Map<String, Object> patch = Map.of(
+            "carrier_id", "00000000-0000-0000-0000-000000000099"
+        );
+        List<FieldError> errors = validator.validate("route", patch, true);
+        assertTrue(errors.stream().anyMatch(e ->
+            "carrier_id".equals(e.field) && e.kind == FieldError.Kind.INVALID),
+            "PATCH with bogus FK must produce INVALID error. Got: " + errors);
+    }
+
+    @Test
+    void patch_fkCol_absent_noError() {
+        // PATCH: carrier_id absent → no FK check (absent = no change)
+        Map<String, Object> patch = Map.of("transit_days", 5);
+        List<FieldError> errors = validator.validate("route", patch, true);
+        assertFalse(errors.stream().anyMatch(e -> "carrier_id".equals(e.field)),
+            "PATCH with fk col absent must not produce FK error. Got: " + errors);
+    }
+
+    @Test
+    void fkError_collectedWithOtherErrors() {
+        // FK error collected alongside type error — not fail-fast
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("name",            "Multi-Error Route");
+        data.put("carrier_id",      "00000000-0000-0000-0000-000000000099"); // bogus fk
+        data.put("origin_hub",      "HUB-A");
+        data.put("destination_hub", "HUB-B");
+        data.put("transit_days",    "bad"); // type error: should be integer
+        data.put("is_active",       true);
+        List<FieldError> errors = validator.validate("route", data, false);
+        boolean hasFkError   = errors.stream().anyMatch(e ->
+            "carrier_id".equals(e.field) && e.kind == FieldError.Kind.INVALID);
+        boolean hasTypeError = errors.stream().anyMatch(e ->
+            "transit_days".equals(e.field) && e.kind == FieldError.Kind.INVALID);
+        assertTrue(hasFkError,   "FK error must be collected. Got: "   + errors);
+        assertTrue(hasTypeError, "Type error must also be collected. Got: " + errors);
+    }
 }
