@@ -45,6 +45,10 @@ cost-reports/local/
 # CodeGraph index (local-first, tenant-scoped — rebuildable from source)
 .codegraph/
 
+# Ledger reverse-index (rebuildable from learn-log.md + docs/learn-logs/ via scripts/ledger-index.py)
+docs/learn-logs/_index.json
+docs/learn-logs/_index.md
+
 # Local tooling artifact (observation/memory vault — not repo state)
 .context/
 
