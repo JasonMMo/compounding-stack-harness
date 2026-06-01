@@ -49,6 +49,7 @@ from flask import (
 )
 
 from contract_loader import get_loader
+from manifest_loader import get_manifest_loader
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -66,6 +67,20 @@ BACKEND_BASE_URL = os.environ.get("BACKEND_BASE_URL", "http://localhost:8080").r
 loader = get_loader()
 log.info("Frontend adapter ready. Wire contract version: %s", loader.wire_version())
 log.info("Proxying /api/* to %s", BACKEND_BASE_URL)
+
+# Load screen manifest at startup (Phase 2 — field-aware rendering).
+# PROFILE_MANIFEST env var points to out/<profile>/screen-manifest.json.
+# If unset or file missing, manifest_loader operates in no-manifest mode and
+# the frontend falls back to generic key/value rendering (backward compat).
+manifest = get_manifest_loader()
+if manifest.is_loaded():
+    log.info(
+        "ManifestLoader: profile='%s', entities=%s",
+        manifest.profile(),
+        manifest.entity_keys(),
+    )
+else:
+    log.info("ManifestLoader: no manifest — generic fallback rendering active.")
 
 
 # ---------------------------------------------------------------------------
@@ -330,11 +345,15 @@ def entity_detail(entity_type: str, entity_id: str):
     if payload.get("error"):
         return _render_error(payload, status, entity_type)
 
+    manifest_fields = manifest.entity_fields(entity_type)
     return render_template(
         "detail.html",
         entity_type=entity_type,
         entity_id=entity_id,
         data=payload.get("data", {}),
+        manifest_fields=manifest_fields,
+        hidden_fields=manifest.hidden_fields(entity_type),
+        entity_label=manifest.label(entity_type) or entity_type,
         wire_version=loader.wire_version(),
     )
 
@@ -342,8 +361,13 @@ def entity_detail(entity_type: str, entity_id: str):
 @app.post("/entities/<entity_type>/<entity_id>/edit")
 @_require_login
 def entity_update(entity_type: str, entity_id: str):
-    # Collect all non-empty form fields as the patch data
-    data = {k: v for k, v in request.form.items() if k != "_method" and v != ""}
+    # Collect all non-empty form fields as the patch data (skip hidden/system fields)
+    hidden = set(manifest.hidden_fields(entity_type))
+    data = {
+        k: v
+        for k, v in request.form.items()
+        if k != "_method" and v != "" and k not in hidden
+    }
     payload, status = _proxy_request(
         "PATCH",
         _entity_path(entity_type, entity_id),
@@ -359,11 +383,15 @@ def entity_update(entity_type: str, entity_id: str):
             _entity_path(entity_type, entity_id),
             token=_current_token(),
         )
+        manifest_fields = manifest.entity_fields(entity_type)
         return render_template(
             "detail.html",
             entity_type=entity_type,
             entity_id=entity_id,
             data=read_payload.get("data", data),
+            manifest_fields=manifest_fields,
+            hidden_fields=manifest.hidden_fields(entity_type),
+            entity_label=manifest.label(entity_type) or entity_type,
             error=loader.message_ko(code),
             error_details=err.get("details"),
             wire_version=loader.wire_version(),
@@ -379,9 +407,12 @@ def entity_update(entity_type: str, entity_id: str):
 @app.get("/entities/<entity_type>/new")
 @_require_login
 def entity_create_form(entity_type: str):
+    manifest_fields = manifest.entity_fields(entity_type)
     return render_template(
         "create.html",
         entity_type=entity_type,
+        manifest_fields=manifest_fields,
+        entity_label=manifest.label(entity_type) or entity_type,
         wire_version=loader.wire_version(),
     )
 
@@ -389,7 +420,13 @@ def entity_create_form(entity_type: str):
 @app.post("/entities/<entity_type>/new")
 @_require_login
 def entity_create_post(entity_type: str):
-    data = {k: v for k, v in request.form.items() if v != ""}
+    # hidden_fields are excluded from create POST (they are system-generated)
+    hidden = set(manifest.hidden_fields(entity_type))
+    data = {
+        k: v
+        for k, v in request.form.items()
+        if v != "" and k not in hidden
+    }
     payload, status = _proxy_request(
         "POST",
         _entity_path(entity_type),
@@ -399,9 +436,12 @@ def entity_create_post(entity_type: str):
     if payload.get("error"):
         err = payload["error"]
         code = err.get("code", "INTERNAL")
+        manifest_fields = manifest.entity_fields(entity_type)
         return render_template(
             "create.html",
             entity_type=entity_type,
+            manifest_fields=manifest_fields,
+            entity_label=manifest.label(entity_type) or entity_type,
             form_data=data,
             error=loader.message_ko(code),
             error_details=err.get("details"),
