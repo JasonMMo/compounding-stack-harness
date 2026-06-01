@@ -1,0 +1,54 @@
+# profiles/shop-demo.yaml — Demo profile for Phase 1 expert-agent end-to-end demo
+# Fictional small e-commerce operator. Catalog-grounded (all entity keys verified).
+# ${ENV_VAR} placeholders are G-4 round-trip preserved — do NOT load/dump
+# this file through a plain YAML parser dump pipeline.
+
+version: 1
+
+customer:
+  slug: shop-demo
+  display: "Shop Demo (E-Commerce)"
+  status: active
+  contact: ops@shop-demo.example
+  industry: generic
+
+# ── Pluggable Frontend/Backend ──────────────────────────────────────────────
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi
+
+# ── DDL ──────────────────────────────────────────────────────────────────────
+ddl:
+  dialect: postgres
+  schema: shop_demo
+  idempotent_strategy: on_conflict
+
+# ── Domains ──────────────────────────────────────────────────────────────────
+domains:
+  - slug: crm
+    display: "CRM"
+    entities: [contact]
+    seen_at: 2026-06-01
+  - slug: sales
+    display: "Sales"
+    entities: [sales-order, sales-order-line]
+    seen_at: 2026-06-01
+
+# ── Datasource (secrets use ${ENV_VAR} — G-4 round-trip safe) ────────────────
+datasource:
+  username: ${SHOP_DB_USER}
+  password: ${SHOP_DB_PASSWORD}
+  url_template: "postgresql://{host}:{port}/{db}"
+  host: db.shop-demo.internal
+  port: 5432
+  db: shop_demo_prod
+
+# ── Defaults ─────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: UTC
+
+# ── Cost tracking ─────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 50
+  prepaid_credits_usd: 0
