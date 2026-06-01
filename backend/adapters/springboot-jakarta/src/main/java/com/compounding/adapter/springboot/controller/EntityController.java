@@ -1,5 +1,7 @@
 package com.compounding.adapter.springboot.controller;
 
+import com.compounding.adapter.springboot.contract.CatalogValidator;
+import com.compounding.adapter.springboot.contract.CatalogValidator.FieldError;
 import com.compounding.adapter.springboot.contract.ContractLoader;
 import com.compounding.adapter.springboot.contract.WireResponse;
 import com.compounding.adapter.springboot.store.InMemoryEntityStore;
@@ -23,10 +25,13 @@ public class EntityController {
 
     private final InMemoryEntityStore store;
     private final ContractLoader contractLoader;
+    private final CatalogValidator catalogValidator;
 
-    public EntityController(InMemoryEntityStore store, ContractLoader contractLoader) {
+    public EntityController(InMemoryEntityStore store, ContractLoader contractLoader,
+                            CatalogValidator catalogValidator) {
         this.store = store;
         this.contractLoader = contractLoader;
+        this.catalogValidator = catalogValidator;
     }
 
     // ── entity.read ───────────────────────────────────────────────────────────
@@ -152,6 +157,12 @@ public class EntityController {
                 Map.of("reason", "'data' field is required"));
         }
 
+        // ── catalog validation (full — create) ───────────────────────────────
+        List<FieldError> errors = catalogValidator.validate(entityType, data, false);
+        if (!errors.isEmpty()) {
+            return buildValidationError(errors);
+        }
+
         Map<String, Object> created = store.create(entityType, data);
 
         Map<String, Object> resp = new LinkedHashMap<>();
@@ -184,6 +195,12 @@ public class EntityController {
                 Map.of("reason", "'data' field with at least one field to update is required"));
         }
 
+        // ── catalog validation (partial — update/PATCH) ───────────────────────
+        List<FieldError> patchErrors = catalogValidator.validate(entityType, patchData, true, id);
+        if (!patchErrors.isEmpty()) {
+            return buildValidationError(patchErrors);
+        }
+
         Optional<Map<String, Object>> updated = store.patch(entityType, id, patchData);
         if (updated.isEmpty()) {
             return WireResponse.error(contractLoader, "NOT_FOUND");
@@ -209,6 +226,36 @@ public class EntityController {
         Map<String, Object> resp = new LinkedHashMap<>();
         resp.put("success", true);
         return WireResponse.ok(resp);
+    }
+
+    // ── validation error builder ──────────────────────────────────────────────
+
+    /**
+     * Splits FieldErrors into UNIQUE (CONFLICT 409) vs INVALID (VALIDATION_ERROR 422).
+     * UNIQUE errors take priority: if any exist, return CONFLICT with those fields.
+     * Otherwise return VALIDATION_ERROR with all INVALID fields.
+     * Per validation-contract.md §3: collect ALL violations before returning.
+     */
+    private ResponseEntity<Map<String, Object>> buildValidationError(List<FieldError> errors) {
+        // Partition by kind
+        Map<String, Object> uniqueFields = new LinkedHashMap<>();
+        Map<String, Object> invalidFields = new LinkedHashMap<>();
+
+        for (FieldError e : errors) {
+            if (e.kind == FieldError.Kind.UNIQUE) {
+                uniqueFields.put(e.field, e.reason);
+            } else {
+                invalidFields.put(e.field, e.reason);
+            }
+        }
+
+        // CONFLICT (409) takes priority over VALIDATION_ERROR (422).
+        if (!uniqueFields.isEmpty()) {
+            return WireResponse.error(contractLoader, "CONFLICT",
+                Map.of("fields", uniqueFields));
+        }
+        return WireResponse.error(contractLoader, "VALIDATION_ERROR",
+            Map.of("fields", invalidFields));
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
