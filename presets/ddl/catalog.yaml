@@ -133,6 +133,7 @@ entities:
       reference:   { type: string,  nullable: true }
       description: { type: string,  nullable: false }
       status:      { type: enum,    values: [draft, posted, reversed], nullable: false }
+      # fk-exempt: external ref — no 'accounting-period' entity (domain-expert catalog-growth backlog)
       period_id:   { type: uuid,    nullable: false }
       # lines is a child table (finance_journal_entry_line); not a column here.
     constraints: []
@@ -156,6 +157,7 @@ entities:
       created_at:       { type: timestamp, nullable: false }
       updated_at:       { type: timestamp, nullable: false }
       invoice_number:   { type: string,  nullable: false, unique: true }
+      # fk-exempt: polymorphic — counterparty is crm_contact or procurement_vendor (discriminated at app layer)
       counterparty_id:  { type: uuid,    nullable: false }
       issue_date:       { type: date,    nullable: false }
       due_date:         { type: date,    nullable: false }
@@ -355,6 +357,7 @@ entities:
                         fk: { entity: warehouse, column: id, on_delete: restrict } }
       movement_type:  { type: enum,      values: [receipt, issue, transfer, adjustment, return], nullable: false }
       quantity:       { type: decimal,   precision: 14, scale: 4, nullable: false }
+      # fk-exempt: polymorphic — paired with reference_type discriminator (receipt/issue/transfer/adjustment/return source)
       reference_id:   { type: uuid,      nullable: true }
       reference_type: { type: string,    length: 64, nullable: true }
       moved_at:       { type: timestamp, nullable: false }
@@ -426,7 +429,8 @@ entities:
       created_at:    { type: timestamp, nullable: false }
       updated_at:    { type: timestamp, nullable: false }
       order_number:  { type: string,  nullable: false, unique: true }
-      customer_id:   { type: uuid,    nullable: false }
+      customer_id:   { type: uuid,    nullable: false,
+                       fk: { entity: contact, column: id, on_delete: restrict } }
       order_date:    { type: date,    nullable: false }
       status:        { type: enum,    values: [draft, confirmed, partially-fulfilled, fulfilled, cancelled], nullable: false }
       currency:      { type: string,  length: 8, nullable: false }
@@ -438,7 +442,7 @@ entities:
       - { columns: [customer_id] }
       - { columns: [status] }
     # DDL notes:
-    #   customer_id resolves to crm_contact — cross-domain; FK omitted.
+    #   customer_id → crm contact (cross-domain FK; restrict on delete — a contact with orders cannot be deleted).
     #   fulfilled/cancelled immutability — application layer.
     #   total_amount == sum of lines — application layer.
 
@@ -736,6 +740,7 @@ entities:
       name:          { type: string,    nullable: false }
       sequence:      { type: integer,   nullable: false }
       status:        { type: enum,      values: [pending, in-progress, completed, skipped], nullable: false }
+      # fk-exempt: external ref — no 'machine' entity (domain-expert catalog-growth backlog)
       machine_id:    { type: uuid,      nullable: true }
       actual_start:  { type: timestamp, nullable: true }
       actual_end:    { type: timestamp, nullable: true }
@@ -762,6 +767,7 @@ entities:
       updated_at:     { type: timestamp, nullable: false }
       name:           { type: string, nullable: false }
       reference_type: { type: enum,   values: [work-order, shipment, vendor, process], nullable: false }
+      # fk-exempt: polymorphic — paired with reference_type discriminator (work-order/shipment/vendor/process subject)
       reference_id:   { type: uuid,   nullable: false }
       status:         { type: enum,   values: [pending, in-progress, passed, failed, cancelled], nullable: false }
       assigned_to:    { type: uuid,   nullable: true,
@@ -1082,6 +1088,7 @@ entities:
       owner_id:           { type: uuid,   nullable: false,
                             fk: { entity: employee, column: id, on_delete: restrict } }
       status:             { type: enum,   values: [draft, published, archived, deleted], nullable: false }
+      # fk-exempt: circular FK avoidance — document <-> document-version mutual reference; set after first upload at app layer
       current_version_id: { type: uuid,   nullable: true }
       retention_date:     { type: date,   nullable: true }
     constraints: []
@@ -1131,6 +1138,7 @@ entities:
       document_id:    { type: uuid,   nullable: false,
                         fk: { entity: document, column: id, on_delete: cascade } }
       principal_type: { type: enum,   values: [employee, department, role], nullable: false }
+      # fk-exempt: polymorphic — paired with principal_type discriminator (employee/department/role principal)
       principal_id:   { type: uuid,   nullable: false }
       permission:     { type: enum,   values: [read, edit, admin], nullable: false }
       expires_at:     { type: timestamp, nullable: true }
@@ -1154,6 +1162,7 @@ entities:
       created_at:   { type: timestamp, nullable: false }
       updated_at:   { type: timestamp, nullable: false }
       subject_type: { type: string,    length: 64, nullable: false }
+      # fk-exempt: polymorphic — paired with subject_type discriminator (any approvable entity)
       subject_id:   { type: uuid,      nullable: false }
       requester_id: { type: uuid,      nullable: false,
                       fk: { entity: employee, column: id, on_delete: restrict } }
@@ -1310,6 +1319,7 @@ entities:
       report_definition_id: { type: uuid,      nullable: false,
                               fk: { entity: report-definition, column: id, on_delete: restrict } }
       triggered_by:         { type: enum,      values: [manual, schedule], nullable: false }
+      # fk-exempt: polymorphic — paired with triggered_by discriminator (manual=employee, schedule=scheduled-job)
       triggered_by_id:      { type: uuid,      nullable: true }
       status:               { type: enum,      values: [queued, running, completed, failed], nullable: false }
       started_at:           { type: timestamp, nullable: true }
