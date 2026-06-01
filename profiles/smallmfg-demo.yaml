@@ -1,0 +1,124 @@
+# profiles/smallmfg-demo.yaml — Customer profile (schema v1)
+# 직원 50명 규모 중소 제조업체 — 인사·근태 + 설비 관리.
+# ${ENV_VAR} placeholders are G-4 round-trip preserved — do NOT load/dump
+# this file through a plain YAML parser dump pipeline.
+# Always route through the round-trip safe helper (G-4 requirement).
+#
+# status: draft — CTO 검토 후 active 전환. 직접 머지 금지.
+# PR 초안 작성: axis-7 domain-expert-generic (2026-06-01)
+
+version: 1
+
+customer:
+  slug: smallmfg-demo
+  display: "중소제조 데모"
+  status: draft
+  contact: ""
+  industry: generic         # vertical agent 미투입 — 14 baseline 으로 충분
+
+# ── Pluggable Frontend/Backend ──────────────────────────────────────────────
+# 추론 근거:
+#   - Python 백엔드 선호 → fastapi
+#   - "가벼운 웹이면 됨" → vanilla-htmx
+#   - PostgreSQL 명시 → dialect: postgres
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi
+  backend_options:
+    python_version: "3.11"
+    runner: uvicorn
+
+# ── DDL ──────────────────────────────────────────────────────────────────────
+ddl:
+  dialect: postgres
+  schema: smallmfg
+  idempotent_strategy: on_conflict
+
+# ── Domains ──────────────────────────────────────────────────────────────────
+# entity 키는 catalog.yaml (presets/ddl/catalog.yaml) 의 실제 최상위 키만 사용.
+# 각 entity 존재 확인: catalog.yaml 직접 grep — 모든 키 확인 완료.
+domains:
+  # needs #1-A: "누가 어느 부서인지" → hr 도메인 (employee / department / position)
+  - slug: hr
+    display: "인사 관리"
+    entities:
+      - employee          # catalog: hr.hr_employee (line 13)
+      - department        # catalog: hr.hr_department (line 37)
+      - position          # catalog: hr.hr_position (line 58)
+    seen_at: 2026-06-01
+    notes: "직원 50명. 부서-직위 계층 관리. employee.status (active/on-leave/terminated) 사용."
+
+  # needs #1-B: "휴가 신청/승인" → hr.leave-request + approval 도메인
+  - slug: hr-leave
+    display: "휴가 신청·근태"
+    entities:
+      - leave-request     # catalog: hr.hr_leave_request (line 77)
+    seen_at: 2026-06-01
+    notes: "leave_type: annual/sick/unpaid. status 워크플로: draft→pending→approved/rejected."
+
+  # "승인" 흐름 — leave-request 의 pending→approved/rejected 를 결재선으로 처리
+  - slug: approval
+    display: "결재 (휴가 승인)"
+    entities:
+      - approval-request  # catalog: approval.approval_request (line 1148)
+      - approval-step     # catalog: approval.approval_step (line 1171)
+      - approver          # catalog: approval.approval_approver (line 1190)
+      - approval-decision # catalog: approval.approval_decision (line 1209)
+    seen_at: 2026-06-01
+    notes: "subject_type=leave-request 로 연결. 단순 1단계 승인 (팀장 → 인사담당) 가정."
+
+  # needs #2-A: "보유 설비 목록" → asset 도메인
+  # needs #2-B: "유지보수(점검/수리) 이력" → asset.maintenance-record
+  - slug: asset
+    display: "설비 관리"
+    entities:
+      - asset-category    # catalog: asset.asset_category (line 954)
+      - asset             # catalog: asset.asset_asset (line 972)
+      - maintenance-record # catalog: asset.asset_maintenance_record (line 1024)
+    seen_at: 2026-06-01
+    notes: >
+      설비 = asset (asset_number, serial_number, location, status).
+      점검 → maintenance_type=inspection.
+      수리 → maintenance_type=corrective.
+      다음 점검일 → next_due_date.
+      depreciation-schedule 은 요구 없음 — 미포함.
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+auth:
+  method: session-token
+  sso_provider: none        # 개발자 없음 — 단순 세션 토큰 우선
+
+# ── Datasource (secrets use ${ENV_VAR} — G-4 round-trip safe) ────────────────
+datasource:
+  username: ${SMALLMFG_DB_USER}
+  password: ${SMALLMFG_DB_PASSWORD}
+  url_template: "postgresql://{host}:{port}/{db}"
+  host: localhost
+  port: 5432
+  db: smallmfg_prod
+
+# ── Overlay ──────────────────────────────────────────────────────────────────
+overlay:
+  target_pkg_prefix: smallmfg
+  shell_app_id: smallmfg-portal
+  vault_agent: false
+  sso_keycloak: false
+
+# ── Defaults ─────────────────────────────────────────────────────────────────
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+# ── Cost tracking ─────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 20
+  prepaid_credits_usd: 0
+
+# ── Escalation notes ──────────────────────────────────────────────────────────
+# 현재 14 baseline 으로 100% 커버됨. vertical agent 불필요.
+# 향후 escalation 신호:
+#   - 설비 가동률 / OEE 측정 요구 → manufacturing vertical
+#   - 생산 공정 스케줄링 (MES) 요구 → manufacturing vertical
+#   - 근태 (출퇴근 기록) 요구 → 현재 catalog 에 attendance entity 없음
+#     (domain-expert-generic.md 의 `attendance` 도메인 entity 는 catalog 에 미구현)
+#     → vertical 또는 catalog 확장 PR 필요
