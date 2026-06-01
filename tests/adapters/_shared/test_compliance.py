@@ -404,17 +404,27 @@ class TestStandards:
         assert data.get("field_b") == "changed", f"field_b should be updated: {data}"
 
 import uuid as _uuid_module
-def _valid_employee_data(tag):
+
+def _ensure_department(base_url, tag):
+    """Create a department and return its id. Used by employee tests that need a real FK."""
+    dept_code = ('DEPT-' + _RUN_TAG + '-' + tag)[:32]
+    s, b = _request(base_url, 'POST', '/api/entities/department',
+                    body={'data': {'code': dept_code, 'name': 'Dept ' + tag}})
+    assert s == 201, f"_ensure_department setup failed ({tag}): {b}"
+    return b['id']
+
+def _valid_employee_data(tag, department_id=None):
     return {
         'employee_number': ('EMP-' + _RUN_TAG + '-' + tag)[:64],
         'full_name': 'Test Employee ' + tag,
-        'department_id': str(_uuid_module.uuid4()),
+        'department_id': department_id or str(_uuid_module.uuid4()),
         'hire_date': '2024-01-15',
         'status': 'active',
     }
 class TestValidation:
     def test_create_missing_required_returns_validation_error(self, adapter_base_url):
-        data = _valid_employee_data('s1')
+        dept_id = _ensure_department(adapter_base_url, 's1')
+        data = _valid_employee_data('s1', department_id=dept_id)
         del data['full_name']
         status, body = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
         expected_code = 'VALIDATION_ERROR'
@@ -422,7 +432,8 @@ class TestValidation:
         fields = body.get('error', {}).get('details', {}).get('fields', {})
         assert 'full_name' in fields, ('S1: ' + str(fields))
     def test_create_bad_enum_returns_validation_error(self, adapter_base_url):
-        data = _valid_employee_data('s2')
+        dept_id = _ensure_department(adapter_base_url, 's2')
+        data = _valid_employee_data('s2', department_id=dept_id)
         data['status'] = 'bogus'
         status, body = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
         expected_code = 'VALIDATION_ERROR'
@@ -430,7 +441,8 @@ class TestValidation:
         fields = body.get('error', {}).get('details', {}).get('fields', {})
         assert 'status' in fields, ('S2: ' + str(fields))
     def test_create_length_exceeded_returns_validation_error(self, adapter_base_url):
-        data = _valid_employee_data('s3')
+        dept_id = _ensure_department(adapter_base_url, 's3')
+        data = _valid_employee_data('s3', department_id=dept_id)
         data['employee_number'] = 'E' * 65
         status, body = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
         expected_code = 'VALIDATION_ERROR'
@@ -444,12 +456,13 @@ class TestValidation:
         fields = body.get('error', {}).get('details', {}).get('fields', {})
         assert 'headcount_limit' in fields, ('S4: ' + str(fields))
     def test_create_duplicate_unique_returns_conflict(self, adapter_base_url):
+        dept_id = _ensure_department(adapter_base_url, 's5')
         emp_number = 'UNIQ-' + _RUN_TAG + '-s5'
-        data = _valid_employee_data('s5')
+        data = _valid_employee_data('s5', department_id=dept_id)
         data['employee_number'] = emp_number
         s1, b1 = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
         assert s1 == 201, ('S5 first: ' + str(b1))
-        data2 = _valid_employee_data('s5b')
+        data2 = _valid_employee_data('s5b', department_id=dept_id)
         data2['employee_number'] = emp_number
         status, body = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data2})
         expected_code = 'CONFLICT'
@@ -462,7 +475,8 @@ class TestValidation:
         assert 'id' in body and body['id'], ('S6 id: ' + str(body))
         assert 'error' not in body, ('S6 err: ' + str(body))
     def test_patch_bad_enum_returns_validation_error(self, adapter_base_url):
-        data = _valid_employee_data('s7a')
+        dept_id = _ensure_department(adapter_base_url, 's7a')
+        data = _valid_employee_data('s7a', department_id=dept_id)
         s_create, b_create = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
         assert s_create == 201, ('S7a setup: ' + str(b_create))
         eid = b_create['id']
@@ -472,10 +486,158 @@ class TestValidation:
         fields = body.get('error', {}).get('details', {}).get('fields', {})
         assert 'status' in fields, ('S7a: ' + str(fields))
     def test_patch_omitting_required_field_is_success(self, adapter_base_url):
-        data = _valid_employee_data('s7b')
+        dept_id = _ensure_department(adapter_base_url, 's7b')
+        data = _valid_employee_data('s7b', department_id=dept_id)
         s_create, b_create = _request(adapter_base_url, 'POST', '/api/entities/employee', body={'data': data})
         assert s_create == 201, ('S7b setup: ' + str(b_create))
         eid = b_create['id']
         status, body = _request(adapter_base_url, 'PATCH', '/api/entities/employee/' + eid, body={'data': {'hire_date': '2025-06-01'}})
         assert status == 200, ('S7b: must return 200. Got ' + str(status) + str(body))
         assert 'error' not in body, ('S7b err: ' + str(body))
+
+# ============================================================
+# DIM-6 -- FK referential integrity (validation-contract.md §5)
+#
+# Parent entity: carrier  (no FK deps — only code/name/is_active required)
+# Child entity:  route    (carrier_id → carrier, required non-nullable FK)
+# Nullable FK:   position.department_id → department (nullable: true)
+# FK-exempt:     journal-entry.period_id (uuid col, NO fk: block in catalog)
+#
+# Rules under test:
+#   F1: create child with bogus parent id  → VALIDATION_ERROR + fields.carrier_id
+#   F2: create parent, then child with real parent id → 201 success
+#   F3: nullable FK (position.department_id) omitted → 201 success (no FK error)
+#   F4: PATCH fk col to bogus id → VALIDATION_ERROR + fields.carrier_id
+#   F5: PATCH unrelated field, fk col absent → 200 success (not checked)
+#   F6: fk-exempt col (journal-entry.period_id) arbitrary id → 201 success (not enforced)
+# ============================================================
+
+def _carrier_data(tag):
+    """Minimal valid carrier — no FK dependencies."""
+    return {
+        'code': ('CAR-' + _RUN_TAG + '-' + tag)[:32],
+        'name': 'Carrier ' + tag,
+        'is_active': True,
+    }
+
+def _route_data(carrier_id, tag):
+    """Minimal valid route — carrier_id is the only required FK."""
+    return {
+        'name': 'Route ' + tag,
+        'carrier_id': carrier_id,
+        'origin_hub': 'HUB-A',
+        'destination_hub': 'HUB-B',
+        'transit_days': 3,
+        'is_active': True,
+    }
+
+class TestFkReferentialIntegrity:
+    # F1: child with bogus parent id → VALIDATION_ERROR with fk field populated
+    def test_create_child_bogus_fk_returns_validation_error(self, adapter_base_url):
+        bogus_id = str(uuid.uuid4())
+        data = _route_data(bogus_id, 'f1')
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/route',
+                                 body={'data': data})
+        expected_code = 'VALIDATION_ERROR'
+        _assert_error_envelope(body, expected_code,
+                               http_status=_http_status(expected_code),
+                               actual_status=status)
+        fields = body.get('error', {}).get('details', {}).get('fields', {})
+        assert 'carrier_id' in fields, (
+            'F1: expected carrier_id in validation fields. Got: ' + str(fields))
+        assert 'not found' in fields.get('carrier_id', ''), (
+            'F1: field message must say "not found". Got: ' + str(fields.get('carrier_id')))
+
+    # F2: create parent first, then child with real parent id → success
+    def test_create_parent_then_child_succeeds(self, adapter_base_url):
+        # Create carrier (parent)
+        s_p, b_p = _request(adapter_base_url, 'POST', '/api/entities/carrier',
+                             body={'data': _carrier_data('f2')})
+        assert s_p == 201, ('F2 parent: ' + str(b_p))
+        carrier_id = b_p['id']
+
+        # Create route (child) with real carrier_id
+        data = _route_data(carrier_id, 'f2')
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/route',
+                                 body={'data': data})
+        assert status == 201, (
+            'F2: child create with valid FK must return 201. Got ' +
+            str(status) + ' ' + str(body))
+        assert 'error' not in body, ('F2 err: ' + str(body))
+
+    # F3: nullable FK omitted entirely → success (no FK error raised)
+    def test_nullable_fk_omitted_is_success(self, adapter_base_url):
+        # position.department_id is nullable: true — omitting it must not error
+        data = {
+            'title': 'Analyst-' + _RUN_TAG + '-f3',
+            # department_id intentionally absent (nullable fk)
+        }
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/position',
+                                 body={'data': data})
+        assert status == 201, (
+            'F3: nullable FK omitted must succeed. Got ' + str(status) + ' ' + str(body))
+        assert 'error' not in body, ('F3 err: ' + str(body))
+
+    # F4: PATCH fk col to bogus id → VALIDATION_ERROR
+    def test_patch_fk_col_bogus_id_returns_validation_error(self, adapter_base_url):
+        # First create a valid carrier + route
+        s_p, b_p = _request(adapter_base_url, 'POST', '/api/entities/carrier',
+                             body={'data': _carrier_data('f4p')})
+        assert s_p == 201, ('F4 parent: ' + str(b_p))
+        carrier_id = b_p['id']
+
+        s_r, b_r = _request(adapter_base_url, 'POST', '/api/entities/route',
+                             body={'data': _route_data(carrier_id, 'f4')})
+        assert s_r == 201, ('F4 route: ' + str(b_r))
+        route_id = b_r['id']
+
+        # PATCH carrier_id to a bogus id
+        bogus_id = str(uuid.uuid4())
+        status, body = _request(adapter_base_url, 'PATCH',
+                                 '/api/entities/route/' + route_id,
+                                 body={'data': {'carrier_id': bogus_id}})
+        expected_code = 'VALIDATION_ERROR'
+        _assert_error_envelope(body, expected_code,
+                               http_status=_http_status(expected_code),
+                               actual_status=status)
+        fields = body.get('error', {}).get('details', {}).get('fields', {})
+        assert 'carrier_id' in fields, (
+            'F4: expected carrier_id in validation fields. Got: ' + str(fields))
+
+    # F5: PATCH unrelated field, fk col absent → success (fk not re-checked)
+    def test_patch_unrelated_field_no_fk_col_is_success(self, adapter_base_url):
+        s_p, b_p = _request(adapter_base_url, 'POST', '/api/entities/carrier',
+                             body={'data': _carrier_data('f5p')})
+        assert s_p == 201, ('F5 parent: ' + str(b_p))
+        carrier_id = b_p['id']
+
+        s_r, b_r = _request(adapter_base_url, 'POST', '/api/entities/route',
+                             body={'data': _route_data(carrier_id, 'f5')})
+        assert s_r == 201, ('F5 route: ' + str(b_r))
+        route_id = b_r['id']
+
+        # PATCH only transit_days — carrier_id absent → no FK check
+        status, body = _request(adapter_base_url, 'PATCH',
+                                 '/api/entities/route/' + route_id,
+                                 body={'data': {'transit_days': 5}})
+        assert status == 200, (
+            'F5: PATCH without fk col must succeed. Got ' + str(status) + ' ' + str(body))
+        assert 'error' not in body, ('F5 err: ' + str(body))
+
+    # F6: fk-exempt col (journal-entry.period_id has no fk: block) → no FK error
+    def test_fk_exempt_col_arbitrary_id_is_success(self, adapter_base_url):
+        # journal-entry.period_id is uuid but has NO fk: block in catalog (fk-exempt).
+        # Supplying an arbitrary uuid must NOT trigger a FK referential error.
+        arbitrary_period_id = str(uuid.uuid4())
+        data = {
+            'entry_date': '2024-06-01',
+            'description': 'Test entry ' + _RUN_TAG,
+            'status': 'draft',
+            'period_id': arbitrary_period_id,
+        }
+        status, body = _request(adapter_base_url, 'POST', '/api/entities/journal-entry',
+                                 body={'data': data})
+        assert status == 201, (
+            'F6: fk-exempt period_id must not trigger FK error. Got ' +
+            str(status) + ' ' + str(body))
+        assert 'error' not in body, ('F6 err: ' + str(body))
