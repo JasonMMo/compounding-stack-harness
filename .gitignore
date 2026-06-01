@@ -49,3 +49,11 @@ cost-reports/local/
 # build_tokens.py regenerates it; tracking it would risk drift from the JSON source.
 # (Contrast: gradle-wrapper.jar above is tracked because it is NOT derivable from repo source.)
 frontend/adapters/*/static/css/tokens.css
+
+# Generated DDL (build artifact — single source = presets/ddl/catalog.yaml + dialects/).
+# render.py regenerates per-dialect SQL; tracking it would risk drift from the catalog.
+presets/ddl/build/
+
+# L2 test harness artifacts (compiled classes, HSQLDB jar, build output)
+tests/ddl/out/
+tests/ddl/lib/
