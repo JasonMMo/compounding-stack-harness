@@ -187,6 +187,17 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Escalations**: 없음.
 - **Open loops resolved**: catalog→adapter 검증 link (Growth-10/11 의 명시적 후속). 남은: FK 참조 무결성, react adapter.
 
+### Growth-13 (2026-06-01) — self-improve 인덱스 (ledger-index): think-grid 평가 + 아이디어 흡수·인프라 비채택
+
+- **역할**: Architect (think-grid 평가 + ledger-index 설계 계약) + Integrator (engineer 판단 승인 + 환류).
+- **계기**: CEO 제기 — "지식이 learn-log 에 누적될수록 context 무거워지고 cross-agent 교차정보 관리 곤란. think-grid README 검토하고 개선안 세우자."
+- **평가 (think-grid `D:\AI\workspace\think-grid`)**: 핵심 가치 = 심볼에 앵커된 학습 + 백링크 검색. 단 (1) **이미 80% 보유** — `docs/learn-logs/` 6 인격 원장 + auto-memory `[[]]` + codegraph. (2) **미스핏**: sync-graph.js 는 codegraph→.md mirror = 방금 token-savior→codegraph 로 없앤 "코드그래프 2개" 재발 / Obsidian Graph View 는 인간 전용(에이전트 context 절감 아님) / codegraph 는 .md 미인덱스 / 신규 node+sqlite3 = charter §5 비용·고객 self-host 무게. (3) `.context/` 는 dormant skeleton (0-byte agent 파일, README 예시 이름, untracked).
+- **결정**: think-grid 의 *아이디어*만 흡수, *인프라* 전부 비채택. 신규 자산 1개 = `scripts/ledger-index.py` (역인덱스, codegraph DB 는 검증 소스로만 read). 빠진 20% = "심볼-앵커 교차-인격 역인덱스" 만 채움. `_index.json` gitignore (재생성 캐시 — 초안 §4 commit 제안을 CTO 가 번복: generated_from_commit=HEAD 가 커밋마다 stale).
+- **산출물 (CTO 직접)**: `docs/architecture/ledger-index.md` — 설계 계약 (입력·앵커추출·codegraph 교차검증·출력 스키마·CLI·제약·think-grid 비채택 결정표).
+- **Integrator 판단**: engineer 가 `--symbol` 을 file-anchor basename 까지 확장 (CatalogValidator 가 Files-touched 경로에만 존재) → **승인** (검색 의도 부합, guards-must-work). codegraph unverified 61 도 drop 없이 보존, stale 탐지(`--check`)는 **G-11 가드 후보**로 남김 — 지금 게이트 아님 (가드는 진짜 issue 0 일 때만 박음, feedback_guards_must_work).
+- **Escalations**: 없음 (CEO Option A 위임 선택).
+- **Open loops resolved**: self-improve context-weight (CEO 제기). 남은: `--check`→G-11 승격 여부, `/contribute-back` 인덱스 재빌드 hook, (선택) Obsidian `--md` 시각화.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
