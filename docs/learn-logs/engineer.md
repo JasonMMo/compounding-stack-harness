@@ -279,6 +279,34 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **G-6/G-8 FAIL (build/ 아티팩트 스캔)**: `scripts/diagnose.py` 의 G-6 / G-8 walk 가 `build/` 디렉터리를 제외하지 않아 gradle 빌드 출력물을 소스로 오인. 수정: `_GENERATED_DIR_PARTS` 공유 상수 (`build`, `.gradle`, `node_modules`, `__pycache__`, `target`, `.venv`, `out`, `dist`, `.pytest_cache`, `.git`, `.codegraph`, `.context`) 를 G-6·G-8 블록 위에 정의하고, G-1·G-6·G-8 세 가드 모두 이 단일 상수를 참조. 가드 약화 없음 — 소스 `presets/ddl/catalog.yaml` 은 G-6 scan root(`middle/`, `backend/`, `frontend/`, `scripts/`) 에 없으므로 기존 PASS 유지.
 - 결과: `python scripts/diagnose.py` → 10 guards, 0 FAIL (G-2/G-3 SPEC 유지).
 
+### Growth-13 (2026-06-01) — ledger-index.py 구현 (심볼-앵커 역인덱스)
+
+- Files touched:
+  - `scripts/ledger-index.py` (신규 — pure-stdlib Python 3, sqlite3 포함, 외부 의존 0)
+
+- Implementation choices:
+  - **REPO_ROOT 해석**: `Path(__file__).resolve().parents[1]` — cwd 무관하게 repo 루트 기준 경로 해석. diagnose.py 와 동일 패턴 채택.
+  - **엔트리 파싱 정규식**: `^### Growth-(\d+) \((\d{4}-\d{2}-\d{2})\)\s*[—\-]?\s*(.*)$` 계약 §2.2 그대로. body 수집 종료 조건은 다음 `^### ` 매칭 줄 — `####` 소제목(Growth-12 guard fix 등)은 body 안으로 포함되므로 하위 섹션 정보가 손실 없이 수집됨.
+  - **File anchor 추출**: `_FILES_TOUCHED_START` 로 `- Files touched:` 헤더 감지 후, 2+ 공백 들여쓰기 bullet(`_FILE_BULLET`)만 수집. 백틱·괄호 주석 제거. 비들여쓰기 줄 또는 빈 줄에서 수집 종료.
+  - **Symbol 후보 노이즈 필터 `_SKIP_SYMBOL_RE`**: 슬래시/백슬래시/점·공백 포함 토큰, 확장자(`.md/.yaml/.py/.java/.html/.css/.ts/.js/.sql/.txt`) 종료 토큰을 제거. 경로성·산문 단편을 걸러내고 코드 심볼만 남기는 휴리스틱. false-negative(일부 심볼 누락) 를 false-positive(노이즈 과다) 보다 낫다고 판단.
+  - **codegraph READ-ONLY**: `sqlite3.connect("file:<path>?mode=ro", uri=True)` — 계약 §2.3.3 지시. DB 부재 시 `(None, warning_str)` 반환 후 rc=0 유지, 전 심볼 unverified 처리.
+  - **결정적 출력**: `json.dumps(sort_keys=True, ensure_ascii=False, indent=2)`. wall-clock 타임스탬프 제거, `generated_from_commit = git rev-parse HEAD` (subprocess; 실패 시 `"unknown"`). 내용 무변경 시 재빌드 SHA256 동일 확인.
+  - **`--symbol` 검색 범위 확장 (계약외 판단)**: 계약 §2.5는 `symbols` + `unverified` 만 검색하도록 암시하나, `CatalogValidator`처럼 body 백틱이 아닌 `Files touched:` 경로로만 나타나는 심볼이 존재함. file anchor의 Path.stem 으로 basename 매칭을 추가해 검색 coverage 확보. 계약 변경 판정은 CTO 에스컬레이션으로 보고.
+  - **`build_index()` 중복 방지**: 동일 `(agent, growth)` 조합이 같은 심볼/파일 버킷에 중복 삽입되지 않도록 `any()` 선형 체크. 원장 규모(수백 엔트리)에서 성능 무관.
+
+- Tests added:
+  - **Self-verification (L0 smoke)**: 실행 후 수동 검증 4종.
+    1. `python scripts/ledger-index.py` → rc=0, `_index.json` 생성.
+    2. `--symbol CatalogValidator` → engineer Growth-12 file-anchor basename 매칭으로 출력 확인.
+    3. 재빌드 2회 SHA256 byte-identical (`b63dea3bc1908faa...`).
+    4. `--check` → rc=0 (14 verified 심볼 전원 codegraph 현존).
+  - L1/L2/L3/L4 전용 테스트 파일 미작성 — pure-data 스크립트(LLM·인프라 0). 추후 `/contribute-back` hook 시 pytest fixture 추가 후보.
+
+- Catches surfaced:
+  - **CTO 에스컬레이션**: `--symbol` 의 file-anchor basename 확장이 계약 §2.5 명시 범위 외 단독 판단임을 보고. CTO 가 과잉으로 판정 시 file-anchor 검색 블록 제거로 원복 가능.
+
+- Cost: ~15 turns / ~$0.8 추정
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~M1 진입 시 첫 spawn — `middle/contract/` 첫 wire 키 schema 파일 작성~~ ✅ Growth-5d 완료
