@@ -796,6 +796,101 @@ def g10_ddl_catalog_integrity() -> GuardResult:
 
 
 # ---------------------------------------------------------------------------
+# G-11 Creater single-source catalog loader
+# ---------------------------------------------------------------------------
+
+_WORKFLOW_DIR = REPO_ROOT / "scripts" / "workflow"
+
+# Pattern: direct yaml.safe_load( ... ) call that opens catalog.yaml inline.
+# Matches lines like: yaml.safe_load(open("...catalog.yaml"))
+#                     yaml.safe_load(Path("...catalog.yaml").read_text())
+_INLINE_CATALOG_LOAD_RE = re.compile(
+    r"""yaml\s*\.\s*safe_load\s*\(""",   # yaml.safe_load( anywhere
+)
+
+# Pattern: a local function definition named load_catalog.
+# Matches: def load_catalog(  (any args)
+_LOCAL_LOAD_CATALOG_DEF_RE = re.compile(
+    r"""\bdef\s+load_catalog\s*\(""",
+)
+
+
+def g11_creater_catalog_single_source() -> GuardResult:
+    """G-11 / Growth-14 — creater scripts must not reimplement catalog loading.
+
+    scripts/workflow/*.py MUST import load_catalog from render.py (single-source,
+    presets/ddl/render.py). Violations are:
+      (a) a local `def load_catalog(` definition in any workflow script, OR
+      (b) a direct `yaml.safe_load(` call that opens catalog.yaml inline.
+
+    PASS when scaffold.py and manifest.py only import the loader from render.py
+    (current state as of Growth-14). This guard enshrines the invariant so
+    future workflow scripts cannot silently redeclare catalog parsing logic.
+    """
+    if not _WORKFLOW_DIR.exists():
+        return GuardResult(
+            "G-11", "creater catalog single-source", "Growth-14",
+            status="SKIP",
+            notes="scripts/workflow/ not found — guard activates once creater axis lands.",
+        )
+
+    py_files = sorted(_WORKFLOW_DIR.glob("*.py"))
+    if not py_files:
+        return GuardResult(
+            "G-11", "creater catalog single-source", "Growth-14",
+            status="SKIP",
+            notes="No .py files in scripts/workflow/ yet.",
+        )
+
+    violations: list[str] = []
+    scanned = 0
+
+    for src in py_files:
+        try:
+            lines = src.read_text(encoding="utf-8", errors="ignore").splitlines()
+        except OSError:
+            continue
+        scanned += 1
+        for lineno, line in enumerate(lines, start=1):
+            stripped = line.strip()
+            # Skip comment lines
+            if stripped.startswith("#"):
+                continue
+
+            rel = src.relative_to(REPO_ROOT)
+
+            # (a) local load_catalog definition
+            if _LOCAL_LOAD_CATALOG_DEF_RE.search(line):
+                violations.append(
+                    f"{rel}:{lineno} — local `def load_catalog(` "
+                    f"re-declares catalog loader (must import from render.py)."
+                )
+
+            # (b) inline yaml.safe_load — only flag if catalog.yaml also appears
+            # on the same line or within 3 lines (the open/read pattern).
+            if _INLINE_CATALOG_LOAD_RE.search(line):
+                # Check the surrounding context window [lineno-1 .. lineno+2]
+                ctx_start = max(0, lineno - 2)
+                ctx_end = min(len(lines), lineno + 2)
+                ctx_text = "\n".join(lines[ctx_start:ctx_end])
+                if "catalog.yaml" in ctx_text:
+                    violations.append(
+                        f"{rel}:{lineno} — inline `yaml.safe_load(` near 'catalog.yaml' "
+                        f"re-declares catalog parsing (must import load_catalog from render.py)."
+                    )
+
+    return GuardResult(
+        "G-11", "creater catalog single-source", "Growth-14",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=(
+            f"Scanned {scanned} script(s) in scripts/workflow/. "
+            f"Invariant: import load_catalog from render.py; no local redeclaration."
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 
@@ -810,6 +905,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-8": g8_ascii_slug,
     "G-9": g9_main_log_slim,
     "G-10": g10_ddl_catalog_integrity,
+    "G-11": g11_creater_catalog_single_source,
 }
 
 
