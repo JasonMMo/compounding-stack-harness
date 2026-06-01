@@ -1,0 +1,7 @@
+node_modules/
+dist/
+src/contract/contract.gen.ts
+src/tokens/tokens.gen.css
+*.local
+.env.local
+.env.*.local
