@@ -158,6 +158,16 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Cross-agent catch**: M-2 (7축 환류 자동화) 에서 codegraph 가 diagnose.py 보다 약함 확인 — 가드가 전 파일타입 grep 으로 이미 우위. 도구 중복 회피 결정.
 - **Open loops resolved**: Growth-5f 2-step gate 2번째 step 종결. codegraph 거취 확정.
 
+### Growth-10 (2026-06-01) — ddl 축 채움 + G-10 정의 + QA L2 첫 가동 통합
+
+- **역할**: Architect (catalog format spec + G-10 가드 정의) + Integrator (engineer·qa BLOCK→fix→PASS 체인 마무리)
+- **산출물 (CTO 직접)**: `presets/ddl/_catalog-format.md` — neutral 8-type closed set, catalog.yaml 엔트리 형식 (columns/fk/on_delete/constraints/indexes), dialect yaml 형식, multi-tenant 경계 (M5 보류), wire 정합, G-10 3-check 정의.
+- **결정**: (1) neutral 8-type 만 (uuid/string/text/integer/decimal/boolean/date/timestamp/enum), enum→VARCHAR+CHECK 전방언 이식 (2) dialect 분리 — postgres·hsqldb full, mysql·oracle 타입맵 stub (open-closed) (3) **tenant_id 컬럼 M5 게이트까지 미박음** (premature multi-tenancy 회피) (4) `presets/ddl/build/` gitignore — render.py 가 catalog 에서 재생성하는 파생물 (tokens.css 선례 일관) (5) adapter 검증 wiring 은 후속 Growth (catalog→InMemoryStore) (6) patch_schema.py 보존 — QA 의 regression-가드 권고 수용 (CQO test hygiene 권한)
+- **G-10 정의**: seed entity ⊆ catalog / 모든 fk.entity 실재 / 모든 type closed-set. CTO 가 정의, engineer 가 본문, QA 가 통과기준 — 3-인격 분리 원칙 적용.
+- **Cross-agent catch**: QA L2 첫 가동의 BLOCK 이 render.py 3 결함을 적발했으나, QA 가 patched-schema 47/47 로 **catalog 와 renderer 를 분리 진단** — Integrator 로서 이 격리가 정확함을 확인하고 fix 를 renderer 에만 라우팅 (catalog 무수정). Growth-7 패턴 (QA BLOCK→engineer fix→QA PASS) 의 2번째 실증, 이번엔 L2 layer.
+- **Escalation 수신**: engineer 가 `finance_journal_entry.period_id` FK 부재 (accounting_period 미존재) 보고 → application-layer 검증으로 충분, 57번째 entity 는 period-close DB 가드 필요 시 후속 Growth 후보로 deferred.
+- **Open loops resolved**: ddl 축 첫 채움 (M2 prereq 1개 충족). G-10 신설로 가드 10개.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
