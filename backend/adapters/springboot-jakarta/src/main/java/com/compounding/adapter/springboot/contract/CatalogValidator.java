@@ -23,16 +23,23 @@ import java.util.logging.Logger;
  * Reads presets/ddl/catalog.yaml from the classpath at startup (G-1 compliant —
  * no schema data hardcoded; catalog is the single source of truth).
  *
- * Contract (validation-contract.md §2, §3, §4):
- *   entity_type ∈ catalog  →  enforce schema (required / type / enum / length / unique)
+ * Contract (validation-contract.md §2, §3, §4, §5):
+ *   entity_type ∈ catalog  →  enforce schema (required / type / enum / length / unique / fk)
  *   entity_type ∉ catalog  →  schema-less pass-through (backward-compat)
  *
  * validate(entityType, data, partial) → List<FieldError>
- *   partial=false (create): required + type + enum + length + unique
- *   partial=true  (update): type + enum + length + unique only (no required check)
+ *   partial=false (create): required + type + enum + length + unique + fk
+ *   partial=true  (update): type + enum + length + unique + fk (supplied cols only)
  *
  * Server-populated columns excluded from required check: id, created_at, updated_at.
- * Unique checks query the InMemoryEntityStore (injected).
+ * Unique and FK checks query the InMemoryEntityStore (injected).
+ *
+ * FK check (§5):
+ *   Only columns with an explicit `fk:` block are enforced; fk-exempt columns skipped.
+ *   Absent or null fk value → skipped. Non-null → look up fk.entity in store by id.
+ *   Not found → INVALID error: "referenced <fk.entity> not found".
+ *   Error code stays VALIDATION_ERROR (dangling FK is a field violation, not CONFLICT).
+ *   Single-source: fk targets read from catalog, never hardcoded.
  *
  * Callers split on error kind:
  *   any FieldError with kind=UNIQUE  → CONFLICT (409)
@@ -179,6 +186,11 @@ public class CatalogValidator {
         List<FieldError> uniqueErrors = checkUnique(entityType, columns, data, currentId);
         errors.addAll(uniqueErrors);
 
+        // ── FK referential integrity (§5) ─────────────────────────────────────
+        // Only columns with an explicit `fk:` block; fk-exempt columns skipped.
+        List<FieldError> fkErrors = checkFk(columns, data);
+        errors.addAll(fkErrors);
+
         return Collections.unmodifiableList(errors);
     }
 
@@ -290,6 +302,47 @@ public class CatalogValidator {
                 break;
         }
         return null;
+    }
+
+    /**
+     * Check FK referential integrity for columns with an explicit `fk:` block.
+     *
+     * Rules (validation-contract.md §5):
+     *   - Columns without `fk:` key → fk-exempt; skipped.
+     *   - Value absent or null → skipped (nothing to verify).
+     *   - Non-null value → look up fk.entity in store by id; not found → INVALID.
+     *   - Error message: "referenced <fk.entity> not found".
+     *   - Returns INVALID-kind errors (VALIDATION_ERROR, not CONFLICT).
+     *   - Single-source: fk targets read from catalog, never hardcoded.
+     */
+    @SuppressWarnings("unchecked")
+    private List<FieldError> checkFk(Map<String, Object> columns, Map<String, Object> data) {
+        List<FieldError> errors = new ArrayList<>();
+
+        for (Map.Entry<String, Object> colEntry : columns.entrySet()) {
+            String colName = colEntry.getKey();
+            if (SERVER_COLUMNS.contains(colName)) continue;
+
+            Map<String, Object> colDef = (Map<String, Object>) colEntry.getValue();
+            if (colDef == null) continue;
+
+            // Only enforce columns that have an explicit `fk:` block.
+            Object fkRaw = colDef.get("fk");
+            if (fkRaw == null || !(fkRaw instanceof Map)) continue;
+            Map<String, Object> fkBlock = (Map<String, Object>) fkRaw;
+
+            Object value = data.get(colName);
+            if (value == null || !data.containsKey(colName)) continue;
+
+            String refEntity = str(fkBlock.get("entity"));
+            if (refEntity == null || refEntity.isEmpty()) continue;
+
+            String refId = value.toString();
+            if (store.findById(refEntity, refId).isEmpty()) {
+                errors.add(FieldError.invalid(colName, "referenced " + refEntity + " not found"));
+            }
+        }
+        return errors;
     }
 
     /**
