@@ -1,0 +1,22 @@
+dialect: postgres
+# Production default dialect.
+# render.py uses this for --dialect postgres (or when no dialect is specified).
+type_map:
+  uuid:      UUID
+  string:    VARCHAR
+  text:      TEXT
+  integer:   INTEGER
+  decimal:   NUMERIC
+  boolean:   BOOLEAN
+  date:      DATE
+  timestamp: TIMESTAMP
+  enum:      VARCHAR   # rendered as VARCHAR(255) CHECK (col IN (...))
+defaults:
+  string_length: 255
+  enum_length: 255
+quote: '"'
+on_delete_map:
+  restrict:  RESTRICT
+  cascade:   CASCADE
+  set_null:  SET NULL
+  no_action: NO ACTION
