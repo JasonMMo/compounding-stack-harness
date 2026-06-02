@@ -120,7 +120,7 @@ M0 — Founding
 **페르소나 인수**: CEO 와 IT-담당자 역할을 겸하는 창업 팀이 헌장·아키텍처·비용 모니터링 문서를 읽고 7축 구조와 revenue gate 를 30분 안에 설명할 수 있다.
 
 M1 — Generic Harness Baseline
-**페르소나 인수**: IT-담당자 가 4-corner (springboot·fastapi × vanilla-htmx·react) 의 4계층 풀테스트·compliance test 가 전부 PASS 함을 확인하고, 14 도메인 중 1개를 로컬에서 scaffold → typed 화면이 사내망 내부에서 외부 클라우드 호출 없이 동작함을 검증한다. (ops pack 실배포는 M2 로 이관 — CEO 결정 2026-06-02.)
+**페르소나 인수**: IT-담당자 가 4-corner (springboot·fastapi × vanilla-htmx·react) 의 4계층 풀테스트·compliance test 가 전부 PASS 함을 확인하고, 14 도메인 중 1개를 로컬에서 scaffold → typed 화면이 사내망 내부에서 외부 클라우드 호출 없이 동작함을 30분 안에 검증한다. (ops pack 실배포는 M2 로 이관 — CEO 결정 2026-06-02.)
 
 M2 — First Paid Customer
 **페르소나 인수**: 업무담당자 가 domain-expert agent 와 인터뷰 세션 1회 (최대 2시간) 를 완료하고, 자기 회사 핵심 도메인 1개의 CRUD 화면 초안을 당일 수령하여 실제 업무 데이터를 입력해 본다. 또한 IT-담당자 가 ops pack (docker-compose + Vault + SSO) 을 사내 Linux 서버에 배포하고 SSO 로그인·감사로그 적재까지 2시간 안에 검증한다 (M1 에서 이관).
