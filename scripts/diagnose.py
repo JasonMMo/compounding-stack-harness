@@ -493,7 +493,11 @@ def g7_persona_driven_gating() -> GuardResult:
         )
     text = roadmap.read_text(encoding="utf-8")
     blocks = re.split(r"(?=^#{2,4}\s+M\d+)", text, flags=re.MULTILINE)
-    milestone_blocks = [b for b in blocks if re.match(r"^#{2,4}\s+M\d+", b)]
+    # Real milestone headings are "M{n} — <title>" (number immediately followed
+    # by an em-dash). This deliberately excludes prose sections like
+    # "## M1 Maturity Threshold — …", which are gating *definitions*, not
+    # persona-acceptance triples and so are not subject to the persona+time rule.
+    milestone_blocks = [b for b in blocks if re.match(r"^#{2,4}\s+M\d+\s+—", b)]
     violations: list[str] = []
     for block in milestone_blocks:
         head_match = re.match(r"^#{2,4}\s+(M\d+)[^\n]*", block)
