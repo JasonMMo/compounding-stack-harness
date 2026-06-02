@@ -50,6 +50,7 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - Cross-agent: CTO 가 Scene 4 react+springboot live 촬영 sign-off / Scene 5 ops-pack 미구현 적발 → CEO Scene5 cut 결정. positioning.md 인수 triple CTO 가 M2 동기화.
 - Cost: 영상 제작비 $22 1-shot, LLM·infra 0. 웹리서치 7 소스(demo best-practice/TTS/hosting).
 - Open loops: 실제 촬영 — CEO 결정 대기(CTA URL / CEO voice Scene6 / publish 타이밍 / 샘플데이터 산업 타깃) / qualified lead 5건 수집 / LinkedIn·SI 커뮤니티 포스트 draft
+- **후속 (2026-06-02, 같은 세션)**: ① demo 대본 **사용자 관점 재작성** — entity/DDL/manifest/creater축 등 엔지니어 용어 추방, 업무담당자/CEO 언어로(Scene 4 스택명만 IT-담당자 향 유지). ② **ICP narrowing** (CEO 결정) — positioning §1 ICP 블록 신규 + Persona A(1~30명, CEO 겸업) + Persona C(전산실→대표겸직/외부파트너) + §3 statement 재작성. demo 정렬 점검: smallmfg 50명은 시청자 비노출이라 OK, 단 배포 카피(YouTube 제목/썸네일)에서 "소형·스타트업/제조 스타트업" 표현 권고. 단일 기준 = memory `project_icp`.
 
 ## §3 — Open Loops (이 인격 책임)
 
