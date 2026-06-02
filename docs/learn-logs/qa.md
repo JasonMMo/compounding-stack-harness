@@ -216,9 +216,19 @@ patch_schema.py disposition: KEEP as audit record -- see QA recommendation below
 - **Blocks issued**: 0. **CAVEAT carry (regression checkpoint)**: Java `checkFk`+DIM-6 는 live 미실행 (JDK/Gradle 환경 부재). M1 sign-off 전 JDK 환경서 `ADAPTER_BASE_URL=http://localhost:8080 pytest tests/adapters/springboot-jakarta/ -q` → 37 test rc=0 확인 후 이 ledger 에 기록 필수. = 검증 갭(코드는 read 로 정확 증명), 결함 아님.
 - **Cost**: ~1 round.
 
+### Growth-16 (2026-06-02) — react frontend adapter 감사 (PASS-WITH-CAVEAT → caveat 클로즈)
+
+- **감사 대상**: react adapter (2nd frontend). push 전 머지 게이트. Node v24 + fastapi 가용.
+- **G-1 단일진실 (적대적 grep)**: react `src/` 에서 wire endpoint path / error code 문자열 / http status 정수(404/422/409) / dotted paging 검색 → **하드코딩 0**. 전부 `contract.gen.ts`(생성) 경유. 유일 404 는 DeleteScreen 주석(실행 아님). `/login`·`/entities/:type` 는 **SPA router path**(frontend 내비) — wire endpoint 아니므로 G-1 대상 외. diagnose 4 adapter 47 파일 G-1 PASS.
+- **F-1~F-4 검증**: F-1 buildListParams flat-underscore(5 케이스 실 URLSearchParams 단언). F-3 error.code 분기(텍스트 분기 아님)+message_ko Hangul 체크. F-4 404·200 양 경로 mock 단언+UI already-deleted. F-2 offset+cursor+next_cursor forwarding.
+- **재현 (QA 직접)**: L1 `npm test` 27 pass/8 skip(env-gated, 진짜 skip). L3 `npm run build` exit 0(dist 생성, tsc strict 클린). L4 미재현(포트/env — implementer 보고 35 @ fastapi). 토큰 hex: `app.css`+`.tsx` raw hex **0**(tokens.gen.css 의 hex 는 생성물=정상). vanilla-htmx 37 무회귀. node_modules 미커밋.
+- **CAVEAT 발행 → 클로즈**: F-2 offset-last-page 테스트가 hollow(순수 산술, adapter 미접촉) — PASS-WITH-CAVEAT 발행. CTO 가 즉시 수정 위임 → `hasMorePages` 순수 헬퍼(ListScreen+test 공유) 4 케이스, 27→30 test, fails-closed 증명. **caveat 해소 확인**.
+- **Blocks issued**: 0 (BLOCK 사유 없음 — 하드코딩 0, false PASS 0). caveat 1 발행·동일 세션 클로즈.
+- **Cost**: ~1 round (L1/L3 재현 + 적대 grep).
+
 ## §3 — Open Loops (이 인격 책임)
 
-- **[Growth-15 carry] Java DIM-6 live 미실행** — JDK 환경서 springboot-jakarta 37 test rc=0 확인 + 본 ledger 기록 (M1 sign-off 게이트)
+- **[Growth-15 carry] Java DIM-6 live 미실행** — JDK 환경서 springboot-jakarta 37 test rc=0 확인 + 본 ledger 기록 (M1 sign-off 게이트). react L4 springboot 상대도 동일 환경서 함께 검증 가능.
 - 현행 가드 9개 (G-1~G-9) 의 거짓 PASS / 거짓 FAIL 위험 평가 — 첫 가동 시
 - G-9 통과 기준 인수·재평가 (CTO 임시 박음 → QA 정식 검토)
 - ~~M1 진입 게이트 통과 기준 문서화 — L1~L4 각각의 PASS 정의~~ PARTIAL: L2 PASS 기준 Growth-10 에서 정의됨. L1/L3/L4 는 M1 진입 시 해소 예정.
