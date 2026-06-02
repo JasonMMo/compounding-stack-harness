@@ -224,6 +224,18 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Cross-agent catch**: Engineer 가 CTO 목록 밖 `report-output.triggered_by_id` 발견·분류 + `inspection-plan`(내 오기 inspection-result) 교정 → integrator 승인. QA 가 DIM-5 fake department_id 회귀를 정당 수정으로 판정.
 - **Open loops resolved**: FK 참조 무결성(Growth-12 §5 deferred), catalog dangling hygiene(Growth-14 발견). 남은: Java DIM-6 live / machine·accounting-period entity(domain-expert) / G-13 후보.
 
+### Growth-16 (2026-06-02) — 2nd frontend adapter (react): frontend pluggability 실증
+
+- **역할**: Architect (stack 결정) + Integrator (background 빌드 위임 + QA caveat 즉시 클로즈) + 게이트.
+- **계기**: handoff 후보 #1 (CEO "2→1" 지시). backend 측 pluggability 는 2 adapter 로 증명됐으나 frontend 는 vanilla-htmx 1개 — "contract 만 stable, F 교체" 의 frontend 측 미실증.
+- **stack 결정 (VP 위임, 재확인 없이 확정)**: Vite+React18+TS. **contract 소비 = 빌드타임 codegen** (wire-v1.yaml+codes.yaml → generated TS module, SPA 는 generated 만 import) — 브라우저가 YAML 못 읽는 문제 해결 + 재구현 아닌 소비(G-1). **토큰 = CSS custom property** (frontend-adapter-contract §7 이 남긴 "CSS custom property vs CSS-in-JS" fork 를 전자로 해소 — 공유 design/tokens 파이프라인 일관, vanilla-htmx 와 동일 --* 소비). Vite dev proxy → BACKEND_BASE_URL (self-host 은 reverse-proxy). manifest typed-form 런타임 fetch + generic fallback (Growth-14 패리티).
+- **환경 사전 점검**: Java(Growth-15)가 JDK 부재로 live 미실행됐던 교훈 → react 위임 전 `node --version` 확인(v24 가용) → L1+L3+L4(fastapi) 전부 검증 가능 판정 후 진행. caveat 0 으로 완결(Java 와 대비).
+- **위임 방식**: 큰 빌드라 background engineer 1-shot + "중간 커밋 체크포인트" 지시(Part C silent-stop 교훈). 결과 20 커밋 per-file, L1 27→30 / L3 build / L4 35(fastapi) green.
+- **QA caveat 즉시 클로즈**: QA 가 F-2 offset-last-page 테스트 hollow(순수 산술) 적발(PASS-WITH-CAVEAT). CEO 퇴근 후 자율 마무리 중이었으나 "known-hollow 테스트를 새 adapter 에 남기지 않는다" 원칙으로 즉시 engineer 위임 → `hasMorePages` 순수 헬퍼 추출(ListScreen+test 공유=single-source) 30 test green. push 전 클로즈.
+- **Integrator 판단**: G-1 스코프 — SPA router path(`/login`, `/entities/:type`)는 frontend 내비게이션, wire endpoint 아님 → G-1 대상 외(QA 와 합치). frontend INDEX.md 는 G-5 가 frontend 축 2 adapter 도달로 요구 → 추가.
+- **Escalations**: 없음. react L4 는 fastapi 상대만 — springboot 상대 react L4 는 Growth-15 의 Java 환경 게이트와 동일 묶음(별도 신규 부채 아님).
+- **Open loops resolved**: frontend 측 pluggability(vanilla-htmx 단일) → 4-corner(2×2) 완성. frontend-adapter-contract §7 토큰 fork. 남은: vue/nexacro(M2 후), react persona 분기, maturity threshold.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
