@@ -236,6 +236,14 @@ patch_schema.py disposition: KEEP as audit record -- see QA recommendation below
 - **발견 (CTO 기록용)**: system PATH JDK 21 ↔ Gradle daemon JDK 17 (`C:\Program Files\Java\jdk-17`). Spring Boot 3.2.5 는 17+ 요구라 무해. JDK21 전용 기능 필요 시 `gradle.properties org.gradle.java.home` 또는 toolchains 갱신.
 - **Blocks**: 0. **M1 Java sign-off 게이트 PASS.**
 
+### 검증 체크포인트 (2026-06-02) — vanilla-htmx entity.list 회귀 가드 추가 (L4 가시성 공백 봉합)
+
+- **계기**: 데모 촬영 prep 중 engineer 가 vanilla-htmx `entity_list` 의 실 버그 적발·수정(`6c13137`) — outbound 백엔드 쿼리에 `entity_type` 주입(레코드 필터 오인 → **모든 목록 화면 0행**) + paging 키 contract 불일치. **L4 공유 compliance 가 백엔드 API 만 직접 쳐서 Flask 라우트를 미경유**, 못 잡은 가시성 공백.
+- **추가 가드**: `frontend/adapters/vanilla-htmx/tests/test_entity_list_params.py` (`50bebe6`) — Flask test client 로 라우트를 실제 통과시키고 `_proxy_request` 경계를 monkeypatch 로 가로채 outbound `params`/`path` 캡처. **12 케이스**: offset(6)·cursor(3)·sort/search(3). `_CONTRACT_KEYS` 만 유출·`_FORBIDDEN_KEYS`(entity_type/paging_page/paging_size/filter_search/paging_cursor) 무유출 단언.
+- **진위(가드가 진짜 잡는가)**: server.py 를 버그 버전으로 일시 revert → 신규 테스트 **RED**(forbidden keys leaked 등 정확 지목), 원복 후 green. 가드 약화 아닌 실효 가드.
+- **결과**: fe 스위트 56 pass(44+12) / 21 skip, diagnose 12 가드 0 real FAIL. **learn-log §4 의 "QA 후속(open)" 닫힘.**
+- **설계 메모(감사용)**: 모킹 지점 = 라우트가 params 를 넘기는 경계(`_proxy_request`). 안쪽(urllib)이면 URL 인코딩까지 검증해 취약, 바깥(라이브)이면 L4 중복+backend 의존. 경계 캡처가 "라우트가 contract 키만 조립하는가"를 최저비용 직접 핀.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~[Growth-15 carry] Java DIM-6 live~~ ✅ **CLOSED 2026-06-02** (springboot 37 PASS, 위 체크포인트). react↔springboot L4 36 PASS 도 동시 종결.
