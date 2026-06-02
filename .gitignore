@@ -33,6 +33,7 @@ Thumbs.db
 # Project artifacts
 out/
 docs/scaffolds/
+Videos/
 *.local.yaml
 *.local.json
 .env
