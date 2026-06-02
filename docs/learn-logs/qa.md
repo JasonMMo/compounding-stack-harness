@@ -226,9 +226,20 @@ patch_schema.py disposition: KEEP as audit record -- see QA recommendation below
 - **Blocks issued**: 0 (BLOCK 사유 없음 — 하드코딩 0, false PASS 0). caveat 1 발행·동일 세션 클로즈.
 - **Cost**: ~1 round (L1/L3 재현 + 적대 grep).
 
+### 검증 체크포인트 (2026-06-02) — Java-env sign-off 게이트 CLOSED (Growth-15·16 carry 종결)
+
+- **계기**: 이전 sub-agent 가 "JDK/Gradle 없음"으로 springboot live 를 못 돌렸으나, **메인 머신엔 JDK 21 + Gradle wrapper(`./gradlew`) 존재** (false-negative — system `gradle` 만 찾고 wrapper 미사용). CEO "#1 진행" 지시로 실행.
+- **L1/L3 (gradlew)**: `gradlew clean test` — `CatalogValidatorTest` **22 pass**(15→22, Growth-15 FK 7개 첫 실행 전원 PASS) + `EntitySmokeTest` 8 = 30 pass 0 fail. `gradlew build` SUCCESSFUL.
+- **L4 springboot DIM-1~6 (port 9081)**: `ADAPTER_BASE_URL=...:9081 pytest tests/adapters/springboot-jakarta/` → **37 PASS rc=0**. DIM-6 F1~F6 전원 PASS = **Growth-15 Java FK carry 종결** (Java 상대 첫 live).
+- **L4 react↔springboot**: `BACKEND_BASE_URL=...:9081` → **36 pass / 2 skip**. 2 skip = Vite preview SPA 쉘 테스트(`describe.skipIf(!FRONTEND)`) — wire 계약 아닌 SPA 쉘, **M1 설계상 허용·M2 first-customer 게이트 전 활성 필수**. **Growth-16 carry 종결**.
+- **diagnose**: 12 가드 0 real FAIL.
+- **발견 (CTO 기록용)**: system PATH JDK 21 ↔ Gradle daemon JDK 17 (`C:\Program Files\Java\jdk-17`). Spring Boot 3.2.5 는 17+ 요구라 무해. JDK21 전용 기능 필요 시 `gradle.properties org.gradle.java.home` 또는 toolchains 갱신.
+- **Blocks**: 0. **M1 Java sign-off 게이트 PASS.**
+
 ## §3 — Open Loops (이 인격 책임)
 
-- **[Growth-15 carry] Java DIM-6 live 미실행** — JDK 환경서 springboot-jakarta 37 test rc=0 확인 + 본 ledger 기록 (M1 sign-off 게이트). react L4 springboot 상대도 동일 환경서 함께 검증 가능.
+- ~~[Growth-15 carry] Java DIM-6 live~~ ✅ **CLOSED 2026-06-02** (springboot 37 PASS, 위 체크포인트). react↔springboot L4 36 PASS 도 동시 종결.
+- **[M2 전] Vite preview SPA 테스트 2건 활성** — `FRONTEND_BASE_URL` 세팅 후 react `describe.skipIf(!FRONTEND)` 블록 실행 (M1 허용, M2 first-customer 전 필수).
 - 현행 가드 9개 (G-1~G-9) 의 거짓 PASS / 거짓 FAIL 위험 평가 — 첫 가동 시
 - G-9 통과 기준 인수·재평가 (CTO 임시 박음 → QA 정식 검토)
 - ~~M1 진입 게이트 통과 기준 문서화 — L1~L4 각각의 PASS 정의~~ PARTIAL: L2 PASS 기준 Growth-10 에서 정의됨. L1/L3/L4 는 M1 진입 시 해소 예정.
