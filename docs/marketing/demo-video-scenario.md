@@ -13,7 +13,7 @@
 
 The demo addresses the **M2 gate**: a qualified lead (업무담당자 or the CEO who forwards the link) must watch this video and say "우리 회사도 이렇게 되나?" — the exact question positioning.md names as the M1→M2 transition signal.
 
-**Total run time target: 3 minutes 30 seconds** (sales demo length, per best-practice research).
+**Total run time target: ~3 minutes** (sales demo length, per best-practice research). Originally scoped at 3:30 with a self-host scene; Scene 5 was **cut by CEO decision (2026-06-02)** because the ops pack it depicted is unbuilt — showing only live-verified capability is stronger than a roadmap caveat.
 
 **Hero persona: 업무담당자** (Persona B). The CEO reads the first 30 seconds and delegates. The IT-담당자 reads scene 4. Every scene is labeled with its primary persona.
 
@@ -166,33 +166,11 @@ Cut to the same employee screen, now rendered live in the React frontend (`npm r
 
 ---
 
-#### SCENE 5 — Self-Host Architecture [로드맵] (2:50–3:15) | Persona: IT-담당자
-
-> **CTO honest-marketing block (2026-06-02)**: The ops pack (docker-compose + Vault Agent + Keycloak SSO) is a **documented M1 promise in positioning.md but is NOT yet built** — no compose file, no Vault/Keycloak config exists in the repo, and `smallmfg-demo.yaml` ships with `vault_agent: false` / `sso_keycloak: false`. This scene therefore CANNOT be filmed as a live/shipped capability. It must be presented as an explicitly labeled **roadmap** slide, with future tense, or cut entirely until the ops pack exists. Backends today run via `uvicorn` / `bootRun` directly. **Decision flagged to CEO** (open question 6 below).
-
-**On screen**: A static architecture diagram (CDO to produce), clearly watermarked **"로드맵 — 개발 예정"**. Three boxes:
-
-```
-[고객사 서버 (사내망)]   ← 로드맵 (개발 예정)
-  └─ docker-compose up
-       ├─ FastAPI / SpringBoot backend
-       ├─ vanilla-htmx / react frontend
-       ├─ PostgreSQL
-       └─ Vault Agent + Keycloak SSO (사이드카)
-```
-
-Arrow labeled "데이터 흐름 → 사내망 밖으로 나가지 않음 (설계 목표)"
-
-**VO** (future tense — no present-tense "기본 포함 / 완료" claims):
-> 사내망 self-host 가 이 제품의 설계 목표입니다. 로드맵 상, 설치는 docker-compose 한 번 — Vault Agent 와 Keycloak SSO 사이드카를 포함하고, 데이터는 고객사 서버를 벗어나지 않습니다. 감사로그·접근권한·SSO 를 기본 탑재하는 것이 IT-담당자 인수 기준입니다.
-
-*Screen annotation*: "Self-host 아키텍처 — 로드맵 (외부 클라우드 Zero 설계)"
-
-> **Alternative (recommended if CEO wants a fully-honest cut)**: cut Scene 5 entirely and end on Scene 4 → Scene 6. A 3-minute video showing only live-verified capability is stronger than 3:30 with a roadmap caveat. Final call deferred to CEO.
+> **Scene 5 (Self-Host) — CUT by CEO decision (2026-06-02).** It depicted an ops pack (docker-compose + Vault + Keycloak SSO) that is not yet built (no compose/Vault/Keycloak config in the repo; `smallmfg-demo.yaml` ships `vault_agent: false`). Per the honest-marketing constraint, the video ends on live-verified capability only. The self-host story moves to the **M2** narrative once the ops pack ships (see positioning.md / revenue-roadmap M2). Scene 4 cuts directly to Scene 6.
 
 ---
 
-#### SCENE 6 — Call to Action (3:15–3:30) | Persona: CEO
+#### SCENE 6 — Call to Action (2:50–3:05) | Persona: CEO
 
 **On screen**: Clean slide. Logo (placeholder until CDO finalizes CI). Two lines:
 
@@ -219,8 +197,6 @@ Arrow labeled "데이터 흐름 → 사내망 밖으로 나가지 않음 (설계
 
 > [Scene 4] Frontend 와 Backend 는 고객사가 고릅니다. YAML 두 줄. Middle layer 의 wire-protocol contract 만 stable — adapter 는 교체해도 데이터 구조는 바뀌지 않습니다. 기존 WAS 가 Java 면 SpringBoot, AI 연동 팀이 Python 이면 FastAPI. 둘 다 같은 screen-manifest 를 읽습니다.
 
-> [Scene 5 — 로드맵 cut] 사내망 self-host 가 이 제품의 설계 목표입니다. 로드맵 상, 설치는 docker-compose 한 번 — Vault Agent 와 Keycloak SSO 사이드카를 포함하고, 데이터는 고객사 서버를 벗어나지 않습니다. 감사로그·접근권한·SSO 를 기본 탑재하는 것이 IT-담당자 인수 기준입니다. *(CEO 가 Scene 5 cut 을 택하면 이 VO 생략.)*
-
 > [Scene 6] 인사, 재고, 영업, 설비 — 14개 공통 도메인이 준비되어 있습니다. 산업 특화 도메인은 함께 만들어 갑니다. 사내망 self-host 풀스택 codegen. 지금 trial 문의를 시작하세요.
 
 ---
@@ -245,7 +221,7 @@ Arrow labeled "데이터 흐름 → 사내망 밖으로 나가지 않음 (설계
 
 Rationale:
 - The full VO script is approximately 750 Korean characters + 150 English technical terms — well within the 100K character/month Creator plan limit. One-time cost if the plan is cancelled after production: $22.
-- ElevenLabs explicitly supports Korean (32 languages) with natural prosody. OpenAI TTS and Google TTS both support Korean but ElevenLabs delivers more expressive pacing, which matters for a 3.5-minute narrative video.
+- ElevenLabs explicitly supports Korean (32 languages) with natural prosody. OpenAI TTS and Google TTS both support Korean but ElevenLabs delivers more expressive pacing, which matters for a ~3-minute narrative video.
 - Cost comparison: A professional Korean voiceover actor costs ₩300,000–₩700,000 ($220–$520) for a 3–4 minute studio recording. ElevenLabs is 10–25x cheaper and allows unlimited re-takes when the script changes (which it will during CTO/CEO review).
 - Quality threshold: For a B2B self-host enterprise product, Korean IT-담당자 and 업무담당자 audiences are accustomed to AI TTS in product videos — quality is not a differentiator at this stage. Human voiceover is a M3+ upgrade when paying customers are producing case study videos.
 - **One exception**: If the CEO prefers to record their own voice for Scene 6 (CTA), this adds authenticity to the "trust" signal. ElevenLabs handles scenes 0–5; CEO voice for scene 6 is a low-cost hybrid approach.
@@ -300,7 +276,7 @@ If CEO prefers to upgrade the VO to human voiceover at M2+ (when a paying custom
 
 **Record with OBS Studio → Edit with DaVinci Resolve free → VO with ElevenLabs Creator Korean → Captions with Subtitle Edit → Host on YouTube unlisted → Distribute via Loom 90-sec cut for outbound sales.**
 
-This path costs $22, requires no paid software, and can be executed by the CEO + CMO working asynchronously in 2–3 days total. It produces a 3.5-minute YouTube video and a 90-second Loom cut. All tools are available on Windows 11 (the repo environment). No external agency required.
+This path costs $22, requires no paid software, and can be executed by the CEO + CMO working asynchronously in 2–3 days total. It produces a ~3-minute YouTube video and a 90-second Loom cut. All tools are available on Windows 11 (the repo environment). No external agency required.
 
 ---
 
@@ -311,7 +287,7 @@ This path costs $22, requires no paid software, and can be executed by the CEO +
 - [ ] **CTO sign-off**: Confirm which 4-corner stacks are fully filmable (live HTTP response, not mock). Specifically: is SpringBoot adapter live enough to show in Scene 4, or must Scene 4 use the "[로드맵]" callout?
 - [ ] **CEO decision**: CTA URL / contact method for Scene 6. GitHub Discussions, email form, or Calendly link?
 - [ ] **CEO decision**: Will CEO record Scene 6 VO personally, or full ElevenLabs?
-- [ ] **CDO deliverable** (only if CEO keeps Scene 5): Static architecture diagram, watermarked "로드맵 — 개발 예정", brand colors per CI. Resolution: 1920×1080 PNG. **Blocked-on**: CEO decision on Scene 5 keep-vs-cut (open question 6).
+- [x] ~~CDO Scene 5 architecture diagram~~ — **not needed** (Scene 5 cut by CEO, 2026-06-02).
 - [ ] **CDO deliverable**: Logo / wordmark for Scene 6 end card. Resolution: 1920×1080 PNG, transparent background version for overlay.
 - [ ] **Live demo environment**: `smallmfg-demo` profile running locally with sample data (fictional Korean names, 3–4 employees, 2 assets). CTO or Engineer to prepare seed data SQL.
 - [ ] **Expert-agent interview transcript**: A real (not fabricated) 4-question interview session with the domain-expert-generic agent using smallmfg-demo context. CMO to conduct and record the terminal session. Approximately 5–10 minutes of actual agent interaction.
@@ -343,7 +319,7 @@ This path costs $22, requires no paid software, and can be executed by the CEO +
 Embed the YouTube unlisted link in the top section of `README.md`, above the fold. Format:
 
 ```
-[![Demo: 3분 30초 — smallmfg 인사·설비 관리 scratch to typed form](https://img.youtube.com/vi/<VIDEO_ID>/maxresdefault.jpg)](https://youtu.be/<VIDEO_ID>)
+[![Demo: 3분 — smallmfg 인사·설비 관리 scratch to typed form](https://img.youtube.com/vi/<VIDEO_ID>/maxresdefault.jpg)](https://youtu.be/<VIDEO_ID>)
 ```
 
 This makes README the lead-generation first page (CMO operating principle #1: GitHub README = SEO 100점). The thumbnail showing the scaffold terminal output is immediately recognizable to IT-담당자 personas browsing GitHub.
@@ -405,4 +381,4 @@ YouTube unlisted video (public after CEO decision)
 
 5. **Sample data language**: The live form in Scene 3 will show fictional Korean names and data (김민준, 박서연 etc.). If the primary outbound target is a specific industry or company type, CMO can tailor the seed data to match (e.g., manufacturing part numbers for a factory CEO target). CEO to indicate if a specific first outbound target is in mind.
 
-6. **Scene 5 keep-vs-cut + ops-pack gap (CTO-flagged, 2026-06-02)**: The ops pack (docker-compose + Vault + Keycloak SSO) that Scene 5 depicts, and that positioning.md (lines 72/76/123) names as the **IT-담당자 M1 persona-acceptance criterion**, does **not yet exist** in the repo. Two consequences: (a) **Video** — Scene 5 must be a labeled roadmap slide or be cut (CTO recommends cut for a fully-honest 3:00 video). (b) **M1 maturity** — the IT-담당자 persona acceptance is unmet, which may conflict with the "M1 기술 성숙 달성" claim; CTO requests CEO confirm whether the ops pack is in-scope for M1 maturity or deferred to M2 (the T-1~T-6 technical criteria did not include it). This is a real gap, surfaced honestly per the guards-must-work principle.
+6. **Scene 5 keep-vs-cut + ops-pack gap (CTO-flagged, 2026-06-02) — RESOLVED**: The ops pack (docker-compose + Vault + Keycloak SSO) that Scene 5 depicted, and that positioning.md named as the IT-담당자 M1 persona-acceptance criterion, does not yet exist in the repo. **CEO decisions (2026-06-02)**: (a) **Video** — Scene 5 **cut**; video ends on Scene 4 → Scene 6 (~3:00). (b) **M1 maturity** — ops pack **deferred to M2**; the T-1~T-6 technical maturity criteria stand at 6/6 MET. positioning.md / revenue-roadmap updated to move the ops-pack IT-담당자 acceptance from M1 to M2.
