@@ -42,7 +42,7 @@
   - **Backend adapter 2개**: springboot-jakarta + fastapi
   - `domain-expert-generic` agent 가 profile 작성 도움 demo
 - **revenue trigger**: 없음 (그러나 sales lead 수집 시작)
-- **페르소나 인수**: IT-담당자 가 ops pack (docker-compose + Vault + SSO) 을 처음 받아 사내 Linux 서버에 배포하고, 14 도메인 중 1개 데모 화면에 SSO 로그인으로 접속하는 전 과정을 2시간 안에 완료한다.
+- **페르소나 인수**: IT-담당자 가 4-corner (springboot·fastapi × vanilla-htmx·react) 의 4계층 풀테스트·compliance test 가 전부 PASS 함을 확인하고, 14 도메인 중 1개를 로컬에서 scaffold → typed 화면이 사내망 내부에서 외부 클라우드 호출 없이 동작함을 검증한다. (ops pack 실배포는 M2 로 이관 — CEO 결정 2026-06-02. ops pack 미구현이 M1 maturity 를 막지 않음: T-1~T-6 기술 기준에 ops pack 불포함.)
 - **gating → M2**: 14 도메인 풀테스트 4계층 그린 + 첫 demo 영상 + lead 5건 → 정량 기준은 [M1 Maturity Threshold](#m1-maturity-threshold--pricing-공개-정량-게이트) (Technical 6/6 + GTM)
 
 ---
@@ -56,7 +56,7 @@
   - ops pack (docker-compose + Vault + SSO) 그 회사 환경 적용
   - 결제 영수증 발행
 - **revenue trigger**: **첫 self-host license 매출 발생** (예: \$10K)
-- **페르소나 인수**: 업무담당자 가 domain-expert agent 와 인터뷰 세션 1회 (최대 2시간) 를 완료하고, 자기 회사 핵심 도메인 1개의 CRUD 화면 초안을 당일 수령하여 실제 업무 데이터를 입력해 본다.
+- **페르소나 인수**: 업무담당자 가 domain-expert agent 와 인터뷰 세션 1회 (최대 2시간) 를 완료하고, 자기 회사 핵심 도메인 1개의 CRUD 화면 초안을 당일 수령하여 실제 업무 데이터를 입력해 본다. 또한 IT-담당자 가 ops pack (docker-compose + Vault + SSO) 을 사내 Linux 서버에 배포하고 SSO 로그인·감사로그 적재까지 2시간 안에 검증한다 (M1 에서 이관).
 - **gating → M3**: 첫 고객 사례 공개 가능 + 그 회사 산업이 무엇인지 데이터로 확정
 
 ---
