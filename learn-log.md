@@ -379,3 +379,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **결정 (CTO, VP 위임)**: stack 확정 — Vite+React18+TS / **contract = 빌드타임 codegen**(wire-v1+codes→generated TS, 재구현 아닌 소비, G-1 클린) / **토큰 = CSS custom property**(frontend-adapter-contract §7 open fork 해소 — CSS-in-JS 아님, 공유 토큰 파이프라인 일관) / Vite proxy → BACKEND_BASE_URL / manifest typed-form(Growth-14) 런타임 fetch+generic fallback.
 - **Cross-agent catch**: QA 가 F-2 offset-last-page 테스트가 hollow(순수 산술, adapter 미접촉)임을 적발 → CTO 가 즉시 engineer 에 위임, `hasMorePages` 순수 헬퍼 추출(ListScreen+test 공유, single-source) 30 test green 으로 클로즈. SPA router path 와 wire endpoint 구분 명확화(G-1 스코프).
 - **Open loops**: react L4 는 fastapi 상대 검증됨(35) — springboot 상대 react L4 는 Java 환경서(위 Growth-15 carry 와 동일 게이트) / vue·nexacro adapter(M2 후) / react persona ceo·it 분기 미니멀(후속) / maturity threshold 정량화
+
+### Growth-17 (2026-06-02) — GTM 피벗: demo-video 시나리오(CMO) + honest-marketing ops-pack 갭 적발
+
+- **인격**: CMO (6-scene demo-video 시나리오·제작법($22)·배포 훅 작성) + CTO (integrator: Scene 4 sign-off / Scene 5 vaporware 적발 / 3-doc 동기화)
+- **Axis touched**: 없음 (코드 0) — 비즈니스/마케팅 문서. M1 기술 성숙 후 첫 GTM 산출물
+- **Milestone**: M1→M2 게이트 (demo 영상 + qualified lead). 기술 측 6/6 MET, GTM 측 시동
+- **Revenue/cost**: demo 영상 = M2 pricing 공개 게이트의 GTM 절반 / 제작비 $22 1-shot (OBS+DaVinci+ElevenLabs+YouTube unlisted+Loom) / LLM·infra 추가 0
+- **Why (1줄)**: M1 기술 성숙 달성 → CEO 가 GTM 피벗 확정, 비전문 3-페르소나가 "우리도 되나?" 라고 묻게 만드는 demo 영상이 M2 진입의 GTM 절반
+- **상세**: [cmo.md#Growth-17](docs/learn-logs/cmo.md), [cto.md#Growth-17](docs/learn-logs/cto.md)
+- **Cross-agent catch (honest-marketing G 정신)**: CTO 가 Scene 5(self-host)의 ops-pack(docker-compose+Vault+Keycloak SSO)이 **repo 에 미존재**함을 적발 — positioning.md 가 이를 IT-담당자 **M1 인수 기준**으로 명시했으나 미구현 (hero profile `vault_agent:false`). vaporware 하드 제약 위반 → CEO 판정.
+- **결정 (CEO, 2026-06-02)**: ① ops-pack → **M2 deliverable 이관** (M1 기술 성숙 T-1~T-6 6/6 유지, ops-pack 불포함이 maturity 안 막음). ② demo Scene 5 **cut → ~3:00 영상** (live-verified 능력만, 로드맵 캐비엣보다 강함). positioning.md + revenue-roadmap.md 인수 triple 동기화.
+- **Open loops**: demo 영상 실제 촬영(CEO 결정 대기: CTA URL / CEO voice Scene6 / publish 타이밍 / 샘플데이터 산업) / qualified lead 5건 / ops-pack 구축(M2) / Scene 4 react+springboot live 촬영(검증 완료, 촬영만)
