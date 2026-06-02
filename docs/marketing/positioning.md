@@ -73,13 +73,13 @@
 
 **"성공"이 어떻게 보이는가**: 자사 Linux 서버에 `docker-compose up` 후 30분 이내에 SSO 로그인이 되고, 감사로그가 적재된다. 운영 문서는 자동 생성.
 
-**milestone 별 첫 만남**: M1 에서 ops pack (docker-compose + Vault + SSO) 문서를 보고 보안 검토. M2 에서 실제 사내 서버에 배포·검증.
+**milestone 별 첫 만남**: M1 에서 self-host 보안 아키텍처 설계(로드맵)를 검토하고, 4-corner 4계층 풀테스트 결과로 무결성을 확인. ops pack (docker-compose + Vault + SSO) 실물 산출·사내 서버 배포·SSO 검증은 **M2 (첫 paid customer) deliverable** 로 이관 (CEO 결정, 2026-06-02).
 
 ---
 
 ## 3. Positioning Statement
 
-사내망 데이터 반출이 불가하고 IT 인력이 부족한 한국 중소·중견기업을 위해, 우리는 self-host 풀스택 codegen 하네스를 제공한다. 이 하네스는 AI 도메인 전문가가 업무담당자를 인터뷰해서 고객사 맞춤 풀스택 시스템을 생성하고, Frontend · Backend 를 고객사가 선택한 조합으로 교체할 수 있다는 점에서 범용 SaaS · 외주 SI 와 다르다. 우리의 근거는 14 공통 도메인 preset · 4계층 자동 테스트 · ops pack (Vault + SSO 포함) 이 첫 배포부터 함께 제공된다는 실측 구현이다.
+사내망 데이터 반출이 불가하고 IT 인력이 부족한 한국 중소·중견기업을 위해, 우리는 self-host 풀스택 codegen 하네스를 제공한다. 이 하네스는 AI 도메인 전문가가 업무담당자를 인터뷰해서 고객사 맞춤 풀스택 시스템을 생성하고, Frontend · Backend 를 고객사가 선택한 조합으로 교체할 수 있다는 점에서 범용 SaaS · 외주 SI 와 다르다. 우리의 근거는 14 공통 도메인 preset 과 4계층 자동 테스트가 4-corner 스택 (springboot·fastapi × vanilla-htmx·react) 전부에서 실측 PASS 한다는 점이다 (2026-06-02 검증). ops pack (docker-compose + Vault + SSO) 은 M2 deliverable 로 로드맵에 있다 (M1 미구현).
 
 ---
 
@@ -120,10 +120,10 @@ M0 — Founding
 **페르소나 인수**: CEO 와 IT-담당자 역할을 겸하는 창업 팀이 헌장·아키텍처·비용 모니터링 문서를 읽고 7축 구조와 revenue gate 를 30분 안에 설명할 수 있다.
 
 M1 — Generic Harness Baseline
-**페르소나 인수**: IT-담당자 가 ops pack (docker-compose + Vault + SSO) 을 처음 받아 사내 Linux 서버에 배포하고, 14 도메인 중 1개 데모 화면에 SSO 로그인으로 접속하는 전 과정을 2시간 안에 완료한다.
+**페르소나 인수**: IT-담당자 가 4-corner (springboot·fastapi × vanilla-htmx·react) 의 4계층 풀테스트·compliance test 가 전부 PASS 함을 확인하고, 14 도메인 중 1개를 로컬에서 scaffold → typed 화면이 사내망 내부에서 외부 클라우드 호출 없이 동작함을 검증한다. (ops pack 실배포는 M2 로 이관 — CEO 결정 2026-06-02.)
 
 M2 — First Paid Customer
-**페르소나 인수**: 업무담당자 가 domain-expert agent 와 인터뷰 세션 1회 (최대 2시간) 를 완료하고, 자기 회사 핵심 도메인 1개의 CRUD 화면 초안을 당일 수령하여 실제 업무 데이터를 입력해 본다.
+**페르소나 인수**: 업무담당자 가 domain-expert agent 와 인터뷰 세션 1회 (최대 2시간) 를 완료하고, 자기 회사 핵심 도메인 1개의 CRUD 화면 초안을 당일 수령하여 실제 업무 데이터를 입력해 본다. 또한 IT-담당자 가 ops pack (docker-compose + Vault + SSO) 을 사내 Linux 서버에 배포하고 SSO 로그인·감사로그 적재까지 2시간 안에 검증한다 (M1 에서 이관).
 
 M3 — Expert-Agent First Vertical
 **페르소나 인수**: 특정 산업의 업무담당자 가 해당 산업 전용 domain-expert agent 와 인터뷰 후, 산업 특화 필드 (예: 의료 ICD-10 코드, 금융 계정과목) 가 포함된 화면 초안을 1주일 안에 수령하고 "기존 업무 방식과 맞다"고 확인한다.
