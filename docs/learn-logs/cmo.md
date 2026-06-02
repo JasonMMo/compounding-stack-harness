@@ -42,6 +42,15 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - Cost: ~3 turns, 본 통합 작업만 (질문 응답은 CEO 가 직접)
 - Open loops: M2 가격 공개 게이트 (CEO 가 maturity 평가), M3 landing 작업 시 CDO sync
 
+### Growth-17 (2026-06-02) — demo-video 시나리오 + 제작법 (M1→M2 GTM 첫 산출물)
+
+- Persona served: 업무담당자(hero) — CEO 30초 위임 / IT-담당자 Scene 4 / 3-페르소나 "우리도 되나?" 유도
+- Delivered: `docs/marketing/demo-video-scenario.md` — 6-scene(Scene5 cut 후 5-scene) ~3:00 한국어 B2B 시나리오·VO 스크립트 + 제작법($22: OBS+DaVinci+ElevenLabs Korean+YouTube unlisted+Loom 90초 컷) + asset 체크리스트 + 배포 훅 5종(README embed/LinkedIn/Loom outbound/SI 커뮤니티/sales deck)
+- 그라운딩: positioning.md 3-페르소나 인수 + smallmfg-demo(11 entity) live + 3 차별화. honest-marketing 하드 제약 준수 — live-verified 능력만(4-corner·screen-manifest typed form·expert-agent end-to-end).
+- Cross-agent: CTO 가 Scene 4 react+springboot live 촬영 sign-off / Scene 5 ops-pack 미구현 적발 → CEO Scene5 cut 결정. positioning.md 인수 triple CTO 가 M2 동기화.
+- Cost: 영상 제작비 $22 1-shot, LLM·infra 0. 웹리서치 7 소스(demo best-practice/TTS/hosting).
+- Open loops: 실제 촬영 — CEO 결정 대기(CTA URL / CEO voice Scene6 / publish 타이밍 / 샘플데이터 산업 타깃) / qualified lead 5건 수집 / LinkedIn·SI 커뮤니티 포스트 draft
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] Growth-3 open Q1 (가격대) — 해소됨 (Growth-5e): CEO 결정, maturity threshold 게이트로 공개 보류
