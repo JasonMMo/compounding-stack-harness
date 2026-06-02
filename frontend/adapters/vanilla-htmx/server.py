@@ -272,23 +272,25 @@ def entity_list(entity_type: str):
     sort_direction = request.args.get("sort_direction", "asc")
     search = request.args.get("search", "")
 
-    # Build flat-underscore query params (F-1)
-    params: dict = {
-        "entity_type": entity_type,
-        "paging_mode": paging_mode,
-    }
+    # Build flat-underscore query params (F-1).
+    # entity_type is part of the URL path, NOT a query param — sending it as a
+    # query key makes the backend treat it as a record filter (entity.list
+    # filters on any non-reserved key) and returns 0 rows. Paging keys must be
+    # the contract's flat-underscore page/size/cursor (see _shared compliance
+    # suite: page=, size=, paging_mode=, cursor=), not paging_page/paging_size.
+    params: dict = {"paging_mode": paging_mode}
     if paging_mode == "offset":
-        params["paging_page"] = paging_page
-        params["paging_size"] = paging_size
+        params["page"] = paging_page
+        params["size"] = paging_size
     elif paging_mode == "cursor" and paging_cursor:
-        params["paging_cursor"] = paging_cursor
-        params["paging_size"] = paging_size
+        params["cursor"] = paging_cursor
+        params["size"] = paging_size
 
     if sort_field:
         params["sort_field"] = sort_field
         params["sort_direction"] = sort_direction
     if search:
-        params["filter_search"] = search
+        params["search"] = search
 
     payload, status = _proxy_request(
         "GET",
