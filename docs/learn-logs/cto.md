@@ -243,6 +243,6 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **engineer-agent / qa-agent 첫 가동**: Engineer Growth-5d 에서 첫 가동 완료. QA 첫 가동은 M1 adapter compliance test 작성 시점.
 - **첫 분기 synthesis**: 2026-Q3 마지막 주 (Growth-1~ 누적 통합) — 템플릿 실전 검증
 - **public 전환 게이트**: M2 첫 고객 협의 종료 후 (Growth-5e Q3 답변과 동일 게이트) — 그 즉시 charter §3 #3 사전 확인 룰 의식
-- **System maturity threshold 측정 정의**: Growth-5e Q1 답변이 의존 — M1 마무리 Growth 에 "M1 14 preset PASS + acme-erp demo PASS = maturity = pricing 공개 게이트" 식 박을 후보
+- ~~**System maturity threshold 측정 정의**~~ ✅ **해소 (2026-06-02)**: `revenue-roadmap.md#M1-Maturity-Threshold` 에 정량 박음 — Technical Maturity T-1~T-6(현재 6/6 MET) + GTM(demo·lead, CEO/CMO). T-7(비용측정)은 런타임 LLM 호출 생기는 M2/M3 로 이관(M1 무 LLM 런타임). 자동화 `maturity-check.py` 는 CEO 승인 시 후속.
 - **OpenAPI 3.1 migration (M1 후반)**: 첫 adapter 작업 완료 후 schema 갭 학습 → migration
 - **schema v2 (`secrets:` top-level)**: customer profile 5+ block 도달 시 재검토
