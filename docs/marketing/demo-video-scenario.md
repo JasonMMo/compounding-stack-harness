@@ -66,9 +66,9 @@ domains:
 ```
 
 **VO**:
-> AI 도메인 전문가가 업무담당자와 대화합니다. 코드 한 줄 없이, 인터뷰만으로 customer profile YAML 한 장이 완성됩니다. 이 파일이 시스템의 단일 진실입니다.
+> AI가 묻고, 담당자가 답합니다. "휴가 신청은 어떻게 처리하세요?" "설비 점검 이력은 어디에 기록하세요?" 이 대화만으로 우리 회사 업무 항목이 정리됩니다. 코드도, 컨설턴트도, 긴 요구사항 문서도 필요 없습니다.
 
-*Screen annotation (callout box)*: "customer profile — 고객사 관습의 단일 진실"
+*Screen annotation (callout box)*: "우리 회사 업무 항목 — 말로 설명한 것이 그대로 기록됩니다"
 
 ---
 
@@ -94,11 +94,11 @@ scaffold complete — profile: smallmfg-demo
 Pause 2 seconds on the final output. Then zoom into `screen-manifest.json` — show the first screen entry for `employee` (typed-form fields: `employee_id`, `full_name`, `department_id`, `status`).
 
 **VO**:
-> 명령어 하나. 11개 entity 의 DDL 과 화면 설계 manifest 가 동시에 나옵니다. 이것이 creater 축 — 7개 축을 한 번에 엮는 thin orchestration 입니다.
+> 버튼 하나. 방금 대화에서 나온 업무 항목 11개가 그대로 화면 설계로 바뀝니다. 직원 관리, 휴가 신청, 설비 점검 — 우리 회사 이야기를 한 것뿐인데 화면이 나옵니다.
 
-*Screen annotation (callout box at DDL line)*: "catalog 검증 게이트 통과 — 없는 entity 는 빌드 오류"
+*Screen annotation (callout box at DDL line)*: "대화에서 말한 항목만 — 없는 항목은 만들지 않습니다"
 
-*Screen annotation (callout box at manifest line)*: "screen-manifest.json — Frontend 가 이 파일을 읽어 typed form 을 자동 구동"
+*Screen annotation (callout box at manifest line)*: "화면 설계 완성 — 이 파일이 실제 화면을 구동합니다"
 
 ---
 
@@ -115,9 +115,9 @@ Show two screens in sequence:
 **3C — Asset maintenance record** (15 seconds): Switch to 설비 관리 tab. Show `CNC-001` asset with `next_due_date: 2026-06-15` flagged in amber. Click to open a maintenance record. Show `maintenance_type: inspection` form.
 
 **VO**:
-> 인터뷰가 끝난 당일, 업무담당자는 자기 회사 화면 초안을 직접 씁니다. 코드도, 컨설턴트도, 납기 6개월도 없습니다. Frontend 는 vanilla-htmx — 추가 설치 없이 브라우저에서 바로 동작합니다.
+> 오늘 대화했는데, 오늘 화면이 나왔습니다. 직원 목록, 휴가 신청 양식, 설비 점검 기록 — 우리 회사 업무 방식 그대로입니다. 설치할 것도, 교육받을 것도, 기다릴 납기도 없습니다.
 
-*Screen annotation (top of browser)*: "Frontend: vanilla-htmx | Backend: FastAPI | 사내망 self-host"
+*Screen annotation (top of browser)*: "사내망 self-host — 우리 서버에서만 동작합니다"
 
 ---
 
@@ -158,9 +158,9 @@ scaffold complete — profile: smallmfg-demo
 Cut to the same employee screen, now rendered live in the React frontend (`npm run dev`). The React + SpringBoot corner is live-verified (react↔springboot L4 36 PASS, 2026-06-02), so film the real running screen — no roadmap callout needed.
 
 **VO**:
-> Frontend 와 Backend 는 고객사가 고릅니다. YAML 두 줄. Middle layer 의 wire-protocol contract 만 stable — adapter 는 교체해도 데이터 구조는 바뀌지 않습니다. 기존 WAS 가 Java 면 SpringBoot, AI 연동 팀이 Python 이면 FastAPI. 둘 다 같은 screen-manifest 를 읽습니다.
+> 화면과 서버는 회사가 고릅니다. 파일 두 줄만 바꾸면 됩니다. 기존 서버가 Java면 SpringBoot, Python 팀이 있다면 FastAPI — 어느 쪽이든 업무 데이터 구조는 그대로입니다. 나중에 기술을 바꿔도 처음부터 다시 만들 필요가 없습니다.
 
-*Screen annotation*: "Middle contract — adapter 가 이것만 읽는다. 재구현 금지."
+*Screen annotation*: "서버↔화면 약속은 한 곳 — 화면이나 서버를 갈아끼워도 데이터는 그대로"
 
 **CTO sign-off (2026-06-02)**: All four corners are live-verified and filmable — vanilla-htmx+fastapi, vanilla-htmx+springboot, react+fastapi, and react+springboot (react↔springboot L4 36 PASS; the 2 skips are Vite-preview SPA harness items, not capability gaps). Scene 4's swap (vanilla-htmx/fastapi → react/springboot) is fully honest. The only items requiring a "[로드맵]" label are **vue** and **nexacro** adapters (M2-후) — do not depict those as existing.
 
@@ -179,7 +179,7 @@ Cut to the same employee screen, now rendered live in the React frontend (`npm r
 > "trial 문의 → [연락처 / CTA URL]"
 
 **VO**:
-> 인사, 재고, 영업, 설비 — 14개 공통 도메인이 준비되어 있습니다. 산업 특화 도메인은 함께 만들어 갑니다. 사내망 self-host 풀스택 codegen. 지금 trial 문의를 시작하세요.
+> 인사, 재고, 영업, 설비 관리 — 중소기업에서 가장 많이 쓰는 14가지 업무가 준비되어 있습니다. 우리 회사에만 있는 특수한 업무는 함께 만들어 갑니다. 데이터는 우리 서버 밖으로 나가지 않습니다. 지금 문의하시면 무엇부터 시작할지 같이 정리해 드립니다.
 
 *Note for CEO*: CTA URL / contact method is CEO's decision (positioning.md §6 open question: inbound vs outbound). Placeholder must be replaced before publishing.
 
@@ -189,15 +189,15 @@ Cut to the same employee screen, now rendered live in the React frontend (`npm r
 
 > [Scene 0] 한국 중소기업의 현장 담당자가 매일 겪는 일입니다. 오늘 그 흐름을 바꾸는 시연을 보여드립니다.
 
-> [Scene 1] AI 도메인 전문가가 업무담당자와 대화합니다. 코드 한 줄 없이, 인터뷰만으로 customer profile YAML 한 장이 완성됩니다. 이 파일이 시스템의 단일 진실입니다.
+> [Scene 1] AI가 묻고, 담당자가 답합니다. "휴가 신청은 어떻게 처리하세요?" "설비 점검 이력은 어디에 기록하세요?" 이 대화만으로 우리 회사 업무 항목이 정리됩니다. 코드도, 컨설턴트도, 긴 요구사항 문서도 필요 없습니다.
 
-> [Scene 2] 명령어 하나. 11개 entity 의 DDL 과 화면 설계 manifest 가 동시에 나옵니다. 이것이 creater 축 — 7개 축을 한 번에 엮는 thin orchestration 입니다.
+> [Scene 2] 버튼 하나. 방금 대화에서 나온 업무 항목 11개가 그대로 화면 설계로 바뀝니다. 직원 관리, 휴가 신청, 설비 점검 — 우리 회사 이야기를 한 것뿐인데 화면이 나옵니다.
 
-> [Scene 3] 인터뷰가 끝난 당일, 업무담당자는 자기 회사 화면 초안을 직접 씁니다. 코드도, 컨설턴트도, 납기 6개월도 없습니다. Frontend 는 vanilla-htmx — 추가 설치 없이 브라우저에서 바로 동작합니다.
+> [Scene 3] 오늘 대화했는데, 오늘 화면이 나왔습니다. 직원 목록, 휴가 신청 양식, 설비 점검 기록 — 우리 회사 업무 방식 그대로입니다. 설치할 것도, 교육받을 것도, 기다릴 납기도 없습니다.
 
-> [Scene 4] Frontend 와 Backend 는 고객사가 고릅니다. YAML 두 줄. Middle layer 의 wire-protocol contract 만 stable — adapter 는 교체해도 데이터 구조는 바뀌지 않습니다. 기존 WAS 가 Java 면 SpringBoot, AI 연동 팀이 Python 이면 FastAPI. 둘 다 같은 screen-manifest 를 읽습니다.
+> [Scene 4] 화면과 서버는 회사가 고릅니다. 파일 두 줄만 바꾸면 됩니다. 기존 서버가 Java면 SpringBoot, Python 팀이 있다면 FastAPI — 어느 쪽이든 업무 데이터 구조는 그대로입니다. 나중에 기술을 바꿔도 처음부터 다시 만들 필요가 없습니다.
 
-> [Scene 6] 인사, 재고, 영업, 설비 — 14개 공통 도메인이 준비되어 있습니다. 산업 특화 도메인은 함께 만들어 갑니다. 사내망 self-host 풀스택 codegen. 지금 trial 문의를 시작하세요.
+> [Scene 6] 인사, 재고, 영업, 설비 관리 — 중소기업에서 가장 많이 쓰는 14가지 업무가 준비되어 있습니다. 우리 회사에만 있는 특수한 업무는 함께 만들어 갑니다. 데이터는 우리 서버 밖으로 나가지 않습니다. 지금 문의하시면 무엇부터 시작할지 같이 정리해 드립니다.
 
 ---
 
