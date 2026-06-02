@@ -43,7 +43,7 @@
   - `domain-expert-generic` agent 가 profile 작성 도움 demo
 - **revenue trigger**: 없음 (그러나 sales lead 수집 시작)
 - **페르소나 인수**: IT-담당자 가 ops pack (docker-compose + Vault + SSO) 을 처음 받아 사내 Linux 서버에 배포하고, 14 도메인 중 1개 데모 화면에 SSO 로그인으로 접속하는 전 과정을 2시간 안에 완료한다.
-- **gating → M2**: 14 도메인 풀테스트 4계층 그린 + 첫 demo 영상 + lead 5건
+- **gating → M2**: 14 도메인 풀테스트 4계층 그린 + 첫 demo 영상 + lead 5건 → 정량 기준은 [M1 Maturity Threshold](#m1-maturity-threshold--pricing-공개-정량-게이트) (Technical 6/6 + GTM)
 
 ---
 
@@ -101,6 +101,39 @@
 - **revenue trigger**: **첫 SaaS 테넌트 결제**
 - **페르소나 인수**: CEO 가 SaaS 플랜 landing page 에서 trial 신청 후, IT-담당자 개입 없이 테넌트 프로비저닝이 완료되고 업무담당자 가 첫 로그인해서 도메인 선택 화면을 보는 전 과정이 1시간 안에 끝난다.
 - **gating**: 종착점 (v3.0 은 별도 결정)
+
+## M1 Maturity Threshold — pricing 공개 정량 게이트
+
+> Growth-5e Q1 의존 해소 (2026-06-02, CTO). "M1 이 팔 만큼 성숙했는가"를 정성 판단이 아니라 **측정 가능한 체크리스트**로 박는다. M1→M2 gating(§M1) 의 **기술 성숙도** 절반을 정량화한다 — 나머지 절반(demo 영상 + lead 5건)은 GTM 으로 CEO/CMO 소유.
+
+### 두 축 분리 (둘 다 충족해야 pricing 공개)
+
+- **Technical Maturity** (CTO 소유, 자동 측정 가능) — 아래 T-1~T-6.
+- **GTM Readiness** (CEO/CMO 소유) — demo 영상 1건 + qualified lead 5건 + pricing tier 내부 합의.
+- **pricing 공개 = Technical ALL-PASS AND GTM ALL-MET.** 하나라도 미충족 시 가격 비공개 (charter §3 #3 정신).
+
+### Technical Maturity 체크리스트
+
+| ID | 기준 | 측정 방법 | 현재 (2026-06-02) |
+|---|---|---|---|
+| **T-1** | 7축 전부 ≥1 자산 + manifest 노출 | 각 축 디렉터리/INDEX 존재 (G-5) | ✅ PASS |
+| **T-2** | 14 도메인 catalog 무결성 (seed⊆catalog, dangling FK 0, type closed-set, FK hygiene) | G-10 + G-12 PASS | ✅ PASS |
+| **T-3** | 전 가드 0 real FAIL | `scripts/diagnose.py` (G-2/G-3 SPEC 허용) | ✅ 12/12 |
+| **T-4** | pluggable F/B 4-corner (≥2 backend × ≥2 frontend) compliance | adapter INDEX + adapter-agnostic suite | ✅ springboot·fastapi × vanilla-htmx·react |
+| **T-5** | 4계층 풀테스트 그린 — 양 backend DIM-1~6 + 양 frontend F-1~F-4 live | L1~L4 live run | ✅ springboot 37 · fastapi 37 · react 36 · vanilla-htmx 37 (Java-env 2026-06-02 종결) |
+| **T-6** | expert-agent end-to-end (needs→profile→scaffold rc=0→typed 화면) | scaffold rc=0 + screen-manifest | ✅ smallmfg-demo (Growth-14) |
+
+**현재 Technical Maturity = 6/6 MET → M1 기술 성숙 달성.**
+
+### T-7 (비용 측정) — M1 N/A, M2/M3 로 이관
+
+per-request LLM/infra 비용 측정(charter §5)은 **M1 런타임에 측정할 대상이 없다** — M1 harness 는 순수 로컬(scaffold·adapter·render 무 LLM), expert-agent 추론은 Claude Code 외부에서 발생. 제품이 자체 LLM/infra 호출을 하는 시점(배포형 expert-agent = M3, 호스팅 = M5)에 **T-7 = "deployed 경로 per-request cost log 작동"** 으로 활성. M1 maturity 미달 사유 아님.
+
+### 자동화 (후속 — CEO 승인 시 engineer 위임)
+
+`scripts/maturity-check.py` (또는 make 타겟): T-1~T-6 을 한 번에 평가해 PASS/FAIL maturity 리포트 1장 출력 (diagnose + 4-corner live suite 오케스트레이션). 현재는 수동 평가(위 표). 자동화하면 매 Growth 마무리에 maturity 회귀를 잡는다.
+
+> **결론 (2026-06-02)**: M1 은 기술적으로 pricing 공개 준비 완료. 남은 게이트 = GTM (demo 영상 + lead 5건) — CEO/CMO 소관.
 
 ## Growth Entry Format (learn-log §6 의무)
 
