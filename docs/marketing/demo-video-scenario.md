@@ -158,9 +158,9 @@ scaffold complete — profile: smallmfg-demo
 Cut to the same employee screen, now rendered live in the React frontend (`npm run dev`). The React + SpringBoot corner is live-verified (react↔springboot L4 36 PASS, 2026-06-02), so film the real running screen — no roadmap callout needed.
 
 **VO**:
-> 화면과 서버는 회사가 고릅니다. 파일 두 줄만 바꾸면 됩니다. 기존 서버가 Java면 SpringBoot, Python 팀이 있다면 FastAPI — 어느 쪽이든 업무 데이터 구조는 그대로입니다. 나중에 기술을 바꿔도 처음부터 다시 만들 필요가 없습니다.
+> 화면과 서버 형식은 회사가 고릅니다. 파일 두 줄만 바꾸면 됩니다. 기존 서버가 Java면 SpringBoot, Python 팀이 있다면 FastAPI — 어느 쪽이든 업무 데이터 구조는 그대로입니다. 나중에 기술을 바꿔도 처음부터 다시 만들 필요가 없습니다.
 
-*Screen annotation*: "서버↔화면 약속은 한 곳 — 화면이나 서버를 갈아끼워도 데이터는 그대로"
+*Screen annotation*: "유연한 서버↔화면 구조 — 화면이나 서버를 갈아끼워도 데이터는 그대로"
 
 **CTO sign-off (2026-06-02)**: All four corners are live-verified and filmable — vanilla-htmx+fastapi, vanilla-htmx+springboot, react+fastapi, and react+springboot (react↔springboot L4 36 PASS; the 2 skips are Vite-preview SPA harness items, not capability gaps). Scene 4's swap (vanilla-htmx/fastapi → react/springboot) is fully honest. The only items requiring a "[로드맵]" label are **vue** and **nexacro** adapters (M2-후) — do not depict those as existing.
 
