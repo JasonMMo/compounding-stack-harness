@@ -27,17 +27,18 @@
 - **#1 Java-env 게이트 CLOSED**: 이 머신에 **JDK 21 + gradlew wrapper 존재**(이전 sub-agent 의 "JDK 없음"은 system `gradle` 만 찾은 false-negative). QA 실행 — springboot gradlew test 30(CatalogValidatorTest 22 incl FK 7) + **DIM-1~6 live 37 PASS** + react↔springboot L4 36 PASS(2 skip=Vite preview SPA, M2 전 활성). Growth-15·16 carry 종결. 발견: system JDK21 ↔ Gradle daemon JDK17(무해, Spring Boot 3.2.5 는 17+).
 - **#2 maturity threshold 정량화**: `revenue-roadmap.md#M1-Maturity-Threshold`. pricing 공개 = Technical(T-1~T-6, **현재 6/6 MET**) AND GTM(demo·lead, CEO/CMO). T-7 비용측정은 M2/M3 이관. **→ M1 기술 성숙 달성.**
 
-## ▶ 즉시 다음 액션 — demo 영상 실제 촬영/제작 (CEO 결정 4건 게이트)
+## ▶ 즉시 다음 액션 — demo 영상 촬영 (스크립트·결정·환경 전부 ready, 사람의 녹화만 남음)
 
-Growth-17 에서 **demo-video 시나리오·제작법 완성** (`docs/marketing/demo-video-scenario.md`, ~3:00 5-scene, 제작비 $22). 다음은 실제 촬영·제작인데 **CEO 결정 4건이 선행**돼야 함 (문서 §Open Questions):
-1. **CTA URL** (Scene 6) — GitHub Discussions / email / Calendly 중?
-2. **CEO voice** — Scene 6(CTA) 만 CEO 직접 녹음 vs 전체 ElevenLabs?
-3. **publish 타이밍** — unlisted→public 전환 시점 (권장: 첫 Loom outbound 반응 후).
-4. **샘플 데이터 산업** — 첫 outbound 타깃 산업 있으면 Scene 3 seed 맞춤.
+Growth-17: demo-video 시나리오·제작법 완성 + **CEO 결정 5건 전부 RESOLVED** + **데모 촬영 환경 구축 완료**. 스크립트는 잠김(`docs/marketing/demo-video-scenario.md`, ~3:00 5-scene, $22).
 
-CEO 결정 후 실행 순서: seed 데이터 준비(engineer) → expert-agent 인터뷰 세션 녹화(CMO) → OBS 촬영(4-corner 전부 live 촬영 가능, Scene 4 react+springboot 포함) → DaVinci 편집 → ElevenLabs VO → 자막(한/영) → YouTube unlisted + Loom 90초 컷. 병행: qualified lead 5건 수집(LinkedIn·SI 커뮤니티 포스트, CMO draft).
+**CEO 결정 확정 (2026-06-02)**: CTA=**이메일**(향후 카카오톡, 엔드카드에 사업 이메일 기입) / 보이스=**전체 ElevenLabs**(CEO 녹음 없음) / 시드=**smallmfg 그대로** / publish=첫 Loom 반응 후 public(default) / Scene4 4-corner CTO sign-off / Scene5 cut.
 
-> ⚠️ **honest-marketing 결과 (Growth-17)**: Scene 5(self-host)는 **cut**됨 — ops-pack(docker-compose+Vault+Keycloak SSO)이 미구현이라 vaporware 였음. ops-pack 은 **M2 deliverable 로 이관**(CEO 결정). M1 기술 성숙(T-1~T-6 6/6)은 유지. positioning.md + revenue-roadmap.md 인수 triple 동기화 완료.
+**촬영 환경 ready (engineer, 2026-06-02)**: 런북 [`docs/marketing/demo-runbook.md`] — scaffold→fastapi(8081)→vanilla-htmx(5000)→`seed_loader.py` 적재→`localhost:5000/login`(demo/demo). 시드 `profiles/seed/smallmfg-demo.seed.yaml`(18행: 김민준·박서연·이도윤·정지우 / 연차 leave / CNC-001+AIR-002 / inspection). 목록 화면 시드 실렌더 검증됨.
+
+**남은 일 (사람 = CEO/CMO)**: ① 런북대로 데모 띄워 OBS 녹화(4-corner 전부 live, Scene4 react+springboot 포함) → DaVinci 편집 → ElevenLabs VO(전체) → 자막(한/영) → YouTube unlisted + Loom 90초 컷. ② 병행 qualified lead 5건(LinkedIn·SI 커뮤니티, CMO draft 미작성). ③ 배포 카피엔 ICP("소형·스타트업") 표현 사용. ④ 엔드카드 사업 이메일 주소 확정.
+
+> ⚠️ **honest-marketing (Growth-17)**: Scene 5(self-host) **cut** — ops-pack(docker-compose+Vault+SSO) 미구현 vaporware → **M2 이관**. M1 기술성숙(T-1~T-6 6/6) 유지. positioning+roadmap 동기화 완료.
+> 🐞 **QA 후속(open)**: 데모 prep 중 vanilla-htmx `entity.list` 빈목록 버그 fix(`6c13137`) — L4 가 프론트 Flask 라우트 미경유로 놓침. **프론트 라우트 param-mapping 회귀 테스트 추가** 필요(동종 재발 차단).
 
 ## 다음 후보 (우선순위)
 
