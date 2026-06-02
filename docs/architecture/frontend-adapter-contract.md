@@ -70,5 +70,5 @@ vanilla-htmx 첫 adapter 가 데모해야 하는 화면 (entity_type 파라미�
 ## 7. Open
 
 - F-1 직렬화 자동 캡처 방식 (outbound 로깅 vs mock backend) — QA 가 frontend compliance suite 작성 시 확정.
-- react/vue adapter 의 토큰 소비 (CSS custom property vs CSS-in-JS) — 해당 adapter Growth 시점.
+- ~~react/vue adapter 의 토큰 소비 (CSS custom property vs CSS-in-JS)~~ **해소 (Growth-16)**: react adapter 가 **CSS custom property** 채택 — `build-tokens.mjs` 가 `design/tokens/*.json` → `--*` vars 생성, 컴포넌트는 `var(--*)` 만. 공유 토큰 파이프라인 일관(vanilla-htmx 와 동일 소비 모델). CSS-in-JS 비채택. vue/nexacro 도 동일 권장.
 - nexacro adapter — M2 이후 (한국 SI 진입 시점, 이전 repo 자산 포팅).
