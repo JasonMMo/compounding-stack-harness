@@ -1,4 +1,4 @@
-# HANDOFF — 2026-06-02 (Growth-16 종료 후)
+# HANDOFF — 2026-06-02 (Growth-17 종료 후: GTM demo-video 시나리오 + ops-pack M2 이관)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
 
@@ -27,13 +27,17 @@
 - **#1 Java-env 게이트 CLOSED**: 이 머신에 **JDK 21 + gradlew wrapper 존재**(이전 sub-agent 의 "JDK 없음"은 system `gradle` 만 찾은 false-negative). QA 실행 — springboot gradlew test 30(CatalogValidatorTest 22 incl FK 7) + **DIM-1~6 live 37 PASS** + react↔springboot L4 36 PASS(2 skip=Vite preview SPA, M2 전 활성). Growth-15·16 carry 종결. 발견: system JDK21 ↔ Gradle daemon JDK17(무해, Spring Boot 3.2.5 는 17+).
 - **#2 maturity threshold 정량화**: `revenue-roadmap.md#M1-Maturity-Threshold`. pricing 공개 = Technical(T-1~T-6, **현재 6/6 MET**) AND GTM(demo·lead, CEO/CMO). T-7 비용측정은 M2/M3 이관. **→ M1 기술 성숙 달성.**
 
-## ▶ 즉시 다음 액션 (CEO 확정: GTM 피벗)
+## ▶ 즉시 다음 액션 — demo 영상 실제 촬영/제작 (CEO 결정 4건 게이트)
 
-**CMO(marketing-agent) 에 demo 영상 시나리오 + 제작 방법 위임** — 이번 세션에서 위임 직전 `/clear` 로 중단됨. fresh 세션에서 바로 재개:
-- 산출물: `docs/marketing/demo-video-scenario.md` (시나리오/스크립트 + 웹리서치 기반 제작 방법 + asset 체크리스트 + 배포 훅).
-- 그라운딩: `docs/marketing/positioning.md`(기존 CMO 자산) + M2 페르소나 인수(업무담당자 needs→agent 큐레이션→**당일 typed 화면 초안**) + live 흐름 `smallmfg-demo`(중소제조 인사+설비, 11 entity) / `shop-demo`. 3 차별화(axis-7 expert-agent / pluggable F/B 4-corner / cost-aware self-host).
-- **honest marketing**: 검증된 능력만 — 4-corner·screen-manifest typed form·expert-agent end-to-end 전부 live 검증됨(2026-06-02). vaporware 금지.
-- 제작 방법: SaaS/dev-tool demo 영상 best practice 웹리서치 → 화면녹화·보이스오버(human vs AI TTS)·편집·자막(한/영)·호스팅·비용추정, 명확한 권고 1개.
+Growth-17 에서 **demo-video 시나리오·제작법 완성** (`docs/marketing/demo-video-scenario.md`, ~3:00 5-scene, 제작비 $22). 다음은 실제 촬영·제작인데 **CEO 결정 4건이 선행**돼야 함 (문서 §Open Questions):
+1. **CTA URL** (Scene 6) — GitHub Discussions / email / Calendly 중?
+2. **CEO voice** — Scene 6(CTA) 만 CEO 직접 녹음 vs 전체 ElevenLabs?
+3. **publish 타이밍** — unlisted→public 전환 시점 (권장: 첫 Loom outbound 반응 후).
+4. **샘플 데이터 산업** — 첫 outbound 타깃 산업 있으면 Scene 3 seed 맞춤.
+
+CEO 결정 후 실행 순서: seed 데이터 준비(engineer) → expert-agent 인터뷰 세션 녹화(CMO) → OBS 촬영(4-corner 전부 live 촬영 가능, Scene 4 react+springboot 포함) → DaVinci 편집 → ElevenLabs VO → 자막(한/영) → YouTube unlisted + Loom 90초 컷. 병행: qualified lead 5건 수집(LinkedIn·SI 커뮤니티 포스트, CMO draft).
+
+> ⚠️ **honest-marketing 결과 (Growth-17)**: Scene 5(self-host)는 **cut**됨 — ops-pack(docker-compose+Vault+Keycloak SSO)이 미구현이라 vaporware 였음. ops-pack 은 **M2 deliverable 로 이관**(CEO 결정). M1 기술 성숙(T-1~T-6 6/6)은 유지. positioning.md + revenue-roadmap.md 인수 triple 동기화 완료.
 
 ## 다음 후보 (우선순위)
 
