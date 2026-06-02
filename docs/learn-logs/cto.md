@@ -236,6 +236,16 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Escalations**: 없음. react L4 는 fastapi 상대만 — springboot 상대 react L4 는 Growth-15 의 Java 환경 게이트와 동일 묶음(별도 신규 부채 아님).
 - **Open loops resolved**: frontend 측 pluggability(vanilla-htmx 단일) → 4-corner(2×2) 완성. frontend-adapter-contract §7 토큰 fork. 남은: vue/nexacro(M2 후), react persona 분기, maturity threshold.
 
+### Growth-17 (2026-06-02) — GTM 피벗 integrator: demo-video sign-off + ops-pack vaporware 적발
+
+- **역할**: Integrator — CMO demo-video 산출물 honest-marketing 감사 + 3-doc 동기화. 코드 0.
+- **계기**: M1 기술 성숙(6/6) 후 CEO GTM 피벗 확정 → demo 영상이 M2 게이트의 GTM 절반. `/clear` 로 중단됐던 CMO 위임 재개.
+- **Scene 4 sign-off (positive)**: 2026-06-02 Java 게이트 closure(react↔springboot L4 36 PASS)로 **4-corner 전부 live-verified** 확인 → CMO 가 보수적으로 단 "react 로드맵 헤지" 제거, 실제 react/springboot 스왑 촬영 승인. honest-marketing 은 과소진술도 교정(검증된 능력은 당당히).
+- **Scene 5 적발 (negative, G 정신)**: ops-pack(docker-compose+Vault+Keycloak SSO)이 **repo 전무**(compose/vault/keycloak 파일 0, hero profile `vault_agent:false`/`sso_keycloak:false`)인데 positioning.md 가 이를 **IT-담당자 M1 인수 기준**으로 명시 → vaporware 하드 제약 위반 + M1 maturity 주장과 페르소나 인수 불일치. default 로 못 정하는 CEO 사안 → AskUserQuestion 으로 판정 요청.
+- **결정 통합 (CEO 2026-06-02)**: ① ops-pack M2 이관 (T-1~T-6 에 불포함 → M1 maturity 유지). ② Scene 5 cut(~3:00). → demo-video-scenario.md(OQ6 resolved, run-time/VO/checklist 동기화) + positioning.md(§positioning statement "실측 구현" false 정정 + §5 인수 triple M1/M2 재배치) + revenue-roadmap.md(M1/M2 인수 동기화) 3-doc per-file 커밋.
+- **Integrator 판단**: positioning §5 의 6 인수 triple ↔ revenue-roadmap gating 1:1 매핑 유지하며 ops-pack 만 M1→M2 평행이동. M1 인수는 live-verified 기준(4-corner 풀테스트+로컬 scaffold)으로 재정의 — "검증 가능한 것만 인수 기준" 원칙.
+- **Open loops**: demo 실촬영 CEO 결정 대기(CTA/voice/publish/샘플) / ops-pack 구축(M2 deliverable) / lead 5건
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
