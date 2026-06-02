@@ -176,12 +176,12 @@ Cut to the same employee screen, now rendered live in the React frontend (`npm r
 
 > "14 공통 도메인. 당신의 업무 언어로."
 >
-> "trial 문의 → [연락처 / CTA URL]"
+> "도입 문의 → [사업 문의 이메일]"
 
 **VO**:
 > 인사, 재고, 영업, 설비 관리 — 중소기업에서 가장 많이 쓰는 14가지 업무가 준비되어 있습니다. 우리 회사에만 있는 특수한 업무는 함께 만들어 갑니다. 데이터는 우리 서버 밖으로 나가지 않습니다. 지금 문의하시면 무엇부터 시작할지 같이 정리해 드립니다.
 
-*Note for CEO*: CTA URL / contact method is CEO's decision (positioning.md §6 open question: inbound vs outbound). Placeholder must be replaced before publishing.
+*CTA 결정 (CEO, 2026-06-02)*: 문의 채널 = **이메일** (향후 카카오톡 채널로 전환 예정). 엔드카드의 `[사업 문의 이메일]` 자리에 CEO 가 공개용 사업 이메일 주소를 넣는다 (개인 Gmail 노출 지양 권고 — 별도 사업 주소 권장). 보이스 = **전체 ElevenLabs** (Scene 6 도 TTS, CEO 직접 녹음 없음).
 
 ---
 
@@ -284,9 +284,9 @@ This path costs $22, requires no paid software, and can be executed by the CEO +
 
 ### Pre-production (required before filming)
 
-- [ ] **CTO sign-off**: Confirm which 4-corner stacks are fully filmable (live HTTP response, not mock). Specifically: is SpringBoot adapter live enough to show in Scene 4, or must Scene 4 use the "[로드맵]" callout?
-- [ ] **CEO decision**: CTA URL / contact method for Scene 6. GitHub Discussions, email form, or Calendly link?
-- [ ] **CEO decision**: Will CEO record Scene 6 VO personally, or full ElevenLabs?
+- [x] **CTO sign-off** — 4-corner 전부 live-filmable (react↔springboot L4 36 PASS). Scene 4 로드맵 라벨 불필요.
+- [x] **CEO decision: CTA** — 이메일 (향후 카카오톡). 엔드카드에 사업 이메일 기입.
+- [x] **CEO decision: 보이스** — 전체 ElevenLabs (CEO 녹음 없음).
 - [x] ~~CDO Scene 5 architecture diagram~~ — **not needed** (Scene 5 cut by CEO, 2026-06-02).
 - [ ] **CDO deliverable**: Logo / wordmark for Scene 6 end card. Resolution: 1920×1080 PNG, transparent background version for overlay.
 - [ ] **Live demo environment**: `smallmfg-demo` profile running locally with sample data (fictional Korean names, 3–4 employees, 2 assets). CTO or Engineer to prepare seed data SQL.
@@ -371,14 +371,14 @@ YouTube unlisted video (public after CEO decision)
 
 ## Open Questions for CEO Input
 
-1. **CTA target (Scene 6)**: What URL or contact method goes on the end card? Options: (a) GitHub Discussions thread, (b) email address, (c) Calendly link for 30-minute call. This is the single most important decision before filming Scene 6.
+1. **CTA target (Scene 6) — RESOLVED (CEO, 2026-06-02)**: 문의 채널 = **이메일** (향후 카카오톡 채널 전환). 엔드카드 `[사업 문의 이메일]` 에 CEO 가 공개용 사업 이메일을 넣는다 (개인 Gmail 지양). GitHub Discussions / Calendly 는 미채택.
 
-2. **Scene 4 stack-swap honesty gate**: CTO needs to confirm which adapters are filmable live (verified HTTP response) vs. require a "[로드맵]" callout. CMO cannot make this determination. CTO response needed before recording session is scheduled.
+2. **Scene 4 stack-swap honesty gate — RESOLVED (CTO, 2026-06-02)**: 4-corner 전부 live-filmable (react↔springboot L4 36 PASS). Scene 4 스왑 정직 — 로드맵 라벨 불필요 (vue·nexacro 만 M2-후 로드맵).
 
-3. **CEO voice for Scene 6**: A CEO's real voice on the CTA has higher trust signal than TTS for B2B Korean enterprise. This is a 20-second recording (one take, 2–3 retakes maximum). Recommended: CEO records Scene 6 VO on any smartphone in a quiet room; ElevenLabs handles scenes 0–5.
+3. **CEO voice for Scene 6 — RESOLVED (CEO, 2026-06-02)**: **전체 ElevenLabs** (Scene 6 포함 전 구간 AI TTS, CEO 직접 녹음 없음). 제작 단순화·재테이크 자유 우선.
 
-4. **Publish timing (unlisted → public)**: The video will be uploaded as YouTube unlisted. CEO decides when to flip to public (which triggers SEO indexing and makes the link shareable without restriction). Recommended gate: after the first qualified lead responds to the Loom outbound, confirming the message resonates.
+4. **Publish timing (unlisted → public) — RESOLVED (default 채택)**: YouTube unlisted 업로드 후, **첫 qualified lead 가 Loom outbound 에 반응한 시점**에 public 전환 (권장 게이트). CEO 가 조기 공개를 원하면 그때 재판단.
 
-5. **Sample data language**: The live form in Scene 3 will show fictional Korean names and data (김민준, 박서연 etc.). If the primary outbound target is a specific industry or company type, CMO can tailor the seed data to match (e.g., manufacturing part numbers for a factory CEO target). CEO to indicate if a specific first outbound target is in mind.
+5. **Sample data language — RESOLVED (CEO, 2026-06-02)**: **smallmfg 그대로** — 특정 첫 outbound 산업 타깃 미지정. Scene 3 은 소형 제조(인사+설비) 픽션 샘플(김민준·박서연 등 3~4행, CNC-001 설비) 유지. 추후 특정 타깃 생기면 시드 교체 가능.
 
 6. **Scene 5 keep-vs-cut + ops-pack gap (CTO-flagged, 2026-06-02) — RESOLVED**: The ops pack (docker-compose + Vault + Keycloak SSO) that Scene 5 depicted, and that positioning.md named as the IT-담당자 M1 persona-acceptance criterion, does not yet exist in the repo. **CEO decisions (2026-06-02)**: (a) **Video** — Scene 5 **cut**; video ends on Scene 4 → Scene 6 (~3:00). (b) **M1 maturity** — ops pack **deferred to M2**; the T-1~T-6 technical maturity criteria stand at 6/6 MET. positioning.md / revenue-roadmap updated to move the ops-pack IT-담당자 acceptance from M1 to M2.
