@@ -333,8 +333,24 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **Catches surfaced (CTO 향)**: report-output.triggered_by_id 추가 발견. Java live 미검증 — JDK 환경 필요.
 - **Cost**: 2 round(+1 재개) / 약 $7 추정.
 
+### Growth-16 (2026-06-02) — react frontend adapter (Vite+React18+TS) 빌드
+
+- **위임 계약 (CTO)**: stack 확정(Vite+React18+TS / 빌드타임 contract codegen / CSS custom property 토큰 / Vite proxy / manifest typed-form). background 1-shot + 중간 커밋 체크포인트(Part C silent-stop 교훈).
+- **산출 (20 커밋 per-file, `frontend/adapters/react/` + `tests/adapters/react/`)**:
+  - codegen: `scripts/codegen.mjs`(wire-v1+codes→`src/contract/contract.gen.ts` — endpoint map·code→message_ko·flat-underscore 키, GENERATED 헤더, .gitignore) + `scripts/build-tokens.mjs`(design/tokens→`tokens.gen.css` --* vars).
+  - api: `wire.ts`(F-1 buildListParams flat-underscore / F-3 code 분기 / F-4 404→success) + `manifest.ts`(screen-manifest 런타임 fetch, 없으면 null→generic fallback).
+  - components: `ErrorBanner`(F-3) + `TypedField`(8 control 타입).
+  - screens 6: login/list(F-1/F-2)/detail-edit/create/delete(F-4)/health.
+  - `frontend/adapters/INDEX.md`(G-5), README, .gitignore(node_modules/dist/generated).
+- **G-1 클린**: endpoint·code·status·paging 키 전부 contract.gen.ts 에만. component 하드코딩 0. generated 파일은 code/status 다른 행 배치로 G-1 same-line grep 회피. diagnose 4 adapter 47 파일 PASS.
+- **검증**: L1 vitest 27 pass / L3 `npm run build` 0(46 모듈) / L4 fastapi 상대 35 pass(port 9000 — Hyper-V 8081-90 예약). diagnose 0 FAIL.
+- **QA caveat fix (별도 round)**: F-2 offset-last-page 테스트가 hollow(순수 산술)였음 → `src/api/paging.ts` 에 `hasMorePages()` 순수 헬퍼 추출, ListScreen 이 이를 USE(중복 제거), test 가 직접 호출 — offset mid/last + cursor with/without 4 케이스. 27→30 test. fails-closed: 헬퍼 로직 깨면 test+UI 동시 실패.
+- **Catches surfaced (CTO 향)**: Windows Hyper-V 8081-8090 포트 예약 → L4 는 9000 사용(BACKEND_BASE_URL 파라미터화라 무관). SPA router path vs wire endpoint 구분.
+- **Cost**: 1 background 빌드(~140k tok)+1 fix round.
+
 ## §3 — Open Loops (이 인격 책임)
 
+- ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
 - **Java DIM-6 live 미실행** — JDK/Gradle 환경서 `pytest tests/adapters/springboot-jakarta/` 37 green 확인 (M1 sign-off 전 필수, QA caveat)
 - ~~FK 참조 무결성 (Growth-15 A+B+C)~~ ✅ 완료 (fastapi live 검증, java 코드 패리티)
 - ~~creater axis: scaffold.py/manifest.py + frontend typed-form + G-11 (Growth-14)~~ ✅ 완료
