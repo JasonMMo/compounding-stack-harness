@@ -1,0 +1,220 @@
+# profiles/seed/smallmfg-demo.seed.yaml — Demo seed dataset (schema: seed v1)
+#
+# FICTIONAL DEMO DATA. 모든 인물·설비·이력은 가공의 데모용이며 실재하지 않는다.
+# Names, employee numbers, asset serials are invented for the GTM demo video
+# (docs/marketing/demo-video-scenario.md, Scenes 2-3).
+#
+# Consumed by: scripts/workflow/seed_loader.py
+#   1. login (auth.login: demo/demo)
+#   2. POST each record below in file order via entity.create (wire-v1.yaml)
+#   3. store generates the real UUID id; loader maps `ref:` → that id
+#   4. dependent records reference parents via `$ref: <ref-name>` in fk columns
+#
+# Why `ref:` indirection (design note):
+#   The in-memory store assigns server-side UUIDs on create; the client cannot
+#   set `id`. FK columns are validated against the store (catalog_validator
+#   _check_fk → store.find_by_id). So FKs cannot be static UUIDs baked here —
+#   they must be the ids the store returns. The loader resolves `$ref` at POST
+#   time. This keeps the fixture declarative AND contract-honest (no store edits).
+#
+# Records are listed in dependency order (parents before children) so every
+# `$ref` resolves by the time it is needed. Do not reorder casually.
+#
+# Reusable: any adapter exposing the wire-v1 entity.create key can load this
+#   (fastapi today; springboot tomorrow) — it is not fastapi-specific.
+
+version: 1
+
+seed:
+  slug: smallmfg-demo
+  display: "중소제조 데모 — 시드 데이터 (가공)"
+  note: "직원 4명, 부서 2, 직위 3, 휴가 1건, 결재선 1건, 설비 2대(CNC-001 포함), 점검 이력 1건."
+
+# Demo login (auth.login stub — M1: demo/demo, same across adapters)
+auth:
+  username: demo
+  password: demo
+
+# ─────────────────────────────────────────────────────────────────────────────
+# records: ordered list. Each item:
+#   entity:  wire entity_type (catalog key)
+#   ref:     symbolic id name (other records reference it via $ref)
+#   data:    field map (catalog columns; id/created_at/updated_at are server-set)
+# FK columns use { $ref: <ref-name> } — loader substitutes the created id.
+# ─────────────────────────────────────────────────────────────────────────────
+records:
+
+  # ── departments ────────────────────────────────────────────────────────────
+  - entity: department
+    ref: dept_prod
+    data:
+      code: "PROD"
+      name: "생산부"
+
+  - entity: department
+    ref: dept_hr
+    data:
+      code: "HR"
+      name: "경영지원부"
+
+  # ── positions ──────────────────────────────────────────────────────────────
+  - entity: position
+    ref: pos_manager
+    data:
+      title: "팀장"
+      grade: "G4"
+      department_id: { $ref: dept_prod }
+      headcount_limit: 2
+
+  - entity: position
+    ref: pos_staff
+    data:
+      title: "사원"
+      grade: "G1"
+      department_id: { $ref: dept_prod }
+      headcount_limit: 20
+
+  - entity: position
+    ref: pos_hr_staff
+    data:
+      title: "인사담당"
+      grade: "G2"
+      department_id: { $ref: dept_hr }
+      headcount_limit: 3
+
+  # ── employees ───────────────────────────────────────────────────────────────
+  # status: active / on-leave / terminated (catalog enum).
+  # Scene 3A shows badges "active" / "휴가중" → 박서연 = on-leave.
+  - entity: employee
+    ref: emp_minjun
+    data:
+      employee_number: "EMP-1001"
+      full_name: "김민준"
+      department_id: { $ref: dept_prod }
+      position_id: { $ref: pos_manager }
+      hire_date: "2021-03-02"
+      status: "active"
+
+  - entity: employee
+    ref: emp_seoyeon
+    data:
+      employee_number: "EMP-1002"
+      full_name: "박서연"
+      department_id: { $ref: dept_prod }
+      position_id: { $ref: pos_staff }
+      hire_date: "2022-07-11"
+      status: "on-leave"      # 휴가중 — leave-request approved 아래
+
+  - entity: employee
+    ref: emp_doyoon
+    data:
+      employee_number: "EMP-1003"
+      full_name: "이도윤"
+      department_id: { $ref: dept_prod }
+      position_id: { $ref: pos_staff }
+      hire_date: "2023-01-09"
+      status: "active"
+
+  - entity: employee
+    ref: emp_jiwoo
+    data:
+      employee_number: "EMP-2001"
+      full_name: "정지우"
+      department_id: { $ref: dept_hr }
+      position_id: { $ref: pos_hr_staff }
+      hire_date: "2020-05-18"
+      status: "active"
+
+  # ── leave-request ────────────────────────────────────────────────────────────
+  # 연차(annual). 박서연의 휴가 — approved (그래서 status on-leave).
+  - entity: leave-request
+    ref: leave_seoyeon
+    data:
+      employee_id: { $ref: emp_seoyeon }
+      leave_type: "annual"
+      start_date: "2026-06-01"
+      end_date: "2026-06-05"
+      status: "approved"
+      reason: "개인 연차 (가족 행사)"
+
+  # ── approval chain (1단계: 팀장 승인) for the leave above ──────────────────────
+  - entity: approval-request
+    ref: appr_req_leave
+    data:
+      subject_type: "leave-request"
+      subject_id: { $ref: leave_seoyeon }
+      requester_id: { $ref: emp_seoyeon }
+      status: "approved"
+      title: "휴가 신청 승인 — 박서연 (연차 6/1~6/5)"
+
+  - entity: approval-step
+    ref: appr_step_1
+    data:
+      request_id: { $ref: appr_req_leave }
+      sequence: 1
+      name: "팀장 승인"
+      status: "approved"
+      requires_all: true
+
+  - entity: approver
+    ref: approver_minjun
+    data:
+      step_id: { $ref: appr_step_1 }
+      employee_id: { $ref: emp_minjun }    # 팀장 김민준이 승인자
+
+  - entity: approval-decision
+    ref: decision_1
+    data:
+      step_id: { $ref: appr_step_1 }
+      approver_id: { $ref: approver_minjun }
+      decision: "approved"
+      comment: "승인합니다."
+      decided_at: "2026-05-28T09:30:00Z"
+
+  # ── asset-category + assets ───────────────────────────────────────────────────
+  - entity: asset-category
+    ref: cat_machine
+    data:
+      code: "MACHINE"
+      name: "생산설비"
+      default_useful_life_years: 10
+      depreciation_method: "straight-line"
+
+  # CNC-001 — Scene 3C hero asset, next_due_date 2026-06-15 (amber flag).
+  - entity: asset
+    ref: asset_cnc001
+    data:
+      asset_number: "CNC-001"
+      name: "CNC 밀링머신 1호기"
+      category_id: { $ref: cat_machine }
+      acquisition_date: "2021-04-15"
+      acquisition_cost: 85000000
+      current_book_value: 59500000
+      status: "active"
+      location: "1공장 가공라인"
+      serial_number: "MCT-2021-0415-001"
+
+  - entity: asset
+    ref: asset_compressor
+    data:
+      asset_number: "AIR-002"
+      name: "공기압축기 2호기"
+      category_id: { $ref: cat_machine }
+      acquisition_date: "2022-09-01"
+      acquisition_cost: 12000000
+      current_book_value: 9600000
+      status: "active"
+      location: "1공장 유틸리티실"
+      serial_number: "CMP-2022-0901-002"
+
+  # ── maintenance-record (점검) for CNC-001 ──────────────────────────────────────
+  - entity: maintenance-record
+    ref: maint_cnc001
+    data:
+      asset_id: { $ref: asset_cnc001 }
+      maintenance_type: "inspection"
+      performed_at: "2025-12-15T10:00:00Z"
+      performed_by: "이도윤"
+      cost: 150000
+      description: "정기 점검 — 주축 베어링 윤활, 절삭유 교체, 정밀도 측정. 이상 없음."
+      next_due_date: "2026-06-15"
