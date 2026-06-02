@@ -35,10 +35,14 @@ Growth-17: demo-video 시나리오·제작법 완성 + **CEO 결정 5건 전부 
 
 **촬영 환경 ready (engineer, 2026-06-02)**: 런북 [`docs/marketing/demo-runbook.md`] — scaffold→fastapi(8081)→vanilla-htmx(5000)→`seed_loader.py` 적재→`localhost:5000/login`(demo/demo). 시드 `profiles/seed/smallmfg-demo.seed.yaml`(18행: 김민준·박서연·이도윤·정지우 / 연차 leave / CNC-001+AIR-002 / inspection). 목록 화면 시드 실렌더 검증됨.
 
-**남은 일 (사람 = CEO/CMO)**: ① 런북대로 데모 띄워 OBS 녹화(4-corner 전부 live, Scene4 react+springboot 포함) → DaVinci 편집 → ElevenLabs VO(전체) → 자막(한/영) → YouTube unlisted + Loom 90초 컷. ② 병행 qualified lead 5건(LinkedIn·SI 커뮤니티, CMO draft 미작성). ③ 배포 카피엔 ICP("소형·스타트업") 표현 사용. ④ 엔드카드 사업 이메일 주소 확정.
+**콜드스타트 자산 완료 (2026-06-02, CMO+domain-expert+engineer)**:
+- **아웃바운드 카피** `docs/marketing/outbound-copy.md` — LinkedIn·콜드이메일·커뮤니티(디스콰이엇·OKKY), ICP 향, honest. lead 5건 파이프라인 ready.
+- **Scene 1 인터뷰 transcript** `docs/marketing/demo-assets/smallmfg-interview-transcript.md` — 실 대화 픽션, smallmfg 프로파일 정확 정합. 온스크린 6줄 표시.
+- **QA 회귀 가드** `frontend/.../tests/test_entity_list_params.py` — entity.list 라우트 param-mapping 12 케이스, revert→RED 확인. L4 공백 봉합.
+
+**남은 일 (사람 = CEO/CMO)**: ① 런북대로 데모 띄워 OBS 녹화(4-corner 전부 live, Scene4 react+springboot 포함) → DaVinci 편집 → ElevenLabs VO(전체) → 자막(한/영) → YouTube unlisted + Loom 90초 컷. ② 아웃바운드 카피 발송 → qualified lead 5건. ③ 배포 카피엔 ICP("소형·스타트업") 표현 사용. ④ 엔드카드 사업 이메일 주소 확정. CEO Open Q: 발송 우선순위 / 카카오톡 채널 / 디스콰이엇 게시 명의.
 
 > ⚠️ **honest-marketing (Growth-17)**: Scene 5(self-host) **cut** — ops-pack(docker-compose+Vault+SSO) 미구현 vaporware → **M2 이관**. M1 기술성숙(T-1~T-6 6/6) 유지. positioning+roadmap 동기화 완료.
-> 🐞 **QA 후속(open)**: 데모 prep 중 vanilla-htmx `entity.list` 빈목록 버그 fix(`6c13137`) — L4 가 프론트 Flask 라우트 미경유로 놓침. **프론트 라우트 param-mapping 회귀 테스트 추가** 필요(동종 재발 차단).
 
 ## 다음 후보 (우선순위)
 
