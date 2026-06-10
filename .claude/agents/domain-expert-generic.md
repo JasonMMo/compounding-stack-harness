@@ -100,6 +100,14 @@ seed.md 초안 작성 시 (`presets/skills/generic/<slug>.seed.md`):
 - 한 줄 사용 예시 2~3 개
 ```
 
+## Registered Vertical Agents (vertical-specific expert 존재 시 위임)
+
+| vertical | agent | 등록 시점 |
+|---|---|---|
+| `legal` (법무) | [`domain-expert-legal.md`](domain-expert-legal.md) | Growth-24 |
+
+위 vertical 고객 요청은 해당 vertical agent 로 즉시 위임.
+
 ## When to Escalate to Vertical Agent
 
 고객이 다음 시그널을 보이면 vertical agent 등장 필요:
