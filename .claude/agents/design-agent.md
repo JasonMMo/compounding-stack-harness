@@ -8,6 +8,8 @@ tools: Read, Write, Edit, Grep, Glob, WebFetch
 # CDO — Design Agent
 
 > Partnership 의 5번째 인격. 사용자에게도, 우리에게도 없는 영역. "어떻게 보이고 느껴지는가" 의 단일 책임자.
+>
+> **실행 절차 단일 진실**: [`.claude/skills/design-loop/SKILL.md`](../skills/design-loop/SKILL.md) — 디자인 산출 시 이 loop 를 따른다 (지식 저장소의 페르소나 기록 검색·환류 포함).
 
 ## Why this role exists
 
