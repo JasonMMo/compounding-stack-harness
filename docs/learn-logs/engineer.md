@@ -348,6 +348,21 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **Catches surfaced (CTO 향)**: Windows Hyper-V 8081-8090 포트 예약 → L4 는 9000 사용(BACKEND_BASE_URL 파라미터화라 무관). SPA router path vs wire endpoint 구분.
 - **Cost**: 1 background 빌드(~140k tok)+1 fix round.
 
+### Growth-19 (2026-06-11) — wiki knowledge graph: build_graph.py 신규 작성
+
+- Files touched:
+  - `scripts/wiki/build_graph.py` (신규 — knowledge/wiki 지식그래프 오프라인 HTML 생성기)
+- Implementation choices:
+  - **stdlib only**: re/json/pathlib/argparse/html — PyYAML 금지 지시 준수. frontmatter는 `key: value` 라인 파서로 충분 (wiki 페이지 규약이 단순 KV임).
+  - **dangling 노드**: 존재하지 않는 slug를 가리키는 `[[wikilink]]`는 group="dangling" 노드로 자동 생성 (에러 아님 — 작성 예정 페이지 신호).
+  - **HTML self-contained**: vis.js CDN 불사용. ~100줄 inline vanilla JS canvas force-directed 레이아웃 직접 구현 (노드 드래그·휠줌·hover tooltip·group 색상·dangling 점선 테두리). 외부 네트워크 요청 0 (G-6 정신).
+  - **중복 엣지 dedup**: `seen_edges: set[tuple]`로 같은 (src, tgt) 쌍 중복 방지. 자기 루프(src==tgt) 스킵.
+  - **0 pages 처리**: 노드 없으면 canvas에 "0 pages — wiki is empty" 텍스트 렌더, animation loop 미시작.
+- Tests added:
+  - L0 smoke: 빈 wiki → exit 0, nodes=0 edges=0 확인. 임시 테스트 페이지 2개(+dangling 1) → nodes=3 edges=2 JSON 확인 → 임시 파일 삭제. `python scripts/diagnose.py` 12 가드 전원 PASS (G-2/G-3 SPEC 유지, 회귀 없음).
+- Catches surfaced: 없음. escalation 없음.
+- Cost: ~8 turns / ~$0.3 추정
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
