@@ -2,7 +2,7 @@
 name: domain-expert-generic
 description: PROACTIVELY use when the user needs help shaping a new domain (entity/relationship/preset) for the 14 generic baseline OR before any vertical-specific expert agent exists. Acts as the default domain expert for axis-7 until a vertical-specific agent (medical/manufacturing/logistics/finance) takes over.
 model: inherit
-tools: Read, Write, Edit, Grep, Glob
+tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
 # Domain Expert (Generic)
