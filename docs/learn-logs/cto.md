@@ -246,6 +246,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Integrator 판단**: positioning §5 의 6 인수 triple ↔ revenue-roadmap gating 1:1 매핑 유지하며 ops-pack 만 M1→M2 평행이동. M1 인수는 live-verified 기준(4-corner 풀테스트+로컬 scaffold)으로 재정의 — "검증 가능한 것만 인수 기준" 원칙.
 - **Open loops**: demo 실촬영 CEO 결정 대기(CTA/voice/publish/샘플) / ops-pack 구축(M2 deliverable) / lead 5건
 
+### Growth-18 (2026-06-11) — PM 인격 신설 integrator + LLM Wiki 방법론 리서치
+
+- **역할**: 설계 + 리서치. CEO 직접 제안 ("도메인 자율 성장과 별개로, 고객 질의로 needs 를 발굴·인도하는 절차 필요") 을 7번째 인격으로 구조화. 코드 0.
+- **설계 결정**: ① 역할 정의 (`pm-agent.md`) 와 실행 절차 (`pm-delivery-loop` skill) 분리 — *누가/무엇을* vs *어떻게/어떤 순서로*. ② loop 8단계, **step 7 contribute-back 이 종료 게이트** (CLAUDE.md §7 체크리스트와 1:1 — 지식 환류 없는 인도 금지). ③ PM↔domain-expert 경계: PM 은 needs·우선순위·인수, expert 는 catalog 매핑·도메인 언어. ④ acceptance criteria 는 QA 검증 가능성 감수 필수 + honest-promise (Growth-17 Scene 5 교훈을 고객 약속 규칙으로 승격). charter v1.4 (매트릭스 PM 열 + delivery sign-off 합의 행).
+- **LLM Wiki 리서치 (CEO 질문 2건 — 지식 축적 방법론 + context 비대화)**: GitHub live 조사 (WeKnora 16k★, deepwiki-open 17k★, nashsu/llm_wiki 11k★, mem0 58k★ 등 18 repo) + Karpathy llm-wiki gist 원전 정독. 판정: **도구 비채택, 방법론 채택** — 서버형·embedding형은 Growth-13 "아이디어 채택, 인프라 비채택" 원칙과 충돌. 우리는 이미 절반 보유 (seed.md=Karpathy 형식, learn-log=log.md, ledger-index=검색 CLI). 갭은 `knowledge/wiki/` + `index.md` + read-side progressive-disclosure 규약. 채택안: `docs/architecture/llm-wiki-adoption.md` — **CEO 결정 대기**.
+- **모델 전환 기록**: CEO 가 세션 중 /model fable 전환 → 커밋 trailer Claude Fable 5 로 (Growth-8 의 "trailer 는 실제 co-author 모델 반영" 전례, CLAUDE.md §9 갱신).
+- **Open loops**: LLM Wiki 채택 CEO 판정 → 승인 시 Phase 1~3 (knowledge/wiki 골격 → ledger-index 확장 → PM loop wiring) / PM 첫 실전 loop.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
