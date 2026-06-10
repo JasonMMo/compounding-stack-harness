@@ -262,6 +262,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **Phase 3 (위임)**: engineer 에 build_graph.py 스펙 위임 — CDN 0 self-contained HTML (사내망 G-6 정신), stdlib only, dangling wikilink 는 에러 아닌 회색 노드 (작성 예정 신호), out/ derived gitignore. PM loop step 7 에 wiki ingest 명문화 + CLAUDE.md §11 read-side 규약 1줄 (index→drill-down, 통읽기 금지).
 - **Open loops**: qmd embed 선택 실행 / qmd MCP·plugin 연결 여부 / 첫 실전 ingest (M2 첫 고객 loop #1).
 
+### Growth-20 (2026-06-11) — §6 슬림 회전 정책 수립 + 첫 아카이빙 실행
+
+- **계기**: Growth-19 마무리 시 G-9 가 198/200 — 다음 엔트리가 cap 초과 확정. CEO "G-9 아카이빙도 처리해줘".
+- **경계 결정**: Growth-4~12 (13 슬림 엔트리, 2026-05-29~06-01) 이동 / Growth-13~19 유지 — 13 이후가 현재 활성 문맥 (ledger-index·creater 채움·4-corner·GTM·PM·wiki, open loop 상호참조 다수). founding 1~3 은 divider 앞 full 포맷이라 G-9 비카운트 + 헌장 맥락이므로 main 잔류.
+- **메커니즘**: PowerShell 라인 분할 (181~336 → archive body), **내용 수정 0** — 아카이브 무결성 원칙 (이동 ≠ 재작성). §6 에 포인터 1줄 + 회전 정책 명문 (cap 접근 시 동일 절차). 결과 198→70 non-blank, 가드 12 PASS.
+- **파생 갭 적발**: ledger-index 가 고정 목록이라 pm.md (Growth-18 이후) 와 growth-archive.md 가 **silent 누락** — guards-must-work 정신으로 즉시 engineer 위임 (glob 전환, 향후 인격 추가 시 자동 포함).
+- **Open loops**: 없음.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
