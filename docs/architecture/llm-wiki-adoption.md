@@ -1,6 +1,6 @@
 # LLM Wiki 방법론 채택 제안 (Growth-18 리서치)
 
-> **상태: CEO 결정 대기.** CEO 가 제기한 두 문제 — ① 도메인·고객 요청을 지식으로 축적할 방법론, ② 대화·원장 누적에 따른 context 비대화 — 에 대한 GitHub "LLM Wiki" 생태계 조사와 채택안. 조사일: 2026-06-11 (GitHub API live).
+> **상태: 채택 — CEO 승인 2026-06-11 ("진행하자", Growth-19).** CEO 가 제기한 두 문제 — ① 도메인·고객 요청을 지식으로 축적할 방법론, ② 대화·원장 누적에 따른 context 비대화 — 에 대한 GitHub "LLM Wiki" 생태계 조사와 채택안. 조사일: 2026-06-11 (GitHub API live). 도입 현황: §6.5 Phase 1 (wiki 골격) ✅ / Phase 2 (qmd, BM25 검증) ✅ — `qmd embed` 시맨틱은 선택 후속 / Phase 3 (graph + PM wiring) Growth-19 에서 진행.
 
 ## 1. 원전 — Karpathy llm-wiki 패턴
 
