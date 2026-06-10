@@ -1,0 +1,43 @@
+---
+slug: precedent
+confidence: EXTRACTED
+updated: 2026-06-11
+source: lawfirm-demo (Growth-24 PM loop #1)
+---
+
+# precedent (판례)
+
+> catalog entity: `precedent` (domain: `legal`). seed: `presets/skills/legal/precedent-registry.seed.md`.
+
+## 정의
+
+법원이 선고한 판결의 요지·전문을 저장·검색하는 지식 저장소 단위. `citation` 이 unique key. `[EXTRACTED]` — 업무담당자가 "판례정보를 입력하고 일일이 사람이 검색한다"고 직접 언급.
+
+## 핵심 필드
+
+| 필드 | 의미 | 비고 |
+|---|---|---|
+| `citation` | 판례 인용 표기 | unique, 예: "대법원 2020. 3. 12. 선고 2019다12345 판결" |
+| `court` | 법원명 | 대법원/고등법원/지방법원 등 |
+| `decided_date` | 선고일 | 미래 날짜 불가 |
+| `case_type` | 사건 유형 | legal-case 와 동일 enum |
+| `holding` | 판시 요지 | NOT NULL, 검색 핵심, 300자 이상 권장 |
+| `full_text` | 판결문 전문 | nullable, 공개 판례만 저장 |
+| `keywords` | 키워드 | comma-separated |
+
+## 저작권 주의 `[UNVERIFIED]`
+
+판결문 전문(`full_text`) 저장 전 공개 여부 확인 필수. 대법원 종합법률정보(glaw.scourt.go.kr) 공개 판례는 저장 가능 — 단, 상업적 재배포 조건 재확인 필요.
+
+## AI 검색 패턴 (A안)
+
+### 1단계 — tsvector (즉시 가능)
+`holding` + `keywords` → GIN index → `plainto_tsquery` 키워드 검색.
+
+### 2단계 — RAG (설계 예정)
+`full_text` chunk → embedding → vector store. 설계 완료 시 [[legal-rag-pattern]] 에 기록.
+
+## 관련 엔티티
+
+- [[legal-case]] — 사건-판례 연결 (application layer M:N)
+- [[legal-ai-search-strategy]] — 검색 아키텍처 개요
