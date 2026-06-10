@@ -270,6 +270,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **파생 갭 적발**: ledger-index 가 고정 목록이라 pm.md (Growth-18 이후) 와 growth-archive.md 가 **silent 누락** — guards-must-work 정신으로 즉시 engineer 위임 (glob 전환, 향후 인격 추가 시 자동 포함).
 - **Open loops**: 없음.
 
+### Growth-21 (2026-06-11) — 전 인격 loop skill 화 + knowledge-sync hook 설계
+
+- **계기**: CEO 지시 2건 — ① 지식 축적·수정 시 연관 skill 반영 hook ② 각 agent 의 role·실행 절차 skill 화 + 지식 저장소 활용.
+- **skill 설계 (직접)**: 5 loop (`engineer-loop`/`qa-loop`/`marketing-loop`/`design-loop`/`domain-expert-loop`) — PM 패턴 동형: role 정의서 = 누가/무엇을, skill = 어떻게/순서. 각 loop 에 **지식 저장소 프로토콜 2-step** (시작: `qmd search`+`ledger-index --symbol` 선행 검색 / 종료: wiki 환류 + index.md 1줄 + 신뢰도 라벨). 규약 단일 진실은 `knowledge/wiki/README.md` — skill 은 role-특화 포인트만 (DRY, 5중 복제 회피). 각 agent 정의서 blockquote 에 skill 포인터 1줄 연결.
+- **hook 설계 (위임)**: hook 은 LLM 이 아니므로 "skill 자동 수정" 은 불가/위험 — 대신 PostToolUse(Write|Edit) 에서 지식 경로 (knowledge/·presets/·profiles/) 변경 감지 → **additionalContext 로 연관 skill 점검 지시 주입** (경로→skill 매핑 테이블). 작업을 깨지 않게 예외 시 exit 0.
+- **loop 내 교훈 인용**: 각 anti-pattern 절은 실제 Growth 교훈으로 anchoring (G-1 재구현 금지, Growth-14 phantom 키, Growth-16 hollow 테스트, Growth-17 vaporware) — 추상 규칙보다 사례 기반.
+- **Open loops**: hook 첫 실가동 검증 / CTO integrator skill 화 보류 (main session 은 CLAUDE.md 가 이미 절차 문서).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
