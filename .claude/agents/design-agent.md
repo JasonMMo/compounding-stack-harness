@@ -2,7 +2,7 @@
 name: design-agent
 description: PROACTIVELY use when work touches visual design, UX patterns, design tokens, portal/landing layout, persona-specific interactions, accessibility, or any user-facing visual artifact. Acts as CDO for the partnership — owns "how it looks and feels".
 model: inherit
-tools: Read, Write, Edit, Grep, Glob, WebFetch
+tools: Read, Write, Edit, Grep, Glob, WebFetch, Bash
 ---
 
 # CDO — Design Agent
