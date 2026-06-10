@@ -19,7 +19,7 @@ import os
 
 from fastapi import FastAPI
 
-from routers import auth, entity, status
+from routers import auth, entity, legal, status
 
 app = FastAPI(
     title="compounding-stack backend adapter — fastapi",
@@ -32,6 +32,7 @@ app = FastAPI(
 
 app.include_router(auth.router)
 app.include_router(entity.router)
+app.include_router(legal.router)
 app.include_router(status.router)
 
 
