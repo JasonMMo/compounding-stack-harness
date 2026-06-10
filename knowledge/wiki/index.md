@@ -4,15 +4,18 @@
 
 ## Sources
 
-(없음 — 첫 고객 ingest 대기)
+- [lawfirm-demo profile](../../profiles/lawfirm-demo.yaml) — 30명 법무법인, legal vertical M3 첫 고객 프로파일 초안 (updated: 2026-06-11) `[INFERRED]`
 
 ## Entities
 
-(없음)
+- [legal-case](entities/legal-case.md) — 사건 생애 관리 (case_number, status 흐름, 담당변호사, 의뢰인) (updated: 2026-06-11) `[EXTRACTED]`
+- [precedent](entities/precedent.md) — 판례 등록소 (citation unique key, holding/full_text, tsvector 검색) (updated: 2026-06-11) `[EXTRACTED]`
+- [case-party](entities/case-party.md) — 사건 당사자 (plaintiff/defendant/witness/opposing-counsel) (updated: 2026-06-11) `[EXTRACTED]`
+- [case-document](entities/case-document.md) — 사건 첨부 문서 (소장·준비서면·증거·법원명령) (updated: 2026-06-11) `[EXTRACTED]`
 
 ## Concepts
 
-(없음)
+- [legal-ai-search-strategy](concepts/legal-ai-search-strategy.md) — A안 augment 패턴: tsvector 1단계 + RAG 2단계, 전략 생성 제외 (updated: 2026-06-11) `[INFERRED]`
 
 ## Syntheses
 
