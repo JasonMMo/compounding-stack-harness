@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """ledger-index.py — symbol-anchored cross-agent ledger index.
 
-Reads learn-log.md (agent=main) + docs/learn-logs/{cto,engineer,qa,cdo,cmo}.md
-(agent=file stem), extracts Growth entries, anchors (Files-touched paths +
+Reads learn-log.md (agent=main) + docs/learn-logs/*.md (agent=file stem,
+excluding _index.md and synthesis-template.md), extracts Growth entries, anchors (Files-touched paths +
 backtick/wikilink symbols), cross-validates against .codegraph/codegraph.db,
 and writes docs/learn-logs/_index.json (+ optionally _index.md).
 
@@ -38,14 +38,16 @@ INDEX_JSON = LEARN_LOGS_DIR / "_index.json"
 INDEX_MD = LEARN_LOGS_DIR / "_index.md"
 
 # Agents to process: (path, agent_name)
+# Excluded stems: _index (self-output), synthesis-template (template, not a Growth ledger)
+_EXCLUDED_STEMS = {"_index", "synthesis-template"}
+
 def _source_files() -> list[tuple[Path, str]]:
     sources: list[tuple[Path, str]] = []
     if LEARN_LOG_MAIN.exists():
         sources.append((LEARN_LOG_MAIN, "main"))
-    for stem in ("cto", "engineer", "qa", "cdo", "cmo"):
-        p = LEARN_LOGS_DIR / f"{stem}.md"
-        if p.exists():
-            sources.append((p, stem))
+    for p in sorted(LEARN_LOGS_DIR.glob("*.md")):
+        if p.stem not in _EXCLUDED_STEMS:
+            sources.append((p, p.stem))
     return sources
 
 
