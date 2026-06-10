@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}판례 검색 — Compounding Stack{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">판례 검색</h1>
+  <p class="page-subtitle">키워드로 관련 판례를 검색합니다 (full-text, 'simple' 사전).</p>
+</div>
+
+<section class="search-section" aria-label="판례 검색">
+  <form id="search-form" class="search-form"
+        hx-get="/api/legal/precedents/search"
+        hx-target="#results"
+        hx-trigger="submit"
+        hx-include="[name='q'],[name='case_type']"
+        hx-swap="innerHTML">
+
+    <div class="search-row">
+      <label for="q" class="sr-only">검색어</label>
+      <input
+        id="q"
+        name="q"
+        type="search"
+        class="input input-search"
+        placeholder="예: 손해배상, 계약불이행, 재량권..."
+        value="{{ query | default('') }}"
+        autocomplete="off"
+        required
+      />
+
+      <label for="case_type" class="sr-only">사건 유형</label>
+      <select id="case_type" name="case_type" class="select">
+        <option value="">모든 유형</option>
+        <option value="civil"          {% if case_type == 'civil' %}selected{% endif %}>민사</option>
+        <option value="criminal"       {% if case_type == 'criminal' %}selected{% endif %}>형사</option>
+        <option value="administrative" {% if case_type == 'administrative' %}selected{% endif %}>행정</option>
+        <option value="family"         {% if case_type == 'family' %}selected{% endif %}>가사</option>
+        <option value="commercial"     {% if case_type == 'commercial' %}selected{% endif %}>상사</option>
+      </select>
+
+      <button type="submit" class="btn btn-primary">검색</button>
+    </div>
+  </form>
+</section>
+
+<!-- Results area — htmx replaces this on search -->
+<section id="results" aria-live="polite" aria-label="검색 결과">
+  {% if items is defined %}
+    {% include "_precedent_results.html" %}
+  {% else %}
+  <p class="hint-text">검색어를 입력하고 검색 버튼을 누르세요.</p>
+  {% endif %}
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Render htmx JSON response as precedent cards
+  document.body.addEventListener("htmx:afterRequest", function (evt) {
+    if (evt.detail.elt.id !== "search-form") return;
+    const target = document.getElementById("results");
+    if (!target) return;
+
+    let data;
+    try {
+      data = JSON.parse(evt.detail.xhr.responseText);
+    } catch (e) {
+      target.innerHTML = '<p class="error-text">응답 파싱 오류가 발생했습니다.</p>';
+      return;
+    }
+
+    if (data.error) {
+      target.innerHTML = '<p class="error-text">오류: ' + escHtml(data.error.message || data.error.code) + '</p>';
+      return;
+    }
+
+    const items = data.items || [];
+    if (items.length === 0) {
+      target.innerHTML = '<p class="empty-text">검색 결과가 없습니다.</p>';
+      return;
+    }
+
+    const html = items.map(function (p) {
+      const holdingShort = (p.holding || "").slice(0, 300);
+      const ellipsis = p.holding && p.holding.length > 300 ? "..." : "";
+      const badge = caseTypeBadge(p.case_type);
+      return (
+        '<article class="precedent-card">' +
+          '<header class="precedent-header">' +
+            '<span class="precedent-citation">' + escHtml(p.citation || "") + '</span>' +
+            badge +
+          '</header>' +
+          '<dl class="precedent-meta">' +
+            '<dt>법원</dt><dd>' + escHtml(p.court || "") + '</dd>' +
+            '<dt>선고일</dt><dd>' + escHtml(p.decided_date || "") + '</dd>' +
+          '</dl>' +
+          '<p class="precedent-holding">' + escHtml(holdingShort + ellipsis) + '</p>' +
+          (p.keywords ? '<p class="precedent-keywords">키워드: ' + escHtml(p.keywords) + '</p>' : '') +
+        '</article>'
+      );
+    }).join("");
+
+    target.innerHTML =
+      '<p class="result-count">검색 결과 ' + items.length + '건</p>' +
+      '<div class="precedent-list">' + html + '</div>';
+  });
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function caseTypeBadge(type) {
+    const labels = {
+      civil: "민사", criminal: "형사",
+      administrative: "행정", family: "가사", commercial: "상사"
+    };
+    const label = labels[type] || type || "";
+    return '<span class="badge badge-' + escHtml(type || "other") + '">' + escHtml(label) + '</span>';
+  }
+</script>
+{% endblock %}
