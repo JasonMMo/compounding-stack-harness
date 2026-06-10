@@ -2,7 +2,7 @@
 
 > Founder/CEO 와 CTO/Architect/VP 사이의 의사결정·책임 분담을 한 장에. 변경 시 양자 합의 필수.
 
-## 1. 인격과 역할 — Team Roster (6-인격, Growth-4 부터)
+## 1. 인격과 역할 — Team Roster (7-인격 — Growth-4 부터 6-인격, Growth-18 부터 PM 합류)
 
 | 역할 | 인격 | 인격 종류 | 책임 영역 |
 |---|---|---|---|
@@ -12,6 +12,7 @@
 | **CQO (QA)** | `.claude/agents/qa-agent.md` | AI | 가드 통과 기준, 4계층 풀테스트 게이트, agent 산출물 감사, 머지 BLOCK 권한. |
 | **CMO (marketing-agent)** | `.claude/agents/marketing-agent.md` | AI | 제품 기획·메시지·런칭 시퀀스·콘텐츠·홍보 채널·sales enablement 자료 |
 | **CDO (design-agent)** | `.claude/agents/design-agent.md` | AI | UX/UI 시스템·디자인 토큰·landing/portal 비주얼·페르소나별 인터랙션·접근성 |
+| **PM (pm-agent)** | `.claude/agents/pm-agent.md` | AI | 고객 needs 발굴 인터뷰·요구사항 명세 (acceptance criteria)·delivery loop 전 과정 품질·피드백 triage·지식 환류 게이트. 절차: `.claude/skills/pm-delivery-loop/SKILL.md` |
 
 > **인간 직원이 0명인 단계의 가상 회사**. AI agent 들이 각자 직무 인격을 맡는다. CEO 가 인간이고 나머지는 AI. 매출이 발생하면 (M2) 가장 critical 한 인격부터 인간으로 보강 여부 검토.
 
@@ -27,45 +28,50 @@
 
 ## 2. 의사결정 권한 매트릭스
 
-| 영역 | CEO | CTO | Eng | QA | CMO | CDO | 합의 |
-|---|---|---|---|---|---|---|---|
-| 매출 모델 변경 | ✅ | | | | | | |
-| 가격 책정 | ✅ | | | | | | |
-| 고객 계약 체결 | ✅ | | | | | | |
-| 법적·세무 | ✅ | | | | | | |
-| 채용·인사 (인간 직원) | ✅ | | | | | | |
-| 자본 조달·지분 | ✅ | | | | | | |
-| 7축 설계·contract 변경 | | ✅ | | | | | |
-| 가드 카탈로그 row 추가 / 매핑 | | ✅ | | | | | |
-| 기술 스택 추가 (예: 새 adapter 종류) | | ✅ | | | | | |
-| 일일 결정·agent 오케스트레이션 | | ✅ | | | | | |
-| LLM provider 변경 (cost hedge) | | ✅ | | | | | (월 cost 영향이 매출의 5% 초과 시 합의) |
-| 구현 디테일 (변수명·error handling·내부 함수) | | | ✅ | | | | |
-| adapter 코드 작성 | | | ✅ | | | | (contract 인터페이스는 CTO) |
-| 테스트 코드 작성 | | | ✅ | | | | |
-| 가드 함수 본문 작성 | | | ✅ | | | | (row·매핑은 CTO, 통과 기준은 QA) |
-| in-axis refactor | | | ✅ | | | | |
-| 가드 통과 기준 (PASS/FAIL/SKIP/SPEC 정책) | | | | ✅ | | | |
-| 4계층 풀테스트 PASS 정의 | | | | ✅ | | | |
-| agent 산출물 감사 | | | | ✅ | | | |
-| 머지 BLOCK 권한 | | | | ✅ | | | (CEO+CTO override 가능) |
-| regression 정책 | | | | ✅ | | | |
-| 제품 메시지·포지셔닝 카피 | | | | | ✅ | | (CEO 최종 승인) |
-| 런칭 시퀀스·콘텐츠 캘린더 | | | | | ✅ | | |
-| sales enablement 자료 (deck, demo script) | | | | | ✅ | | (CDO 비주얼 협업) |
-| 외부 채널 콘텐츠 게시 | | | | | | | CEO + CMO (게시 책임은 CEO) |
-| 디자인 토큰·UI 시스템 | | | | | | ✅ | |
-| landing/portal 비주얼 | | | | | | ✅ | |
-| 페르소나별 인터랙션 패턴 | | | | | | ✅ | (CTO 와 contract 정합성 확인) |
-| **첫 vertical 선택** | | | | | | | CEO + CTO + CMO |
-| **마일스톤 진입/완료 선언** | | | | | | | CEO + CTO (QA 통과 보고 의무) |
-| **7축 추가/변경** | | | | | | | CEO + CTO |
-| **CLAUDE.md / AGENTS.md / 이 charter 변경** | | | | | | | CEO + CTO |
-| 무료 trial 정책 | | | | | | | CEO + CMO |
-| OSS / 상용 분리선 변경 | | | | | | | CEO + CTO + CMO |
-| 브랜드 명·로고·CI | | | | | | | CEO + CMO + CDO |
-| 새 가드 추가 (end-to-end) | | | | | | | CTO (row) + QA (기준) + Eng (본문) |
-| 새 adapter 추가 (end-to-end) | | | | | | | CTO (contract) + Eng (구현) + QA (compliance test) |
+| 영역 | CEO | CTO | Eng | QA | CMO | CDO | PM | 합의 |
+|---|---|---|---|---|---|---|---|---|
+| 매출 모델 변경 | ✅ | | | | | | | |
+| 가격 책정 | ✅ | | | | | | | |
+| 고객 계약 체결 | ✅ | | | | | | | |
+| 법적·세무 | ✅ | | | | | | | |
+| 채용·인사 (인간 직원) | ✅ | | | | | | | |
+| 자본 조달·지분 | ✅ | | | | | | | |
+| 7축 설계·contract 변경 | | ✅ | | | | | | |
+| 가드 카탈로그 row 추가 / 매핑 | | ✅ | | | | | | |
+| 기술 스택 추가 (예: 새 adapter 종류) | | ✅ | | | | | | |
+| 일일 결정·agent 오케스트레이션 | | ✅ | | | | | | |
+| LLM provider 변경 (cost hedge) | | ✅ | | | | | | (월 cost 영향이 매출의 5% 초과 시 합의) |
+| 구현 디테일 (변수명·error handling·내부 함수) | | | ✅ | | | | | |
+| adapter 코드 작성 | | | ✅ | | | | | (contract 인터페이스는 CTO) |
+| 테스트 코드 작성 | | | ✅ | | | | | |
+| 가드 함수 본문 작성 | | | ✅ | | | | | (row·매핑은 CTO, 통과 기준은 QA) |
+| in-axis refactor | | | ✅ | | | | | |
+| 가드 통과 기준 (PASS/FAIL/SKIP/SPEC 정책) | | | | ✅ | | | | |
+| 4계층 풀테스트 PASS 정의 | | | | ✅ | | | | |
+| agent 산출물 감사 | | | | ✅ | | | | |
+| 머지 BLOCK 권한 | | | | ✅ | | | | (CEO+CTO override 가능) |
+| regression 정책 | | | | ✅ | | | | |
+| 제품 메시지·포지셔닝 카피 | | | | | ✅ | | | (CEO 최종 승인) |
+| 런칭 시퀀스·콘텐츠 캘린더 | | | | | ✅ | | | |
+| sales enablement 자료 (deck, demo script) | | | | | ✅ | | | (CDO 비주얼 협업) |
+| 외부 채널 콘텐츠 게시 | | | | | | | | CEO + CMO (게시 책임은 CEO) |
+| 디자인 토큰·UI 시스템 | | | | | | ✅ | | |
+| landing/portal 비주얼 | | | | | | ✅ | | |
+| 페르소나별 인터랙션 패턴 | | | | | | ✅ | | (CTO 와 contract 정합성 확인) |
+| needs 인터뷰 설계·실행 | | | | | | | ✅ | |
+| 요구사항 명세 (acceptance criteria 정의) | | | | | | | ✅ | (QA 가 검증 가능성 감수) |
+| delivery plan·loop 운영 | | | | | | | ✅ | |
+| 고객 피드백 triage | | | | | | | ✅ | (가격·계약 영향 건은 CEO 이관) |
+| **delivery sign-off (고객 인도 승인)** | | | | | | | | CEO + PM (QA 게이트 통과 보고 의무) |
+| **첫 vertical 선택** | | | | | | | | CEO + CTO + CMO |
+| **마일스톤 진입/완료 선언** | | | | | | | | CEO + CTO (QA 통과 보고 의무) |
+| **7축 추가/변경** | | | | | | | | CEO + CTO |
+| **CLAUDE.md / AGENTS.md / 이 charter 변경** | | | | | | | | CEO + CTO |
+| 무료 trial 정책 | | | | | | | | CEO + CMO |
+| OSS / 상용 분리선 변경 | | | | | | | | CEO + CTO + CMO |
+| 브랜드 명·로고·CI | | | | | | | | CEO + CMO + CDO |
+| 새 가드 추가 (end-to-end) | | | | | | | | CTO (row) + QA (기준) + Eng (본문) |
+| 새 adapter 추가 (end-to-end) | | | | | | | | CTO (contract) + Eng (구현) + QA (compliance test) |
 
 ## 3. CTO 의 일일 의사결정 자율성 (Auto Mode 헌장)
 
@@ -124,3 +130,4 @@ CTO 가 다음 상황 발견 시 **즉시 CEO 알림** (Auto Mode 진행 중단)
 | v1.1 | 2026-05-29 | 4-인격 → 6-인격 확장 (engineer + QA 신설), CTO 책임에서 코드 작성·통과 기준 분리, learn-log per-agent 분리 | CEO + CTO 합의 (Growth-4) |
 | v1.2 | 2026-05-29 | §3 Auto Mode #5 추가 — CTO Integrator 마무리 step (main §6 1줄+pointer 단독 작성) | CTO 단독 결정 (Growth-5a, CEO 추천안 위임) |
 | v1.3 | 2026-05-29 | §3 #3 변경 — private repo master 푸시는 CTO 자동, public 전환 시 사전 확인 룰 자동 재발효. CLAUDE.md §9 / AGENTS.md 동기화 | CEO 직접 제안 (Growth-5b) |
+| v1.4 | 2026-06-11 | 6-인격 → 7-인격 확장 (PM 신설) — 고객 needs 발굴·요구사항 명세·delivery loop·피드백 triage 권한 추가, delivery sign-off 합의 행 (CEO+PM) 신설. CLAUDE.md §1 동기화 | CEO 직접 제안 (Growth-18) |
