@@ -1,0 +1,51 @@
+version: 1
+customer:
+  slug: lawfirm-demo
+  display: "법무법인 데모"
+  status: draft
+  industry: legal
+  size: 30
+  locale: ko
+  timezone: Asia/Seoul
+
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi          # Python — LLM/RAG 통합 유리
+
+ddl:
+  dialect: postgres         # tsvector full-text search 지원
+
+auth:
+  method: session           # 30명 규모, SSO 불필요
+
+datasource:
+  host: localhost
+  port: 5432
+
+billing:
+  llm_budget_usd_per_month: TBD   # AI 검색 빈도 확인 후 결정
+
+domains:
+  - slug: legal
+    display: 법무 (사건·판례)
+    entities: [legal-case, precedent, case-party, case-document]
+  - slug: hr
+    display: 인원 관리
+    entities: [employee, department]
+  - slug: document
+    display: 문서 관리
+    entities: [document, document-version, document-category, access-rule]
+  - slug: approval
+    display: 결재
+    entities: [approval-request, approval-step, approver, approval-decision]
+
+# A안 채택: AI가 관련 판례를 묶어 제시, 전략 수립은 변호사 (augment 모드)
+# B안(전략 자동 생성) 제외 — scope 외, Growth-24 honest-promise 원칙 적용
+
+escalation:
+  - "판례 AI 검색 (RAG): fastapi 어댑터에 vector store 통합 필요 — CTO 설계 후 engineer 위임"
+  - "재판 전략 수립 범위: A안(판례 묶음 제시) 채택 확인 필요 — CEO 승인 후 acceptance criteria 확정"
+
+notes:
+  - "Growth-24 — M3 첫 vertical: legal"
+  - "PM loop #1 회전 시작 (시나리오: 업무담당자 인터뷰)"
