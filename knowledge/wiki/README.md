@@ -53,14 +53,23 @@ PM 의 honest-promise 원칙과 직결: **고객 약속의 근거는 `[EXTRACTED
 | **Query** | 과거 지식 필요 시 | **index.md 먼저** (또는 `qmd search`) → 해당 페이지만 drill-down. 전체 디렉터리 통읽기 금지 |
 | **Lint** | 분기 synthesis (synthesis-template) 에 통합 | 모순·고아 페이지·stale 주장·`[UNVERIFIED]` 잔존 점검 |
 
-## 검색 (qmd)
+## 검색 — 커버리지 지도 (어디를 어느 도구로)
+
+| 찾는 것 | 도구 | 범위 |
+|---|---|---|
+| wiki 페이지 (사례·개념·합성) | `qmd search "<질의>" -c wiki` | `knowledge/wiki/**` |
+| 회사 문서·인격 ledger·growth-archive | `qmd search "<질의>" -c docs` | `docs/**` |
+| preset seed (도메인 지식) | `qmd search "<질의>" -c presets` | `presets/skills/**` |
+| **main `learn-log.md` §6 rollup** (repo 루트 — qmd collection 밖) | `python scripts/ledger-index.py --symbol <심볼>` | 원장 전체 + 전 ledger 역인덱스 |
+| 심볼→Growth 역추적 (코드·파일 기준) | `python scripts/ledger-index.py --symbol <심볼>` | 〃 |
 
 ```
 qmd search "<자연어 질의>" -c wiki        # BM25 (기본)
+qmd update                                # 지식 추가·수정 후 재인덱스 — 생략 시 stale 검색 (hook 체크리스트 ⑤)
 qmd embed && qmd query "<질의>" -c wiki   # 시맨틱 (GGUF 모델 다운로드 후, 선택)
 ```
 
-collection 구성은 `docs/architecture/llm-wiki-adoption.md` §6.5 참조. qmd 불가 환경 fallback: `python scripts/ledger-index.py --symbol <키워드>` + index.md 수동 스캔.
+collection 구성은 `docs/architecture/llm-wiki-adoption.md` §6.5 참조. qmd 불가 환경 fallback: ledger-index + index.md 수동 스캔.
 
 ## Anti-patterns
 
