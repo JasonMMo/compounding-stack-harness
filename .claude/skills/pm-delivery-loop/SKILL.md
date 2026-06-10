@@ -20,7 +20,7 @@ description: Run the PM delivery loop for a customer engagement — needs discov
 | 4 | **Verify** | `python scripts/diagnose.py` + 해당 stack 의 4계층 풀테스트 subset + acceptance criteria 대조표 작성. QA 게이트 통과 필수 | 전 criteria PASS 또는 BLOCK 해소 |
 | 5 | **Deliver** | 인도 패키지 구성 (화면 초안 / 데모 / 사용 문서). CEO 승인 후 전달 — 외부 전달 책임은 CEO (charter §2) | 고객 수령 확인 |
 | 6 | **Feedback** | 피드백 수집 → triage: **수용** (→ step 1 재진입) / **backlog** (사유와 함께 기록) / **거절** (사유 회신). 가격·계약 영향 건은 CEO 이관 | 전 피드백 분류 완료, 수용분은 새 회전 계획 수립 |
-| 7 | **Contribute-back** ★종료 게이트 | 지식 환류: seed/preset 갱신, FAQ 누적 (`presets/skills/<industry>/faq.md`), verified-profile 사례 (PII 제거), `learn-log.md §6` 1줄 + `docs/learn-logs/pm.md` 상세 | CLAUDE.md §7 체크리스트 5항목 전부 답변됨 |
+| 7 | **Contribute-back** ★종료 게이트 | 지식 환류: **wiki ingest** (`knowledge/wiki/` 페이지 갱신 + index.md 1줄, 규약: `knowledge/wiki/README.md`), seed/preset 갱신, FAQ 누적 (`presets/skills/<industry>/faq.md`), verified-profile 사례 (PII 제거), `learn-log.md §6` 1줄 + `docs/learn-logs/pm.md` 상세 | CLAUDE.md §7 체크리스트 5항목 전부 답변됨 |
 
 ## 단계별 산출물 위치
 
