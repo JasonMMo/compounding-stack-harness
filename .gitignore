@@ -65,3 +65,4 @@ presets/ddl/build/
 # L2 test harness artifacts (compiled classes, HSQLDB jar, build output)
 tests/ddl/out/
 tests/ddl/lib/
+.obsidian/
