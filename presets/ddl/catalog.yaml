@@ -1334,3 +1334,108 @@ entities:
       - { columns: [status] }
     # DDL notes:
     #   Append-only once completed/failed — application layer.
+
+  # ─────────────────────────────────────────────
+  # LEGAL (법무) — Growth-24, M3 첫 vertical
+  # ─────────────────────────────────────────────
+
+  legal-case:
+    domain: legal
+    table: legal_case
+    primary_key: id
+    columns:
+      id:                   { type: uuid,      nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      case_number:          { type: string,    length: 64, nullable: false, unique: true }
+      title:                { type: string,    nullable: false }
+      case_type:            { type: enum,      values: [civil, criminal, administrative, family, commercial], nullable: false }
+      status:               { type: enum,      values: [intake, active, trial, appeal, closed, withdrawn], nullable: false }
+      filed_date:           { type: date,      nullable: false }
+      court:                { type: string,    nullable: true }
+      next_hearing_date:    { type: date,      nullable: true }
+      assigned_attorney_id: { type: uuid,      nullable: false,
+                              fk: { entity: employee, column: id, on_delete: restrict } }
+      client_contact_id:    { type: uuid,      nullable: true,
+                              fk: { entity: contact, column: id, on_delete: set_null } }
+      summary:              { type: text,      nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [status] }
+      - { columns: [assigned_attorney_id] }
+      - { columns: [next_hearing_date] }
+    # DDL notes:
+    #   Full-text search over summary — postgres tsvector GIN index; application layer.
+    #   closed/withdrawn = terminal states; no re-activation — application layer.
+    #   client_contact_id → crm_contact (cross-domain FK); restrict omitted — app layer.
+
+  precedent:
+    domain: legal
+    table: legal_precedent
+    primary_key: id
+    columns:
+      id:           { type: uuid,   nullable: false }
+      created_at:   { type: timestamp, nullable: false }
+      updated_at:   { type: timestamp, nullable: false }
+      citation:     { type: string, length: 128, nullable: false, unique: true }
+      court:        { type: string, nullable: false }
+      decided_date: { type: date,   nullable: false }
+      case_type:    { type: enum,   values: [civil, criminal, administrative, family, commercial], nullable: false }
+      holding:      { type: text,   nullable: false }
+      full_text:    { type: text,   nullable: true }
+      keywords:     { type: string, nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [case_type] }
+      - { columns: [decided_date] }
+    # DDL notes:
+    #   Full-text search over holding + keywords — postgres tsvector GIN index; app layer.
+    #   RAG vector embedding index — separate vector store, not in this DDL (Growth-24 escalation).
+    #   keywords stored as comma-separated string; parsed at application layer.
+    #   full_text: public rulings only — copyright check required before storing.
+
+  case-party:
+    domain: legal
+    table: legal_case_party
+    primary_key: id
+    columns:
+      id:         { type: uuid,   nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      case_id:    { type: uuid,   nullable: false,
+                    fk: { entity: legal-case, column: id, on_delete: cascade } }
+      role:       { type: enum,   values: [plaintiff, defendant, witness, opposing-counsel, expert-witness], nullable: false }
+      name:       { type: string, nullable: false }
+      contact_id: { type: uuid,   nullable: true,
+                    fk: { entity: contact, column: id, on_delete: set_null } }
+      notes:      { type: string, nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [case_id] }
+      - { columns: [role] }
+    # DDL notes:
+    #   Multiple parties per case allowed; same person in multiple roles is valid.
+    #   contact_id → crm_contact; FK on_delete=set_null (contact deletion does not remove party record).
+
+  case-document:
+    domain: legal
+    table: legal_case_document
+    primary_key: id
+    columns:
+      id:            { type: uuid,      nullable: false }
+      created_at:    { type: timestamp, nullable: false }
+      updated_at:    { type: timestamp, nullable: false }
+      case_id:       { type: uuid,      nullable: false,
+                       fk: { entity: legal-case, column: id, on_delete: cascade } }
+      document_type: { type: enum,      values: [complaint, brief, evidence, court-order, contract, correspondence, other], nullable: false }
+      title:         { type: string,    nullable: false }
+      filed_at:      { type: timestamp, nullable: true }
+      storage_key:   { type: string,    nullable: true }
+      notes:         { type: string,    nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [case_id] }
+      - { columns: [document_type] }
+    # DDL notes:
+    #   storage_key resolves to document_version.storage_key — cross-domain; FK omitted (app layer).
+    #   Append-only for legal audit trail — application layer.
