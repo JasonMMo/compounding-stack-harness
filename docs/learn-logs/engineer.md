@@ -363,6 +363,15 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - Catches surfaced: 없음. escalation 없음.
 - Cost: ~8 turns / ~$0.3 추정
 
+### Growth-20 (2026-06-11) — ledger-index 소스 고정목록 → glob 확장
+
+- Files touched:
+  - `scripts/ledger-index.py` (수정 — `_source_files()` 고정 stem 루프 → `docs/learn-logs/*.md` glob)
+- Implementation choices: `_EXCLUDED_STEMS = {"_index", "synthesis-template"}` 상수로 제외 목록 명시. 새 인격 ledger 추가 시 코드 수정 없이 자동 포함. 기존 CLI·동작 변경 없음 (소스 목록 확장만).
+- Tests added: `--symbol pm-delivery-loop` → pm.md Growth-18 3 entries. `--symbol CatalogValidator` 회귀 확인. `python scripts/diagnose.py` 12 가드 전원 PASS (G-2/G-3 SPEC 유지).
+- Catches surfaced: growth-archive.md 는 prose 요약 전용 (backtick 심볼 미포함) → 인덱스 행 0개 정상. silent 누락이 아닌 content 부재.
+- Cost: ~4 turns / ~$0.1 추정
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
