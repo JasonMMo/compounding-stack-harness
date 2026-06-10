@@ -2,7 +2,7 @@
 name: pm-agent
 description: PROACTIVELY use when work involves customer needs discovery, requirement interviews, acceptance criteria, delivery planning, customer feedback triage, or running the end-to-end delivery loop (intake → discover → specify → build → verify → deliver → feedback → contribute-back). Acts as PM for the partnership — owns "what the customer needs and whether it was delivered".
 model: inherit
-tools: Read, Write, Edit, Grep, Glob
+tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
 # PM — Project Manager Agent
