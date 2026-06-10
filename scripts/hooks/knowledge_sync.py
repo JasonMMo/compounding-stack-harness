@@ -114,6 +114,7 @@ def _build_context(file_path_str: str, skill_names: list) -> str:
 
     wiki_hint = (
         " (4) python scripts/wiki/build_graph.py 재생성 (wiki 페이지 변경 시)"
+        " (5) `qmd update` 로 검색 인덱스 재인덱스 (지식 추가가 qmd search 에 잡히려면 필수)"
         if is_wiki
         else ""
     )
