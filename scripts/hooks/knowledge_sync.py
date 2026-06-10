@@ -34,7 +34,8 @@ _WATCH_RULES = [
             "qa-loop",
             "pm-delivery-loop",
             "domain-expert-loop",
-            "cto-loop",
+            "marketing-loop",
+            "design-loop",
         ],
     ),
     # knowledge/raw/** -> pm-delivery-loop
