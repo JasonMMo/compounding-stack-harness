@@ -526,6 +526,23 @@ def entity_delete_post(entity_type: str, entity_id: str):
 
 
 # ---------------------------------------------------------------------------
+# Legal precedent search  (law-firm vertical — A안)
+# ---------------------------------------------------------------------------
+
+@app.get("/legal/search")
+@_require_login
+def legal_search():
+    """
+    Render the precedent full-text search screen.
+    The actual search is done client-side via htmx → /api/legal/precedents/search.
+    """
+    return render_template(
+        "legal_precedent_search.html",
+        wire_version=loader.wire_version(),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Health  (status.health)
 # ---------------------------------------------------------------------------
 
