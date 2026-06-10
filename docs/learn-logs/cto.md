@@ -278,6 +278,15 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **loop 내 교훈 인용**: 각 anti-pattern 절은 실제 Growth 교훈으로 anchoring (G-1 재구현 금지, Growth-14 phantom 키, Growth-16 hollow 테스트, Growth-17 vaporware) — 추상 규칙보다 사례 기반.
 - **Open loops**: hook 첫 실가동 검증 / CTO integrator skill 화 보류 (main session 은 CLAUDE.md 가 이미 절차 문서).
 
+### Growth-22 (2026-06-11) — 지식 연계 integrator 점검 (CEO 지시)
+
+- **점검 관점**: "agent 가 저장소를 활용하고, 저장소 발전이 skill 과 유기 연계되는가" — 절차 (skill) ↔ 권한 (tools) ↔ 신선도 (인덱스) ↔ 문서 (커버리지) 4축 대조.
+- **갭 1 (치명)**: pm/marketing/design/domain-expert 의 tools 에 Bash 부재 — loop skill 의 시작-검색 step (`qmd search`, `ledger-index --symbol`) 이 **실행 불가능한 절차**였음. engineer/qa 만 실행 가능. → 4 정의서 tools 에 Bash 추가. 교훈: 절차를 skill 화할 때 실행 주체의 tool 권한과 대조하는 것이 점검 항목 (이번에 누락했던 것).
+- **갭 2**: qmd 는 collection add 시점 인덱스 — 지식 추가 후 `qmd update` 없으면 시작-검색이 stale 인덱스에서 "사례 없음" 거짓 판정. → hook 체크리스트 ⑤ 추가 (engineer, 6792efd). `qmd update` 동작·다중 `-c` 문법 실검증 (skill 예시 유효 확인).
+- **갭 3**: main `learn-log.md` 는 repo 루트라 qmd collection (wiki/docs/presets) 밖 — 검색 도구별 커버리지가 비문서. → wiki README 에 커버리지 지도 표 (main 원장 = ledger-index 담당 명시).
+- **hook 첫 실가동 (Growth-21 open loop 해소)**: 본 점검 중 README Edit 에 PostToolUse hook 이 실제 발화, ⑤ 포함 컨텍스트 주입 확인 — 체크리스트를 그대로 따라 qmd update 실행까지 완료 (자기 검증 원칙).
+- **Open loops**: 없음.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
