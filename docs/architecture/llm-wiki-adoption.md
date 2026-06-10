@@ -63,3 +63,37 @@
 | 3 | PM loop step 7 과 wiring (첫 고객 loop 부터 실가동) | PM + CTO | loop 당 ~1 turn 증분 |
 
 **Milestone 기여**: M2 (고객 지식이 재사용 자산화 → 2번째 고객 한계비용 하락), M3 (vertical agent 의 지식 기반). **비용 영향**: 신규 infra 0, LLM 증분은 ingest 시 wiki 갱신 turn (~\$0.1/건).
+
+## 6. 인프라 차용 추천 (2026-06-11 CEO 요청 — "차용 포함해서 추천")
+
+§2 의 "도구 비채택" 을 CEO 지시로 재검토. **상시 서버·API 비용이 0 인 on-device 인프라는 차용한다** 로 기준 완화. 3-tier:
+
+### 6.1 지금 차용 (추천 ✅)
+
+| 차용물 | 무엇을 | 왜 |
+|---|---|---|
+| **tobi/qmd** (26.4k★, MIT, TS) | 검색 인프라 전체 — BM25 + vector + LLM re-rank, 전부 로컬 (node-llama-cpp + GGUF). `npm i -g @tobilu/qmd` → `qmd collection add docs/ knowledge/ presets/` → `qmd embed`. **Claude Code 공식 플러그인** (`claude plugin install qmd@qmd`) + MCP (stdio/HTTP daemon) | Karpathy 원전이 직접 추천한 그 도구. 제안 B 의 "수백 페이지 초과 시 검색엔진 필요" 갭을 처음부터 해소. API 비용 0, self-host 완전 호환 (G-6). **역할 분담**: `ledger-index.py` = 심볼→Growth 역인덱스 (구조 조회·가드 연동, 유지), qmd = 자연어·시맨틱 검색 (wiki/seed/ledger 횡단) |
+| **SamurAIGPT/llm-wiki-agent** (2.9k★, MIT) 구조 | `wiki/` 레이아웃 (index·log·sources·entities·concepts·syntheses) + **graph.json/graph.html** (vis.js, 서버 없는 오프라인 지식그래프 시각화) | fork 아닌 구조 복제 — 검증된 디렉터리 규약을 설계 비용 0 으로. graph.html 은 CEO 가 브라우저 더블클릭으로 지식 지형 열람 |
+| **sdyckjq-lab/llm-wiki-skill** (1.8k★) 아이디어 | 신뢰도 라벨 4종 (EXTRACTED / INFERRED / AMBIGUOUS / UNVERIFIED) + SHA256 ingest 캐시 | 고객 발언 vs 우리 추론 구분 — PM loop 의 honest-promise 원칙과 직결. skill 자체는 중국어 지향이라 라벨 규약만 차용 |
+
+### 6.2 조건부 (CEO 취향)
+
+- **Obsidian (읽기 전용 viewer)** — wiki 는 plain markdown+git 이므로 의존성 없이 graph view·백링크 열람용으로만. Growth-13 의 "Obsidian *의존* 비채택" 과 충돌 없음 (없어도 동작).
+- **nashsu/llm_wiki 데스크톱 앱** (11.1k★) — 개인 지식베이스론 우수하나 회사 자산은 git 단일 진실이어야 해서 이원화 리스크. 부속 skill 은 60★ 미성숙. **비추천**.
+
+### 6.3 보류 유지 (M5 게이트 재평가)
+
+mem0 / LightRAG / GraphRAG / letta / WeKnora / PandaWiki — 상시 서버 + embedding 파이프라인 + ingest 마다 LLM 추출 비용. multi-tenant SaaS (M5) 에서 고객별 지식 격리가 필요해질 때 재평가. **deepwiki-open** (16.8k★) 은 별도 트랙: M2 고객 인도 문서 (repo→wiki) 자동 생성 후보.
+
+### 6.4 리스크와 fallback
+
+- qmd 는 node-llama-cpp 네이티브 빌드 의존 — **Phase 2 에서 Windows 설치 검증을 engineer 에 위임**, 실패 시 BM25-only 모드 또는 sqlite FTS5 (ledger-index 확장) fallback.
+- 차용물 3종 모두 MIT (qmd·llm-wiki-agent) 또는 규약만 차용 — 라이선스 리스크 0.
+
+### 6.5 도입 경로 갱신 (§5 대체)
+
+| Phase | 작업 | 담당 |
+|---|---|---|
+| 1 | `knowledge/wiki/` 골격 (llm-wiki-agent 구조) + index.md + 신뢰도 라벨 규약 | CTO + engineer |
+| 2 | qmd 설치·collection 구성·Windows 검증 (+plugin/MCP 연결), read-side 규약 CLAUDE.md 반영 | engineer + CTO |
+| 3 | graph.html 생성 스크립트 + PM loop step 7 wiring (첫 고객 loop 실가동) | engineer + PM |
