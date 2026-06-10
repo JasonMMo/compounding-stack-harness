@@ -405,3 +405,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **상세**: [pm.md#Growth-18](docs/learn-logs/pm.md), [cto.md#Growth-18](docs/learn-logs/cto.md)
 - **결정 (CEO 제안, CTO 실행)**: `pm-agent.md` + `pm-delivery-loop` skill (8단계, contribute-back 종료 게이트) / charter v1.4 (매트릭스 PM 열 + delivery sign-off 합의 행) / PM↔domain-expert 경계 = "무엇이 필요한가" vs "도메인적으로 무엇인가" / 커밋 trailer 모델 Fable 5 전환 (CEO /model 전환의 정직한 기록, Growth-8 전례)
 - **Open loops**: **LLM Wiki 채택안 CEO 결정 대기** ([`docs/architecture/llm-wiki-adoption.md`](docs/architecture/llm-wiki-adoption.md) — knowledge/wiki + index.md + read-side 규약, zero-infra) / PM 인터뷰 질문 시트 초안 / PM 첫 실전 loop (M2 첫 고객)
+
+### Growth-19 (2026-06-11) — LLM Wiki 채택 실행 — knowledge/wiki 골격 + qmd 검색 + 지식그래프
+
+- **인격**: CTO (Phase 1·2 직접 + Phase 3 설계·위임) + Engineer (build_graph.py) — Growth-18 open loop 의 CEO 승인 ("진행하자", 인프라 차용 §6 추천 포함)
+- **Axis touched**: creater (`scripts/wiki/build_graph.py` + qmd 검색 인프라), customer (`knowledge/wiki/` — 고객·도메인 횡단 지식 축적 위치 신설)
+- **Milestone**: M2 (고객 지식 재사용 자산화 — 2번째 고객 한계비용 하락) + M3 (vertical agent 지식 기반)
+- **Revenue/cost**: 신규 API 비용 0 (qmd 는 on-device GGUF) / ingest 당 LLM 증분 ~\$0.1
+- **Why (1줄)**: 지식 축적 (쓰기) 과 context 비대화 (읽기) 의 공통 해법으로 Karpathy LLM-wiki 패턴 + qmd 채택 — 우리가 이미 가진 절반 (seed·learn-log·ledger-index) 에 빈 절반 (wiki·index·검색) 을 채움
+- **상세**: [cto.md#Growth-19](docs/learn-logs/cto.md), [engineer.md#Growth-19](docs/learn-logs/engineer.md)
+- **결정 (CTO)**: log.md 신설 안 함 (learn-log 단일 진실) / graph 는 derived → `out/` gitignore / CDN 0 self-contained HTML (사내망) / qmd embed 시맨틱은 선택 후속 / PATH 의 bun 고아 qmd shim 제거 (Windows 함정, cto.md 상세) / PM loop step 7 = wiki ingest 트리거 명문화
+- **Open loops**: qmd embed 선택 실행 / qmd MCP·plugin 연결 / 첫 실전 ingest (M2 첫 고객 loop #1) / PM 인터뷰 질문 시트 (Growth-18 carry)
