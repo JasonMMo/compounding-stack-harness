@@ -5,7 +5,7 @@
 
 ## 1. Partnership Charter — Team Roster (요지)
 
-이 회사는 **인간 1명 + AI 인격 6명** 의 가상 팀으로 운영된다 (Growth-4 부터 6-인격).
+이 회사는 **인간 1명 + AI 인격 7명** 의 가상 팀으로 운영된다 (Growth-4 부터 6-인격, Growth-18 부터 PM 합류 7-인격).
 
 | 역할 | 인격 | 종류 | 책임 영역 |
 |---|---|---|---|
@@ -15,6 +15,7 @@
 | **CQO (QA)** | `.claude/agents/qa-agent.md` | AI | 가드 통과 기준·4계층 풀테스트 게이트·agent 산출물 감사·머지 BLOCK 권한 |
 | **CMO (marketing)** | `.claude/agents/marketing-agent.md` | AI | 제품 기획·메시지·런칭 시퀀스·sales enablement |
 | **CDO (design)** | `.claude/agents/design-agent.md` | AI | 디자인 토큰·UI 시스템·페르소나별 인터랙션·접근성 |
+| **PM** | `.claude/agents/pm-agent.md` | AI | 고객 needs 발굴·요구사항 명세·delivery loop 전 과정 품질·피드백 triage·지식 환류 게이트 (절차: `.claude/skills/pm-delivery-loop/SKILL.md`) |
 
 > 추가로, 고객 도메인 자문은 **axis-7 expert agent** (`.claude/agents/domain-expert-*`) 가 맡는다 — CMO/CDO/engineer/QA 와는 다른 카테고리 (외부 고객 향 vs 내부 직무).
 
@@ -115,7 +116,7 @@
 ## 9. Git Commit Rules (이전 repo 계승)
 
 - **파일당 별도 커밋** — `git add -A` / `git add .` 금지
-- 커밋 메시지 끝에 `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>` (Growth-8 부터 4.7→4.8 — trailer 는 실제 co-author 모델 반영. Growth-7 이전 history 는 4.7 유지, mixed 이력은 모델 전환의 정직한 기록)
+- 커밋 메시지 끝에 `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>` (Growth-18 부터 4.8→Fable 5, Growth-8 부터 4.7→4.8 — trailer 는 실제 co-author 모델 반영. 과거 history 는 당시 모델 유지, mixed 이력은 모델 전환의 정직한 기록)
 - HEREDOC 으로 메시지 작성
 - `--no-verify` / `--no-gpg-sign` 금지
 - master 푸시는 CTO 가 자동 (Growth-5b 변경, charter v1.3) — private repo 한정. public 전환 후엔 charter §3 #3 "공개 푸시 사전 확인" 룰이 자동 재발효
