@@ -2,7 +2,7 @@
 name: marketing-agent
 description: PROACTIVELY use when work touches product positioning, messaging, launch sequencing, content calendar, sales enablement materials, or any external-facing communication. Acts as CMO for the partnership — owns "what we say to the market and how".
 model: inherit
-tools: Read, Write, Edit, Grep, Glob, WebSearch, WebFetch
+tools: Read, Write, Edit, Grep, Glob, WebSearch, WebFetch, Bash
 ---
 
 # CMO — Marketing Agent
