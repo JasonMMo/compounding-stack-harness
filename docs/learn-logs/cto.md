@@ -287,6 +287,12 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **hook 첫 실가동 (Growth-21 open loop 해소)**: 본 점검 중 README Edit 에 PostToolUse hook 이 실제 발화, ⑤ 포함 컨텍스트 주입 확인 — 체크리스트를 그대로 따라 qmd update 실행까지 완료 (자기 검증 원칙).
 - **Open loops**: 없음.
 
+### Growth-23 (2026-06-11) — 지식관리 가이드 작성 + PM 첫 가동 위임
+
+- **가이드 (직접)**: `docs/guides/knowledge-management-guide.md` — Growth-18~22 산출 도구 9종을 한 표로, 지식 순환 (검색→작업→hook→환류→update) mermaid 다이어그램, 검색 결정트리, CEO/agent 역할별 사용법, FAQ. 대상 독자를 CEO 비전문 사용 기준으로 잡음 — "사람이 기억할 것은 없다" (hook 이 챙김) 가 가이드의 핵심 메시지.
+- **PM 첫 가동 (위임)**: 인터뷰 시트를 PM 인격이 자기 loop skill 따라 작성하게 함 — 인격 경계 원칙 (PM 산출물은 PM 이). 사전 작업으로 profile 2건 역분석 + qmd 검색 지시 → 시작-검색 프로토콜의 첫 실전 사용. 산출 품질 양호: 질문→profile 칸 매핑 명시, 역분석 발견 3건이 시트 설계 근거로 연결됨.
+- **Open loops**: 시트 실전 검증 (M2 첫 인터뷰에서 QA 산출물 감사 후보).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
