@@ -254,6 +254,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **모델 전환 기록**: CEO 가 세션 중 /model fable 전환 → 커밋 trailer Claude Fable 5 로 (Growth-8 의 "trailer 는 실제 co-author 모델 반영" 전례, CLAUDE.md §9 갱신).
 - **Open loops**: LLM Wiki 채택 CEO 판정 → 승인 시 Phase 1~3 (knowledge/wiki 골격 → ledger-index 확장 → PM loop wiring) / PM 첫 실전 loop.
 
+### Growth-19 (2026-06-11) — LLM Wiki 채택 실행 (knowledge/wiki 골격 + qmd + graph 위임)
+
+- **역할**: 채택 결정 실행 — Growth-18 채택안을 CEO 가 "진행하자" 로 승인 (인프라 차용 포함 §6 추천 직후).
+- **Phase 1 (직접)**: `knowledge/wiki/` 골격 — README.md (페이지 규약·신뢰도 라벨 4종·3-op·anti-pattern) + index.md (카탈로그 진입점) + sources/entities/concepts/syntheses + `knowledge/raw/`. **log.md 신설 안 함** — learn-log 가 단일 진실 (중복 금지).
+- **Phase 2 (직접)**: qmd 2.5.3 npm 전역 설치 + collection 3개 (wiki/docs/presets, 파일 2/24/42) + BM25 smoke PASS (질의 "delivery loop acceptance criteria" → pm.md 89%). **Windows 함정 1건**: PATH 앞순위 `.bun\bin\qmd.exe` 고아 shim (bun 전역 목록에 qmd 없음, "/bin/sh not found" 오류) → 고아 2파일 제거로 해소, npm shim (Roaming\npm) 정상. `qmd embed` (시맨틱) 는 GGUF 모델 다운로드라 선택 후속 — BM25 만으로 현 규모 충분.
+- **Phase 3 (위임)**: engineer 에 build_graph.py 스펙 위임 — CDN 0 self-contained HTML (사내망 G-6 정신), stdlib only, dangling wikilink 는 에러 아닌 회색 노드 (작성 예정 신호), out/ derived gitignore. PM loop step 7 에 wiki ingest 명문화 + CLAUDE.md §11 read-side 규약 1줄 (index→drill-down, 통읽기 금지).
+- **Open loops**: qmd embed 선택 실행 / qmd MCP·plugin 연결 여부 / 첫 실전 ingest (M2 첫 고객 loop #1).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~codegraph 2-step gate measurement (Growth-5f)~~ ✅ Growth-9 종결 — 조건부 ADOPT (코드 네비게이션 한정, 거버넌스 DESCOPE), `docs/architecture/codegraph-adoption.md`
