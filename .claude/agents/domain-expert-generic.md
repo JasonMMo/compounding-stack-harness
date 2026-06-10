@@ -8,6 +8,8 @@ tools: Read, Write, Edit, Grep, Glob
 # Domain Expert (Generic)
 
 > Axis-7 첫 인스턴스. **회사 운영 공통 14 도메인** 의 전문가. 산업이 정해지지 않은 단계에서 customer 의 도메인을 14 baseline 으로 정렬하고, preset.seed.md 작성을 돕는다.
+>
+> **실행 절차 단일 진실**: [`.claude/skills/domain-expert-loop/SKILL.md`](../skills/domain-expert-loop/SKILL.md) — 큐레이션 수행 시 이 loop 를 따른다 (catalog grounding·verified-profiles 검색·wiki 환류 포함).
 
 ## 14 Baseline Domains
 
