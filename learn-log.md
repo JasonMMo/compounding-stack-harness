@@ -394,3 +394,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **Cross-agent catch (honest-marketing G 정신)**: CTO 가 Scene 5(self-host)의 ops-pack(docker-compose+Vault+Keycloak SSO)이 **repo 에 미존재**함을 적발 — positioning.md 가 이를 IT-담당자 **M1 인수 기준**으로 명시했으나 미구현 (hero profile `vault_agent:false`). vaporware 하드 제약 위반 → CEO 판정.
 - **결정 (CEO, 2026-06-02)**: ① ops-pack → **M2 deliverable 이관** (M1 기술 성숙 T-1~T-6 6/6 유지, ops-pack 불포함이 maturity 안 막음). ② demo Scene 5 **cut → ~3:00 영상** (live-verified 능력만, 로드맵 캐비엣보다 강함). positioning.md + revenue-roadmap.md 인수 triple 동기화.
 - **Open loops**: demo 영상 실제 촬영(CEO 결정 대기: CTA URL / CEO voice Scene6 / publish 타이밍 / 샘플데이터 산업) / qualified lead 5건 / ops-pack 구축(M2) / Scene 4 react+springboot live 촬영(검증 완료, 촬영만)
+
+### Growth-18 (2026-06-11) — 7번째 인격 PM 신설 (delivery loop) + LLM Wiki 방법론 리서치
+
+- **인격**: CTO (역할·skill 설계, charter v1.4, LLM Wiki 리서치·채택안) — PM 인격은 CEO 직접 제안으로 신설
+- **Axis touched**: 없음 (코드 0) — 조직/프로세스. PM 은 수요 측 loop 로 7축 환류 (step 7 contribute-back) 를 트리거하는 메타 역할
+- **Milestone**: M2 (first paid customer — needs 발굴→인도 절차가 qualified lead 의 계약 전환 실행 경로)
+- **Revenue/cost**: PM loop 1회전 \$2~5 가이드, 월 \$50 budget / 신규 infra 0
+- **Why (1줄)**: 지금까지 공급 측 (자산 자율 성장) 만 있었고, 고객 질의로 needs 를 발굴·인도·환류하는 수요 측 절차가 부재 — CEO 가 PM 인격 + 실행 skill 신설 지시
+- **상세**: [pm.md#Growth-18](docs/learn-logs/pm.md), [cto.md#Growth-18](docs/learn-logs/cto.md)
+- **결정 (CEO 제안, CTO 실행)**: `pm-agent.md` + `pm-delivery-loop` skill (8단계, contribute-back 종료 게이트) / charter v1.4 (매트릭스 PM 열 + delivery sign-off 합의 행) / PM↔domain-expert 경계 = "무엇이 필요한가" vs "도메인적으로 무엇인가" / 커밋 trailer 모델 Fable 5 전환 (CEO /model 전환의 정직한 기록, Growth-8 전례)
+- **Open loops**: **LLM Wiki 채택안 CEO 결정 대기** ([`docs/architecture/llm-wiki-adoption.md`](docs/architecture/llm-wiki-adoption.md) — knowledge/wiki + index.md + read-side 규약, zero-infra) / PM 인터뷰 질문 시트 초안 / PM 첫 실전 loop (M2 첫 고객)
