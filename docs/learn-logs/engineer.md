@@ -372,6 +372,14 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - Catches surfaced: growth-archive.md 는 prose 요약 전용 (backtick 심볼 미포함) → 인덱스 행 0개 정상. silent 누락이 아닌 content 부재.
 - Cost: ~4 turns / ~$0.1 추정
 
+### Growth-21 (2026-06-11) — knowledge_sync PostToolUse hook
+
+- Files touched: `scripts/hooks/knowledge_sync.py` (신규), `.claude/settings.json` (hooks 키 추가)
+- Implementation choices: stdlib only (json/pathlib/sys). `_rel_parts()` — `Path.resolve().relative_to(_REPO_ROOT)` 로 Windows 역슬래시 자동 정규화. `_WATCH_RULES` 튜플 리스트로 감시 대상 5개 패턴 정의. 비매칭·예외 모두 exit 0 (hook 이 작업을 깨면 안 됨). `PYTHONIOENCODING=utf-8` 을 command 에 포함 (Windows cp949 터미널에서 Korean em-dash 인코딩 오류 방지). settings.json 은 기존 permissions 키 보존 후 `hooks` 키 추가.
+- Tests added: pipe-test 3건 — ① wiki 매칭 → JSON hookEventName+additionalContext+5 skills+build_graph 힌트 확인 ② backend/foo.py 비매칭 → stdout 공백+rc=0 ③ 깨진 stdin → stderr 로그+rc=0. `python scripts/diagnose.py` 12 가드 전원 PASS (G-2/G-3 SPEC 유지, 회귀 없음).
+- Catches surfaced: 없음. escalation 없음.
+- Cost: ~10 turns / ~$0.3 추정
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
