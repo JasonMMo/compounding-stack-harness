@@ -1,34 +1,36 @@
-# HANDOFF — 2026-06-11 (Growth-33: subagent output protocol 확립 — 결과 파일화 규약)
+# HANDOFF — 2026-06-11 (Growth-34: output protocol dogfood 측정 + G-13 가드)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
 
 ## ▶▶▶ 복귀 직후 상태 (확인용)
 
-- **Git**: clean, master 동기화 (HEAD `5462564` = Growth-33 learn-log).
-- **codegraph MCP** ✔ 연결됨 — `mcp__codegraph__*` 7종 사용 가능. 의존 작업 전 `codegraph sync` 권장 (stale 차단).
+- **Git**: clean, master 동기화 (HEAD `6d316d1` = Growth-34 cto-ledger).
+- **codegraph MCP** ✔ 연결됨 — `mcp__codegraph__*` 8종 사용 가능. 의존 작업 전 `codegraph sync` 권장 (stale 차단).
 - **claude-mem 비활성화** — 세션 시작 덤프/Read 힌트 없음. DB 보존, 키 true 로 복구.
 - **security-agent (CISO)** 직접 spawn 가능 — `Agent(subagent_type="security-agent", ...)`.
 - **context-mode** 활성 — 큰 출력은 `ctx_execute`/`ctx_execute_file`, mutation·git·navigation 만 Bash.
+- **가드**: 13개 (G-13 신설), 0 real FAIL (G-2/G-3 SPEC). 실행 시 `PYTHONIOENCODING=utf-8` 권장 (cp949 stdout 의 `└` 인코딩 에러로 rc=1 오탐 방지 — 가드 FAIL 아님).
 
 ## ▶▶ 이번 세션에 끝낸 것 — master 푸시 완료
 
-**Growth-33 — Subagent Output Protocol (결과 파일화)**. Growth-32 보안리뷰 ~64k 토큰 main 유입이 변동비 주범 → subagent→main **반환 경계** 규약 확립.
-- 신규 단일 진실: `docs/architecture/subagent-output-protocol.md` (임계 ~30줄/2KB / 위치 3종: `docs/learn-logs/<role>.md`·`docs/delivery/<slug>/<role>-review.md`·`out/analysis/`(gitignored) / envelope 4항: 판정→경로→결정·BLOCK→비용).
-- 7 loop SKILL 에 `## 출력 규약` 1줄 환류 (8-인격 기본 적용). CLAUDE.md §11 포인터 (ad-hoc agent 는 CTO spawn prompt 명시).
-- 10 커밋 (파일당 별도). context-mode(내부 분석 비용) 와 다른 축 = 반환 비용.
+**Growth-34 — Output Protocol dogfood 측정 + G-13 가드 + 인프라 보안 회귀 점검**. Growth-33 규약이 *측정* 없이 주장만 있던 것을, 같은 실패 모드(security-agent)로 재가동해 증명.
+- **dogfood 측정**: 보안리뷰 본문 193줄/8KB → `out/analysis/security-infra-review-2026-06-11.md`(gitignored), subagent 내부 58.6k 토큰 격리, **main 반환 = envelope ~10줄**. Growth-32 ~64k 유입 대비 변동비 차단 증명.
+- **G-13 신설**: `g13_subagent_output_protocol_wired` — 7 loop SKILL 의 protocol 링크 정적 검사. envelope 크기는 런타임 속성 → wiring 드리프트만 가드. `--check` 후보 G-14 로 재배치.
+- **부수 보안**: CAV-1 demo password (M1 stub) / CAV-2 codegraph 1인 메인테이너 (`.npmrc` 버전 핀 권장). 둘 다 informational.
+- **§6 회전**: Growth-34 엔트리가 §6 200행 cap 초과 → Growth-13~15 를 `growth-archive.md` 로 회전 (Growth-20 정책). §6 179행.
 
 ## 현재 상태
 
-- **Milestone**: M3 진행 — legal vertical 인도 직전 (기능 L4 5/5 + 보안 CISO PASS 양 게이트 통과). M2 self-host 온보딩 자산 완비.
-- **Verification Matrix**: L2 PASS, L4 PASS, 보안리뷰 PASS. L1·L3 NOT_SETUP (개별 green).
-- **PM loop (lawfirm-demo)**: Step 5 Deliver 완료, **CEO 승인 대기** (양 게이트 통과 보고됨, 승인만 남음). 승인 시 Step 6 Feedback.
+- **Milestone**: M3 진행 — legal vertical. lawfirm-demo 는 **가상 시나리오로 시스템 작동 검증 완료** (실 고객 아님 — PM/CISO/기능 게이트 전 과정 dogfood). M2 self-host 온보딩 자산 완비.
+- **Verification Matrix**: L2 PASS, L4 PASS, 보안리뷰 PASS. L1·L3 NOT_SETUP (개별 green). 가드 13개 green.
 
 ## 다음 후보 (우선순위)
 
-1. **PM loop lawfirm CEO 승인** → 승인 시 고객 전달 + Step 6 Feedback. (인도 패키지: `docs/delivery/lawfirm-demo/`)
-2. **Growth-33 dogfood 측정** — 다음 보안/QA 리뷰가 실제로 envelope 만 반환하는지 확인 (효과 증명). 임계 초과 자동 감지 가드 후보.
+1. **engineer: `.npmrc` codegraph 버전 핀** (`@colbymchenry/codegraph@0.9.9`) — CISO CAV-2 후속, 공급망 hedge. 작은 작업.
+2. **G-14 (`--check` stale-anchor)** — ledger-index stale 앵커 탐지 가드 구현 (오래 밀린 후보).
 3. **남은 MCP/플러그인 정리 결정** (CEO 판단): Google Drive(미인증), gemini-cli, zai-mcp-server(이미지·무관).
 4. **RAG 2단계** (pgvector) / **legal 검색 토큰 인증** (M2, 보안 체크리스트 #4) / **시크릿 커밋 금지 정적 가드** (G-N 후보).
+5. **실 고객 발굴** (M2 게이트) — 지금까지는 가상 시나리오 검증, 매출은 실 고객 라이선스에서 시작.
 
 ## 운영 메모
 
