@@ -398,3 +398,16 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: 규약은 dogfood 로 *측정*해야 자산이 된다 — 같은 실패 모드 재현이 가장 정직한 증명. 측정이 곧 hardening 가드(G-13)를 낳음
 - **Revenue/cost**: 비용 hedge 효과 증명 (메타) / dogfood subagent 58.6k 토큰 (격리됨, main 미유입) + 편집 소량
 - **Open loops**: G-14 (`--check` stale-anchor) 구현 시점 미정 / `.npmrc` codegraph 버전 핀 (engineer 후보)
+
+### Growth-35 (2026-06-11) — DevOps 인격 신설 (9번째) + 배포 토폴로지 v1 (1인 비대면 창업 인프라)
+
+- **인격**: CTO (아키텍처·charter integrator) + DevOps (신설, founding)
+- **Axis touched**: 거버넌스 (9-인격 charter v1.6), creater/인프라 (deployment-topology + CI/CD 스케치), customer (디지털 자산 레지스트리)
+- **Milestone**: M2/M3 — 비대면 고객 접점(메신저·preview·설치) 의 인프라 토대
+- **Why (1줄)**: CEO 가 이 harness 로 숨고/크몽 건당 500만원 1인 비대면 창업 → 인프라·디지털 자산·CI/CD 담당 인격 공백
+- **핵심 통찰+결정 (CTO)**: **preview 티어 ≠ production 티어** (self-host=M2 가치 제안 → 최종물은 고객 인프라, n9n.co.kr/VPS 는 설득용 preview 전용). 고객-facing preview 는 노트북 터널 ✗ → **Coolify on Seoul VPS** ($6~12/월) + `*.n9n.co.kr` 와일드카드, 터널은 데모 폴백만. 메신저=숨고/크몽→카톡채널 (커스텀 ✗)
+- **신설 자산**: `devops-agent.md` + `devops-loop/SKILL.md`(출력 규약 wiring=G-13 PASS) + `deployment-topology.md` + `infra/registry/`(시크릿 볼트 gitignored) + charter v1.6 + CLAUDE.md §1/INDEX 동기화
+- **경계**: engineer=artifact 생성 / DevOps=출하·호스팅·추적. CISO=보안 판정 / DevOps=하드닝 실행. 인도 설치는 PM 승인+CISO 게이트 후
+- **교훈 (1줄)**: 새 사업 모델(비대면 창업)이 직무 공백을 드러내면 인격 신설이 정답 — charter "직무별 인격" 철학의 6번째 적용
+- **Revenue/cost**: preview 인프라 $6~12/월 (미provisioning, §5 환류 예정) / 인격 신설은 편집만
+- **Open loops**: preview VPS provisioning + Coolify + 와일드카드 DNS (다음 DevOps 세션) / CI/CD v1 구현 / `.npmrc`·G-14 (Growth-34 이월)
