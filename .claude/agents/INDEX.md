@@ -18,5 +18,6 @@
 | [marketing-agent.md](marketing-agent.md) | CMO | 포지셔닝·메시지·런칭·sales enablement |
 | [design-agent.md](design-agent.md) | CDO | 디자인 토큰·UI 시스템·접근성 |
 | [pm-agent.md](pm-agent.md) | PM | 고객 needs 발굴·요구사항·delivery loop 품질 |
+| [security-agent.md](security-agent.md) | CISO | 인도 전 보안 리뷰 게이트·시크릿/취약점 점검·데이터 유출 추적·self-host 하드닝·보안 인도 BLOCK |
 
 상세 역할 정의: [`docs/business/partnership-charter.md`](../../docs/business/partnership-charter.md), agent frontmatter 규약: `.claude/rules/agent-definition.md` (user-global).
