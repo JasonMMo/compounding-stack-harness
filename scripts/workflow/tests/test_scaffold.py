@@ -313,8 +313,58 @@ class TestDogfoodScaffold:
         sql_content = sql_path.read_text(encoding="utf-8")
         # At least one CREATE TABLE must be present
         assert "CREATE TABLE" in sql_content, "DDL must contain CREATE TABLE"
-        # Spot-check: crm_contact table
-        assert "crm_contact" in sql_content, "DDL must contain crm_contact table"
+
+
+# ---------------------------------------------------------------------------
+# DDL self-containment: subset render must not reference absent tables
+# ---------------------------------------------------------------------------
+
+import re  # noqa: E402
+
+
+def _assert_self_contained(sql_content: str) -> None:
+    """Every REFERENCES target in the DDL must be a table created in the same DDL."""
+    created = set(re.findall(r'CREATE TABLE\s+"(\w+)"', sql_content))
+    referenced = set(re.findall(r'REFERENCES\s+"(\w+)"', sql_content))
+    missing = referenced - created
+    assert not missing, (
+        f"DDL references tables it never creates (fails on a fresh DB): {sorted(missing)}"
+    )
+
+
+class TestSubsetFkOmission:
+    def test_subset_omits_fk_to_excluded_entity(self):
+        """employee FK-references position; rendering without position must omit that FK."""
+        result = subprocess.run(
+            [sys.executable, str(RENDER_DIR / "render.py"),
+             "--dialect", "postgres",
+             "--entities", "employee,department"],
+            capture_output=True, text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode == 0, f"render.py failed:\n{result.stderr}"
+        assert "hr_position" not in result.stdout, (
+            "FK to out-of-subset entity must be omitted, not emitted as a dangling REFERENCES"
+        )
+        _assert_self_contained(result.stdout)
+
+    def test_lawfirm_demo_ddl_self_contained(self, tmp_path):
+        """lawfirm-demo scaffold output must run on a fresh, empty database."""
+        result = subprocess.run(
+            [sys.executable, str(WORKFLOW_DIR / "scaffold.py"),
+             "--profile", "lawfirm-demo",
+             "--dialect", "postgres",
+             "--out", str(tmp_path)],
+            capture_output=True, text=True,
+            cwd=str(REPO_ROOT),
+        )
+        assert result.returncode == 0, f"scaffold failed:\n{result.stderr}"
+        sql_content = (tmp_path / "lawfirm-demo" / "ddl" / "postgres.sql").read_text(encoding="utf-8")
+        _assert_self_contained(sql_content)
+        # contact (crm) is outside the profile — its FK must be omitted, not pulled in
+        assert "crm_contact" not in sql_content, (
+            "out-of-profile entity must not leak into the DDL"
+        )
 
     def test_scaffold_produces_manifest(self, tmp_path):
         result = subprocess.run(
