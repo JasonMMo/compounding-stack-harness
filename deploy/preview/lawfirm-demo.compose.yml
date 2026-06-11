@@ -1,0 +1,58 @@
+# deploy/preview/lawfirm-demo.compose.yml
+# Coolify dockercompose preview — profile: lawfirm-demo
+# Build context: repo root (Coolify clones whole repo, build context = clone root)
+#
+# Domain: SERVICE_FQDN_FRONTEND magic env → Coolify traefik auto-routing
+# Manifest: server-side persistent file mounted read-only into frontend
+#
+# Coolify deployment:
+#   build_pack: dockercompose
+#   docker_compose_location: /deploy/preview/lawfirm-demo.compose.yml
+#   git_repository: git@github.com:JasonMMo/compounding-stack-harness.git
+#   git_branch: master
+#   private_key_uuid: <coolify deploy key uuid>
+
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/adapters/fastapi/Dockerfile
+    environment:
+      PORT: "8081"
+      PYTHONIOENCODING: "utf-8"
+    networks:
+      - preview-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
+    environment:
+      # Coolify magic env: SERVICE_FQDN_<SERVICE_NAME_UPPERCASE> → domain routing
+      SERVICE_FQDN_FRONTEND: "https://lawfirm-demo.n9n.co.kr"
+      FRONTEND_PORT: "5000"
+      BACKEND_BASE_URL: "http://backend:8081"
+      CONTRACT_DIR: "/app/middle/contract"
+      PROFILE_MANIFEST: "/data/manifest/screen-manifest.json"
+      PYTHONIOENCODING: "utf-8"
+      # SECRET_KEY injected via Coolify environment variables (not in compose file)
+    volumes:
+      # Persistent manifest file — scp'd to server before deploy
+      # Path: /data/coolify/manifests/lawfirm-demo/screen-manifest.json
+      - type: bind
+        source: /data/coolify/manifests/lawfirm-demo/screen-manifest.json
+        target: /data/manifest/screen-manifest.json
+        read_only: true
+    ports:
+      - "5000"
+    depends_on:
+      - backend
+    networks:
+      - preview-net
+    restart: unless-stopped
+
+networks:
+  preview-net:
+    driver: bridge
