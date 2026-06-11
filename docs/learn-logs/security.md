@@ -6,6 +6,20 @@
 
 ## §1 — Growth 상세
 
+
+### Growth-34 (2026-06-11) — 인프라 변경 회귀 점검 (codegraph 0.9.9 / mcp-openai 제거 / claude-mem 비활성화)
+
+- **대상**: codegraph MCP 서버 추가, @mzxrai/mcp-openai 제거, claude-mem 비활성화
+- **판정**: PASS-WITH-CAVEAT
+- **상세 보고서**: [`out/analysis/security-infra-review-2026-06-11.md`](../../out/analysis/security-infra-review-2026-06-11.md)
+- **주요 발견**:
+  - egress: codegraph dist JS 외부 호출 0건 (stdio 전용). mcp-openai 제거로 OpenAI egress 차단 (개선).
+  - 시크릿: .env gitignored -> codegraph 인덱싱 제외 확인. git history .env 커밋 이력 0.
+  - CAV-1 [medium]: AuthController.java DEMO_PASSWORD="demo" (M1 stub, Growth-32 기존 이관, M2 교체 필수).
+  - CAV-2 [informational]: 1인 메인테이너 npm 패키지 - 업그레이드 시 CISO 재검토 + 버전 고정 권장.
+  - claude-mem DB 잔존: 비활성화 상태, 로컬 디스크 잔존만 (PASS, informational).
+- **보안 가드 후보**: "npm global 보안 도구 신규 설치 시 버전 고정 + CISO 리뷰" (2회 인식, 3회 시 가드 제안 의무).
+
 ### Growth-32 (2026-06-11) — CISO 인격 신설 (founding)
 
 - **계기**: CEO 직접 요구 — "우리가 제공하는 결과물에 보안 결함이 없도록 전달하자" + "보안 관련 담당 agent 가 필요하면 추가해줘" (인터뷰 A5 보안 답변에 연동).
@@ -21,6 +35,7 @@
 | 대상 | 일자 | 판정 | 발견 요약 |
 |---|---|---|---|
 | lawfirm-demo 인도물 (legal vertical + 인도 패키지) | 2026-06-11 | PASS-WITH-CAVEAT → **PASS** (CAVEAT 해소 후) | 아래 상세 |
+| 인프라 변경 회귀 점검 (codegraph/mcp-openai/claude-mem) | 2026-06-11 | PASS-WITH-CAVEAT | CAV-1: AuthController DEMO_PASSWORD(기존 M1 stub, 체크리스트 이관). CAV-2: 1인 메인테이너 버전 고정 권장. egress 0건. |
 
 **첫 리뷰 상세 (security-loop 7단계 수행)**:
 
@@ -36,6 +51,7 @@
 
 ## §3 — Open Loops (이 인격 책임)
 
-- self-host 보안 체크리스트 v1 작성 → lawfirm 인도 패키지 첨부
-- 시크릿 커밋 금지 정적 가드 (G-N 후보) → CTO 제안
-- 의존성 CVE 점검 자동화 (반복 리뷰 turn 비용 상수화 hedge)
+- self-host 보안 체크리스트 v1 작성 → lawfirm 인도 패키지 첨부 (완료 Growth-32)
+- 시크릿 커밋 금지 정적 가드 (G-N 후보) → CTO 제안 (진행 중)
+- 의존성 CVE 점검 자동화 (반복 리뷰 turn 비용 상수화 hedge) (진행 중)
+- npm global 보안 도구 버전 고정 가드 (G-N 후보) — 2회 인식, 3회 시 의무 제안 (신규 Growth-34)
