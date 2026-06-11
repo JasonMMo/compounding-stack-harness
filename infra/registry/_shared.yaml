@@ -1,0 +1,18 @@
+# Shared infra assets (DevOps, Growth-35). 시크릿 평문 ✗ — secret_ref 만.
+domains:
+  - name: n9n.co.kr
+    registrar: TBD            # 도메인 등록기관
+    wildcard: "*.n9n.co.kr"   # preview 서브도메인 와일드카드 (미구성)
+    status: owned             # owned | dns-configured
+preview_vps:
+  - provider: TBD             # Vultr | AWS Lightsail | 카페24 (Seoul)
+    region: seoul
+    spec: ">=2vCPU/4GB"
+    paas: coolify
+    status: not-provisioned   # not-provisioned | live
+    monthly_cost_usd: null    # ~6~12 예상 (charter §5)
+    secret_ref:
+      - vault/preview-vps/ssh
+tunnel:
+  provider: cloudflared       # 작업 중 화면공유 데모 폴백 전용 (고객-facing preview ✗)
+  status: fallback-only
