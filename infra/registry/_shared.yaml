@@ -14,7 +14,7 @@ preview_vps:
     status: live              # provisioned 2026-06-11. SSH 키 인증만(비번 차단), root prohibit-password
     kernel: 6.8.0-124-generic # apt 최신(0 pending) + 재부팅 적용. restart policy always/unless-stopped → 재부팅 자동복구 검증
     ssh_key: "~/.ssh/n9n_preview_ed25519 (operator-local, gitignored — vault/preview-vps/ssh)"
-    hardening: "SSH 비번인증 차단·apt 최신·커널 패치 완료. TODO(잔여): 8000 admin UI를 coolify.n9n.co.kr(443)로 서빙 후 raw 8000 차단 or 클라우드 방화벽→CEO IP"
+    hardening: "완료(CISO 잔여 0) — SSH 비번인증 차단·apt 최신·커널 패치 + Hostinger 클라우드 방화벽 allow-list(22/80/443 만 inbound). 8000/8080/6001/6002 외부 차단 실측 검증 2026-06-11. 대시보드는 SSH local-forward(-L 8000:localhost:8000)로만 접속"
     tls_pipeline: "검증됨 2026-06-11 — *.n9n.co.kr grey-cloud + Coolify traefik(letsencrypt HTTP-01) → test.n9n.co.kr LE 인증서 자동 발급, 외부 HTTPS 200"
     cicd_pipeline: "검증됨 2026-06-11 — Coolify API(write+deploy 토큰, SSH→localhost:8000) 프로젝트→dockerimage 앱→instant_deploy→cicd-smoke.n9n.co.kr 외부 HTTPS 200, 정리 후 잔여 0. 레시피: deployment-topology.md §4"
     server_uuid: n12vdydjpwp81hu5i15n1gsb   # Coolify server (localhost). 운영 인벤토리(비밀 아님)
