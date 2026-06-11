@@ -27,6 +27,7 @@
 | (인격 신설 — 첫 배포는 다음 세션 preview VPS provisioning 부터) | 2026-06-11 | founding | 토폴로지 v1 확정 + provider 확정 (Hostinger KVM 2 싱가포르, OS=Coolify 템플릿/Ubuntu 24.04) | Hostinger KVM 2 \$8.99/월 24개월 (CEO provisioning 중) |
 | preview VPS (187.77.140.157, 싱가포르) | 2026-06-11 | provision (1차) | live — 접속·하드닝 일부 | KVM 2 \$8.99/월 가동 |
 | preview VPS — TLS 파이프라인 | 2026-06-11 | provision (2차) | **검증 PASS** — `<slug>.n9n.co.kr` 자동 HTTPS | LE 무료 |
+| preview VPS — CI/CD (Coolify API) | 2026-06-11 | deploy (스모크) | **검증 PASS** — API 로 프로젝트→앱→배포→외부 HTTPS 200, 정리 후 잔여 0 | LLM 0, infra 0 (기존 VPS) |
 
 ### Growth-35 provisioning 1차 (2026-06-11) — preview VPS 부트스트랩
 
@@ -52,3 +53,12 @@
 - **조치**: ① CEO 가 노출 토큰 즉시 revoke + 재발급 ② 볼트 규약 수정 — **source 금지, `sed -n 's/^KEY=//p'` 추출** (셸 미실행, 특수문자 안전). README + .example 반영.
 - **교훈 (1줄)**: 시크릿 .env 는 절대 `source` 하지 않는다 — 임의 토큰의 특수문자(`|$ \``)가 셸에서 실행·노출된다. 값 추출은 sed/grep 으로 셸을 안 거치게. (가드 후보: 스크립트 내 `source *.env`/`. *.env` 탐지.)
 - **2차 노출 (같은 세션)**: 재발급 토큰을 `cut -d= -f1` 로 진단 → 파일에 `KEY=` 접두어 없이 값만 있어 전체 줄(=토큰) 출력. **2번째 토큰도 폐기**. 근본 교훈: ① 불투명 토큰은 `KEY=value` 금지 → **값만 담은 전용 파일**(`coolify_api_token`), `tr` 로 읽고 `${#}` 길이만 확인 ② **읽기 실패 시 포맷 추측 진단(`cut`/`xxd`/`cat`) 금지** — 진단이 곧 노출. 빈 값이면 CEO 에게 파일 확인 요청. README/example 반영, `preview-vps.env`(KEY=value) 폐기 → `coolify_api_token`(raw).
+- **3차(폐기 후 재발급) — 운영 파일 = `preview-vps.env`(raw 값)**: CEO 가 노출 2개 폐기 후 새 토큰을 `preview-vps.env` 에 raw 로 저장 (sed 가 접두어 유무 양쪽 처리). 읽기 스크립트에서 fallback 라인 누락 시 `coolify_api_token`(없는 파일)만 읽어 `len=0` → **내용 비출력 원칙대로 `wc -c` 바이트 길이만으로 어느 파일에 있는지 판별**(content 안 찍음). 교훈: 시크릿 소스 경로는 한 곳으로 고정하거나 항상 fallback 포함. 빈 값일 때도 `wc -c`/존재 확인은 안전(값 비노출), `cat`/`cut` 만 금지.
+
+### Growth-35 CI/CD v1 (2026-06-11) — Coolify API 배포 파이프라인 end-to-end 증명
+
+- **토큰 스코프 함정**: 첫 토큰 read-only → `GET 200` 이지만 `POST /projects` = `{"message":"Unauthenticated."}`. 같은 헤더에 메서드만 다르면 **쓰기 스코프 부재** 신호. CEO 가 **write+deploy**(또는 root) 스코프로 재발급 → POST 200.
+- **파이프라인**: `POST /projects`(uuid) → `GET /projects/{uuid}`(환경 production uuid) → `POST /applications/dockerimage`(image=traefik/whoami, ports_exposes=80, domains=https://cicd-smoke.n9n.co.kr, instant_deploy=true) → ~45s 후 **외부 머신 `https://cicd-smoke.n9n.co.kr` 200 + LE 정식 인증서**(CN=cicd-smoke.n9n.co.kr, issuer Let's Encrypt, 90일, ssl_verify=0).
+- **정리**: `DELETE /applications/{uuid}` 는 **비동기 큐** → 즉시 `DELETE /projects/{uuid}` 하면 `"Project has resources"` 실패. ~15s 후 재시도 → `Project deleted`, projects=[], 외부 도메인 503. 잔여 0.
+- **증명 의미**: profile→scaffold 산출 이미지를 `dockerimage` image 자리에 넣으면 **한 명령으로 고객 preview 자동 생성**. creater(CI/CD)축 코어 작동. 레시피는 토폴로지 §4 에 런북화 (재유도 금지).
+- **CISO 잔여(불변)**: 8000 admin UI 인터넷 노출 — 토큰은 SSH→localhost 로만 쓰므로 8000 을 클라우드 방화벽으로 막아도 API 운영 무영향. 다음 하드닝: instance FQDN `coolify.n9n.co.kr`(443) + raw 8000 차단.
