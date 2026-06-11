@@ -1,0 +1,34 @@
+# docker-compose.yml — local PostgreSQL for L4 live tests / demos.
+#
+# 목적: PostgreSQL 수동 설치 없이 한 줄로 DB 기동 (Growth-28, L4 무개입화 마무리).
+#
+#   docker compose up -d          # DB 기동
+#   python scripts/preflight.py   # 사전 점검 (ALL PASS 확인)
+#   python scripts/demo/setup_lawfirm.py   # 스키마 + 시드 적재 (idempotent)
+#   docker compose down           # 종료 (-v 붙이면 데이터까지 삭제)
+#
+# 자격증명은 .env 에서 읽는다 (.env.example 참조). 미설정 시 기본값 사용.
+# 호스트에 이미 postgres 가 5432 를 점유 중이면 POSTGRES_HOST_PORT 로 비켜간다:
+#   POSTGRES_HOST_PORT=5433 docker compose up -d
+#   (이때 DATABASE_URL 도 localhost:5433 으로 맞출 것)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: csh-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-claude}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-claude}
+      POSTGRES_DB: ${POSTGRES_DB:-lawfirm_db}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - csh-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-claude} -d ${POSTGRES_DB:-lawfirm_db}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  csh-pgdata:
