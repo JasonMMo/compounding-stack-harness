@@ -19,5 +19,6 @@
 | [design-agent.md](design-agent.md) | CDO | 디자인 토큰·UI 시스템·접근성 |
 | [pm-agent.md](pm-agent.md) | PM | 고객 needs 발굴·요구사항·delivery loop 품질 |
 | [security-agent.md](security-agent.md) | CISO | 인도 전 보안 리뷰 게이트·시크릿/취약점 점검·데이터 유출 추적·self-host 하드닝·보안 인도 BLOCK |
+| [devops-agent.md](devops-agent.md) | DevOps | preview 티어 운영·디지털 자산 레지스트리·CI/CD·시크릿 볼트·설치 런북·인프라 비용 추적 |
 
 상세 역할 정의: [`docs/business/partnership-charter.md`](../../docs/business/partnership-charter.md), agent frontmatter 규약: `.claude/rules/agent-definition.md` (user-global).
