@@ -26,7 +26,7 @@
 | L1 pytest | NOT_SETUP | — |
 | L2 JDBC | NOT_SETUP | — |
 | L3 build | NOT_SETUP | — |
-| L4 live | NOT_SETUP | — |
+| L4 live | PASS | 2026-06-11 (lawfirm-demo, 손해배상·자백·위약금 5종) |
 
 ## §2 — Trap Catalog (재번호)
 
@@ -327,4 +327,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **Why (1줄)**: Growth-24 A안 설계 → 즉시 구현 — tsvector 1단계 완성, RAG 2단계는 escalation backlog
 - **상세**: [cto.md](docs/learn-logs/cto.md), engineer 커밋 `9290b1a..05b259b`
 - **결정 (Engineer)**: `DATABASE_URL` 미설정 시 200+warning graceful fallback (dev 환경 gate-free), `'simple'` 사전 (pg_bigm 없이 prefix 매칭)
-- **Open loops**: postgres 실가동 확인 (L4) / RAG 2단계 / CEO 인터뷰 (A2·A5) / `legal-rag-pattern` wiki
+- **Open loops**: ~~postgres 실가동 확인 (L4)~~ ✅ Growth-26 에서 완료 / RAG 2단계 / CEO 인터뷰 (A2·A5) / `legal-rag-pattern` wiki
+
+### Growth-26 (2026-06-11) — L4 live 통과 + DDL 의존성 순서 버그 픽스
+
+- **인격**: CTO (L4 검증·버그 탐색) + Engineer (render.py·scaffold.py 픽스)
+- **Axis touched**: creater (scaffold.py emit_ddl 단일 호출·topo-sort 수정), ddl (render.py --entities 복수 플래그 추가)
+- **Milestone**: M3 — legal vertical L4 완전 통과 (acceptance criteria 달성)
+- **Revenue/cost**: M3 트리거 완성 증거 확보 / Engineer 1 round
+- **Why (1줄)**: Growth-25 이후 postgres 설치·연결 디버깅 → L4 PASS 5/5 확인, scaffold DDL 생성 순서 버그(entity별 단독 render → topo-sort 무력화) 발견 및 픽스
+- **결정 (CTO)**: scaffold.py `emit_ddl`을 per-entity subprocess 루프→단일 `--entities` 호출로 교체 (render.py 위상 정렬을 올바르게 활용)
+- **Open loops**: RAG 2단계 / CEO 인터뷰 (A2·A5) / `legal-rag-pattern` wiki
