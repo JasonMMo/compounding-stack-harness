@@ -13,7 +13,9 @@ preview_vps:
     ip: 187.77.140.157        # 운영 인벤토리 (비밀 아님). ⚠ public 전환 시 vault 로 이관
     status: live              # provisioned 2026-06-11. SSH 키 인증만(비번 차단), root prohibit-password
     ssh_key: "~/.ssh/n9n_preview_ed25519 (operator-local, gitignored — vault/preview-vps/ssh)"
-    hardening: "SSH 비번인증 차단 완료. TODO: 클라우드 방화벽(8000→CEO IP), apt upgrade, ufw-docker"
+    hardening: "SSH 비번인증 차단 완료. TODO: 클라우드 방화벽(8000→CEO IP), apt upgrade"
+    tls_pipeline: "검증됨 2026-06-11 — *.n9n.co.kr grey-cloud + Coolify traefik(letsencrypt HTTP-01) → test.n9n.co.kr LE 인증서 자동 발급, 외부 HTTPS 200"
+    dns: "Cloudflare, *.n9n.co.kr A→187.77.140.157 (grey/DNS-only) 전파 완료"
     monthly_cost_usd: 8.99    # 24개월 선결제 기준(~$216). 갱신가 상승 주의. 쿠폰: HostAdvice VPS 74%+15% (affiliate 링크)
     coupon_ref: "hostadvice.com/hosting-company/hostinger-coupons (VPS 74% off + 15%, 24mo 선결제)"
     secret_ref:
