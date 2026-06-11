@@ -23,13 +23,13 @@
 ## 현재 상태
 
 - **Milestone**: M2/M3 — preview 티어 **인프라 live** (provisioning 완료, TLS 파이프라인 검증). lawfirm-demo 는 가상 시나리오 검증 완료.
-- **preview VPS 진행**: ✅VPS·SSH키·apt최신·커널패치 ✅DNS와일드카드(Cloudflare grey) ✅Coolify TLS 자동발급 검증 ✅Coolify API 토큰(볼트, write+deploy) ✅CI/CD v1 end-to-end 검증 ✅8000 노출차단(클라우드 방화벽 allow 22/80/443, 실측 검증) **CISO 잔여 0** ⏳scaffold.py→이미지→API 결선.
+- **preview VPS 진행**: ✅VPS·SSH키·apt최신·커널패치 ✅DNS와일드카드(Cloudflare grey) ✅Coolify TLS 자동발급 검증 ✅Coolify API 토큰(볼트, write+deploy) ✅CI/CD v1 end-to-end 검증 ✅8000 노출차단 **CISO 잔여 0** ✅scaffold→preview v1 로컬 검증(2-container) ⏳Coolify Phase 2(dockerimage 재설계+manifest 서버주입).
 - **Verification Matrix**: L2 PASS, L4 PASS, 보안리뷰 PASS. L1·L3 NOT_SETUP. 가드 13개 green.
 
 ## 다음 후보 (우선순위)
 
-1. **DevOps: scaffold→Coolify 결선** — `scaffold.py` 산출 이미지를 deployment-topology.md §4 레시피의 `dockerimage` image 자리에 결선 → 한 명령 고객 preview. (API 파이프라인·하드닝 모두 검증 완료.) 대시보드 접속은 SSH `-L 8000:localhost:8000` 터널.
-2. **첫 고객 preview 리허설** — 가상 고객 1명으로 profile→scaffold→Coolify 배포→`<slug>.n9n.co.kr` HTTPS 전 과정 dogfood + 레지스트리 `<slug>.yaml` 첫 엔트리.
+1. **DevOps Phase 2: 로컬 compose → Coolify 결선** — scaffold→preview v1 은 **로컬 검증 완료**(`preview_package.py`: DB 없는 2-container, lawfirm-demo `/login`·`/health` 200, manifest 14ent). Coolify 배포는 재설계 필요: ① compose build context 절대경로(로컬 전용) → topology §4 의 pre-built `dockerimage`(레지스트리 push) 경로 ② manifest 를 host bind 대신 사전배포/env/init-fetch 로 서버 주입(1 이미지 N 프로필 유지). 대시보드 접속 SSH `-L 8000:localhost:8000`.
+2. **첫 고객 preview 리허설** — 가상 고객 1명으로 profile→preview_package→Coolify 배포→`<slug>.n9n.co.kr` HTTPS 전 과정 dogfood + 레지스트리 `<slug>.yaml` 첫 엔트리.
 4. **engineer: `.npmrc` codegraph 버전 핀** / **G-14 (`--check`)** (이월).
 5. **실 고객 발굴** (M2 게이트) — 숨고/크몽 첫 의뢰.
 
