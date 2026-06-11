@@ -39,7 +39,15 @@ PYTHONIOENCODING=utf-8 python scripts/workflow/preview_package.py --profile <slu
 
 ## Step 2 — Coolify Compose 파일 작성
 
-`deploy/preview/lawfirm-demo.compose.yml` 을 `deploy/preview/<slug>.compose.yml` 로 복제 후 3곳 치환:
+> **자동화**: `preview_package.py --coolify` 가 이 단계를 자동 처리한다.
+
+```bash
+PYTHONIOENCODING=utf-8 python scripts/workflow/preview_package.py --profile <slug> --coolify
+# 산출물: deploy/preview/<slug>.compose.yml
+# 검증: 생성 후 shop-demo 레퍼런스와 구조 diff 자동 출력 (slug 차이 외 0 이어야 PASS)
+```
+
+수동 작성이 필요한 경우에만: `deploy/preview/lawfirm-demo.compose.yml` 을 `deploy/preview/<slug>.compose.yml` 로 복제 후 3곳 치환:
 
 1. 주석 헤더의 `profile: lawfirm-demo` → `profile: <slug>`
 2. `source:` 경로: `/data/coolify/manifests/lawfirm-demo/` → `/data/coolify/manifests/<slug>/`
@@ -72,7 +80,34 @@ ssh -i ~/.ssh/n9n_preview_ed25519 root@187.77.140.157 \
   "ls -la /data/coolify/manifests/<slug>/"
 ```
 
-## Step 4 — Coolify API 배포 (스크립트로 실행)
+## Step 3.5 — (선택) manifest scp 단독 실행
+
+`deploy_to_coolify.py` 가 scp 를 포함하므로 별도 실행 불필요. 수동으로 올려야 할 때만:
+
+```bash
+ssh -i ~/.ssh/n9n_preview_ed25519 root@187.77.140.157 \
+  "mkdir -p /data/coolify/manifests/<slug>"
+scp -i ~/.ssh/n9n_preview_ed25519 \
+  out/<slug>/screen-manifest.json \
+  root@187.77.140.157:/data/coolify/manifests/<slug>/screen-manifest.json
+```
+
+## Step 4 — Coolify API 배포
+
+> **자동화**: Steps 4a~4e + manifest scp + SECRET_KEY 주입 + 외부 검증이 한 명령으로.
+>
+> ```bash
+> # dry-run 먼저 (payload 확인, 실제 API 호출 없음):
+> PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug <slug> --dry-run
+>
+> # 실제 배포 (멱등 — 이미 있는 project/app 재사용):
+> PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug <slug>
+> ```
+>
+> 멱등 보장: project·app 이 이미 존재하면 재사용(shop-demo 기존 테넌트 안전).
+> 기존 slug 재배포 = 동일 명령 재실행.
+
+수동 단계 참조용 (스크립트 내부 동작):
 
 > 규약: curl 인라인 금지 (훅 차단) — `out/*.sh` 또는 `out/*.py` 스크립트 파일로 실행 후 삭제.
 
@@ -152,6 +187,8 @@ curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 10 "https://<slug>.n9n.co
 ```
 
 3항목 모두 PASS 시 preview live 확정.
+
+**CISO 보안 주의 (§7)**: `GET /applications/{uuid}/envs` 응답의 `real_value` 필드에 SECRET_KEY 평문 노출됨. `deploy_to_coolify.py` 는 이 필드를 `***masked***` 로 자동 치환하여 절대 출력하지 않는다. 수동 API 호출 시에도 응답 출력 전 `real_value` 필드를 마스킹할 것.
 
 ## Step 6 — SECRET_KEY 주입
 
