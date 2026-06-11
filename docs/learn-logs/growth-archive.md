@@ -160,3 +160,41 @@
 - **결정 (CTO)**: catalog entity 만 enforce, 미정의 entity_type 은 schema-less 통과 (backward-compat — 기존 23-test 무파손) / required·type·enum·length→VALIDATION_ERROR(422), unique→CONFLICT(409) / 서버컬럼(id·created·updated) 검증 제외 / PATCH 부분검증 (required 생략) / FK 참조검증 후속 / `docs/architecture/validation-contract.md`
 - **Cross-agent catch**: 검증 PASS(DIM-5 31/31 양 adapter) 후 **가드 3개 회귀** — CTO 진단: G-1 fastapi 가 422/409 하드코딩(springboot 패리티 위반) = 진짜 소스버그 → loader 경유 수정. G-6·G-8 은 gradle `build/` 생성물(catalog copy 주석의 tenant_id·.class 의 `$`) 오탐 = 스코프 버그 → G-1 과 동일 제외셋으로 정정 (약화 아님, 소스 검출 유지). feedback_guards_must_work 일관 적용.
 - **Open loops resolved**: adapter 검증 wiring (Growth-10/11 open loop). 남은: FK 참조 무결성 검증, react adapter
+
+## Growth-13 ~ Growth-15 (2026-06-01, 이동: Growth-34)
+
+### Growth-13 (2026-06-01) — self-improve 인덱스 (ledger-index) — think-grid 아이디어 흡수, 인프라 비채택
+
+- **인격**: CTO (think-grid 평가·설계 계약·integrator 판정·환류) + Engineer (ledger-index.py 구현·검증)
+- **Axis touched**: creater (self-improve 도구 — `scripts/ledger-index.py` 신규, diagnose.py 형제)
+- **Milestone**: M1 (지식 누적 메커니즘 자체의 확장성 — 인격 증가·Growth 누적에도 cross-agent 통합이 O(전체)→O(관련))
+- **Revenue/cost**: 0 LLM / 0 신규 infra (stdlib sqlite3) / Engineer 1 round + codegraph DB read-only 재사용
+- **Why (1줄)**: 시간순 prose 원장(Σ860줄, 증가)을 통째로 읽던 cross-agent 통합을 `--symbol` scoped 조회로 — context-weight + 교차정보 통증의 공통 뿌리 해소
+- **상세**: [cto.md#Growth-13](docs/learn-logs/cto.md), [engineer.md#Growth-13](docs/learn-logs/engineer.md)
+- **결정 (CTO)**: think-grid 의 *아이디어*(심볼 앵커+백링크 검색)만 채택, *인프라*(sync-graph.js codegraph→.md mirror / Obsidian 의존 / node+sqlite3) **비채택** — 방금 token-savior→codegraph 로 없앤 "코드그래프 2개" redundancy 재발 방지. `.context/` dormant skeleton (0-byte, untracked) 은 우리 docs/learn-logs/ 와 중복이라 미채택. `_index.json` 은 gitignore(재생성 캐시, generated_from_commit=HEAD 가 커밋마다 stale → noisy diff 회피) — 초안 §4 commit 제안을 CTO 번복.
+- **Cross-agent catch**: Engineer 가 `--symbol` 을 file-anchor basename 까지 확장 (CatalogValidator 가 body 백틱 아닌 Files-touched 경로에만 등장) → CTO integrator 승인 (검색 의도 부합, guards-must-work 데이터 silent 손실 금지와 일치). codegraph 교차검증으로 unverified 61 도 drop 없이 보존 — stale 앵커 탐지(`--check`)는 G-11 가드 후보로 남김.
+- **Open loops resolved**: self-improve context-weight (CEO 제기). 남은: `--check` 의 G-11 가드 승격 여부, `/contribute-back` 에 인덱스 재빌드 hook, (선택) Obsidian `--md` 시각화
+
+### Growth-14 (2026-06-01) — expert-agent end-to-end demo (creater 축 첫 채움 + 화면 초안 실증)
+
+- **인격**: CTO (7축 결합 설계·옵션 공격검증·integrator·live agent 큐레이션 실행·환류) + Engineer (scaffold.py/manifest.py/frontend typed-form/G-11 구현) + QA (Phase 1 포맷 게이트 PASS) + axis-7 domain-expert-generic (live profile 큐레이션)
+- **Axis touched**: creater (`scripts/workflow/scaffold.py`+`manifest.py` 신규 — 빈 orchestrator 축 첫 채움), frontend (vanilla-htmx manifest-driven typed form), expert-agent (catalog-aware 정렬), customer (`profiles/shop-demo.yaml`+`smallmfg-demo.yaml`)
+- **Milestone**: M2 핵심 인수("당일 화면 초안") 실증 — 비전문가 needs → agent 큐레이션 → 실 entity 필드 화면
+- **Revenue/cost**: M2 라이선스 게이트 직접 기여 / Engineer 3 round + agent 1 큐레이션 / 결정적 경로 0 LLM
+- **Why (1줄)**: 6축은 자산화됐으나 엮는 orchestrator 부재로 end-to-end 증명 불가 — creater 축을 thin 하게 채워 7축을 화면까지 연결
+- **상세**: [cto.md#Growth-14](docs/learn-logs/cto.md), [engineer.md#Growth-14](docs/learn-logs/engineer.md)
+- **결정 (CTO)**: 옵션 B(field-aware) 채택 — A(generic 폼)는 가치 미증명, C(LLM 결정적 경로)는 테스트 불가. manifest 는 catalog 파생 derived artifact(`out/`, gitignore), wire contract 불변(프로토콜에 고객 entity 결합 금지). agent baseline 표 catalog 14 에 1:1 동기화(phantom entity 가 acme-erp 깨뜨린 근본원인 제거).
+- **Cross-agent catch**: live agent 가 needs 의 `attendance`(출퇴근)가 catalog 미구현임을 스스로 잡아 escalation 보류 — catalog-aware 원칙 작동 확인. `sales-order.customer_id` 가 fk 블록 없어 text 분류 = FK 무결성 갭(별도 백로그) 실증.
+- **Open loops**: acme-erp 비호환(domains customer/order ⊄ catalog) **CEO 결정 대기**(삭제 vs catalog 키로 수정) / react adapter(frontend 2nd) / FK 참조무결성 검증(G-12 후보) / `--serve` 자동기동
+
+### Growth-15 (2026-06-01) — FK 참조 무결성 (catalog hygiene + G-12 + runtime 양 backend DIM-6)
+
+- **인격**: CTO (3-part 설계·dangling/polymorphic 분류 결정·integrator) + Engineer (catalog 주석·G-12·양 validator·DIM-6) + QA (PASS-WITH-CAVEAT — 양 backend 로직 패리티 적대 검증)
+- **Axis touched**: ddl (catalog FK hygiene 주석 + customer_id→contact fk), creater (G-12 가드), backend (양 adapter CatalogValidator FK 체크), middle (validation-contract §5 deferred→구현)
+- **Milestone**: M1 검증 완결성 — Growth-12 가 명시 deferred 한 FK 참조 무결성 해소
+- **Revenue/cost**: 0 신규 infra / Engineer 2 round(+1 재개) + QA 1 / acme-erp·shop-demo 재scaffold ripple
+- **Why (1줄)**: Growth-14 가 `customer_id` dangling 을 실증 → catalog hygiene(정적) + runtime FK(동적) 양면 해소, "진짜 검증" 스토리 완성
+- **상세**: [cto.md#Growth-15](docs/learn-logs/cto.md), [engineer.md#Growth-15](docs/learn-logs/engineer.md), [qa.md#Growth-15](docs/learn-logs/qa.md)
+- **결정 (CTO)**: `*_id`-no-fk 10개를 polymorphic/circular(7, fk-exempt 마커)·backlog(machine/period, entity 미존재→domain-expert)·genuine(customer_id→contact fk) 로 분류 — catalog **성장**은 비포함. G-12 는 마커 기반(polymorphic false-positive 회피). runtime FK = fk 선언 컬럼만 enforce(exempt skip), VALIDATION_ERROR 재사용(신규 코드 0).
+- **Cross-agent catch**: Engineer 가 CTO 목록 밖 10번째 컬럼(`report-output.triggered_by_id`) 발견·분류 + 오기(inspection-plan) 교정. QA 가 DIM-5 회귀(fake department_id)를 정당 수정으로 판정·Java live 미실행 caveat 명시.
+- **Open loops**: **Java DIM-6 live 미실행 (JDK 환경 부재) — M1 sign-off 전 `pytest tests/adapters/springboot-jakarta/` 37 green 확인 + qa.md 기록 필수** / machine·accounting-period entity 신설(domain-expert) / ledger-index `--check`→G-13 후보 / react adapter (다음)
