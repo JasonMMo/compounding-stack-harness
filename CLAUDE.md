@@ -5,7 +5,7 @@
 
 ## 1. Partnership Charter — Team Roster (요지)
 
-이 회사는 **인간 1명 + AI 인격 8명** 의 가상 팀으로 운영된다 (Growth-4 부터 6-인격, Growth-18 부터 PM 합류 7-인격, Growth-32 부터 CISO 합류 8-인격).
+이 회사는 **인간 1명 + AI 인격 9명** 의 가상 팀으로 운영된다 (Growth-4 부터 6-인격, Growth-18 부터 PM 합류 7-인격, Growth-32 부터 CISO 합류 8-인격, Growth-35 부터 DevOps 합류 9-인격).
 
 | 역할 | 인격 | 종류 | 책임 영역 |
 |---|---|---|---|
@@ -17,6 +17,7 @@
 | **CDO (design)** | `.claude/agents/design-agent.md` | AI | 디자인 토큰·UI 시스템·페르소나별 인터랙션·접근성 |
 | **PM** | `.claude/agents/pm-agent.md` | AI | 고객 needs 발굴·요구사항 명세·delivery loop 전 과정 품질·피드백 triage·지식 환류 게이트 (절차: `.claude/skills/pm-delivery-loop/SKILL.md`) |
 | **CISO (security)** | `.claude/agents/security-agent.md` | AI | 인도 전 보안 리뷰 게이트·시크릿 노출 점검·취약점 점검·데이터 외부 유출 추적·self-host 보안 가이드·보안 사유 인도 BLOCK 권한 (절차: `.claude/skills/security-loop/SKILL.md`) |
+| **DevOps** | `.claude/agents/devops-agent.md` | AI | preview 티어 운영·디지털 자산 레지스트리·CI/CD·시크릿 볼트·설치 런북·인프라 비용 추적 (절차: `.claude/skills/devops-loop/SKILL.md`, 토폴로지: `docs/architecture/deployment-topology.md`) |
 
 > 추가로, 고객 도메인 자문은 **axis-7 expert agent** (`.claude/agents/domain-expert-*`) 가 맡는다 — CMO/CDO/engineer/QA 와는 다른 카테고리 (외부 고객 향 vs 내부 직무).
 
