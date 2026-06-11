@@ -861,6 +861,145 @@ def commit_compose_file(slug: str, dry_run: bool = False) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Webhook helpers (Gap 2b — GitHub push → Coolify auto-redeploy)
+# ---------------------------------------------------------------------------
+
+# Coolify 4.1.2 webhook mechanism (investigated 2026-06-12):
+#   - Each application has manual_webhook_secret_github (40-char hex, auto-generated)
+#   - Endpoint: POST https://<vps-ip-or-fqdn>/webhooks/source/github/events/manual
+#     with header X-Hub-Signature-256: sha256=<HMAC-SHA256(secret, body)>
+#     and X-GitHub-Event: push
+#   - Coolify matches the HMAC against all apps with git_repository matching push payload
+#   - On match: queues redeploy for that app
+#
+# GitHub webhook registration:
+#   - URL: https://187.77.140.157/webhooks/source/github/events/manual
+#     (VPS IP, port 443, traefik proxies to Coolify)
+#   - Secret: app's manual_webhook_secret_github value
+#   - Events: push (to master branch)
+#   - Content-type: application/json
+#
+# SAFETY: Registration is gated — this function PRINTS what would be registered
+#   and returns the payload. Actual GitHub API call requires --confirm flag
+#   AND must only be done for explicitly named slugs (not all apps at once).
+
+
+def get_webhook_secret(app_uuid: str, token: str) -> str:
+    """Return manual_webhook_secret_github for app. Never printed — length only."""
+    result = _api_request("GET", f"/applications/{app_uuid}", token, mutating=False)
+    secret = result.get("manual_webhook_secret_github", "")
+    if not secret:
+        raise ValueError(f"No manual_webhook_secret_github found for app {app_uuid}")
+    return secret
+
+
+def save_webhook_secret_to_vault(slug: str, secret: str) -> Path:
+    """Save webhook secret to vault only — never commits or prints value."""
+    vault_path = REPO_ROOT / "infra" / "secrets" / f"{slug}-webhook-secret.txt"
+    vault_path.write_text(secret, encoding="utf-8")
+    print(f"[deploy_to_coolify] webhook secret saved to vault: {vault_path} (len={len(secret)})")
+    return vault_path
+
+
+def show_webhook_registration_plan(slug: str, app_uuid: str, token: str) -> dict:
+    """Print GitHub webhook registration plan WITHOUT executing it.
+
+    Returns the plan dict for CTO review. Secret value is never shown.
+    Actual registration requires --confirm flag + explicit approval.
+    """
+    secret = get_webhook_secret(app_uuid, token)
+    vault_path = save_webhook_secret_to_vault(slug, secret)
+
+    webhook_url = "https://187.77.140.157/webhooks/source/github/events/manual"
+    plan = {
+        "webhook_url": webhook_url,
+        "content_type": "application/json",
+        "events": ["push"],
+        "branch_filter": "master",
+        "secret_vault": str(vault_path),
+        "secret_len": len(secret),
+        "app_uuid": app_uuid,
+        "slug": slug,
+        "note": (
+            "Coolify matches incoming push by git_repository field in payload. "
+            "All apps on this Coolify instance with same git_repository will receive "
+            "redeploy trigger on master push — not slug-specific filtering."
+        ),
+        "risk": (
+            "HIGH: master push triggers redeploy for ALL apps sharing git_repository "
+            f"git@github.com:JasonMMo/compounding-stack-harness.git. "
+            "Currently 2 live tenants (lawfirm-demo + shop-demo) would both redeploy "
+            "on every master push. Safe only if all live tenants are stable. "
+            "No per-app branch filter in Coolify 4.1.2 manual webhook path."
+        ),
+        "github_api_command": (
+            "gh api repos/JasonMMo/compounding-stack-harness/hooks "
+            "--method POST "
+            "--field name=web "
+            "--field active=true "
+            f"--field 'config[url]={webhook_url}' "
+            "--field 'config[content_type]=json' "
+            "--field 'config[secret]=<from-vault>' "
+            "--field 'events[]=push'"
+        ),
+    }
+
+    print()
+    print("[webhook-plan] === GitHub Webhook Registration Plan ===")
+    print(f"[webhook-plan] slug:        {slug}")
+    print(f"[webhook-plan] app_uuid:    {app_uuid}")
+    print(f"[webhook-plan] webhook_url: {webhook_url}")
+    print(f"[webhook-plan] events:      push (master)")
+    print(f"[webhook-plan] secret:      vault:{vault_path} (len={len(secret)}, value NOT shown)")
+    print(f"[webhook-plan] RISK:        {plan['risk']}")
+    print()
+    print("[webhook-plan] ACTION REQUIRED: CTO must confirm before executing.")
+    print("[webhook-plan] Re-run with --setup-webhook --confirm to register on GitHub.")
+    print()
+
+    return plan
+
+
+def register_github_webhook(slug: str, app_uuid: str, token: str) -> bool:
+    """Register GitHub webhook for the Coolify app (requires --confirm flag).
+
+    SAFETY: Only callable with explicit --confirm. Never called from main deploy flow.
+    Returns True on success.
+    """
+    secret = get_webhook_secret(app_uuid, token)
+    webhook_url = "https://187.77.140.157/webhooks/source/github/events/manual"
+
+    # Use gh CLI to register webhook (token from gh auth — not Coolify token)
+    cmd = [
+        "gh", "api",
+        "repos/JasonMMo/compounding-stack-harness/hooks",
+        "--method", "POST",
+        "--field", "name=web",
+        "--field", "active=true",
+        f"--field", f"config[url]={webhook_url}",
+        "--field", "config[content_type]=json",
+        "--field", f"config[secret]={secret}",
+        "--field", "events[]=push",
+    ]
+
+    print(f"[deploy_to_coolify] registering GitHub webhook for {slug} ...")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[deploy_to_coolify] ERROR: gh api failed: {result.stderr}", file=sys.stderr)
+        return False
+
+    try:
+        resp = json.loads(result.stdout)
+        hook_id = resp.get("id")
+        hook_url = resp.get("config", {}).get("url", "")
+        print(f"[deploy_to_coolify] webhook registered: id={hook_id}, url={hook_url}")
+    except Exception:
+        print(f"[deploy_to_coolify] webhook registered (could not parse response).")
+
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -896,7 +1035,47 @@ def main() -> int:
         "--skip-registry", action="store_true",
         help="Skip registry update after successful deploy.",
     )
+    parser.add_argument(
+        "--setup-webhook", action="store_true",
+        help=(
+            "Show GitHub webhook registration plan for this slug. "
+            "Saves webhook secret to infra/secrets/<slug>-webhook-secret.txt. "
+            "Does NOT register — prints plan and waits for --confirm. "
+            "SAFETY: only test with shop-demo first."
+        ),
+    )
+    parser.add_argument(
+        "--confirm", action="store_true",
+        help=(
+            "Execute the GitHub webhook registration (requires --setup-webhook). "
+            "GATE: CTO must confirm the plan output before using this flag. "
+            "Prerequisite: gh CLI authenticated."
+        ),
+    )
     args = parser.parse_args()
+
+    # Short-circuit: webhook setup mode (does not deploy)
+    if args.setup_webhook:
+        token = _load_token()
+        # Resolve app_uuid for slug
+        apps = _api_request("GET", "/applications", token, mutating=False)
+        app_list = apps if isinstance(apps, list) else apps.get("data", [])
+        app_uuid_found = None
+        for app in app_list:
+            if app.get("name") == args.slug:
+                app_uuid_found = app["uuid"]
+                break
+        if not app_uuid_found:
+            print(f"[deploy_to_coolify] ERROR: app '{args.slug}' not found.", file=sys.stderr)
+            return 1
+
+        plan = show_webhook_registration_plan(args.slug, app_uuid_found, token)
+
+        if args.confirm:
+            print(f"[deploy_to_coolify] --confirm received — registering GitHub webhook ...")
+            ok = register_github_webhook(args.slug, app_uuid_found, token)
+            return 0 if ok else 1
+        return 0
 
     slug: str = args.slug
     dry_run: bool = args.dry_run
