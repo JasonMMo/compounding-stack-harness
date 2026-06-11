@@ -33,6 +33,7 @@
 | lawfirm-demo.n9n.co.kr (Coolify Phase 2) | 2026-06-11 | deploy (첫 영속 preview) | **검증 PASS** — build_pack=dockercompose, LE TLS 자동, /login 200, /login HTML 정상. 앱 UUID opryb94j9k5cjdv8bienenv0 | LLM ~$0.5, infra $0 (기존 VPS) |
 | shop-demo.n9n.co.kr (리허설) | 2026-06-12 | deploy (반복 가능성 입증) | **검증 PASS** — 동일 경로 2번째 반복. /login 200, TLS CN=shop-demo, /health 200. 앱 UUID cn56k6xtmhp2njv5ed31xv7t. 런북 신설 | LLM ~$0.3, infra $0 (기존 VPS) |
 | shop-demo.n9n.co.kr (자동화 검증) | 2026-06-12 | deploy (멱등 재배포 — 스크립트) | **PASS** — `deploy_to_coolify.py --slug shop-demo` 단일 명령. 빌드 finished, /login 200, /health 200, TLS CN PASS. preview_package.py --coolify 구조 diff PASS. | LLM ~$0.3, infra $0 |
+| shop-demo.n9n.co.kr (갭1·갭2 자동화) | 2026-06-12 | registry 자동 merge + webhook 조사 | **PASS (갭1)** — 레지스트리 merge(secret_ref/tls/수동 필드 보존, deployed_at=Coolify finished_at). **CTO 컨펌 대기 (갭2b)** — webhook 조사: repo-level 매칭 리스크 확인, `--setup-webhook` 계획 출력 PASS. | LLM ~$0.4, infra $0 |
 
 ### Growth-35 provisioning 1차 (2026-06-11) — preview VPS 부트스트랩
 
@@ -120,6 +121,19 @@
 - **레지스트리**: `infra/registry/shop-demo.yaml` 생성.
 - **수동→자동 갭 (CTO 후속)**: ① `deploy/preview/<slug>.compose.yml` 자동 생성 (현재 수동 복제·치환) ② Coolify API 4단계 단일 스크립트화 ③ manifest scp 자동화.
 - **교훈 (1줄)**: deploy key·server·privkey UUID 는 같은 repo 의 신규 고객마다 완전 재사용 가능 — Coolify project+app UUID 만 신규 발급하면 된다. 배포 시간 ~5분(Phase 2 첫 배포 30분 대비).
+
+### Growth-35 갭1·갭2 자동화 (2026-06-12) — 레지스트리 merge + webhook 조사
+
+- **갭1 완료 — 레지스트리 자동 merge**: `deploy_to_coolify.py` 에 `update_registry()` 추가. 배포 성공 후 `infra/registry/<slug>.yaml` 에 `coolify_project/app/url/status/deployed_at` 만 갱신. `deployed_at` = Coolify 배포 응답의 `finished_at` (서버 타임스탬프, 하드코드 금지). raw-line merge 방식 — PyYAML 불필요, `secret_ref`·`tls`·`build_commit`·수동 필드 완전 보존. shop-demo 검증: merge PASS, secret_ref 보존, 후행 주석 클린 처리 확인.
+- **갭2a 완료 — `--commit` 플래그**: `deploy/preview/<slug>.compose.yml` 을 배포 전 per-file 커밋·push. `git add <file>` 만 사용(git add -A 금지), 이미 커밋된 파일이면 skip.
+- **갭2b 조사 완료 — webhook CTO 컨펌 대기**:
+  - Coolify 4.1.2 webhook URL = `https://187.77.140.157/webhooks/source/github/events/manual`
+  - 인증 = `X-Hub-Signature-256: sha256=<HMAC>`, 시크릿 = `manual_webhook_secret_github` (앱마다 자동 생성 40자)
+  - **핵심 리스크**: Coolify 4.1.2 은 `git_repository` 로만 앱 매칭 → master push 시 같은 repo 의 **모든 앱** 동시 재배포. per-app 필터 없음. 현재 2 테넌트 → 모두 트리거됨.
+  - `--setup-webhook` 으로 계획 출력 + vault 저장 구현. `--confirm` 으로 `gh api` 실제 등록 (CTO 컨펌 후).
+  - 웹훅 시크릿 = `infra/secrets/<slug>-webhook-secret.txt` 볼트 저장, 레지스트리/코드 평문 금지.
+- **커밋**: `08be0c4` (registry+commit), `b7853cc` (shop-demo registry), `6d26ab1` (webhook), `6a83c96` (runbook).
+- **교훈 (1줄)**: Coolify 4.1.2 webhook은 app-level이 아닌 repo-level 매칭이므로, "모든 테넌트가 항상 안정"이 보장될 때만 auto-deploy webhook 을 활성화하는 것이 안전하다.
 
 ### Growth-35 자동화 v1 (2026-06-12) — deploy_to_coolify.py + preview_package.py --coolify
 
