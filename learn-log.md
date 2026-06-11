@@ -406,3 +406,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: 새 agent 정의는 세션 중 spawn 목록에 즉시 등록 안 됨 → 첫 dogfood 는 general-purpose 에 헌장+loop 주입으로 수행 (다음 세션부터 직접 spawn). 보안은 self-host 경계에서 "외부 호출 0" 을 grep 으로 증명하는 게 핵심 증거
 - **Revenue/cost**: M2/M3 보안 인도 자산 / 보안 리뷰 ~64k + engineer ~24k tokens
 - **Open loops**: legal 검색 엔드포인트 토큰 인증 (M2) / 시크릿 커밋 금지 정적 가드 (G-N 후보) / 의존성 CVE 자동 점검 / CISO 직접 spawn 검증 (다음 세션)
+
+### Growth-33 (2026-06-11) — Subagent Output Protocol: 결과 파일화로 반환 변동비 차단
+
+- **인격**: CEO (작업 방식 변경 결정) + CTO (규약 설계·loop 환류)
+- **Axis touched**: 조직/오케스트레이션 (CLAUDE.md §11, 7 loop SKILL `## 출력 규약`), architecture (신규 protocol 문서)
+- **Milestone**: M2/M3 — cost-aware-by-design 의 변동비 hedge (고객·인격 수 증가 시 선형 누출 차단)
+- **Why (1줄)**: Growth-32 보안 리뷰 ~64k 토큰이 main context 로 통째 유입된 게 단일 변동비 주범 → subagent→main 반환 경계에 "파일로 쓰고 경로+요약 envelope 만 반환" 규약 확립
+- **결정 (CEO→CTO)**: ① 단일 진실 `docs/architecture/subagent-output-protocol.md` (임계 ~30줄/2KB, 위치 3종, envelope 4항, CTO spawn 규율) ② 7 loop SKILL 에 `## 출력 규약` 1줄 환류 (8-인격 기본 적용) ③ CLAUDE.md §11 포인터 (ad-hoc agent 는 CTO spawn prompt 명시)
+- **교훈 (1줄)**: context-mode 는 subagent *내부* 분석 비용을, output-protocol 은 subagent→main *반환* 비용을 줄인다 — 다른 축. 단일 규약 + 7 포인터로 중복 없이 cross-agent 적용
+- **Revenue/cost**: 자체 비용 hedge 자산 (메타) / 이번 작업 토큰 소량 (문서+편집)
+- **Open loops**: 실제 효과 측정 (다음 보안/QA 리뷰가 envelope 만 반환하는지 dogfood) / 임계 초과 자동 감지 가드 후보
