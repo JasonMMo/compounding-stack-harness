@@ -409,5 +409,5 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **신설 자산·경계**: `devops-agent.md` + `devops-loop/SKILL.md`(G-13 PASS) + `deployment-topology.md` + `infra/registry/`(볼트 gitignored) + charter v1.6/INDEX. 경계: engineer=artifact / DevOps=출하·호스팅·추적, CISO=판정 / DevOps=하드닝 실행, 인도설치 PM+CISO 게이트 후
 - **교훈 (1줄)**: 새 사업 모델(비대면 창업)이 직무 공백을 드러내면 인격 신설이 정답 — charter "직무별 인격" 철학의 6번째 적용
 - **Revenue/cost**: preview 인프라 Hostinger KVM2 $8.99/월(24mo, Singapore) 가동 / 인격 신설·provisioning 은 편집·infra 0
-- **provisioning+CI/CD 완료 (같은 세션)**: VPS live·SSH 키전용·커널패치 / `*.n9n.co.kr` grey-cloud / Coolify traefik LE 자동 TLS 검증 / **Coolify API(write+deploy) 배포 파이프라인 end-to-end 검증** (cicd-smoke.n9n.co.kr HTTPS 200, 잔여 0). 레시피=topology §4, 상세=devops.md ledger. 보안사고 2회(토큰 source·cut 노출)→raw-file 규약 hardening
-- **Open loops**: 8000 admin UI 노출 차단(클라우드 방화벽/instance FQDN 443) / scaffold.py→dockerimage 결선 / `.npmrc`·G-14 (Growth-34 이월)
+- **provisioning+CI/CD+하드닝 완료 (같은 세션)**: VPS live·SSH 키전용·커널패치 / `*.n9n.co.kr` grey-cloud / Coolify traefik LE 자동 TLS 검증 / **Coolify API(write+deploy) 배포 end-to-end 검증**(cicd-smoke HTTPS 200, 잔여 0) / **8000 admin UI 클라우드 방화벽 차단(allow 22/80/443) 실측 → CISO 잔여 0**. 레시피=topology §4, 상세=devops.md. 보안사고 2회(토큰 source·cut)→raw-file 규약 hardening
+- **Open loops**: scaffold.py→dockerimage image 결선(파이프라인 자체는 검증 완료) / `.npmrc`·G-14 (Growth-34 이월)
