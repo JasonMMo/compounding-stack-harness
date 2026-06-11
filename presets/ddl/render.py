@@ -439,7 +439,11 @@ def main(argv: list[str] | None = None) -> int:
     for (owner_key, col_key), fk in deferred_fks.items():
         deferred_by_owner.setdefault(owner_key, set()).add(col_key)
         target_entity = fk.get("entity")
-        if not target_entity or target_entity not in all_entities:
+        # Both ends must be inside the rendered subset — an ALTER TABLE on an
+        # absent owner table (or referencing an absent target) fails on a fresh DB.
+        if owner_key not in subset:
+            continue
+        if not target_entity or target_entity not in subset:
             continue
         target_table = all_entities[target_entity]["table"]
         owner_table = all_entities[owner_key]["table"]
@@ -469,7 +473,10 @@ def main(argv: list[str] | None = None) -> int:
         ent = all_entities[key]
         # Pass the set of deferred FK cols so they are skipped inline.
         deferred_cols = deferred_by_owner.get(key, set())
-        ddl = render_table(key, ent, all_entities, dialect, deferred_cols)
+        # Pass `subset` (not all_entities) so render_fk omits FKs whose target
+        # table is outside this render — otherwise the DDL references tables
+        # that are never created (fails on a fresh DB).
+        ddl = render_table(key, ent, subset, dialect, deferred_cols)
         print(ddl)
 
         # Emit ALTER TABLE statements for back-edge FKs whose target is this table.
