@@ -26,6 +26,7 @@
 |---|---|---|---|---|
 | (인격 신설 — 첫 배포는 다음 세션 preview VPS provisioning 부터) | 2026-06-11 | founding | 토폴로지 v1 확정 + provider 확정 (Hostinger KVM 2 싱가포르, OS=Coolify 템플릿/Ubuntu 24.04) | Hostinger KVM 2 \$8.99/월 24개월 (CEO provisioning 중) |
 | preview VPS (187.77.140.157, 싱가포르) | 2026-06-11 | provision (1차) | live — 접속·하드닝 일부 | KVM 2 \$8.99/월 가동 |
+| preview VPS — TLS 파이프라인 | 2026-06-11 | provision (2차) | **검증 PASS** — `<slug>.n9n.co.kr` 자동 HTTPS | LE 무료 |
 
 ### Growth-35 provisioning 1차 (2026-06-11) — preview VPS 부트스트랩
 
@@ -34,3 +35,12 @@
 - **하드닝 적용**: `/etc/ssh/sshd_config.d/00-hardening.conf` — `PasswordAuthentication no` + `PermitRootLogin prohibit-password` (00- prefix 로 50-cloud-init yes 보다 먼저 파싱돼 우선). `sshd -t` 검증 → reload → 새 연결로 키 인증 재확인 (REKEY_OK).
 - **CISO 미해소 (TODO)**: ① 방화벽 inactive — 클라우드 방화벽으로 8000(admin UI)→CEO IP 제한 필요 (ufw 는 docker-published 포트 미차단 gotcha). ② `apt upgrade` 미실행. ③ Coolify `/register` 200=열림 → **CEO 즉시 admin 선점 필요** (포트 8000 인터넷 노출, 선등록자=root).
 - **다음**: admin 등록 후 → 클라우드 방화벽 → Coolify instance FQDN/`*.n9n.co.kr` 와일드카드 + TLS → CI/CD v1 → 레지스트리 고객 엔트리.
+
+### Growth-35 provisioning 2차 (2026-06-11) — DNS + TLS 파이프라인 end-to-end 검증 PASS
+
+- **admin 선점**: CEO Coolify admin 등록 완료 → `/register` 302→login (열린 창 닫힘, 보안 해소).
+- **DNS**: n9n.co.kr 은 **Cloudflare** 관리. `*` A→187.77.140.157 **grey-cloud(DNS-only)** 추가 → Cloudflare/Google 양쪽 전파 확인 (acme-corp/test/foobar 모두 직접 IP).
+- **TLS 검증 (Coolify API 없이 SSH 만으로)**: traefik 구성 정찰 (certresolver `letsencrypt` HTTP-01, network `coolify`, acme.json 0B) → `coolify` 네트워크에 traefik 라벨 단 `traefik/whoami` 테스트 컨테이너 기동(`Host(test.n9n.co.kr)`) → **35s 내 LE 정식 인증서 자동 발급** (acme.json 15.9KB, issuer=Let's Encrypt, CN=test.n9n.co.kr, ~9/9 만료) → 외부 머신 `https://test.n9n.co.kr` 200 + whoami + X-Forwarded-Proto=https → 테스트 컨테이너 제거(잔여 0).
+- **증명**: 임의 `<slug>.n9n.co.kr` → 자동 HTTPS 파이프라인 작동. preview 티어 코어 기능 live.
+- **CISO 잔여**: ① 8000(admin UI) 인터넷 노출 (admin 등록·강비번으로 auth 보호되나 source-IP 제한 권장 — CEO 공인 IP 121.165.228.221 관측되나 가정용 동적 가능성) ② apt upgrade ③ 향후 admin 을 `coolify.n9n.co.kr`(443) 로 서빙 후 raw 8000 차단이 정석.
+- **다음**: 남은 하드닝 → Coolify API 토큰(시크릿 볼트) → CI/CD v1 (`scaffold.py`→Coolify 배포) → 첫 고객 preview.
