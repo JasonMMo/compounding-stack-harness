@@ -9,7 +9,8 @@
 - 자원 1개 = `.env` 1개: `infra/secrets/<resource>.env` (예: `preview-vps.env`).
 - 템플릿: 같은 이름 `.example` (값 없는 형태, 추적됨).
 - 값 채우기는 **운영자가 본인 에디터/터미널로 직접** (Claude 세션을 거치지 않게 — 토큰이 transcript 에 남지 않도록).
-- 사용 시 Claude 는 `set -a; . infra/secrets/<file>.env; set +a` 로 **출력 없이 env 주입**, 값을 echo 하지 않는다.
+- 사용 시 Claude 는 **`source` 금지** (값에 `|`·`$`·공백 등 특수문자가 있으면 셸이 실행·노출시킴 — Growth-35 사고). 반드시 셸 실행을 안 거치는 추출로 읽고 값을 echo 하지 않는다:
+  `TOKEN=$(sed -n 's/^COOLIFY_API_TOKEN=//p' infra/secrets/preview-vps.env)`
 - 로테이션: 토큰 재발급 시 파일만 교체. 유출 의심 시 즉시 Coolify/Hostinger 에서 revoke 후 재발급 (CISO 에스컬레이션).
 
 ## 현재 볼트 항목
