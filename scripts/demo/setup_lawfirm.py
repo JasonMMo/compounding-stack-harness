@@ -22,6 +22,12 @@ import uuid
 from datetime import date, datetime, timezone
 
 try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=pathlib.Path(__file__).resolve().parents[2] / ".env", override=False)
+except ImportError:
+    pass  # python-dotenv optional; set DATABASE_URL manually if absent
+
+try:
     import psycopg2
     from psycopg2 import sql as pgsql
 except ImportError:
