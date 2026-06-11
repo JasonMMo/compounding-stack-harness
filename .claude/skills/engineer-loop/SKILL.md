@@ -24,6 +24,10 @@ description: Run the Engineer execution loop for any implementation delegation �
 - **시작**: step 2 — wiki/원장 검색이 구현보다 먼저. 통읽기 금지 (index→drill-down).
 - **종료**: step 7 — "한 번만 쓸 코드인데" 가 떠오르면 catalog/template/wiki 등록부터.
 
+## 출력 규약
+
+구현 상세·diff 설명·refactor 근거는 `docs/learn-logs/engineer.md` (누적) 에 쓰고, main 으로는 **커밋 해시 + 경로 + 결정/막힘 항목만** 반환한다 (envelope §4). 큰 탐색·조사는 `out/analysis/<topic>.md`. 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
+
 ## Anti-patterns
 
 - 스펙 모호한 채 추측 구현 / contract 재구현 (G-1) / 가드 FAIL silence / `git add -A` / push / known-hollow 테스트 잔류 (Growth-16 교훈)
