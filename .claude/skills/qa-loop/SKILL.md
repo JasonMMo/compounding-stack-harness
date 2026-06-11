@@ -24,6 +24,10 @@ description: Run the QA audit loop — pass-criteria check, adversarial verifica
 - **시작**: step 2 — 과거 판정·caveat 검색 없이 감사 시작 금지 (동일 caveat 재발견 낭비 방지).
 - **종료**: step 7 — 판정 자체가 지식: 비자명한 판정 근거는 wiki syntheses 로.
 
+## 출력 규약
+
+감사 근거·재현 명령·반박 시도 상세는 `docs/learn-logs/qa.md` (누적) 또는 인도물 단위면 `docs/delivery/<slug>/qa-report.md` 에 쓰고, main 으로는 **판정 + 경로 + FAIL/CAVEAT 항목만** 반환한다 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
+
 ## Anti-patterns
 
 - "직관적으로 안전해 보임" 판정 / 가드 약화 제안 수용 / CAVEAT 의 해소 조건 누락 / 산출 인격에게 판정 위임
