@@ -30,8 +30,9 @@ services:
       context: .
       dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
     environment:
-      # Coolify magic env: SERVICE_FQDN_<SERVICE_NAME_UPPERCASE> → domain routing
-      SERVICE_FQDN_FRONTEND: "https://lawfirm-demo.n9n.co.kr"
+      # Domain routing: set via Coolify API PATCH docker_compose_domains
+      # [{"name":"frontend","domain":"https://lawfirm-demo.n9n.co.kr"}]
+      # Do NOT use SERVICE_FQDN_* env here — set via API, not compose file.
       FRONTEND_PORT: "5000"
       BACKEND_BASE_URL: "http://backend:8081"
       CONTRACT_DIR: "/app/middle/contract"
