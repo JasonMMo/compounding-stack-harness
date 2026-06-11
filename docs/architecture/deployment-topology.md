@@ -42,7 +42,10 @@
   - **Coolify 원클릭 OS 템플릿** 보유 → 수동 `install.sh` 생략 가능 (셋업 30분+ 단축).
   - 대안 검토 (기각): Vultr 서울 = 진짜 한국 DC·무약정이나 8GB 동급이 ~\$48/월 (5배). 한국 affiliate 리스트(Ultahost 등) = 커미션 정렬·실 Seoul DC 불명확.
   - 쿠폰: HostAdvice VPS 74%+15% (affiliate 링크, 24개월 선결제 조건). 갱신가 상승 주의.
-- **DNS**: `n9n.co.kr` 와일드카드 `*.n9n.co.kr` A 레코드 → VPS IP. 고객마다 `<slug>.n9n.co.kr` 한 줄로 발급.
+- **DNS**: `n9n.co.kr` 은 **Cloudflare** 관리 (NS clyde/mira.ns.cloudflare.com). 와일드카드 `*` A 레코드 → VPS IP 추가, **반드시 DNS-only (grey cloud)**. 고객마다 `<slug>.n9n.co.kr` 자동 매칭.
+  - ⚠ **grey-cloud 필수**: orange(프록시)면 Cloudflare 가 :80 을 가로채 Coolify traefik 의 Let's Encrypt HTTP-01 챌린지가 실패한다. grey 면 트래픽이 VPS 로 직결돼 per-subdomain LE 정상. (Cloudflare 무료 플랜은 와일드카드 프록시 미지원 → 어차피 grey 강제.)
+  - 대안: Cloudflare API 토큰으로 DNS-01 와일드카드 단일 인증서도 가능하나, 기본은 grey + per-subdomain HTTP-01 로 단순화.
+  - apex `n9n.co.kr` 는 기존 설정 유지 (랜딩/포트폴리오 별도). preview 엔 `*` 와일드카드만 필요.
 - **비용 프레이밍**: 건당 500만원 대비 월 \$6 는 무의미. **신뢰도 > 비용 절감** — 여기서 아끼지 않는다 (단 CEO 선택은 초기 KVM 1 절약, 수요 확인 후 업글).
 
 ### Preview 부트스트랩 런북 (1회)
@@ -52,7 +55,7 @@
 1. Hostinger KVM 2 발급 (싱가포르 리전, OS = **Coolify 애플리케이션 템플릿** 또는 Ubuntu 24.04 LTS). SSH 키 인증만, 비밀번호 로그인 비활성.
 2. 방화벽: 22(SSH, 내 IP 화이트리스트 권장)/80/443 만 개방.
 3. Coolify: 원클릭 템플릿이면 설치 완료 상태. 수동이면 `curl -fsSL https://coolify.io/install.sh | bash` (설치 전 스크립트 검토, CISO).
-4. DNS: 도메인 등록기관에서 `*.n9n.co.kr` + `n9n.co.kr` A 레코드 → VPS IP.
+4. DNS (Cloudflare): `*` A 레코드 → VPS IP, **DNS-only(grey cloud)**. (orange 면 LE HTTP-01 실패.)
 5. Coolify 에서 와일드카드 TLS (Let's Encrypt DNS-01) 또는 per-project TLS 구성.
 6. 헬스체크 + 레지스트리 (`infra/registry/`) 에 VPS·도메인 자산 기록.
 
