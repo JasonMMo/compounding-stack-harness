@@ -207,12 +207,19 @@ body: {"key":"SECRET_KEY","value":"<value_from_vault>"}
 
 ## Step 7 — 레지스트리 등록
 
-`infra/registry/<slug>.yaml` 을 `_template.yaml` 기반으로 작성:
+> **자동화**: `deploy_to_coolify.py` 가 배포 성공 후 자동으로 `infra/registry/<slug>.yaml` 을 갱신한다.
+>
+> - 갱신 필드: `coolify_project`, `coolify_app`, `url`, `status`, `deployed_at` (Coolify `finished_at` 타임스탬프 사용, 하드코드 금지)
+> - **merge 보장**: `secret_ref`, `tls`, `contact`, `production`, `build_commit` 등 수동 작성 필드 절대 클로버 금지
+> - 파일 없으면 최소 스켈레톤 자동 생성
+> - 갱신 후 커밋은 별도로 (`--skip-registry` 플래그로 skip 가능)
+
+수동 작성이 필요한 경우에만: `infra/registry/<slug>.yaml` 을 `_template.yaml` 기반으로 작성:
 - `secret_ref`: `vault/<slug>/secret-key` 참조만 (평문 금지)
 - 모든 uuid (coolify_project, coolify_app) 기록
 - `tls` 필드: `openssl x509` 출력 기준
 
-커밋:
+레지스트리 커밋:
 
 ```bash
 git add infra/registry/<slug>.yaml
@@ -242,15 +249,23 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 | /health | PASS | HTTP 200 |
 | SECRET_KEY 주입 | PASS | env uuid: uow88ywm0w2wskq30ct8lfju |
 
-## 수동 단계 중 자동화 갭
+## 자동화 현황 및 남은 갭 (2026-06-12 갱신)
 
-현재 수동으로 하는 단계 중 `preview_package.py` 가 자동 생성했어야 하는 것:
+| 단계 | 자동화 상태 | 명령 |
+|---|---|---|
+| compose 파일 생성 | **완료** | `preview_package.py --profile <slug> --coolify` |
+| compose commit+push | **완료** | `deploy_to_coolify.py --slug <slug> --commit` |
+| manifest SCP | **완료** | deploy_to_coolify.py 내장 |
+| Coolify API 4단계 | **완료** | deploy_to_coolify.py 내장 |
+| 레지스트리 갱신 | **완료** | deploy_to_coolify.py 내장 (merge, secret_ref 보존) |
+| GitHub webhook 등록 | **조사 완료 — CTO 컨펌 대기** | `deploy_to_coolify.py --slug shop-demo --setup-webhook` (계획 출력) / `--confirm` (실행, CTO 승인 후) |
 
-1. **server-compose 파일 미생성** (핵심 갭): `preview_package.py` 는 로컬 절대경로 기반 `out/<slug>/docker-compose.yml` 만 생성함. Coolify 용 `deploy/preview/<slug>.compose.yml` (서버 manifest 경로 `/data/coolify/...`, build context=repo root) 은 수동 작성. → `preview_package.py --coolify` 옵션으로 `deploy/preview/<slug>.compose.yml` 자동 생성 필요.
-2. **Coolify API 시퀀스 수동 실행**: project 생성→app 생성→도메인 PATCH→deploy 트리거 4단계가 각각 별도 스크립트. → `deploy_to_coolify.py --slug <slug>` 단일 스크립트로 통합 가능.
-3. **manifest scp 수동**: → `preview_package.py` 또는 `deploy_to_coolify.py` 에서 scp 단계 포함 가능.
+### webhook 자동 재배포 컨펌 게이트
 
-CTO 가 후속 결정 (자동화 여부·우선순위).
+- **조사 결과 (2026-06-12)**: Coolify 4.1.2 webhook 엔드포인트 = `https://187.77.140.157/webhooks/source/github/events/manual`, 인증 = GitHub HMAC-SHA256 (`X-Hub-Signature-256`), 시크릿 = 앱의 `manual_webhook_secret_github` (40자 hex, 자동 생성됨)
+- **중요 제한**: Coolify 4.1.2 webhook 은 `git_repository` 로 앱을 매칭 — master push 시 **같은 repo 를 가진 모든 앱이 동시 재배포**됨. 현재 lawfirm-demo + shop-demo 2개 테넌트 모두 트리거됨.
+- **CTO 컨펌 필요 항목**: ① 2 테넌트 동시 자동 재배포 허용 여부 ② webhook URL 이 VPS IP 직접(443) 사용해도 무방한지 (FQDN 사용 권장 여부) ③ 적용 범위 (shop-demo 먼저 / 전체 동시)
+- **컨펌 후 실행**: `PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug shop-demo --setup-webhook --confirm`
 
 ## 비용
 
