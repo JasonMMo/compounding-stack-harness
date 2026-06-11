@@ -18,5 +18,7 @@
 
 | 파일 | 내용 | 비고 |
 |---|---|---|
-| `coolify_api_token` | Coolify API 토큰 **값만** (한 줄, 접두어·따옴표 없이) | Coolify 4.x. `tr` 로 읽음 |
+| `preview-vps.env` | Coolify API 토큰 **값만** (한 줄, raw). **이게 운영 파일** | write+deploy 스코프. `sed -E 's/^COOLIFY_API_TOKEN=//' \| tr -d ...` 로 읽음 (접두어 유무 양쪽 안전) |
 | (SSH 키) | `~/.ssh/n9n_preview_ed25519` | repo 밖 operator-local |
+
+> ⚠ 시크릿 소스 경로는 **`preview-vps.env` 한 곳으로 고정**. 다른 파일(`coolify_api_token`)을 읽으려다 없으면 `len=0` 으로 오인 → 빈 값일 땐 `cat`/`cut` 금지, `wc -c`(바이트 길이)·존재 확인만으로 진단 (값 비노출).
