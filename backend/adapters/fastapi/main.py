@@ -17,6 +17,14 @@ from __future__ import annotations
 
 import os
 
+# Load .env before any module-level env-var reads (e.g. legal._DB_URL).
+# python-dotenv is optional — if absent, env vars must be set manually.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env"), override=False)
+except ImportError:
+    pass
+
 from fastapi import FastAPI
 
 from routers import auth, entity, legal, status
