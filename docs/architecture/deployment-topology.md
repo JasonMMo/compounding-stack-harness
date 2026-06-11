@@ -89,6 +89,32 @@ DDL + screen-manifest + adapter 산출
 - preview 배포는 git push 트리거 (Coolify webhook). production 패키징은 명시적 릴리스 (인도 승인 후).
 - L4 live 풀테스트와 정렬 — preview URL 이 곧 L4 검증 대상.
 
+### Coolify API 배포 레시피 (검증됨, Growth-35 2026-06-11)
+
+토큰은 볼트(`infra/secrets/`)에서 `tr`로 값만 읽어 **SSH 암호 채널로 localhost:8000**에만 쓴다 (평문 HTTP 인터넷 미경유). 토큰 스코프는 **write+deploy** 필수 (read-only 면 POST 가 `Unauthenticated`).
+
+```
+T=$(sed -E 's/^COOLIFY_API_TOKEN=//' infra/secrets/preview-vps.env | tr -d ' \t\r\n')   # 값 비출력, ${#T}만 확인
+ssh -i ~/.ssh/n9n_preview_ed25519 root@<ip> "COOLIFY_API_TOKEN='$T' bash -s" <<'EOF'
+H="Authorization: Bearer $COOLIFY_API_TOKEN"; B="http://localhost:8000/api/v1"
+# 1) 프로젝트            → {"uuid": project_uuid}
+curl -s -X POST -H "$H" -H 'Content-Type: application/json' -d '{"name":"<slug>"}' "$B/projects"
+# 2) 환경 uuid 조회      → environments[].uuid (자동생성 "production")
+curl -s -H "$H" "$B/projects/<project_uuid>"
+# 3) docker 이미지 앱 + 도메인 + 즉시배포  → {"uuid": app_uuid}
+curl -s -X POST -H "$H" -H 'Content-Type: application/json' -d '{
+  "project_uuid":"<p>","server_uuid":"<s>","environment_name":"production",
+  "docker_registry_image_name":"<img>","docker_registry_image_tag":"latest",
+  "ports_exposes":"80","domains":"https://<slug>.n9n.co.kr","instant_deploy":true
+}' "$B/applications/dockerimage"
+# 4) 정리: DELETE /applications/<app_uuid> (비동기 큐) → 완료 후 DELETE /projects/<project_uuid>
+EOF
+```
+
+- 증명: `traefik/whoami` → `cicd-smoke.n9n.co.kr` 외부 HTTPS 200 + LE 정식 인증서(90일) ~45s. 삭제 후 도메인 503, 잔여 0.
+- 서버 uuid `n12vdydjpwp81hu5i15n1gsb` (localhost). 와일드카드 `*.n9n.co.kr` grey-cloud 가 `<slug>` 서브도메인 DNS 를 자동 커버 → 앱별 DNS 추가 불필요.
+- v1 다음: `scaffold.py` 산출 이미지를 `<img>` 자리에 → 한 명령으로 고객 preview 생성.
+
 ## 5. GTM 접점 (3종)
 
 | # | 접점 | 수단 | 비고 |
