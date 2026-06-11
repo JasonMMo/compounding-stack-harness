@@ -23,6 +23,10 @@ description: Run the domain-expert curation loop — catalog grounding, customer
 - **시작**: step 1·2 — catalog 와 사례가 인터뷰보다 먼저 (같은 질문 반복 방지).
 - **종료**: step 6 — 산업 지식의 단일 누적 위치는 preset seed + wiki concepts.
 
+## 출력 규약
+
+큐레이션 근거·인터뷰 기록·매핑 상세는 산출물(`profiles/<slug>.yaml`·seed·wiki)에 직접 쓰거나 일회성이면 `out/analysis/<topic>.md` 에 쓰고, main 으로는 **요약 + 경로 + 갭/에스컬레이션 항목만** 반환한다 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
+
 ## Anti-patterns
 
 - phantom entity 키 (Growth-14 acme-erp 교훈) / 추측 컨벤션 / 직접 머지 / 산업 특수 지식을 generic 에 욱여넣기 (vertical 에스컬레이션 대신)
