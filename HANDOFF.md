@@ -4,8 +4,9 @@
 
 ## ▶▶▶ 복귀 직후 상태 (확인용)
 
-- **Git**: clean, master 동기화 (HEAD `af78448` = Growth-35 learn-log).
+- **Git**: clean, master 동기화 (HEAD = Growth-35 provisioning).
 - **팀**: 9-인격 (DevOps 합류). `Agent(subagent_type="devops-agent", ...)` 직접 spawn 가능.
+- **★ preview VPS LIVE**: Hostinger KVM 2 `187.77.140.157` (싱가포르). SSH `ssh -i ~/.ssh/n9n_preview_ed25519 root@187.77.140.157` (키 인증만). Coolify 4.1.2 healthy. `*.n9n.co.kr` 자동 HTTPS **검증 완료**. admin 등록됨(8000). 잔여: 8000 노출 차단 + CI/CD v1.
 - **codegraph MCP** ✔ 연결됨 — `mcp__codegraph__*` 8종 사용 가능. 의존 작업 전 `codegraph sync` 권장 (stale 차단).
 - **claude-mem 비활성화** — 세션 시작 덤프/Read 힌트 없음. DB 보존, 키 true 로 복구.
 - **security-agent (CISO)** 직접 spawn 가능 — `Agent(subagent_type="security-agent", ...)`.
@@ -21,16 +22,17 @@
 
 ## 현재 상태
 
-- **Milestone**: M2/M3 — legal vertical + 비대면 창업 인프라 토대. lawfirm-demo 는 **가상 시나리오 검증 완료** (실 고객 아님). preview/production 2-티어 토폴로지 확정 (인프라 미provisioning).
-- **Verification Matrix**: L2 PASS, L4 PASS, 보안리뷰 PASS. L1·L3 NOT_SETUP (개별 green). 가드 13개 green.
+- **Milestone**: M2/M3 — preview 티어 **인프라 live** (provisioning 완료, TLS 파이프라인 검증). lawfirm-demo 는 가상 시나리오 검증 완료.
+- **preview VPS 진행**: ✅VPS·SSH키·apt최신·커널패치 ✅DNS와일드카드(Cloudflare grey) ✅Coolify TLS 자동발급 검증 ⏳8000 노출차단 ⏳Coolify API 토큰(볼트) ⏳CI/CD v1.
+- **Verification Matrix**: L2 PASS, L4 PASS, 보안리뷰 PASS. L1·L3 NOT_SETUP. 가드 13개 green.
 
 ## 다음 후보 (우선순위)
 
-1. **DevOps: preview 티어 provisioning** — Seoul VPS 발급 + Coolify 설치 + `*.n9n.co.kr` 와일드카드 DNS (`deployment-topology.md` §2 런북). CEO 액션 필요 (VPS 구매·DNS). 첫 인프라 비용 §5 환류.
-2. **DevOps: CI/CD v1** — `scaffold.py` → docker build → Coolify preview push 파이프라인 + 레지스트리 첫 엔트리.
-3. **engineer: `.npmrc` codegraph 버전 핀** (`@colbymchenry/codegraph@0.9.9`) — CISO CAV-2 후속, 공급망 hedge.
-4. **G-14 (`--check` stale-anchor)** — ledger-index stale 앵커 탐지 가드 (오래 밀린 후보).
-5. **실 고객 발굴** (M2 게이트) — 숨고/크몽 첫 의뢰. 매출은 실 고객에서 시작.
+1. **DevOps: 8000 admin UI 노출 차단** — Coolify instance FQDN을 `coolify.n9n.co.kr`(443/TLS)로 설정 후 raw 8000 차단 (or 클라우드 방화벽→CEO IP). CISO 잔여.
+2. **DevOps: Coolify API 토큰 → CI/CD v1** — 토큰을 `infra/secrets/`(gitignored 볼트)에 저장(시크릿 chat 금지) → `scaffold.py` → Coolify API 배포 자동화 → `<slug>.n9n.co.kr` preview.
+3. **첫 고객 preview 리허설** — 가상 고객 1명으로 profile→scaffold→Coolify 배포→`<slug>.n9n.co.kr` HTTPS 전 과정 dogfood + 레지스트리 `<slug>.yaml` 첫 엔트리.
+4. **engineer: `.npmrc` codegraph 버전 핀** / **G-14 (`--check`)** (이월).
+5. **실 고객 발굴** (M2 게이트) — 숨고/크몽 첫 의뢰.
 
 ## 운영 메모
 
