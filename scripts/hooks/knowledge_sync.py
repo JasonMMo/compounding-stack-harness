@@ -112,19 +112,11 @@ def _build_context(file_path_str: str, skill_names: list) -> str:
     except ValueError:
         pass
 
-    wiki_hint = (
-        " (4) python scripts/wiki/build_graph.py 재생성 (wiki 페이지 변경 시)"
-        " (5) `qmd update` 로 검색 인덱스 재인덱스 (지식 추가가 qmd search 에 잡히려면 필수)"
-        if is_wiki
-        else ""
-    )
+    wiki_hint = " + wiki: build_graph.py 재생성, qmd update" if is_wiki else ""
 
     return (
-        f"[knowledge-sync] {file_path_str} 변경됨. 점검: "
-        f"(1) knowledge/wiki/index.md 1줄 갱신 여부 "
-        f"(2) 신뢰도 라벨 (knowledge/wiki/README.md 규약) "
-        f"(3) 연관 skill ({skills_list}) 의 절차·예시가 이 변경과 어긋나지 않는지 — "
-        f"어긋나면 skill 파일 갱신이 이 작업의 일부다 (CLAUDE.md §7 환류 체크)"
+        f"[knowledge-sync] {file_path_str} → 연관 skill ({skills_list}) 절차가 "
+        f"이 변경과 어긋나는지 점검 (CLAUDE.md §7 환류)"
         f"{wiki_hint}"
     )
 
