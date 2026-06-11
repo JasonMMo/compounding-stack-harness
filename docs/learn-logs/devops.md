@@ -44,3 +44,10 @@
 - **증명**: 임의 `<slug>.n9n.co.kr` → 자동 HTTPS 파이프라인 작동. preview 티어 코어 기능 live.
 - **CISO 잔여**: ① 8000(admin UI) 인터넷 노출 (admin 등록·강비번으로 auth 보호되나 source-IP 제한 권장 — CEO 공인 IP 121.165.228.221 관측되나 가정용 동적 가능성) ② apt upgrade ③ 향후 admin 을 `coolify.n9n.co.kr`(443) 로 서빙 후 raw 8000 차단이 정석.
 - **다음**: 남은 하드닝 → Coolify API 토큰(시크릿 볼트) → CI/CD v1 (`scaffold.py`→Coolify 배포) → 첫 고객 preview.
+
+### Growth-35 CISO 사고 (2026-06-11) — 토큰 source 노출 + 규약 수정
+
+- **사고**: Coolify API 토큰을 볼트에서 `set -a; . preview-vps.env` (source) 로 읽음 → Coolify 토큰이 `id|hash` 형식(`|` 포함)이라 미인용 값의 `|` 를 셸이 파이프로 해석 → 에러 메시지로 **토큰 값이 transcript 에 노출**.
+- **영향**: 토큰이 root 권한 + 8000 인터넷 노출 → 노출 토큰 폐기 필수. 커밋물엔 없음(볼트 gitignored), git history 깨끗.
+- **조치**: ① CEO 가 노출 토큰 즉시 revoke + 재발급 ② 볼트 규약 수정 — **source 금지, `sed -n 's/^KEY=//p'` 추출** (셸 미실행, 특수문자 안전). README + .example 반영.
+- **교훈 (1줄)**: 시크릿 .env 는 절대 `source` 하지 않는다 — 임의 토큰의 특수문자(`|$ \``)가 셸에서 실행·노출된다. 값 추출은 sed/grep 으로 셸을 안 거치게. (가드 후보: 스크립트 내 `source *.env`/`. *.env` 탐지.)
