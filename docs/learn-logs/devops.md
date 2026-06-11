@@ -51,3 +51,4 @@
 - **영향**: 토큰이 root 권한 + 8000 인터넷 노출 → 노출 토큰 폐기 필수. 커밋물엔 없음(볼트 gitignored), git history 깨끗.
 - **조치**: ① CEO 가 노출 토큰 즉시 revoke + 재발급 ② 볼트 규약 수정 — **source 금지, `sed -n 's/^KEY=//p'` 추출** (셸 미실행, 특수문자 안전). README + .example 반영.
 - **교훈 (1줄)**: 시크릿 .env 는 절대 `source` 하지 않는다 — 임의 토큰의 특수문자(`|$ \``)가 셸에서 실행·노출된다. 값 추출은 sed/grep 으로 셸을 안 거치게. (가드 후보: 스크립트 내 `source *.env`/`. *.env` 탐지.)
+- **2차 노출 (같은 세션)**: 재발급 토큰을 `cut -d= -f1` 로 진단 → 파일에 `KEY=` 접두어 없이 값만 있어 전체 줄(=토큰) 출력. **2번째 토큰도 폐기**. 근본 교훈: ① 불투명 토큰은 `KEY=value` 금지 → **값만 담은 전용 파일**(`coolify_api_token`), `tr` 로 읽고 `${#}` 길이만 확인 ② **읽기 실패 시 포맷 추측 진단(`cut`/`xxd`/`cat`) 금지** — 진단이 곧 노출. 빈 값이면 CEO 에게 파일 확인 요청. README/example 반영, `preview-vps.env`(KEY=value) 폐기 → `coolify_api_token`(raw).
