@@ -24,6 +24,10 @@ description: Run the CISO security review loop — threat surface enumeration, s
 - **시작**: step 2 — 과거 보안 발견·caveat 검색 없이 리뷰 시작 금지.
 - **종료**: step 7 — 비자명한 보안 판정 근거와 self-host 하드닝 패턴은 wiki/체크리스트로 누적 (고객 수 증가 시 반복 리뷰를 가드로 상수화하는 hedge).
 
+## 출력 규약
+
+리뷰 본문·라인 인용·PoC 는 `docs/learn-logs/security.md` (누적) 또는 인도물 단위면 `docs/delivery/<slug>/security-review.md` 에 쓰고, main 으로는 **판정 + 경로 + BLOCK/CAVEAT 항목만** 반환한다 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
+
 ## Anti-patterns
 
 - "안전해 보임" 판정 (재현 명령 없음) / 보안 BLOCK 을 시간 압박으로 약화 / CAVEAT 의 해소 조건 누락 / live-검증 안 된 보안 능력을 인도 문서에 약속 / 시크릿 발견을 조용히 수정 (에스컬레이션 의무 — git history rotate 필요)
