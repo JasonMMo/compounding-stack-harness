@@ -29,6 +29,7 @@
 | preview VPS — TLS 파이프라인 | 2026-06-11 | provision (2차) | **검증 PASS** — `<slug>.n9n.co.kr` 자동 HTTPS | LE 무료 |
 | preview VPS — CI/CD (Coolify API) | 2026-06-11 | deploy (스모크) | **검증 PASS** — API 로 프로젝트→앱→배포→외부 HTTPS 200, 정리 후 잔여 0 | LLM 0, infra 0 (기존 VPS) |
 | preview VPS — 8000 노출 차단 | 2026-06-11 | harden (3차) | **검증 PASS** — 클라우드 방화벽 allow-list, 8000/8080/6001/6002 외부 차단 실측, 22/80/443 유지. CISO 잔여 0 | $0 |
+| 로컬 (preview 패키징) | 2026-06-11 | package (scaffold 결선) | **검증 PASS** — profile→2-container compose, lawfirm-demo /login·/health 200, manifest 14 entities. Coolify 배포는 Phase 2 | $0 |
 
 ### Growth-35 provisioning 1차 (2026-06-11) — preview VPS 부트스트랩
 
@@ -72,3 +73,12 @@
 - **대시보드 접속**: 8000 차단 후엔 **SSH local-forward** `ssh -i ~/.ssh/n9n_preview_ed25519 -L 8000:localhost:8000 root@<ip>` → `http://localhost:8000` (암호 채널, 인터넷 노출 0). CEO 접속 확인.
 - **결과**: provisioning 1·2차의 CISO 미해소(방화벽·8000 노출) **전부 해소 — CISO 잔여 0**. apt 최신·커널 패치는 1차에서 완료.
 - **교훈 (1줄)**: 관리 UI 노출 차단은 "관리용 포트를 인터넷에 안 연다 + SSH 터널로만 접속" 이 가장 단순·확실. FQDN/리버스프록시 경로는 webhook 등 외부 인바운드가 필요할 때만.
+
+### Growth-35 scaffold→preview 결선 v1 (2026-06-11) — 로컬 2-container 패키징 (engineer 위임)
+
+- **설계 (CTO)**: preview 배포 단위 = **DB 없는 2-container** — 백엔드 fastapi 가 `store.py` InMemoryEntityStore(시작 시 빈 상태) 라 postgres 불필요. frontend(vanilla-htmx, manifest 렌더, 도메인 대상) + backend(/api/* wire). 정찰로 entry/env/포트/in-memory 확인 후 engineer 에 구현 위임(charter 모델 롤: CTO 설계→engineer 구현).
+- **구현 (engineer)**: `backend/.../Dockerfile` + `frontend/.../Dockerfile`(둘 다 build context=repo root, middle/contract+catalog COPY) + 루트 `.dockerignore` + `scripts/workflow/preview_package.py --profile <slug>`(scaffold 호출→`out/<slug>/docker-compose.yml` 생성, frontend :8090 노출, backend 미노출, manifest read-only bind, SECRET_KEY 주석 placeholder). 4 파일 개별 커밋.
+- **검증 (engineer, 로컬)**: lawfirm-demo `docker compose up -d --build` → `/login` 200, `/health` 200, 프론트 로그 `ManifestLoader: 14 entities` → `down -v` 정리. 가드 0 FAIL(G-11 이 scripts/workflow 4 스크립트 스캔, render.py 단일소스 import 확인).
+- **출력 규약 적용**: engineer 가 상세 보고서 `out/analysis/preview-wiring-v1.md`(gitignored) 작성, main 엔 envelope ~15줄(상태+파일+검증+CAVEAT)만 반환. subagent 내부 65k 토큰 격리.
+- **Phase 2 (Coolify) 미해소 — CTO 다음**: ① compose build context 가 절대 경로(로컬 전용) → Coolify(Linux)는 §4 pre-built `dockerimage`(레지스트리) 경로로 재설계 ② **manifest 주입**: 현재 host volume bind(1 이미지 N 프로필 pluggability 위해) → Coolify 단일호스트면 사전배포 단계로 manifest 를 서버에 두거나, env/init-fetch 로 전환. 이미지 태그 `compounding-{backend|frontend}-{slug}:local`.
+- **교훈 (1줄)**: 배포 단위를 "정찰로 실제 런타임 의존(여기선 in-memory store→DB 불필요)을 먼저 확인" 하면 과설계(불필요한 postgres 컨테이너)를 피한다. local-first 검증으로 Coolify 전에 컨테이너 단위를 de-risk.
