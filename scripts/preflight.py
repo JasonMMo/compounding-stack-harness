@@ -19,6 +19,12 @@ import pathlib
 import socket
 import sys
 
+# Windows consoles default to a legacy codepage (e.g. cp949) that cannot
+# encode the em-dash/check glyphs this script prints — force UTF-8.
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 # ---------------------------------------------------------------------------
