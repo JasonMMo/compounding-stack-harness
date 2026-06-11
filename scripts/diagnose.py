@@ -985,6 +985,42 @@ def g12_catalog_fk_hygiene() -> GuardResult:
     )
 
 
+_OUTPUT_PROTOCOL_REF = "subagent-output-protocol"
+
+
+def g13_subagent_output_protocol_wired() -> GuardResult:
+    """G-13 / Growth-33 — every persona loop SKILL wires the subagent output protocol.
+
+    Detection: each .claude/skills/<role>-loop/SKILL.md must link to
+    subagent-output-protocol.md (the file-then-envelope return discipline).
+    Heading wording varies across loops ('## 출력 규약' vs '**반환 규약**'), so the
+    check is on the protocol link, not the heading. This keeps the return
+    boundary from silently dropping out of a loop when it is edited — the
+    protocol's drift failure mode. Envelope size itself is a runtime property
+    and cannot be checked statically; this guard protects the mechanism that
+    makes the 8-persona agents comply by default.
+    """
+    skills_dir = REPO_ROOT / ".claude" / "skills"
+    if not skills_dir.exists():
+        return GuardResult(
+            "G-13", "subagent output protocol wired", "Growth-33",
+            status="SKIP", notes="No .claude/skills directory.",
+        )
+    violations: list[str] = []
+    checked = 0
+    for skill in sorted(skills_dir.glob("*-loop/SKILL.md")):
+        checked += 1
+        rel = skill.relative_to(REPO_ROOT).as_posix()
+        if _OUTPUT_PROTOCOL_REF not in skill.read_text(encoding="utf-8"):
+            violations.append(f"{rel}: no link to subagent-output-protocol.md")
+    return GuardResult(
+        "G-13", "subagent output protocol wired", "Growth-33",
+        status="FAIL" if violations else ("PASS" if checked else "SKIP"),
+        violations=violations,
+        notes=f"Scanned {checked} *-loop SKILL(s).",
+    )
+
+
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
@@ -1002,6 +1038,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-10": g10_ddl_catalog_integrity,
     "G-11": g11_creater_catalog_single_source,
     "G-12": g12_catalog_fk_hygiene,
+    "G-13": g13_subagent_output_protocol_wired,
 }
 
 
