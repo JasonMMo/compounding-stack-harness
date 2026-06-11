@@ -22,7 +22,14 @@
 
 | # | 고객 | 시작 | 단계 | 상태 |
 |---|---|---|---|---|
-| 1 | 30인 법무법인 (lawfirm-demo) | 2026-06-11 | Step 5 Deliver | 인도 패키지 조립 완료 (`docs/delivery/lawfirm-demo/`), CEO 승인 대기 — 외부 전달 책임은 CEO (charter §2) |
+| 1 | 30인 법무법인 (lawfirm-demo) | 2026-06-11 | Step 5 Deliver | 인도 패키지 조립 완료 (`docs/delivery/lawfirm-demo/`) + CISO 보안 게이트 PASS (CAVEAT 3건 해소, Growth-32). CEO 승인 대기 — 외부 전달 책임은 CEO (charter §2) |
+
+### CEO 인터뷰 답변 기록 (lawfirm-demo, 2026-06-11)
+
+미답이던 2문항이 CEO 답변으로 채워짐 (인터뷰 시트 A5·A6):
+
+- **A6 (예산)**: 초기 구축비 **500만원 (일회성)** — self-host 설치·구축·라이선스. profile `billing.setup_cost_krw: 5000000`. 월 LLM 운영 예산은 초기비와 분리, AI 검색 빈도 측정 후 별도 확정 (`llm_budget_usd_per_month: TBD` 유지).
+- **A5 (보안·데이터)**: **소송 데이터 외부 유출 절대 금지, self-host 필수.** "우리가 제공하는 결과물에 보안 결함이 없도록 전달" — 인도물에 대한 명시적 보안 품질 요구. profile `security` 섹션 신설 (data_residency: on-premise, self_host: required). 이 요구가 **CISO 인격 신설 (Growth-32)** 의 직접 계기. CISO 첫 리뷰에서 A5(외부 유출 0) 충족 확인.
 
 ## §3 — Open Loops (이 인격 책임)
 
