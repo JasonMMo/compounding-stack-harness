@@ -2,7 +2,7 @@ version: 1
 customer:
   slug: lawfirm-demo
   display: "법무법인 데모"
-  status: draft
+  status: active   # draft→active: L4 5종 PASS + 인도 패키지 조립 (Growth-31, CTO 결정)
   industry: legal
   size: 30
   locale: ko
