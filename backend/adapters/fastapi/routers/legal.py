@@ -134,7 +134,7 @@ async def search_precedents(
     except Exception as exc:  # noqa: BLE001
         log.error("legal router: search query failed — %s", exc)
         return JSONResponse(
-            content={"error": {"code": "INTERNAL", "message": str(exc)}},
+            content={"error": {"code": "INTERNAL", "message": "내부 오류가 발생했습니다. 관리자에게 문의하세요."}},
             status_code=500,
         )
     finally:
