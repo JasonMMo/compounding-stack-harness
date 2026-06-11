@@ -23,5 +23,16 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "nexacro-claude-skills@nexacro-claude-skills": false,
+    "nexacro-fullstack-starter@nexacro-claude-skills": false,
+    "frontend-design@claude-plugins-official": false,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": false,
+    "context-engineering@context-engineering-marketplace": false,
+    "glm-plan-usage@zai-coding-plugins": false,
+    "document-skills@anthropic-agent-skills": false,
+    "claude-hud@claude-hud": false,
+    "superpowers@superpowers-dev": false
   }
 }
