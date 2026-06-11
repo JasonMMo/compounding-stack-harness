@@ -22,7 +22,7 @@
 
 | # | 고객 | 시작 | 단계 | 상태 |
 |---|---|---|---|---|
-| — | (없음 — M2 첫 고객 대기) | | | |
+| 1 | 30인 법무법인 (lawfirm-demo) | 2026-06-11 | Step 5 Deliver | 인도 패키지 조립 완료 (`docs/delivery/lawfirm-demo/`), CEO 승인 대기 — 외부 전달 책임은 CEO (charter §2) |
 
 ## §3 — Open Loops (이 인격 책임)
 
