@@ -23,6 +23,10 @@ description: Run the CDO design loop — token single-source grounding, persona 
 - **시작**: step 2 — 페르소나 가정 대신 wiki 의 실제 고객 기록.
 - **종료**: step 6 — 패턴이 두 고객에서 반복되면 디자인 시스템 승격 후보.
 
+## 출력 규약
+
+디자인 근거·토큰 표·페르소나 인터랙션 상세는 `docs/learn-logs/cdo.md` (누적) 또는 인도물 단위면 `docs/delivery/<slug>/design-review.md` 에 쓰고, main 으로는 **요약 + 경로 + 결정 항목만** 반환한다 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
+
 ## Anti-patterns
 
 - 하드코딩 hex / adapter 별 토큰 fork / contract 암묵 변경 / 페르소나 없는 단일 화면 / 장식적 복잡성 (비전문 사용자 3 페르소나가 기준)
