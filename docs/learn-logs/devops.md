@@ -32,6 +32,7 @@
 | 로컬 (preview 패키징) | 2026-06-11 | package (scaffold 결선) | **검증 PASS** — profile→2-container compose, lawfirm-demo /login·/health 200, manifest 14 entities. Coolify 배포는 Phase 2 | $0 |
 | lawfirm-demo.n9n.co.kr (Coolify Phase 2) | 2026-06-11 | deploy (첫 영속 preview) | **검증 PASS** — build_pack=dockercompose, LE TLS 자동, /login 200, /login HTML 정상. 앱 UUID opryb94j9k5cjdv8bienenv0 | LLM ~$0.5, infra $0 (기존 VPS) |
 | shop-demo.n9n.co.kr (리허설) | 2026-06-12 | deploy (반복 가능성 입증) | **검증 PASS** — 동일 경로 2번째 반복. /login 200, TLS CN=shop-demo, /health 200. 앱 UUID cn56k6xtmhp2njv5ed31xv7t. 런북 신설 | LLM ~$0.3, infra $0 (기존 VPS) |
+| shop-demo.n9n.co.kr (자동화 검증) | 2026-06-12 | deploy (멱등 재배포 — 스크립트) | **PASS** — `deploy_to_coolify.py --slug shop-demo` 단일 명령. 빌드 finished, /login 200, /health 200, TLS CN PASS. preview_package.py --coolify 구조 diff PASS. | LLM ~$0.3, infra $0 |
 
 ### Growth-35 provisioning 1차 (2026-06-11) — preview VPS 부트스트랩
 
@@ -119,3 +120,15 @@
 - **레지스트리**: `infra/registry/shop-demo.yaml` 생성.
 - **수동→자동 갭 (CTO 후속)**: ① `deploy/preview/<slug>.compose.yml` 자동 생성 (현재 수동 복제·치환) ② Coolify API 4단계 단일 스크립트화 ③ manifest scp 자동화.
 - **교훈 (1줄)**: deploy key·server·privkey UUID 는 같은 repo 의 신규 고객마다 완전 재사용 가능 — Coolify project+app UUID 만 신규 발급하면 된다. 배포 시간 ~5분(Phase 2 첫 배포 30분 대비).
+
+### Growth-35 자동화 v1 (2026-06-12) — deploy_to_coolify.py + preview_package.py --coolify
+
+- **목표**: 리허설에서 식별된 수동 갭 3종 자동화 (compose 수동 복제·치환 / API 4단계 수동 실행 / manifest scp 수동).
+- **산출물 1 — `scripts/workflow/preview_package.py --coolify`**: `deploy/preview/<slug>.compose.yml` 자동 생성. 검증된 lawfirm-demo/shop-demo 의 차집합(slug-가변 부분)만 파라미터화. 생성 후 shop-demo 레퍼런스와 구조 diff 자동 실행 — slug 차이 외 0 이면 PASS. 로컬 모드(`--coolify` 없음) 완전 보존.
+- **산출물 2 — `scripts/workflow/deploy_to_coolify.py --slug <slug>`**: 런북 8단계를 멱등·단일 명령으로. project ensure(재사용/생성) → app ensure → domain PATCH → manifest SCP → SECRET_KEY 주입(409=이미 있음 → 스킵, Coolify 4.1.2 per-env PATCH 엔드포인트 미노출 확인) → deploy 트리거 → 빌드 폴링 → 외부 검증(HTTP/TLS).
+- **재사용 상수 하드코딩**: server_uuid `n12vdydjpwp81hu5i15n1gsb`, private_key_uuid `s127pafarr46wlu1r2mre2te` — 런북에서 가져옴, 재생성 금지.
+- **보안 처리**: 토큰 `sed` 추출(shell source 금지, 특수문자 안전). `real_value` 필드 전 응답에서 `***masked***` 치환(CISO §7). SECRET_KEY 값 절대 미출력.
+- **실측 발견**: Coolify 4.1.2 에서 env 이미 존재 시 POST → 409; 단일 env PATCH `/envs/{uuid}` 엔드포인트 존재하지 않음(404). 해결책 = 409 를 idempotent success 로 처리.
+- **shop-demo 멱등 재배포 검증**: `deploy_to_coolify.py --slug shop-demo` → build finished, /login 200, /health 200, TLS CN=shop-demo.n9n.co.kr PASS. 기존 2 테넌트 무손상.
+- **커밋**: `28c8a49` (preview_package.py), `3575569` (deploy_to_coolify.py), `e11ae34` (runbook).
+- **교훈 (1줄)**: 신규 slug 배포 전체 플로우 = `preview_package.py --profile <slug> --coolify` → compose commit+push → `deploy_to_coolify.py --slug <slug> --dry-run` → `deploy_to_coolify.py --slug <slug>` — 이게 단일 진실.
