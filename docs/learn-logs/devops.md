@@ -11,7 +11,8 @@
 - **계기**: CEO 직접 요구 — 이 harness 를 바탕으로 **1인 비대면 창업** (숨고/크몽 건당 500만원). 고객 접점 3종 (메신저·preview 사이트·원격/방문 설치) + 인프라·디지털 자산·CI/CD 담당 인격 필요. n9n.co.kr 도메인 보유.
 - **결정 (CEO 위임 → CTO 설계)**: 인프라/배포/CD 를 engineer·CISO 에 통합하지 않고 전담 9번째 인격으로 분리. 근거 — ① engineer 는 artifact *생성*, DevOps 는 *출하·호스팅·추적* (다른 축) ② CISO 는 보안 *판정*, DevOps 는 하드닝 *실행* ③ 1인이 N 고객 자산을 추적해야 하므로 레지스트리 단일 책임자 필요 ④ charter "직무별 인격" 철학.
 - **핵심 아키텍처 통찰 (CTO)**: **preview 티어 ≠ production 티어**. 우리 가치 제안은 고객 사내망 self-host (M2) → 최종 인도물은 고객 인프라. n9n.co.kr/VPS 는 **고객 설득용 preview/staging 전용**. 이 분리가 배포 선택을 가른다.
-- **배포 결정**: 로컬 Docker+터널을 고객-facing preview 로 쓰지 않는다 (노트북 의존 = 비대면 신뢰도 치명). **Coolify on Seoul VPS** (\$6~12/월) + `*.n9n.co.kr` 와일드카드 DNS → 고객별 `<slug>.n9n.co.kr`. 터널(cloudflared)은 작업 중 화면공유 데모 폴백으로만.
+- **배포 결정**: 로컬 Docker+터널을 고객-facing preview 로 쓰지 않는다 (노트북 의존 = 비대면 신뢰도 치명). **Coolify on Hostinger VPS** (KVM 1, 싱가포르, \$5.84/월 24개월 — CEO 확정, 한국 페이지 검토 후) + `*.n9n.co.kr` 와일드카드 DNS → 고객별 `<slug>.n9n.co.kr`. 터널(cloudflared)은 작업 중 화면공유 데모 폴백으로만.
+  - **provider 비교 (기각)**: Hostinger 한국 DC 없음 → 싱가포르 최근접(~70-90ms, preview 무관). Vultr 서울 = 진짜 한국 DC·무약정이나 8GB 동급 ~\$48/월(5배). 한국 affiliate 리스트(Ultahost 등) = 커미션 정렬·실 Seoul DC 불명확. → preview 는 지연 무관·RAM 가성비 우선이라 Hostinger. Coolify 원클릭 템플릿으로 셋업 단축. 초기 KVM 1, 수요 확인 후 KVM 2 업글.
 - **GTM 접점**: 숨고/크몽 플랫폼 채팅(초기) → 카카오톡 채널(진행) → n9n.co.kr 랜딩/포트폴리오. 커스텀 메신저 ✗ (과설계).
 - **신설 자산**: `.claude/agents/devops-agent.md` + `.claude/skills/devops-loop/SKILL.md` (출력 규약 wiring, G-13) + `docs/architecture/deployment-topology.md` (토폴로지 단일 진실) + `infra/registry/` (디지털 자산 레지스트리 스캐폴드) + charter v1.6 (9-인격) + CLAUDE.md §1 동기화 + INDEX.md 행.
 - **권한**: preview 티어 운영·디지털 자산 레지스트리·CI/CD·시크릿 볼트 운영·설치 런북·인프라 비용 추적 (단독, CTO 아키텍처 제약 내). 인도 설치는 PM 승인 + CISO 보안 게이트 후.
@@ -23,4 +24,4 @@
 
 | 대상 | 일자 | 동작 | 결과 | 비용 델타 |
 |---|---|---|---|---|
-| (인격 신설 — 첫 배포는 다음 세션 preview VPS provisioning 부터) | 2026-06-11 | founding | 토폴로지 v1 확정 | preview 티어 \$6~12/월 (예정, 미provisioning) |
+| (인격 신설 — 첫 배포는 다음 세션 preview VPS provisioning 부터) | 2026-06-11 | founding | 토폴로지 v1 확정 + provider 확정 (Hostinger KVM 1 싱가포르) | Hostinger KVM 1 \$5.84/월 24개월 (예정, 미provisioning) |
