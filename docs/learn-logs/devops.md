@@ -31,6 +31,7 @@
 | preview VPS — 8000 노출 차단 | 2026-06-11 | harden (3차) | **검증 PASS** — 클라우드 방화벽 allow-list, 8000/8080/6001/6002 외부 차단 실측, 22/80/443 유지. CISO 잔여 0 | $0 |
 | 로컬 (preview 패키징) | 2026-06-11 | package (scaffold 결선) | **검증 PASS** — profile→2-container compose, lawfirm-demo /login·/health 200, manifest 14 entities. Coolify 배포는 Phase 2 | $0 |
 | lawfirm-demo.n9n.co.kr (Coolify Phase 2) | 2026-06-11 | deploy (첫 영속 preview) | **검증 PASS** — build_pack=dockercompose, LE TLS 자동, /login 200, /login HTML 정상. 앱 UUID opryb94j9k5cjdv8bienenv0 | LLM ~$0.5, infra $0 (기존 VPS) |
+| shop-demo.n9n.co.kr (리허설) | 2026-06-12 | deploy (반복 가능성 입증) | **검증 PASS** — 동일 경로 2번째 반복. /login 200, TLS CN=shop-demo, /health 200. 앱 UUID cn56k6xtmhp2njv5ed31xv7t. 런북 신설 | LLM ~$0.3, infra $0 (기존 VPS) |
 
 ### Growth-35 provisioning 1차 (2026-06-11) — preview VPS 부트스트랩
 
@@ -105,3 +106,16 @@
   7. SECRET_KEY가 env var 목록 조회 시 `real_value` 필드에 노출됨 — 목록 조회 응답 출력 시 value 필드 마스킹 필요.
 - **레지스트리**: `infra/registry/lawfirm-demo.yaml` 생성 — 모든 UUID/경로/TLS/secret_ref 기록.
 - **교훈 (1줄)**: Coolify dockercompose 도메인은 "SERVICE_FQDN_* env"가 아니라 "API PATCH docker_compose_domains 배열"로 설정한다 — 이 패턴이 4.1.2 공식 메커니즘.
+
+### Growth-35 리허설 — shop-demo.n9n.co.kr (2026-06-12) — Phase 2 반복 가능성 입증 PASS
+
+- **목표**: lawfirm-demo 와 동일한 경로로 shop-demo(소매 SMB) 를 배포 — Phase 2 가 손대지 않고 반복 가능한지 검증 + 런북 고착화.
+- **경로**: profile shop-demo(기존) → manifest 생성(entities: contact·sales-order·sales-order-line) → `deploy/preview/shop-demo.compose.yml`(lawfirm-demo 복제·3곳 치환) → manifest scp → Coolify API 4단계(project→app→domain PATCH→deploy) → 외부 검증.
+- **신규 UUID**: project `k5vmkpn9ygimznoxnavpwd4y`, app `cn56k6xtmhp2njv5ed31xv7t`, deploy `d3k0p5ssr978fhnl5veu1pyn`.
+- **재사용 UUID (변경 없음)**: server `n12vdydjpwp81hu5i15n1gsb`, privkey `s127pafarr46wlu1r2mre2te`, deploy-key id 154181975.
+- **검증 결과**: /login HTTP 200 PASS, TLS CN=shop-demo.n9n.co.kr exp 2026-09-09 PASS, /health HTTP 200 PASS.
+- **추가 함정 (신규 발견)**: ① 프로젝트 생성 payload 에 한글 포함 시 "Invalid JSON" — ASCII 설명문 사용. ② env 주입 body 에 `is_build_time`/`is_secret` 포함 시 422 — `key`+`value` 만.
+- **런북**: `docs/runbooks/preview-deploy.md` 신설 — 전체 N단계, 함정 목록, 재사용 UUID, 실제 예시(shop-demo), 수동→자동 갭 기록.
+- **레지스트리**: `infra/registry/shop-demo.yaml` 생성.
+- **수동→자동 갭 (CTO 후속)**: ① `deploy/preview/<slug>.compose.yml` 자동 생성 (현재 수동 복제·치환) ② Coolify API 4단계 단일 스크립트화 ③ manifest scp 자동화.
+- **교훈 (1줄)**: deploy key·server·privkey UUID 는 같은 repo 의 신규 고객마다 완전 재사용 가능 — Coolify project+app UUID 만 신규 발급하면 된다. 배포 시간 ~5분(Phase 2 첫 배포 30분 대비).
