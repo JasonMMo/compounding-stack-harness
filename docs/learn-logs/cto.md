@@ -293,7 +293,7 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **PM 첫 가동 (위임)**: 인터뷰 시트를 PM 인격이 자기 loop skill 따라 작성하게 함 — 인격 경계 원칙 (PM 산출물은 PM 이). 사전 작업으로 profile 2건 역분석 + qmd 검색 지시 → 시작-검색 프로토콜의 첫 실전 사용. 산출 품질 양호: 질문→profile 칸 매핑 명시, 역분석 발견 3건이 시트 설계 근거로 연결됨.
 - **Open loops**: 시트 실전 검증 (M2 첫 인터뷰에서 QA 산출물 감사 후보).
 
-### Growth-33 dogfood (2026-06-11) — output protocol 효과 측정 + G-13 hardening
+### Growth-34 (2026-06-11) — output protocol dogfood 측정 + G-13 hardening
 
 - **측정 (CTO orchestrate)**: Growth-32 의 ~64k main 유입을 일으킨 바로 그 security-agent 를 재가동 — 이번 세션 인프라 변경(codegraph 0.9.9 설치·mcp-openai 제거·claude-mem 비활성화)의 보안 회귀 리뷰. 전체 본문 193줄/8KB → `out/analysis/security-infra-review-2026-06-11.md` (gitignored scratch), subagent 내부 58.6k 토큰 격리, **main 반환 = envelope ~10줄** (PASS-WITH-CAVEAT + 경로 + CAV-1/CAV-2). 같은 실패 모드에서 변동비 차단을 직접 증명 — 규약이 작동한다.
 - **G-13 신설 (직접)**: `g13_subagent_output_protocol_wired` — 7 loop SKILL 이 subagent-output-protocol.md 링크 보유하는지 정적 검사 (헤딩 문구 무관, pm 은 `**반환 규약**` 사용). envelope 크기 자체는 런타임 속성이라 정적 불가 → **규약 wiring 드리프트**가 enforceable 한 실패 모드. ledger-index `--check` 후보는 G-14 로 재배치 (가드 번호 = 구현 시점 확정).
