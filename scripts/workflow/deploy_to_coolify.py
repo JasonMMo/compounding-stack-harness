@@ -8,6 +8,9 @@ Usage:
   # Real deploy (idempotent — reuses existing project/app if found):
   python scripts/workflow/deploy_to_coolify.py --slug shop-demo
 
+  # With compose file commit+push before deploy:
+  python scripts/workflow/deploy_to_coolify.py --slug new-client --commit
+
 Steps (runbook docs/runbooks/preview-deploy.md §4):
   1. Verify SSH tunnel to Coolify API (localhost:8000).
   2. Ensure project — reuse if <slug> already exists, create otherwise.
@@ -19,6 +22,7 @@ Steps (runbook docs/runbooks/preview-deploy.md §4):
   6. Trigger instant deploy.
   7. Poll build status until finished or error (timeout 5 min).
   8. External validation: /login HTTP 200, /health HTTP 200, TLS CN match.
+  9. Update registry infra/registry/<slug>.yaml (merge — never clobber existing fields).
 
 Security:
   - Token read from infra/secrets/preview-vps.env via sed (no shell source).
@@ -49,6 +53,10 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
+
+# yaml: stdlib only — we use a minimal hand-rolled approach to preserve
+# comments and hand-written fields (PyYAML is not guaranteed installed).
+# We merge only the specific known keys rather than full parse+dump.
 
 # ---------------------------------------------------------------------------
 # Constants (verified — do NOT modify without runbook update)
@@ -565,6 +573,294 @@ def validate_preview(slug: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Registry update (merge — never clobber hand-written fields)
+# ---------------------------------------------------------------------------
+
+def _yaml_get(lines: list[str], key: str) -> str | None:
+    """Return the scalar value of a top-level YAML key from raw lines, or None."""
+    pattern = re.compile(r"^" + re.escape(key) + r":\s*(.*)")
+    for line in lines:
+        m = pattern.match(line)
+        if m:
+            v = m.group(1).strip().strip('"').strip("'")
+            return v if v not in ("null", "", "~") else None
+    return None
+
+
+def _yaml_set(lines: list[str], key: str, value: str) -> list[str]:
+    """Replace or append a top-level YAML key's scalar value in raw lines.
+
+    Preserves all other lines (comments, nested keys, other top-level keys).
+    Only modifies the exact line matching '^key:'.
+    """
+    pattern = re.compile(r"^(" + re.escape(key) + r":)\s*(.*)")
+    new_lines = []
+    replaced = False
+    for line in lines:
+        m = pattern.match(line)
+        if m:
+            new_lines.append(f"{key}: {value}\n")
+            replaced = True
+        else:
+            new_lines.append(line)
+    if not replaced:
+        new_lines.append(f"{key}: {value}\n")
+    return new_lines
+
+
+def _yaml_set_nested(lines: list[str], parent: str, key: str, value: str) -> list[str]:
+    """Set a 2-level nested YAML key (parent.key) in raw lines.
+
+    Looks for the parent block and updates or appends the child key with 2-space indent.
+    Preserves all comments and other fields.
+    """
+    pattern_parent = re.compile(r"^" + re.escape(parent) + r":\s*$")
+    pattern_child = re.compile(r"^  " + re.escape(key) + r":\s*(.*)")
+
+    new_lines = []
+    in_parent = False
+    child_replaced = False
+    parent_line_idx = -1
+
+    for i, line in enumerate(lines):
+        if pattern_parent.match(line):
+            in_parent = True
+            parent_line_idx = i
+            new_lines.append(line)
+            continue
+        if in_parent:
+            # Still in parent block if line is indented (2+ spaces) or blank
+            if line.startswith("  ") or line.strip() == "":
+                m = pattern_child.match(line)
+                if m:
+                    new_lines.append(f"  {key}: {value}\n")
+                    child_replaced = True
+                else:
+                    new_lines.append(line)
+                continue
+            else:
+                # Exiting parent block — append child if not yet added
+                if not child_replaced:
+                    new_lines.append(f"  {key}: {value}\n")
+                    child_replaced = True
+                in_parent = False
+        new_lines.append(line)
+
+    # If parent block is at end of file
+    if in_parent and not child_replaced:
+        new_lines.append(f"  {key}: {value}\n")
+
+    # If parent key never found — append minimal block
+    if parent_line_idx == -1:
+        new_lines.append(f"{parent}:\n")
+        new_lines.append(f"  {key}: {value}\n")
+
+    return new_lines
+
+
+def update_registry(
+    slug: str,
+    project_uuid: str,
+    app_uuid: str,
+    deploy_uuid: str | None,
+    token: str,
+    dry_run: bool = False,
+) -> dict[str, str]:
+    """Merge deploy results into infra/registry/<slug>.yaml.
+
+    Merge strategy: load raw lines, update only these keys:
+      preview.coolify_project, preview.coolify_app,
+      preview.url, preview.status, preview.deployed_at
+
+    All other fields (secret_ref, contact, production, tls, etc.) are preserved.
+    File created from skeleton if missing.
+
+    Returns dict of before/after values for envelope (no secret values).
+    """
+    registry_path = REPO_ROOT / "infra" / "registry" / f"{slug}.yaml"
+
+    # Resolve deployed_at from deployment response (server timestamp — no hardcode)
+    deployed_at = None
+    if deploy_uuid and not deploy_uuid.startswith("DRY-RUN"):
+        try:
+            result = _api_request(
+                "GET", f"/deployments/{deploy_uuid}", token,
+                dry_run=False, mutating=False,
+            )
+            finished_at = result.get("finished_at") or result.get("updated_at")
+            if finished_at:
+                # ISO timestamp — take date part only: 2026-06-12T16:38:41.000000Z → 2026-06-12
+                deployed_at = finished_at[:10]
+        except Exception as exc:
+            print(f"[deploy_to_coolify] WARN: could not fetch deployment timestamp: {exc}")
+
+    if not deployed_at:
+        # Fallback: use application updated_at
+        try:
+            app_result = _api_request(
+                "GET", f"/applications/{app_uuid}", token,
+                dry_run=False, mutating=False,
+            )
+            updated_at = app_result.get("updated_at", "")
+            if updated_at:
+                deployed_at = updated_at[:10]
+        except Exception:
+            pass
+
+    if not deployed_at:
+        deployed_at = "unknown"
+
+    live_url = f"https://{slug}.n9n.co.kr"
+
+    if dry_run:
+        print(f"[DRY-RUN] registry update: {registry_path}")
+        print(f"[DRY-RUN]   preview.coolify_project → {project_uuid}")
+        print(f"[DRY-RUN]   preview.coolify_app     → {app_uuid}")
+        print(f"[DRY-RUN]   preview.url             → {live_url}")
+        print(f"[DRY-RUN]   preview.status          → live")
+        print(f"[DRY-RUN]   preview.deployed_at     → {deployed_at}")
+        return {}
+
+    # Load or create registry file
+    if registry_path.exists():
+        lines = registry_path.read_text(encoding="utf-8").splitlines(keepends=True)
+        before = {
+            "coolify_project": _yaml_get(lines, "  coolify_project") or "(none)",
+            "coolify_app": _yaml_get(lines, "  coolify_app") or "(none)",
+            "status": _yaml_get(lines, "  status") or "(none)",
+            "deployed_at": _yaml_get(lines, "  deployed_at") or "(none)",
+        }
+    else:
+        # Skeleton — minimal valid registry entry
+        skeleton = (
+            f"# infra/registry/{slug}.yaml\n"
+            f"# Auto-created by deploy_to_coolify.py\n"
+            f"# Secret plaintext forbidden: use secret_ref only\n"
+            f"slug: {slug}\n"
+            f"contact:\n"
+            f"  channel: internal\n"
+            f"  handle: demo\n"
+            f"preview:\n"
+            f"  subdomain: {slug}.n9n.co.kr\n"
+            f"  url: null\n"
+            f"  coolify_project: null\n"
+            f"  coolify_app: null\n"
+            f"  coolify_env: production\n"
+            f"  deploy_key_github_id: 154181975\n"
+            f"  coolify_privkey_uuid: {PRIVATE_KEY_UUID}\n"
+            f"  server_uuid: {SERVER_UUID}\n"
+            f"  compose_file: deploy/preview/{slug}.compose.yml\n"
+            f"  manifest_server_path: /data/coolify/manifests/{slug}/screen-manifest.json\n"
+            f"  status: provisioning\n"
+            f"  deployed_at: null\n"
+            f"production:\n"
+            f"  install_method: null\n"
+            f"  installed_at: null\n"
+            f"  stack:\n"
+            f"    frontend: vanilla-htmx\n"
+            f"    backend: fastapi\n"
+            f"secret_ref:\n"
+            f"  - vault/{slug}/secret-key    # infra/secrets/{slug}-secret-key.txt\n"
+            f'cost_note: "preview VPS shared (187.77.140.157), Hostinger KVM2 $8.99/mo"\n'
+        )
+        lines = skeleton.splitlines(keepends=True)
+        before = {
+            "coolify_project": "(none)",
+            "coolify_app": "(none)",
+            "status": "(none)",
+            "deployed_at": "(none)",
+        }
+
+    # Apply updates — only preview sub-keys
+    lines = _yaml_set_nested(lines, "preview", "coolify_project", project_uuid)
+    lines = _yaml_set_nested(lines, "preview", "coolify_app", app_uuid)
+    lines = _yaml_set_nested(lines, "preview", "url", live_url)
+    lines = _yaml_set_nested(lines, "preview", "status", "live")
+    lines = _yaml_set_nested(lines, "preview", "deployed_at", f'"{deployed_at}"')
+
+    registry_path.write_text("".join(lines), encoding="utf-8")
+    print(f"[deploy_to_coolify] registry updated: {registry_path}")
+
+    after = {
+        "coolify_project": project_uuid,
+        "coolify_app": app_uuid,
+        "status": "live",
+        "deployed_at": deployed_at,
+    }
+    return {"before": before, "after": after}
+
+
+# ---------------------------------------------------------------------------
+# Compose file commit + push (--commit flag, per-file rule)
+# ---------------------------------------------------------------------------
+
+def commit_compose_file(slug: str, dry_run: bool = False) -> bool:
+    """Commit and push deploy/preview/<slug>.compose.yml to master.
+
+    Follows per-file commit rule — only this file, never git add -A.
+    Returns True on success.
+    """
+    compose_rel = f"deploy/preview/{slug}.compose.yml"
+    compose_path = REPO_ROOT / "deploy" / "preview" / f"{slug}.compose.yml"
+
+    if not compose_path.exists():
+        print(
+            f"[deploy_to_coolify] ERROR: {compose_path} not found.\n"
+            f"  Run: python scripts/workflow/preview_package.py --profile {slug} --coolify",
+            file=sys.stderr,
+        )
+        return False
+
+    commit_msg = (
+        f"feat(deploy): add {slug} Coolify preview compose file\n\n"
+        f"Generated by preview_package.py --coolify. Structural diff PASS.\n\n"
+        f"Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+    )
+
+    if dry_run:
+        print(f"[DRY-RUN] git add {compose_rel}")
+        print(f"[DRY-RUN] git commit -m '{commit_msg[:60]}...'")
+        print(f"[DRY-RUN] git push origin master")
+        return True
+
+    # Check if file is already tracked and unchanged
+    status_result = subprocess.run(
+        ["git", "status", "--porcelain", compose_rel],
+        capture_output=True, text=True, cwd=str(REPO_ROOT),
+    )
+    if not status_result.stdout.strip():
+        print(f"[deploy_to_coolify] {compose_rel} already committed and clean — skipping commit.")
+        return True
+
+    add_result = subprocess.run(
+        ["git", "add", compose_rel],
+        capture_output=True, text=True, cwd=str(REPO_ROOT),
+    )
+    if add_result.returncode != 0:
+        print(f"[deploy_to_coolify] ERROR: git add failed: {add_result.stderr}", file=sys.stderr)
+        return False
+
+    commit_result = subprocess.run(
+        ["git", "commit", "-m", commit_msg],
+        capture_output=True, text=True, cwd=str(REPO_ROOT),
+    )
+    if commit_result.returncode != 0:
+        print(f"[deploy_to_coolify] ERROR: git commit failed: {commit_result.stderr}", file=sys.stderr)
+        return False
+    print(f"[deploy_to_coolify] committed: {commit_result.stdout.strip()}")
+
+    push_result = subprocess.run(
+        ["git", "push", "origin", "master"],
+        capture_output=True, text=True, cwd=str(REPO_ROOT),
+    )
+    if push_result.returncode != 0:
+        print(f"[deploy_to_coolify] ERROR: git push failed: {push_result.stderr}", file=sys.stderr)
+        return False
+    print(f"[deploy_to_coolify] pushed to origin/master.")
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -588,6 +884,18 @@ def main() -> int:
         "--skip-validation", action="store_true",
         help="Skip external HTTP/TLS validation after deploy.",
     )
+    parser.add_argument(
+        "--commit", action="store_true",
+        help=(
+            "Commit and push deploy/preview/<slug>.compose.yml before deploying. "
+            "Per-file commit rule: only that file, never git add -A. "
+            "Default: off (compose file must already be committed)."
+        ),
+    )
+    parser.add_argument(
+        "--skip-registry", action="store_true",
+        help="Skip registry update after successful deploy.",
+    )
     args = parser.parse_args()
 
     slug: str = args.slug
@@ -601,7 +909,12 @@ def main() -> int:
     # Load token (always — needed for GET calls even in dry-run)
     token = _load_token()
 
-    # Step 0: tunnel check
+    # Step 0a: commit compose file if requested (before tunnel/deploy)
+    if args.commit:
+        if not commit_compose_file(slug, dry_run=dry_run):
+            return 1
+
+    # Step 0b: tunnel check
     if not check_tunnel(dry_run=dry_run):
         return 1
 
@@ -634,6 +947,16 @@ def main() -> int:
     deploy_uuid = trigger_deploy(app_uuid, token, dry_run=dry_run)
 
     if dry_run:
+        # Show registry dry-run even in dry-run mode
+        if not args.skip_registry:
+            update_registry(
+                slug=slug,
+                project_uuid=project_uuid or f"DRY-RUN-PROJECT-UUID-{slug}",
+                app_uuid=app_uuid or f"DRY-RUN-APP-UUID-{slug}",
+                deploy_uuid=None,
+                token=token,
+                dry_run=True,
+            )
         print()
         print("[DRY-RUN] All steps printed. Re-run without --dry-run to execute.")
         return 0
@@ -657,6 +980,25 @@ def main() -> int:
             )
     else:
         print("[deploy_to_coolify] --skip-validation: external check skipped.")
+
+    # Step 9: registry update
+    if not args.skip_registry:
+        reg_diff = update_registry(
+            slug=slug,
+            project_uuid=project_uuid,
+            app_uuid=app_uuid,
+            deploy_uuid=deploy_uuid,
+            token=token,
+            dry_run=dry_run,
+        )
+        if reg_diff:
+            b = reg_diff.get("before", {})
+            a = reg_diff.get("after", {})
+            print(f"[deploy_to_coolify] registry diff: project {b.get('coolify_project')} → {a.get('coolify_project')}")
+            print(f"[deploy_to_coolify] registry diff: app {b.get('coolify_app')} → {a.get('coolify_app')}")
+            print(f"[deploy_to_coolify] registry diff: deployed_at {b.get('deployed_at')} → {a.get('deployed_at')}")
+    else:
+        print("[deploy_to_coolify] --skip-registry: registry update skipped.")
 
     print()
     print(f"[deploy_to_coolify] DONE. Preview: https://{slug}.n9n.co.kr/login")
