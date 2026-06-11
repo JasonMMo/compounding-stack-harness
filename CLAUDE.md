@@ -142,4 +142,5 @@
 - 옛 Growth (참조 전용): `business-fullstack-creater/learn-log.md` (별도 repo)
 - profile schema: `profiles/_README.md`
 - 도메인 전문가 agent: `.claude/agents/domain-expert-generic.md` (첫 인스턴스)
+- subagent 반환 규약: 큰 분석·리뷰 산출물은 **파일로 쓰고 경로+요약 envelope 만 반환** (변동비 hedge — main context 유입 차단). CTO 가 ad-hoc agent spawn 시 prompt 에 명시, 8-인격은 loop SKILL `## 출력 규약` 으로 기본 적용. 설계: [`docs/architecture/subagent-output-protocol.md`](docs/architecture/subagent-output-protocol.md)
 - 다른 AI 에이전트용: `AGENTS.md` (tool-agnostic)
