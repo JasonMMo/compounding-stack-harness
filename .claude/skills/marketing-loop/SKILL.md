@@ -23,6 +23,10 @@ description: Run the CMO content loop — positioning grounding, knowledge-store
 - **시작**: step 2 — 고객의 실제 표현 (`[EXTRACTED]`) 을 검색해 카피에 쓰기. 우리가 지어낸 표현보다 강하다.
 - **종료**: step 6 — 효과 있는 메시지는 재사용 자산.
 
+## 출력 규약
+
+포지셔닝 근거·메시지 후보·고객 언어 상세는 `docs/learn-logs/cmo.md` (누적) 에 쓰고, main 으로는 **요약 + 경로 + 결정 항목만** 반환한다 (envelope §4). 큰 조사는 `out/analysis/<topic>.md`. 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
+
 ## Anti-patterns
 
 - 미구현 능력의 인수 기준화 (Growth-17) / 검증 불가 수치 ("빠르다") / CEO 승인 전 외부 게시 / 과소진술 (검증된 능력은 당당히 — Scene 4 교훈)
