@@ -1,22 +1,28 @@
 """
-preview_package.py — generates out/<slug>/docker-compose.yml for local preview.
+preview_package.py — generates compose files for local or Coolify preview.
 
 Usage:
   python scripts/workflow/preview_package.py --profile lawfirm-demo
   python scripts/workflow/preview_package.py --profile shop-demo --out out/
+  python scripts/workflow/preview_package.py --profile new-client --coolify
+
+Modes:
+  LOCAL (default): generates out/<slug>/docker-compose.yml
+    - Absolute Windows paths for build context and manifest volume.
+    - Frontend exposed on host port (default :8090).
+    - No Coolify labels.
+
+  COOLIFY (--coolify flag): generates deploy/preview/<slug>.compose.yml
+    - Repo-root relative build context (Coolify clones full repo).
+    - Manifest bind-mount from /data/coolify/manifests/<slug>/screen-manifest.json.
+    - Domain comment only — set via API PATCH docker_compose_domains.
+    - SECRET_KEY injected via Coolify env API (not in compose file).
 
 Steps:
   1. Run scaffold.py to produce out/<slug>/ artifacts (DDL + manifest).
      If out/<slug>/screen-manifest.json already exists, scaffold is skipped
      unless --force-scaffold is passed.
-  2. Write out/<slug>/docker-compose.yml (2 services: backend + frontend).
-
-Compose contract:
-  - frontend only port exposed to host (default :8090).
-  - backend reachable by frontend inside compose network as http://backend:8081.
-  - PROFILE_MANIFEST mounted read-only from host into frontend container.
-  - SECRET_KEY placeholder — set via env before docker compose up in production.
-  - No Coolify labels / traefik config (Phase 2).
+  2. Write compose file(s).
 
 Exit codes: 0 success, 1 error.
 """
@@ -33,6 +39,72 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # ---------------------------------------------------------------------------
 # Docker-compose template
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Coolify compose template
+# ---------------------------------------------------------------------------
+
+_COOLIFY_COMPOSE_TEMPLATE = """\
+# deploy/preview/{slug}.compose.yml
+# Coolify dockercompose preview — profile: {slug}
+# Build context: repo root (Coolify clones whole repo, build context = clone root)
+#
+# Domain: set via Coolify API PATCH docker_compose_domains (not SERVICE_FQDN_* env)
+# Manifest: server-side persistent file mounted read-only into frontend
+#
+# Coolify deployment:
+#   build_pack: dockercompose
+#   docker_compose_location: /deploy/preview/{slug}.compose.yml
+#   git_repository: git@github.com:JasonMMo/compounding-stack-harness.git
+#   git_branch: master
+#   private_key_uuid: s127pafarr46wlu1r2mre2te
+
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/adapters/fastapi/Dockerfile
+    environment:
+      PORT: "8081"
+      PYTHONIOENCODING: "utf-8"
+    networks:
+      - preview-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
+    environment:
+      # Domain routing: set via Coolify API PATCH docker_compose_domains
+      # [{{"name":"frontend","domain":"https://{slug}.n9n.co.kr"}}]
+      # Do NOT use SERVICE_FQDN_* env here — set via API, not compose file.
+      FRONTEND_PORT: "5000"
+      BACKEND_BASE_URL: "http://backend:8081"
+      CONTRACT_DIR: "/app/middle/contract"
+      PROFILE_MANIFEST: "/data/manifest/screen-manifest.json"
+      PYTHONIOENCODING: "utf-8"
+      # SECRET_KEY injected via Coolify environment variables (not in compose file)
+    volumes:
+      # Persistent manifest file — scp'd to server before deploy
+      # Path: /data/coolify/manifests/{slug}/screen-manifest.json
+      - type: bind
+        source: /data/coolify/manifests/{slug}/screen-manifest.json
+        target: /data/manifest/screen-manifest.json
+        read_only: true
+    ports:
+      - "5000"
+    depends_on:
+      - backend
+    networks:
+      - preview-net
+    restart: unless-stopped
+
+networks:
+  preview-net:
+    driver: bridge
+"""
 
 _COMPOSE_TEMPLATE = """\
 # docker-compose.yml — local preview for profile: {slug}
@@ -125,6 +197,22 @@ def _utf8_env() -> dict:
 # Compose writer
 # ---------------------------------------------------------------------------
 
+def write_coolify_compose(slug: str) -> Path:
+    """Write deploy/preview/<slug>.compose.yml for Coolify deployment.
+
+    Template is structurally identical to lawfirm-demo/shop-demo reference files.
+    Only slug-variable parts differ (service name prefix comment, manifest path, domain comment).
+    """
+    deploy_dir = REPO_ROOT / "deploy" / "preview"
+    deploy_dir.mkdir(parents=True, exist_ok=True)
+
+    compose_content = _COOLIFY_COMPOSE_TEMPLATE.format(slug=slug)
+
+    compose_path = deploy_dir / f"{slug}.compose.yml"
+    compose_path.write_text(compose_content, encoding="utf-8")
+    return compose_path
+
+
 def write_compose(slug: str, out_root: Path, frontend_port: int) -> Path:
     out_dir = out_root / slug
     manifest_host = (out_dir / "screen-manifest.json").resolve()
@@ -145,19 +233,65 @@ def write_compose(slug: str, out_root: Path, frontend_port: int) -> Path:
 # CLI
 # ---------------------------------------------------------------------------
 
+def _verify_coolify_compose_structure(slug: str, compose_path: Path) -> bool:
+    """Verify generated Coolify compose matches reference templates structurally.
+
+    Diffs generated file against shop-demo reference (slug substituted out).
+    Returns True if structurally identical (slug differences only).
+    """
+    import difflib
+
+    reference_path = REPO_ROOT / "deploy" / "preview" / "shop-demo.compose.yml"
+    if not reference_path.exists():
+        print("[preview_package] WARN: reference shop-demo.compose.yml not found — skipping diff.")
+        return True
+
+    generated = compose_path.read_text(encoding="utf-8")
+    reference = reference_path.read_text(encoding="utf-8")
+
+    # Normalize: replace slug in generated with reference slug for comparison
+    generated_normalized = generated.replace(slug, "shop-demo")
+
+    if generated_normalized == reference:
+        print("[preview_package] structural diff vs shop-demo: PASS (slug differences only).")
+        return True
+
+    # Show diff for diagnosis
+    diff = list(difflib.unified_diff(
+        reference.splitlines(keepends=True),
+        generated_normalized.splitlines(keepends=True),
+        fromfile="shop-demo.compose.yml (reference)",
+        tofile=f"{slug}.compose.yml (generated, slug normalized)",
+        n=3,
+    ))
+    if diff:
+        print("[preview_package] WARN: structural diff detected (non-slug differences):")
+        for line in diff:
+            print("  " + line.rstrip())
+        return False
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Generate docker-compose.yml for local customer preview.",
+        description="Generate docker-compose.yml for local or Coolify customer preview.",
     )
     parser.add_argument("--profile", required=True, help="Profile slug (e.g. lawfirm-demo)")
     parser.add_argument("--out", default=str(REPO_ROOT / "out"), help="Output root directory")
     parser.add_argument(
         "--frontend-port", type=int, default=8090,
-        help="Host port for frontend (default: 8090)",
+        help="Host port for frontend — LOCAL mode only (default: 8090)",
     )
     parser.add_argument(
         "--force-scaffold", action="store_true",
         help="Re-run scaffold.py even if out/<slug>/screen-manifest.json already exists.",
+    )
+    parser.add_argument(
+        "--coolify", action="store_true",
+        help=(
+            "Generate deploy/preview/<slug>.compose.yml for Coolify deployment "
+            "instead of out/<slug>/docker-compose.yml for local use."
+        ),
     )
     args = parser.parse_args()
 
@@ -165,7 +299,7 @@ def main() -> int:
     out_root = Path(args.out).resolve()
     manifest_path = out_root / slug / "screen-manifest.json"
 
-    # Step 1: scaffold
+    # Step 1: scaffold (both modes)
     if manifest_path.exists() and not args.force_scaffold:
         print(f"[preview_package] scaffold artifacts found at {out_root / slug} — skipping scaffold.")
         print(f"[preview_package] (pass --force-scaffold to regenerate)")
@@ -183,14 +317,30 @@ def main() -> int:
             return 1
         print(f"[preview_package] scaffold complete. manifest → {manifest_path}")
 
-    # Step 2: write compose
-    compose_path = write_compose(slug, out_root, args.frontend_port)
-    print(f"[preview_package] compose written → {compose_path}")
-    print()
-    print("Next steps:")
-    print(f"  docker compose -f \"{compose_path}\" up -d --build")
-    print(f"  # then open http://localhost:{args.frontend_port}/login")
-    print(f"  docker compose -f \"{compose_path}\" down -v  # cleanup")
+    if args.coolify:
+        # Step 2 (Coolify mode): write deploy/preview/<slug>.compose.yml
+        compose_path = write_coolify_compose(slug)
+        print(f"[preview_package] Coolify compose written → {compose_path}")
+
+        # Structural diff verification against reference
+        _verify_coolify_compose_structure(slug, compose_path)
+
+        print()
+        print("Coolify next steps:")
+        print(f"  1. git add {compose_path.relative_to(REPO_ROOT).as_posix()}")
+        print(f"  2. git commit + push to master")
+        print(f"  3. scp out/{slug}/screen-manifest.json → root@187.77.140.157:/data/coolify/manifests/{slug}/")
+        print(f"  4. python scripts/workflow/deploy_to_coolify.py --slug {slug} --dry-run")
+        print(f"  5. python scripts/workflow/deploy_to_coolify.py --slug {slug}")
+    else:
+        # Step 2 (local mode): write out/<slug>/docker-compose.yml
+        compose_path = write_compose(slug, out_root, args.frontend_port)
+        print(f"[preview_package] compose written → {compose_path}")
+        print()
+        print("Next steps:")
+        print(f"  docker compose -f \"{compose_path}\" up -d --build")
+        print(f"  # then open http://localhost:{args.frontend_port}/login")
+        print(f"  docker compose -f \"{compose_path}\" down -v  # cleanup")
 
     return 0
 
