@@ -16,11 +16,14 @@ preview_vps:
     ssh_key: "~/.ssh/n9n_preview_ed25519 (operator-local, gitignored — vault/preview-vps/ssh)"
     hardening: "SSH 비번인증 차단·apt 최신·커널 패치 완료. TODO(잔여): 8000 admin UI를 coolify.n9n.co.kr(443)로 서빙 후 raw 8000 차단 or 클라우드 방화벽→CEO IP"
     tls_pipeline: "검증됨 2026-06-11 — *.n9n.co.kr grey-cloud + Coolify traefik(letsencrypt HTTP-01) → test.n9n.co.kr LE 인증서 자동 발급, 외부 HTTPS 200"
+    cicd_pipeline: "검증됨 2026-06-11 — Coolify API(write+deploy 토큰, SSH→localhost:8000) 프로젝트→dockerimage 앱→instant_deploy→cicd-smoke.n9n.co.kr 외부 HTTPS 200, 정리 후 잔여 0. 레시피: deployment-topology.md §4"
+    server_uuid: n12vdydjpwp81hu5i15n1gsb   # Coolify server (localhost). 운영 인벤토리(비밀 아님)
     dns: "Cloudflare, *.n9n.co.kr A→187.77.140.157 (grey/DNS-only) 전파 완료"
     monthly_cost_usd: 8.99    # 24개월 선결제 기준(~$216). 갱신가 상승 주의. 쿠폰: HostAdvice VPS 74%+15% (affiliate 링크)
     coupon_ref: "hostadvice.com/hosting-company/hostinger-coupons (VPS 74% off + 15%, 24mo 선결제)"
     secret_ref:
       - vault/preview-vps/ssh
+      - vault/preview-vps/coolify-api-token   # write+deploy 스코프. infra/secrets/preview-vps.env (raw 값, gitignored)
 tunnel:
   provider: cloudflared       # 작업 중 화면공유 데모 폴백 전용 (고객-facing preview ✗)
   status: fallback-only
