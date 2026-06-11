@@ -167,7 +167,10 @@ def check_ports() -> None:
             if result == 0:
                 ok(f":{port} ({label}) — listening")
             else:
-                fail(f":{port} ({label}) — not reachable (PostgreSQL not running?)")
+                fail(
+                    f":{port} ({label}) — not reachable. "
+                    "Start a server: 'docker compose up -d' (repo root) or launch host postgres"
+                )
         else:
             if result != 0:
                 ok(f":{port} ({label}) — free")
