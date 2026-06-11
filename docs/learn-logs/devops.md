@@ -28,6 +28,7 @@
 | preview VPS (187.77.140.157, 싱가포르) | 2026-06-11 | provision (1차) | live — 접속·하드닝 일부 | KVM 2 \$8.99/월 가동 |
 | preview VPS — TLS 파이프라인 | 2026-06-11 | provision (2차) | **검증 PASS** — `<slug>.n9n.co.kr` 자동 HTTPS | LE 무료 |
 | preview VPS — CI/CD (Coolify API) | 2026-06-11 | deploy (스모크) | **검증 PASS** — API 로 프로젝트→앱→배포→외부 HTTPS 200, 정리 후 잔여 0 | LLM 0, infra 0 (기존 VPS) |
+| preview VPS — 8000 노출 차단 | 2026-06-11 | harden (3차) | **검증 PASS** — 클라우드 방화벽 allow-list, 8000/8080/6001/6002 외부 차단 실측, 22/80/443 유지. CISO 잔여 0 | $0 |
 
 ### Growth-35 provisioning 1차 (2026-06-11) — preview VPS 부트스트랩
 
@@ -62,3 +63,12 @@
 - **정리**: `DELETE /applications/{uuid}` 는 **비동기 큐** → 즉시 `DELETE /projects/{uuid}` 하면 `"Project has resources"` 실패. ~15s 후 재시도 → `Project deleted`, projects=[], 외부 도메인 503. 잔여 0.
 - **증명 의미**: profile→scaffold 산출 이미지를 `dockerimage` image 자리에 넣으면 **한 명령으로 고객 preview 자동 생성**. creater(CI/CD)축 코어 작동. 레시피는 토폴로지 §4 에 런북화 (재유도 금지).
 - **CISO 잔여(불변)**: 8000 admin UI 인터넷 노출 — 토큰은 SSH→localhost 로만 쓰므로 8000 을 클라우드 방화벽으로 막아도 API 운영 무영향. 다음 하드닝: instance FQDN `coolify.n9n.co.kr`(443) + raw 8000 차단.
+
+### Growth-35 하드닝 3차 (2026-06-11) — 8000 admin UI 노출 차단 (CISO 잔여 0)
+
+- **상황**: `instance_settings.fqdn = null` + 4.1.2 UI 에 FQDN 필드가 안 보임(버전별 위치 이동). → instance FQDN(443) 경로 대신 **클라우드 방화벽 allow-list** 채택 (버전 UI 무관·하이퍼바이저 레벨이라 `ufw 가 docker-published 포트 미차단` gotcha 회피).
+- **조치 (CEO 실행, DevOps 설계·검증)**: Hostinger 클라우드 방화벽 default-deny + inbound **22/80/443 만 허용**. 22=SSH(키전용), 80=LE HTTP-01+리다이렉트, 443=preview HTTPS. 나머지 자동 차단.
+- **검증 (외부 머신 실측)**: 8000/8080/6001/6002 = 차단(필터), 22/80 = OPEN, 443 = traefik 503(백엔드 없을 때 정상). preview 파이프라인·SSH·인증서 발급 무손상.
+- **대시보드 접속**: 8000 차단 후엔 **SSH local-forward** `ssh -i ~/.ssh/n9n_preview_ed25519 -L 8000:localhost:8000 root@<ip>` → `http://localhost:8000` (암호 채널, 인터넷 노출 0). CEO 접속 확인.
+- **결과**: provisioning 1·2차의 CISO 미해소(방화벽·8000 노출) **전부 해소 — CISO 잔여 0**. apt 최신·커널 패치는 1차에서 완료.
+- **교훈 (1줄)**: 관리 UI 노출 차단은 "관리용 포트를 인터넷에 안 연다 + SSH 터널로만 접속" 이 가장 단순·확실. FQDN/리버스프록시 경로는 webhook 등 외부 인바운드가 필요할 때만.
