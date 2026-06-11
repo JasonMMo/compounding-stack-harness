@@ -43,6 +43,10 @@ Videos/
 metrics/local/
 cost-reports/local/
 
+# Digital-asset secret vault (DevOps, Growth-35) — 평문 시크릿 절대 커밋 금지.
+# 레지스트리(infra/registry/*.yaml)엔 볼트 키 참조만, 평문 자격증명/토큰/키는 여기에만.
+infra/secrets/
+
 # CodeGraph index (local-first, tenant-scoped — rebuildable from source)
 .codegraph/
 
