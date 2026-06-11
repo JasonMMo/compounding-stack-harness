@@ -989,7 +989,9 @@ _OUTPUT_PROTOCOL_REF = "subagent-output-protocol"
 
 
 def g13_subagent_output_protocol_wired() -> GuardResult:
-    """G-13 / Growth-33 — every persona loop SKILL wires the subagent output protocol.
+    """G-13 / Growth-34 — every persona loop SKILL wires the subagent output protocol.
+
+    Hardens the Growth-33 output protocol; implemented in the Growth-34 dogfood.
 
     Detection: each .claude/skills/<role>-loop/SKILL.md must link to
     subagent-output-protocol.md (the file-then-envelope return discipline).
@@ -1003,7 +1005,7 @@ def g13_subagent_output_protocol_wired() -> GuardResult:
     skills_dir = REPO_ROOT / ".claude" / "skills"
     if not skills_dir.exists():
         return GuardResult(
-            "G-13", "subagent output protocol wired", "Growth-33",
+            "G-13", "subagent output protocol wired", "Growth-34",
             status="SKIP", notes="No .claude/skills directory.",
         )
     violations: list[str] = []
@@ -1014,7 +1016,7 @@ def g13_subagent_output_protocol_wired() -> GuardResult:
         if _OUTPUT_PROTOCOL_REF not in skill.read_text(encoding="utf-8"):
             violations.append(f"{rel}: no link to subagent-output-protocol.md")
     return GuardResult(
-        "G-13", "subagent output protocol wired", "Growth-33",
+        "G-13", "subagent output protocol wired", "Growth-34",
         status="FAIL" if violations else ("PASS" if checked else "SKIP"),
         violations=violations,
         notes=f"Scanned {checked} *-loop SKILL(s).",
