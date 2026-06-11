@@ -1,0 +1,40 @@
+# .dockerignore — repo-root build context exclusions
+# Keeps Docker build context lean; avoids leaking dev artifacts into images.
+
+# Git history
+.git/
+.gitignore
+
+# Scaffold / preview output (bind-mounted at runtime, not baked in)
+out/
+
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Node / front-end build artifacts (not used in this build)
+node_modules/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets — never bake into image
+.env
+*.env
+secrets/
