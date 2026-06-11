@@ -1,79 +1,71 @@
-# HANDOFF — 2026-06-04 (촬영 대기 유지 — 06-02 이후 새 진척 없음)
+# HANDOFF — 2026-06-11 (Windows restart 직전 — docker 설치 완료, compose 실가동 검증이 첫 액션)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
 
-## ▶▶▶ 2026-06-04 현재 상태 — 촬영 대기, 환경 ready 유지
+## ▶▶▶ restart 사유와 복귀 직후 상태
 
-06-02 PM 데모 촬영 1차 시도(아래 환경 함정 2건) 이후 **커밋된 변경 없음**. 진척 없이 대기 중. 환경은 녹화 가능 상태 그대로:
-- 8081 fastapi 백엔드 = smallmfg 18건 적재된 상태 가정(서버 재기동 시 in-memory 라 재적재 필요 — 아래 §함정 참조).
-- 다음 액션은 **사람(CEO)의 OBS 녹화** 한 가지. 코드·문서·콜드스타트 자산은 전부 ready(아래 본문).
-- 비긴급 엔지니어 위임 후보 2건(런북 "재기동 금지" 명시 / `seed_loader --reset` 멱등화)은 미착수 — 촬영을 막지 않으므로 보류.
+CEO 가 **Docker Desktop 을 설치**하고 Windows 를 재시작함. 재시작으로 사라지는 것:
 
-## ▶▶ 가장 최근 (2026-06-02 오후 세션) — 데모 촬영 1차 시도, 환경 함정 2건
+- **8000 포트의 FastAPI** (background bash 로 띄워둔 것) — 죽음. 필요 시 재기동 (아래 §복귀 절차).
+- **WSL postgres** — WSL 배포판 자동 기동 여부에 따라 다름. `python scripts/preflight.py` 가 5432 응답을 알려줌.
 
-CEO 가 런북대로 데모를 띄우다 막힘. **둘 다 코드 버그 아님 — 운영 절차 함정.** 산출물 변경 없음(`.gitignore` 에 `Videos/` 추가만).
+재시작 후에도 살아 있는 것:
 
-1. **seed_loader 재실행 → `409 CONFLICT (code must be unique)`**
-   - 원인: fastapi 스토어는 `InMemoryEntityStore`(`store.py:23`, 영속화 없음). 이미 18건 적재된 서버에 **재적재**를 시도해 유니크 충돌. = "데이터 이미 있음" 신호, 고장 아님.
-2. **uvicorn 재기동 → `WinError 10048 (포트 이미 사용 중)`**
-   - 원인: 8081 에 **기존 백엔드가 이미 정상 가동 중**인데 두 번째 인스턴스를 같은 포트에 띄우려 함. CTO 가 "재적재 전 재시작" 으로 잘못 안내한 게 화근(과잉 처방).
-   - **정정**: 데이터가 이미 있으면 재적재·재시작 **둘 다 불필요**. 409 는 무시. 기존 백엔드(18건 서빙 중)를 그대로 쓰면 됨.
+- **`.env`** (repo root, gitignored) — `DATABASE_URL` 이미 기입됨. 자격증명 재입력 불필요. 형식은 `.env.example` 참조.
+- **lawfirm_db 데이터** — WSL postgres 의 디스크에 영속 (1 부서·3 직원·5 판례·3 사건 + GIN 인덱스).
+- 코드·문서 전부 — git clean, master 동기화 (HEAD `1ebcff2`).
 
-> **결론**: 8081 백엔드는 18건 적재된 채 살아 있음 → `localhost:5000/login`(demo/demo) 목록에서 18행 확인 후 **녹화 가능 상태**. CEO 가 "생각보다 까다롭다"며 일단 중단, 인계 요청.
->
-> **런북 UX 갭 (엔지니어 위임 후보, 비긴급)**: (a) 런북에 *"백엔드가 이미 떠 있으면 재기동·재적재 금지, 409 는 무시"* 명시, (b) `seed_loader.py --reset`(스토어 clear 엔드포인트 호출 후 적재)로 재적재 멱등화. `store.py:114 _store.clear()` 이미 존재 → clear 라우트만 노출하면 됨.
+## ▶▶ 복귀 직후 첫 액션 — docker compose 실가동 검증 (Growth-28 open loop)
 
-## 이번 세션에 끝낸 것 — Growth-14·15·16 (전부 master 푸시 완료)
+Growth-28 에서 `docker-compose.yml` 을 작성했으나 **당시 docker 미설치라 YAML 검증까지만** 수행 (learn-log §Growth-28 "한계" 참조). 이제 docker 가 생겼으니 실가동 1회 검증으로 loop 를 닫는다:
 
-세션 시작점은 Growth-13(ledger-index) 종료 직후. CEO 가 후보 #1(expert-agent demo) → 이후 "#2→#1" 지시.
+1. `docker --version` / `docker compose version` — 설치 확인.
+2. **포트 충돌 판단**: `python scripts/preflight.py` 로 5432 상태 확인.
+   - WSL postgres 가 이미 5432 를 점유 중이면 → `.env` 에 `POSTGRES_HOST_PORT=5433` 추가 후 compose 기동, 검증용 `DATABASE_URL` 은 `localhost:5433` 으로.
+   - 5432 가 비어 있으면 그대로 기동.
+3. `docker compose up -d` → healthcheck green 확인 (`docker compose ps`).
+4. compose postgres 의 기본 자격증명은 `.env.example` 의 `POSTGRES_*` 주석 참조 (`.env` 에 미설정 시 user/pass/db = claude/claude/lawfirm_db — **WSL postgres 비밀번호와 다름** 주의).
+5. compose DB 에 `python scripts/demo/setup_lawfirm.py` (DATABASE_URL 을 compose 쪽으로 맞춰서) → preflight ALL PASS → L4 검색 1종 스모크 (`손해배상` 2건 기대).
+6. PASS 시 learn-log Growth-28 의 "compose 실가동 검증" open loop 닫고 1줄 추가 기록.
 
-**Growth-14 — expert-agent end-to-end demo (creater 축 첫 채움)**
-- `scripts/workflow/scaffold.py`+`manifest.py`: profile→catalog 검증→DDL+screen-manifest. frontend typed-form(manifest 구동, 없으면 generic fallback). **G-11**(creater single-source). agent baseline 표 catalog 1:1 동기화. live: domain-expert agent 가 needs→11 entity 큐레이션→scaffold rc=0 = 7축 실증. acme-erp 비호환은 CEO 결정으로 catalog 실키 수정.
+검증 후 정리: `docker compose down` (WSL postgres 가 메인이면 compose 는 내려둠. `-v` 붙이면 데이터까지 삭제).
 
-**Growth-15 — FK 참조 무결성**
-- catalog FK hygiene(10 dangling 분류: polymorphic 7·backlog 2·customer_id→contact fk) + **G-12** 가드. runtime FK 검증 양 backend + DIM-6. ⚠️ **fastapi live 37 green / Java live 미실행(JDK 부재)**.
+## 이번 세션 (06-11) 에 끝낸 것 — Growth-25 ~ 28 (전부 master 푸시 완료)
 
-**Growth-16 — 2nd frontend adapter (react)**
-- `frontend/adapters/react/`: Vite+React18+TS. contract 빌드타임 codegen(G-1 클린), CSS custom property 토큰, 6 screen, F-1~F-4, manifest typed-form. **L1 30 / L3 build / L4 35(fastapi) green**. `frontend/adapters/INDEX.md`(G-5). QA F-2 hollow test caveat → hasMorePages 헬퍼로 클로즈.
+- **Growth-25** — legal vertical A안 full-stack (tsvector 판례 검색 + UI + tests). PM loop 첫 시나리오 (30인 법무법인).
+- **Growth-26** — **L4 live 5/5 PASS** (손해배상·자백·위약금·case_type 필터·empty). 그 과정에서 **DDL 위상정렬 버그** 발견·픽스: scaffold.py 가 entity 별 `render.py --entity` 를 루프 호출 → 각 subprocess 가 단일 entity 만 보게 되어 cross-entity FK 순서 무력화. 픽스 = `render.py --entities` (복수, comma 구분) 신설 + scaffold `emit_ddl` 단일 호출로 교체. test_scaffold 25/25.
+- **Growth-27** — **L4 무개입화 1차**: `.env`/`.env.example` 패턴 + `scripts/preflight.py` (패키지·env·DB·포트·uvicorn 5영역 사전점검, 16체크) + fastapi `main.py`·`setup_lawfirm.py` dotenv 자동 로딩. 배경: Growth-26 에서 CEO 개입 5회 (postgres 설치, 자격증명 2회, DB명, export 구문) — 재발 방지.
+- **Growth-28** — **L4 무개입화 마무리**: `docker-compose.yml` (postgres:16-alpine, .env 주입, healthcheck) + preflight 실패 메시지에 복구 명령 내장. ⚠️ 실가동 미검증 (위 첫 액션).
 
 ## 현재 상태
 
-- **Milestone**: M1 거의 완성. **pluggable F/B 4-corner 완성** (backend springboot+fastapi × frontend vanilla-htmx+react). 7축 전부 활성.
-- **Guards**: 12개 (G-1~G-12), 실 FAIL 0 (G-2/G-3 만 SPEC). `python scripts/diagnose.py`.
-- **Tests**: workflow L1 25 + vanilla-htmx 23 + manifest 21 + react 30 ... fastapi DIM-1~6 live 37. `out/` gitignore.
-- **Git**: clean, master 동기화 (HEAD `e1ed6e9`).
+- **Milestone**: M3 진행 중 — legal vertical L4 완전 통과 (acceptance criteria 달성). M2 self-host 온보딩 자산 (env/preflight/compose) 확충.
+- **Verification Matrix**: L4 live **PASS** (2026-06-11). L1~L3 은 NOT_SETUP (매트릭스상; 개별 테스트는 green).
+- **Git**: clean, master 동기화 (HEAD `1ebcff2`).
+- **PM loop (lawfirm-demo)**: Step 4 Verify 완료. Step 5 Deliver (데모 패키지) 대기.
 
-## 2026-06-02 추가 종결 — #1 Java 게이트 + #2 maturity threshold (CEO "1→2" 지시)
+## 복귀 절차 (L4 환경 재현 — 이제 무개입 경로)
 
-- **#1 Java-env 게이트 CLOSED**: 이 머신에 **JDK 21 + gradlew wrapper 존재**(이전 sub-agent 의 "JDK 없음"은 system `gradle` 만 찾은 false-negative). QA 실행 — springboot gradlew test 30(CatalogValidatorTest 22 incl FK 7) + **DIM-1~6 live 37 PASS** + react↔springboot L4 36 PASS(2 skip=Vite preview SPA, M2 전 활성). Growth-15·16 carry 종결. 발견: system JDK21 ↔ Gradle daemon JDK17(무해, Spring Boot 3.2.5 는 17+).
-- **#2 maturity threshold 정량화**: `revenue-roadmap.md#M1-Maturity-Threshold`. pricing 공개 = Technical(T-1~T-6, **현재 6/6 MET**) AND GTM(demo·lead, CEO/CMO). T-7 비용측정은 M2/M3 이관. **→ M1 기술 성숙 달성.**
-
-## ▶ 즉시 다음 액션 — demo 영상 촬영 (스크립트·결정·환경 전부 ready, 사람의 녹화만 남음)
-
-Growth-17: demo-video 시나리오·제작법 완성 + **CEO 결정 5건 전부 RESOLVED** + **데모 촬영 환경 구축 완료**. 스크립트는 잠김(`docs/marketing/demo-video-scenario.md`, ~3:00 5-scene, $22).
-
-**CEO 결정 확정 (2026-06-02)**: CTA=**이메일**(향후 카카오톡, 엔드카드에 사업 이메일 기입) / 보이스=**전체 ElevenLabs**(CEO 녹음 없음) / 시드=**smallmfg 그대로** / publish=첫 Loom 반응 후 public(default) / Scene4 4-corner CTO sign-off / Scene5 cut.
-
-**촬영 환경 ready (engineer, 2026-06-02)**: 런북 [`docs/marketing/demo-runbook.md`] — scaffold→fastapi(8081)→vanilla-htmx(5000)→`seed_loader.py` 적재→`localhost:5000/login`(demo/demo). 시드 `profiles/seed/smallmfg-demo.seed.yaml`(18행: 김민준·박서연·이도윤·정지우 / 연차 leave / CNC-001+AIR-002 / inspection). 목록 화면 시드 실렌더 검증됨.
-
-**콜드스타트 자산 완료 (2026-06-02, CMO+domain-expert+engineer)**:
-- **아웃바운드 카피** `docs/marketing/outbound-copy.md` — LinkedIn·콜드이메일·커뮤니티(디스콰이엇·OKKY), ICP 향, honest. lead 5건 파이프라인 ready.
-- **Scene 1 인터뷰 transcript** `docs/marketing/demo-assets/smallmfg-interview-transcript.md` — 실 대화 픽션, smallmfg 프로파일 정확 정합. 온스크린 6줄 표시.
-- **QA 회귀 가드** `frontend/.../tests/test_entity_list_params.py` — entity.list 라우트 param-mapping 12 케이스, revert→RED 확인. L4 공백 봉합.
-
-**남은 일 (사람 = CEO/CMO)**: ① 런북대로 데모 띄워 OBS 녹화(4-corner 전부 live, Scene4 react+springboot 포함) → DaVinci 편집 → ElevenLabs VO(전체) → 자막(한/영) → YouTube unlisted + Loom 90초 컷. ② 아웃바운드 카피 발송 → qualified lead 5건. ③ 배포 카피엔 ICP("소형·스타트업") 표현 사용. ④ 엔드카드 사업 이메일 주소 확정. CEO Open Q: 발송 우선순위 / 카카오톡 채널 / 디스콰이엇 게시 명의.
-
-> ⚠️ **honest-marketing (Growth-17)**: Scene 5(self-host) **cut** — ops-pack(docker-compose+Vault+SSO) 미구현 vaporware → **M2 이관**. M1 기술성숙(T-1~T-6 6/6) 유지. positioning+roadmap 동기화 완료.
+```
+python scripts/preflight.py --profile lawfirm-demo   # 사전점검: 실패 메시지가 곧 복구 명령
+# (5432 미응답이면: WSL postgres 기동 또는 docker compose up -d)
+python scripts/demo/setup_lawfirm.py                  # 멱등 — 이미 적재돼 있으면 skip 출력
+uvicorn main:app --app-dir backend/adapters/fastapi --port 8000   # .env 자동 로딩
+# 스모크: GET /api/legal/precedents/search?q=손해배상 → 2건
+```
 
 ## 다음 후보 (우선순위)
 
-1. **GTM (CEO/CMO 소관)** — ↑ demo 영상(위 즉시 액션) + qualified lead 5건 → pricing 공개. 기술 측은 준비 완료.
-2. **catalog 성장 (domain-expert)** — `machine`(production), `accounting-period`(finance) entity 신설 → operation.machine_id / journal-entry.period_id fk-exempt backlog 해소.
-3. **maturity-check.py 자동화** (T-1~T-6 1-shot PASS/FAIL 리포트, CEO 승인 시 engineer) / Vite preview SPA 테스트 2건 활성(M2 전) / vue·nexacro adapter(M2 후) / react persona ceo·it / ledger-index `--check`→G-13 / OpenAPI 3.1 / `--serve`.
+1. **compose 실가동 검증** — ↑ 복귀 직후 첫 액션 (Growth-28 loop 닫기).
+2. **PM loop Step 5 (Deliver)** — lawfirm-demo 데모 패키지 (화면 데모 + 사용법 + acceptance criteria 표) 고객 전달 형태로 조립. CEO 지시 대기.
+3. **CEO 인터뷰 미답 2문항** — A2 (예산·LLM budget) / A5 (보안·외부망·self-host). lawfirm-demo 시나리오 진행에 필요. **CEO 답변 필요.**
+4. **RAG 2단계** (pgvector semantic search) — CTO 설계 → engineer 구현. 착수 지시 필요. 확정 후 `legal-rag-pattern` wiki 작성 (INFERRED→EXTRACTED).
 
 ## 운영 메모
 
-- 파일당 별도 커밋 / `Co-Authored-By: Claude Opus 4.8` / master push CTO 자동 (private repo).
-- Growth 마무리마다 `python scripts/ledger-index.py` 재빌드.
-- **환경 가용**: Node v24 ✓ / Python ✓ (fastapi live 가능) / **JDK·Gradle ✗** (springboot live 불가 — 위 #1 게이트의 원인).
-- 장시간 background engineer 위임 시 "중간 커밋 체크포인트" 지시 (Part C silent-stop 교훈).
+- 파일당 별도 커밋 / `Co-Authored-By: Claude Fable 5` / master push CTO 자동 (private repo).
+- **자격증명은 절대 커밋 금지** — `.env` (gitignored) 에만. 이 파일에도 적지 않음.
+- **Bash env var 는 `export`** (CMD `set` 아님) — 다만 dotenv 자동 로딩 후로는 수동 export 자체가 불필요.
+- FastAPI 장기 기동은 **Bash `run_in_background`** 사용 (PowerShell Start-Job 은 Running 표시 후 silent 종료 — 06-11 재확인).
+- ctx_execute 샌드박스는 localhost 접근 불가 — L4 HTTP 테스트는 PowerShell `Invoke-RestMethod`.
+- 환경: Node v24 ✓ / Python 3.14 ✓ / JDK 21 + gradlew ✓ / **Docker ✓ (06-11 설치, 미검증)** / WSL postgres ✓.
