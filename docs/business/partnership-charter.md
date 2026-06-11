@@ -2,7 +2,7 @@
 
 > Founder/CEO 와 CTO/Architect/VP 사이의 의사결정·책임 분담을 한 장에. 변경 시 양자 합의 필수.
 
-## 1. 인격과 역할 — Team Roster (8-인격 — Growth-4 부터 6-인격, Growth-18 부터 PM, Growth-32 부터 CISO 합류)
+## 1. 인격과 역할 — Team Roster (9-인격 — Growth-4 부터 6-인격, Growth-18 부터 PM, Growth-32 부터 CISO, Growth-35 부터 DevOps 합류)
 
 | 역할 | 인격 | 인격 종류 | 책임 영역 |
 |---|---|---|---|
@@ -14,6 +14,7 @@
 | **CDO (design-agent)** | `.claude/agents/design-agent.md` | AI | UX/UI 시스템·디자인 토큰·landing/portal 비주얼·페르소나별 인터랙션·접근성 |
 | **PM (pm-agent)** | `.claude/agents/pm-agent.md` | AI | 고객 needs 발굴 인터뷰·요구사항 명세 (acceptance criteria)·delivery loop 전 과정 품질·피드백 triage·지식 환류 게이트. 절차: `.claude/skills/pm-delivery-loop/SKILL.md` |
 | **CISO (security-agent)** | `.claude/agents/security-agent.md` | AI | 인도 전 보안 리뷰 게이트·시크릿 노출 점검·취약점 클래스 점검·데이터 외부 유출 경로 추적·self-host 보안 가이드·보안 사유 인도 BLOCK 권한. 절차: `.claude/skills/security-loop/SKILL.md` |
+| **DevOps (devops-agent)** | `.claude/agents/devops-agent.md` | AI | preview 티어 운영 (Coolify/VPS·`*.n9n.co.kr`)·디지털 자산 레지스트리·CI/CD 파이프라인·시크릿 볼트 운영·원격/방문 설치 런북·인프라 비용 추적. 절차: `.claude/skills/devops-loop/SKILL.md`, 토폴로지: `docs/architecture/deployment-topology.md` |
 
 > **인간 직원이 0명인 단계의 가상 회사**. AI agent 들이 각자 직무 인격을 맡는다. CEO 가 인간이고 나머지는 AI. 매출이 발생하면 (M2) 가장 critical 한 인격부터 인간으로 보강 여부 검토.
 
@@ -73,6 +74,11 @@
 | 브랜드 명·로고·CI | | | | | | | | CEO + CMO + CDO |
 | 새 가드 추가 (end-to-end) | | | | | | | | CTO (row) + QA (기준) + Eng (본문) |
 | 새 adapter 추가 (end-to-end) | | | | | | | | CTO (contract) + Eng (구현) + QA (compliance test) |
+| preview 티어 운영·서브도메인 발급/회수 | | | | | | | | DevOps (단독, CTO 토폴로지 제약 내) |
+| 디지털 자산 레지스트리·시크릿 볼트 운영 | | | | | | | | DevOps (시크릿 자세는 CISO 와 정렬) |
+| CI/CD 파이프라인 구성 | | | | | | | | DevOps (가드화 시 CTO row + QA 기준) |
+| 인프라 비용 추적·인프라 hedge lever | | | | | | | | DevOps (측정) + CTO (hedge 결정) |
+| delivery 설치 실행 (원격/방문) | | | | | | | | DevOps (런북·실행) + PM (인도 승인) + CISO (보안 게이트) |
 
 ## 3. CTO 의 일일 의사결정 자율성 (Auto Mode 헌장)
 
@@ -133,3 +139,4 @@ CTO 가 다음 상황 발견 시 **즉시 CEO 알림** (Auto Mode 진행 중단)
 | v1.3 | 2026-05-29 | §3 #3 변경 — private repo master 푸시는 CTO 자동, public 전환 시 사전 확인 룰 자동 재발효. CLAUDE.md §9 / AGENTS.md 동기화 | CEO 직접 제안 (Growth-5b) |
 | v1.4 | 2026-06-11 | 6-인격 → 7-인격 확장 (PM 신설) — 고객 needs 발굴·요구사항 명세·delivery loop·피드백 triage 권한 추가, delivery sign-off 합의 행 (CEO+PM) 신설. CLAUDE.md §1 동기화 | CEO 직접 제안 (Growth-18) |
 | v1.5 | 2026-06-11 | 7-인격 → 8-인격 확장 (CISO 신설) — 인도 전 보안 리뷰 게이트·시크릿 노출 점검·취약점 점검·데이터 외부 유출 추적·self-host 보안 가이드·보안 사유 인도 BLOCK 권한. delivery sign-off 에 CISO 보안 게이트 통과 보고 의무 추가. CLAUDE.md §1 동기화 | CEO 직접 제안·위임 (Growth-32, "보안 결함 없는 인도물" 요구) |
+| v1.6 | 2026-06-11 | 8-인격 → 9-인격 확장 (DevOps 신설) — preview 티어 운영 (Coolify/VPS·`*.n9n.co.kr`)·디지털 자산 레지스트리·CI/CD·시크릿 볼트·원격/방문 설치 런북·인프라 비용 추적. §2 에 DevOps 결정 행 5개 추가. `deployment-topology.md` (2-티어 preview/production) + `infra/registry/` 신설. CLAUDE.md §1 동기화 | CEO 직접 제안·위임 (Growth-35, 1인 비대면 창업 인프라 요구) |
