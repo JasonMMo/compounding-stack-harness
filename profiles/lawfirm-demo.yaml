@@ -23,7 +23,13 @@ datasource:
   port: 5432
 
 billing:
-  llm_budget_usd_per_month: TBD   # AI 검색 빈도 확인 후 결정
+  setup_cost_krw: 5000000         # A6 — 초기 구축비 일회성 (CEO, 2026-06-11). self-host 설치·구축·라이선스
+  llm_budget_usd_per_month: TBD   # 초기비와 분리된 월 LLM 예산은 별도 논의 (AI 검색 빈도 측정 후 확정)
+
+security:
+  data_residency: on-premise      # A5 — 고객(소송) 데이터 외부 유출 금지
+  self_host: required             # 사내망 운영, 외부 클라우드 반출 금지
+  deliverable_requirement: "보안 결함 없는 인도물 — CISO 인도 전 보안 리뷰 PASS 필수 (CEO 요구, 2026-06-11)"
 
 domains:
   - slug: legal
