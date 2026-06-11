@@ -1,0 +1,32 @@
+# infra/registry/shop-demo.yaml
+# 고객/프로필: shop-demo (소매 SMB preview 데모)
+# Growth-35 Phase 2 리허설 (2026-06-12) — 첫 고객 preview 반복 배포 검증
+# 시크릿 평문 절대 금지: secret_ref 볼트 키 이름만
+slug: shop-demo
+contact:
+  channel: internal             # 내부 데모 — 실 고객 아님
+  handle: "demo"
+preview:
+  subdomain: shop-demo.n9n.co.kr
+  url: https://shop-demo.n9n.co.kr
+  coolify_project: k5vmkpn9ygimznoxnavpwd4y      # project_uuid
+  coolify_app: cn56k6xtmhp2njv5ed31xv7t          # application_uuid
+  coolify_env: production                          # environment_name
+  deploy_key_github_id: 154181975                 # GitHub repo deploy key id (shared, read_only)
+  coolify_privkey_uuid: s127pafarr46wlu1r2mre2te  # Coolify security/keys uuid (shared)
+  server_uuid: n12vdydjpwp81hu5i15n1gsb           # shared preview VPS
+  compose_file: deploy/preview/shop-demo.compose.yml
+  manifest_server_path: /data/coolify/manifests/shop-demo/screen-manifest.json
+  status: live                  # live (2026-06-12)
+  deployed_at: "2026-06-12"
+  build_commit: e62abac          # first deploy commit sha
+  tls: "Let's Encrypt, CN=shop-demo.n9n.co.kr, exp 2026-09-09"
+production:
+  install_method: null           # 아직 production 미배포
+  installed_at: null
+  stack:
+    frontend: vanilla-htmx
+    backend: fastapi
+secret_ref:
+  - vault/shop-demo/secret-key    # infra/secrets/shop-demo-secret-key.txt (gitignored)
+cost_note: "preview 티어 공유 VPS (187.77.140.157) 귀속분, Hostinger KVM2 $8.99/월 공유"
