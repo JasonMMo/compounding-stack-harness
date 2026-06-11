@@ -7,11 +7,11 @@ domains:
 preview_vps:
   - provider: hostinger       # 결정 (Growth-35, CEO). Coolify 원클릭 OS 템플릿 보유
     region: singapore         # ⚠ Hostinger 한국 DC 없음 — 싱가포르가 한국 최근접 (~70-90ms, preview 용 충분)
-    plan: KVM 1               # 1 vCPU / 4GB / 50GB NVMe (CEO 확정, 절약). 초기 1~2 고객용. 다수 동시 preview 시 KVM 2(8GB) 업글
+    plan: KVM 2               # 2 vCPU / 8GB / 100GB NVMe (CEO 확정 — KVM1 대비 +$3/월로 RAM 2배, 다수 고객 스택 여유)
+    os: ubuntu-24.04-lts      # Coolify 애플리케이션 템플릿(있으면) = Ubuntu LTS + Coolify 사전설치. 없으면 Ubuntu 24.04 LTS 클린
     paas: coolify             # 원클릭 템플릿으로 설치 (수동 install.sh 생략 가능)
     status: not-provisioned   # not-provisioned | live
-    monthly_cost_usd: 5.84    # 24개월 선결제 기준(~$140). 갱신가 상승 주의. 쿠폰: HostAdvice VPS 74%+15% (affiliate 링크)
-    upgrade_path: "KVM 2 (2vCPU/8GB/$8.99) — 동시 고객 preview 스택 늘면"
+    monthly_cost_usd: 8.99    # 24개월 선결제 기준(~$216). 갱신가 상승 주의. 쿠폰: HostAdvice VPS 74%+15% (affiliate 링크)
     coupon_ref: "hostadvice.com/hosting-company/hostinger-coupons (VPS 74% off + 15%, 24mo 선결제)"
     secret_ref:
       - vault/preview-vps/ssh
