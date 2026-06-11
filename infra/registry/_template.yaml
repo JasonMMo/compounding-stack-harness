@@ -1,0 +1,21 @@
+# Digital asset record — copy to infra/registry/<slug>.yaml per customer.
+# 시크릿 평문 절대 금지: secret_ref 는 볼트 키 이름만 (평문은 infra/secrets/, gitignored).
+slug: example-corp            # ASCII slug (G-8)
+contact:
+  channel: kakao             # kakao | sungho | kmong | email
+  handle: "@example"         # 채널 핸들 (식별용, 평문 연락처 ✗)
+preview:
+  subdomain: example-corp.n9n.co.kr
+  coolify_project: example-corp
+  status: provisioning       # provisioning | live | retired
+  deployed_at: null
+production:
+  install_method: remote     # remote | onsite
+  installed_at: null         # 인도 완료 일자
+  stack:                     # profile stack.frontend / stack.backend 반영
+    frontend: null
+    backend: null
+secret_ref:                  # 볼트 키 이름만 — 평문 ✗
+  - vault/example-corp/db
+  - vault/example-corp/admin
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5)"
