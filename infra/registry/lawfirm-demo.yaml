@@ -1,0 +1,31 @@
+# infra/registry/lawfirm-demo.yaml
+# 고객/프로필: lawfirm-demo (법무 도메인 preview 데모)
+# Growth-35 Phase 2 (2026-06-11) — 첫 영속 Coolify preview 배포 완료
+# 시크릿 평문 절대 금지: secret_ref 볼트 키 이름만
+slug: lawfirm-demo
+contact:
+  channel: internal             # 내부 데모 — 실 고객 아님
+  handle: "demo"
+preview:
+  subdomain: lawfirm-demo.n9n.co.kr
+  url: https://lawfirm-demo.n9n.co.kr
+  coolify_project: kjjjc67jyiksda35jqly02h7      # project_uuid
+  coolify_app: opryb94j9k5cjdv8bienenv0          # application_uuid
+  coolify_env: f10p2y0qlbys80n3qp4h1w6o          # environment_uuid (production)
+  deploy_key_github_id: 154181975                 # GitHub repo deploy key id (read_only)
+  coolify_privkey_uuid: s127pafarr46wlu1r2mre2te  # Coolify security/keys uuid
+  compose_file: deploy/preview/lawfirm-demo.compose.yml
+  manifest_server_path: /data/coolify/manifests/lawfirm-demo/screen-manifest.json
+  status: live                  # live (2026-06-11)
+  deployed_at: "2026-06-11"
+  build_commit: e96fd3d          # first deploy commit sha
+  tls: "Let's Encrypt, CN=lawfirm-demo.n9n.co.kr, exp 2026-09-09"
+production:
+  install_method: null           # 아직 production 미배포
+  installed_at: null
+  stack:
+    frontend: vanilla-htmx
+    backend: fastapi
+secret_ref:
+  - vault/lawfirm-demo/secret-key    # infra/secrets/lawfirm-demo-secret-key.txt (gitignored)
+cost_note: "preview 티어 공유 VPS (187.77.140.157) 귀속분, Hostinger KVM2 $8.99/월 공유"
