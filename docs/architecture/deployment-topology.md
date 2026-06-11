@@ -28,7 +28,7 @@
 [고객 브라우저]
    │  https://acme-corp.n9n.co.kr
    ▼
-[Seoul VPS]  ── Coolify (self-hosted PaaS)
+[Hostinger VPS · 싱가포르]  ── Coolify (self-hosted PaaS)
    ├─ project: acme-corp   → docker stack (frontend+backend+db)
    ├─ project: beta-inc    → docker stack
    └─ ...                   (고객별 격리, 단일 VPS 다중 프로젝트)
@@ -36,19 +36,22 @@
 ```
 
 - **PaaS**: Coolify (오픈소스, self-host). git push → 자동 배포, 프로젝트 격리, TLS 자동, preview 환경 내장.
-- **VPS**: Seoul 리전 (Vultr / AWS Lightsail / 카페24, ~\$6~12/월, ≥2vCPU/4GB). Coolify 권장 사양 충족.
-  - Oracle Cloud Free ARM (Seoul) 도 가능하나 사업용은 account reclaim 리스크로 비추천.
+- **VPS**: **Hostinger KVM 1** (1vCPU/4GB/50GB NVMe, \$5.84/월 24개월 선결제). CEO 확정 (Growth-35). 초기 1~2 고객용 — 동시 preview 늘면 KVM 2 (2vCPU/8GB, \$8.99) 업글.
+  - **리전 = 싱가포르** (Hostinger 한국 DC 없음 — 인도/인니/싱가포르/말聞이시아 중 한국 최근접 ~70-90ms). preview 는 영업 데모라 지연 무관, production 은 고객 self-host 라 무관.
+  - **Coolify 원클릭 OS 템플릿** 보유 → 수동 `install.sh` 생략 가능 (셋업 30분+ 단축).
+  - 대안 검토 (기각): Vultr 서울 = 진짜 한국 DC·무약정이나 8GB 동급이 ~\$48/월 (5배). 한국 affiliate 리스트(Ultahost 등) = 커미션 정렬·실 Seoul DC 불명확.
+  - 쿠폰: HostAdvice VPS 74%+15% (affiliate 링크, 24개월 선결제 조건). 갱신가 상승 주의.
 - **DNS**: `n9n.co.kr` 와일드카드 `*.n9n.co.kr` A 레코드 → VPS IP. 고객마다 `<slug>.n9n.co.kr` 한 줄로 발급.
-- **비용 프레이밍**: 건당 500만원 대비 월 \$6~12 는 무의미. **신뢰도 > 비용 절감** — 여기서 아끼지 않는다.
+- **비용 프레이밍**: 건당 500만원 대비 월 \$6 는 무의미. **신뢰도 > 비용 절감** — 여기서 아끼지 않는다 (단 CEO 선택은 초기 KVM 1 절약, 수요 확인 후 업글).
 
 ### Preview 부트스트랩 런북 (1회)
 
 > ⚠ 미provisioning. 다음 DevOps 세션 첫 임무. 실행 전 CISO 하드닝 기준 정렬.
 
-1. Seoul VPS 발급 (≥2vCPU/4GB, Ubuntu LTS). SSH 키 인증만, 비밀번호 로그인 비활성.
+1. Hostinger KVM 1 발급 (싱가포르 리전, Ubuntu LTS 또는 **Coolify 원클릭 템플릿** 선택). SSH 키 인증만, 비밀번호 로그인 비활성.
 2. 방화벽: 22(SSH, 내 IP 화이트리스트 권장)/80/443 만 개방.
-3. Coolify 설치 (`curl -fsSL https://coolify.io/install.sh | bash` — 설치 전 스크립트 검토, CISO).
-4. DNS: 가비아/도메인 등록기관에서 `*.n9n.co.kr` + `n9n.co.kr` A 레코드 → VPS IP.
+3. Coolify: 원클릭 템플릿이면 설치 완료 상태. 수동이면 `curl -fsSL https://coolify.io/install.sh | bash` (설치 전 스크립트 검토, CISO).
+4. DNS: 도메인 등록기관에서 `*.n9n.co.kr` + `n9n.co.kr` A 레코드 → VPS IP.
 5. Coolify 에서 와일드카드 TLS (Let's Encrypt DNS-01) 또는 per-project TLS 구성.
 6. 헬스체크 + 레지스트리 (`infra/registry/`) 에 VPS·도메인 자산 기록.
 
@@ -98,7 +101,7 @@ DDL + screen-manifest + adapter 산출
 
 | 항목 | 비용 | 비고 |
 |---|---|---|
-| Seoul VPS (Coolify preview) | \$6~12/월 | 단일 VPS 다중 고객 프로젝트 격리 |
+| Hostinger KVM 1 (Coolify preview, 싱가포르) | \$5.84/월 (24개월) | 단일 VPS 다중 고객 프로젝트 격리. 동시 증가 시 KVM 2(\$8.99) 업글 |
 | 도메인 n9n.co.kr | 보유 | 갱신비 연 단위 |
 | 와일드카드 TLS | \$0 | Let's Encrypt |
 | 터널 (cloudflared, 데모 폴백) | \$0 | Cloudflare 무료 |
