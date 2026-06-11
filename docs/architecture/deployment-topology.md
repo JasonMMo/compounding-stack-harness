@@ -115,6 +115,19 @@ EOF
 - 서버 uuid `n12vdydjpwp81hu5i15n1gsb` (localhost). 와일드카드 `*.n9n.co.kr` grey-cloud 가 `<slug>` 서브도메인 DNS 를 자동 커버 → 앱별 DNS 추가 불필요.
 - v1 다음: `scaffold.py` 산출 이미지를 `<img>` 자리에 → 한 명령으로 고객 preview 생성.
 
+### 로컬 preview 패키징 (검증됨, Growth-35 2026-06-11)
+
+`scripts/workflow/preview_package.py --profile <slug>` → scaffold 호출 후 `out/<slug>/docker-compose.yml` 생성. **배포 단위 = DB 없는 2-container** (백엔드 fastapi 가 in-memory store → postgres 불필요):
+
+```
+docker compose -f out/<slug>/docker-compose.yml up -d --build   # frontend :8090, backend 미노출
+# 검증: curl localhost:8090/login (200) · /health (200) · 프론트 로그 ManifestLoader
+docker compose -f out/<slug>/docker-compose.yml down -v
+```
+
+- frontend(vanilla-htmx, 도메인 대상) → BACKEND_BASE_URL=http://backend:8081, PROFILE_MANIFEST=manifest read-only bind. Dockerfile 2종 build context=repo root (middle/contract+catalog COPY).
+- **Coolify(Phase 2) 재설계 필요**: ① compose build context 가 절대 경로(로컬 전용) → 위 §4 pre-built `dockerimage`(레지스트리 push) 경로로 ② manifest 는 host bind 대신 사전배포/env/init-fetch 로 서버에 주입 (1 이미지 N 프로필 유지). 상세: `out/analysis/preview-wiring-v1.md` (gitignored, 로컬).
+
 ## 5. GTM 접점 (3종)
 
 | # | 접점 | 수단 | 비고 |
