@@ -28,6 +28,7 @@ description: Run the PM delivery loop for a customer engagement — needs discov
 - profile: `profiles/<slug>.yaml` (스키마: `profiles/_README.md`)
 - scaffold 산출: `out/` (gitignore — 인도 패키지로만 복사)
 - 환류 자산: `presets/`, `knowledge/generic/verified-profiles/`
+- **반환 규약**: 위 산출물은 파일에 쓰고 main 으로는 **요약 + 경로 + 결정/BLOCK 항목만** 반환 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md)
 
 ## Anti-patterns (위반 시 QA 경계 감사 대상)
 
