@@ -391,18 +391,29 @@ def main(argv: list[str] | None = None) -> int:
         "--entity",
         help="Emit only the named entity.",
     )
+    parser.add_argument(
+        "--entities",
+        help="Comma-separated list of entity keys to emit (subset of catalog).",
+    )
     args = parser.parse_args(argv)
 
     catalog = load_catalog()
     dialect = load_dialect(args.dialect)
     all_entities: dict[str, Any] = catalog.get("entities", {})
 
-    # Filter
+    # Filter — priority: --entity (singular) > --entities (plural) > --domain > all
     if args.entity:
         if args.entity not in all_entities:
             print(f"Entity '{args.entity}' not found in catalog.", file=sys.stderr)
             return 1
         subset = {args.entity: all_entities[args.entity]}
+    elif args.entities:
+        keys = [k.strip() for k in args.entities.split(",") if k.strip()]
+        missing = [k for k in keys if k not in all_entities]
+        if missing:
+            print(f"Unknown entity keys: {', '.join(missing)}", file=sys.stderr)
+            return 1
+        subset = {k: all_entities[k] for k in keys}
     elif args.domain:
         subset = {k: v for k, v in all_entities.items() if v.get("domain") == args.domain}
         if not subset:
