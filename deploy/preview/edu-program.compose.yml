@@ -4,6 +4,7 @@
 #
 # Domain: set via Coolify API PATCH docker_compose_domains (not SERVICE_FQDN_* env)
 # Manifest: server-side persistent file mounted read-only into frontend
+# Seed: server-side seed-data.json mounted read-only into backend (SEED_FILE)
 #
 # Coolify deployment:
 #   build_pack: dockercompose
@@ -21,6 +22,14 @@ services:
     environment:
       PORT: "8081"
       PYTHONIOENCODING: "utf-8"
+      SEED_FILE: "/data/seed/seed-data.json"
+    volumes:
+      # Seed data file — scp'd to server before deploy
+      # Path: /data/coolify/manifests/edu-program/seed-data.json
+      - type: bind
+        source: /data/coolify/manifests/edu-program/seed-data.json
+        target: /data/seed/seed-data.json
+        read_only: true
     # No custom network — Coolify attaches containers to its uuid network only.
     # Traefik can only reach uuid-net IPs; declaring preview-net caused bistable 504.
     restart: unless-stopped
