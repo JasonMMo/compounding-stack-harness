@@ -32,6 +32,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy adapter source files (server.py, contract_loader.py, manifest_loader.py, etc.)
 COPY frontend/adapters/vanilla-htmx/ ./
 
+# Copy design tokens and generate tokens.css at build time.
+# tokens.css is .gitignored (generated artifact) so it is absent from the git clone;
+# token_css_generator._tokens_dir() walks up from /app and finds /app/design/tokens/.
+COPY design/tokens/ ./design/tokens/
+RUN python build_tokens.py
+
 # Copy runtime contract dependency
 COPY middle/contract/ ./middle/contract/
 
