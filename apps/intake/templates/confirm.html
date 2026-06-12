@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}제출 완료 — 시스템 도입 상담 신청{% endblock %}
+{% block content %}
+<article class="intake-card confirm-card">
+  <hgroup>
+    <h1>제출이 완료되었습니다</h1>
+    <p>1~2 영업일 내에 담당자가 연락드립니다.</p>
+  </hgroup>
+
+  {% if not fake %}
+  <section class="edit-link-section">
+    <h2>수정 링크 보관</h2>
+    <p>
+      아래 링크를 저장해 두시면 제출하신 내용을 언제든지 수정할 수 있습니다.<br>
+      <strong>창을 닫기 전에 반드시 복사해 두세요.</strong>
+    </p>
+    <div class="edit-link-box">
+      <code id="edit-link">{{ request.base_url }}edit/{{ edit_token }}</code>
+      <button type="button" onclick="copyEditLink()" class="copy-btn">복사</button>
+    </div>
+  </section>
+  {% endif %}
+
+  <p style="margin-top: var(--pico-spacing)"><a href="/">처음으로 돌아가기</a></p>
+</article>
+
+<script>
+function copyEditLink() {
+  var link = document.getElementById('edit-link').textContent;
+  navigator.clipboard.writeText(link).then(function() {
+    alert('링크가 클립보드에 복사되었습니다.');
+  }).catch(function() {
+    // fallback: select text
+    var range = document.createRange();
+    range.selectNode(document.getElementById('edit-link'));
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+  });
+}
+</script>
+{% endblock %}
