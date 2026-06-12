@@ -387,3 +387,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: 리허설은 실데이터로만 드러나는 결함을 잡는다 — 스모크 통과한 폼의 bool 함정도, push-직후 race 도, bind-mount 디렉터리화도 실제 의뢰 흐름에서만 나타났다
 - **Revenue/cost**: LLM=agent 6회 spawn (리허설 2회전 누적 ~37만 tok) / infra=기존 VPS 앱 1 추가 (증분 0원) / M2 게이트 직전 — 인프라·프로세스 검증 끝, 남은 건 영업
 - **Open loops**: 건1 scope-confirm 발송 (CEO — letter URL, 학사관리=사업 범위·LMS=배치 가져오기 단계 동의) / 건2 거절 회신 발송 (CEO) / production self-host 합의 (Vercel 비추천 전달) / education vertical seed 신설 (M3 — budget-line·enrollment·attendance 등 9 entity 후보) / manifest scp 순서 견고화 (deploy 스크립트, devops 후보)
+
+### Growth-39 (2026-06-12 후속 세션) — 아코디언 사이드바 + Hostinger CSS + 테이블 스타일
+
+- **인격/Axis/Milestone**: CTO (integrator) + CDO (디자인 분석·spec) + Engineer (CSS·JS·토큰 구현) / frontend (vanilla-htmx adapter)·design (토큰 파이프라인) / M2 — edu-program.n9n.co.kr UI 품질 상향
+- **Why (1줄)**: CEO — "좌측 1차/2차 아코디언 메뉴, Hostinger 수준 CSS, 반응형 UI" + 수평 배열·라이트테마·테이블 스타일 3종 보정 요청
+- **구현**: `sidebar-group__header` button + SVG chevron + `sidebar-nav--accordion` (max-height 0→600px CSS transition) + `initAccordion()` JS (localStorage `sidebar-accordion-open` 상태 유지). Hostinger 라이트테마: `--sidebar-item-active-bg: #EEF2FF` / `--sidebar-item-active-text: #4F46E5` / active `::before` left-bar 제거(fill-only) / 트리 indent `border-left 2px + padding-left 20px`. 3단계 반응형: ≥1280px 240px / 769–1279px 56px CSS-only collapse / <768px drawer. 테이블: `.th` `#F8FAFC`·2px 하단선 / `.td` `#F0F0F0` 구분선 / hover `#F8FAFC`(파랑 제거) / 줄무늬 제거 / `table-wrapper` 부드러운 그림자.
+- **핵심 버그**: Pico CSS classless 가 `<nav>` 에 `flex-direction: row` 자동 적용 → `display: block` 명시로 차단 (`.app-sidebar`, `.sidebar-group`, `.sidebar-nav { flex-direction: column }`).
+- **토큰 파이프라인**: `tokens.css` gitignored → `design/tokens/semantic.json` sidebar 섹션(10 토큰) 추가 → `build_tokens.py` 재생성 → Docker build time 포함.
+- **커밋**: 161a61d→046bcbb→fa18df3→56954c2→ccac470→eaa0f5b (6건, pushed). live 검증: 10 sidebar CSS vars PASS, initAccordion PASS, table styles PASS.
+- **교훈 (1줄)**: CSS 프레임워크 암묵적 기본값(Pico nav flex-row)은 레이아웃 컴포넌트에 반드시 명시 override — `display: block` 한 줄이 수평 메뉴 버그 전체를 해결한다
+- **Revenue/cost**: LLM=CDO+Engineer agent 2회 spawn / infra 변경 없음 / M2 데모 UI 품질 충족
+- **Open loops**: 건1 scope-confirm 회신 대기 / 건2 거절 회신 대기 / education vertical seed 신설 (M3) / G-14 stale-anchor 가드 / `.npmrc` codegraph 버전 핀
