@@ -9,15 +9,15 @@ contact:
 preview:
   subdomain: lawfirm-demo.n9n.co.kr
   url: https://lawfirm-demo.n9n.co.kr
-  coolify_project: kjjjc67jyiksda35jqly02h7      # project_uuid
-  coolify_app: opryb94j9k5cjdv8bienenv0          # application_uuid
+  coolify_project: kjjjc67jyiksda35jqly02h7
+  coolify_app: opryb94j9k5cjdv8bienenv0
   coolify_env: f10p2y0qlbys80n3qp4h1w6o          # environment_uuid (production)
   deploy_key_github_id: 154181975                 # GitHub repo deploy key id (read_only)
   coolify_privkey_uuid: s127pafarr46wlu1r2mre2te  # Coolify security/keys uuid
   compose_file: deploy/preview/lawfirm-demo.compose.yml
   manifest_server_path: /data/coolify/manifests/lawfirm-demo/screen-manifest.json
-  status: live                  # live (2026-06-11)
-  deployed_at: "2026-06-11"
+  status: live
+  deployed_at: "2026-06-12"
   build_commit: e96fd3d          # first deploy commit sha
   tls: "Let's Encrypt, CN=lawfirm-demo.n9n.co.kr, exp 2026-09-09"
 production:
