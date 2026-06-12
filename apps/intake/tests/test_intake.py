@@ -90,6 +90,24 @@ def test_questions_yaml_parse():
         assert "persona" in q, f"persona 없는 질문: {q}"
 
 
+def test_all_option_values_are_str():
+    """YAML 1.1 불리언 파싱 회귀 — 모든 option value 가 str 이어야 한다."""
+    questions_path = INTAKE_DIR / "questions.yaml"
+    with open(questions_path, encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    non_str = []
+    for q in data.get("questions", []):
+        for opt in q.get("options", []):
+            v = opt.get("value")
+            if not isinstance(v, str):
+                non_str.append(
+                    f"q={q['id']} opt_value={v!r} (type={type(v).__name__})"
+                )
+    assert not non_str, (
+        "bool/int option value 발견 — 따옴표 누락:\n" + "\n".join(non_str)
+    )
+
+
 # ---------------------------------------------------------------------------
 # 테스트 3: POST /submit → revision 파일 생성
 # ---------------------------------------------------------------------------
