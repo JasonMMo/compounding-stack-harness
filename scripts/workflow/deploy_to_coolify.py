@@ -18,6 +18,8 @@ Steps (runbook docs/runbooks/preview-deploy.md §4):
      POST /applications/private-deploy-key with validated payload.
      Pitfall: docker_compose_location MUST start with '/' (absolute).
   4. PATCH domain — docker_compose_domains array (NOT fqdn field — 422).
+     Pitfall: PATCH 직후 422 'docker_compose_raw' race — app 생성 후 Coolify 가
+     git fetch 전이면 422; poll(_wait_for_compose_raw)+retry 로 자동 복구.
   5. SCP manifest to server /data/coolify/manifests/<slug>/screen-manifest.json.
   6. Trigger instant deploy.
   7. Poll build status until finished or error (timeout 5 min).
@@ -420,6 +422,50 @@ def ensure_application(slug: str, project_uuid: str, token: str, dry_run: bool =
 # Domain PATCH
 # ---------------------------------------------------------------------------
 
+_COMPOSE_RAW_NOT_LOADED = "docker_compose_raw"  # 422 메시지 매칭 키워드
+
+
+def _wait_for_compose_raw(app_uuid: str, token: str, poll_interval: int = 5, max_wait: int = 120) -> bool:
+    """Coolify 가 git 에서 compose 파일을 적재할 때까지 poll.
+
+    POST /applications/private-deploy-key 직후 곧바로 domain PATCH 를 하면
+    Coolify 가 아직 git clone/fetch 를 완료하지 못해 docker_compose_raw 가 null 인 경우
+    422 'Cannot set docker_compose_domains without docker_compose_raw' 를 반환한다.
+
+    GET /applications/{uuid} 의 docker_compose_raw 필드가 비어 있지 않을 때까지 poll.
+    Returns True when loaded, False on timeout.
+    """
+    deadline = time.time() + max_wait
+    attempt = 0
+    while time.time() < deadline:
+        attempt += 1
+        try:
+            app = _api_request(
+                "GET", f"/applications/{app_uuid}", token,
+                dry_run=False, mutating=False,
+            )
+            raw = app.get("docker_compose_raw") if app else None
+            if raw:
+                print(
+                    f"[deploy_to_coolify] docker_compose_raw loaded "
+                    f"(attempt={attempt}, len={len(raw)})."
+                )
+                return True
+            print(
+                f"[deploy_to_coolify] waiting for compose raw... "
+                f"(attempt={attempt}, elapsed={int(time.time() - (deadline - max_wait))}s)"
+            )
+        except Exception as exc:
+            print(f"[deploy_to_coolify] poll error: {exc}", file=sys.stderr)
+        time.sleep(poll_interval)
+
+    print(
+        f"[deploy_to_coolify] WARN: docker_compose_raw still null after {max_wait}s.",
+        file=sys.stderr,
+    )
+    return False
+
+
 def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False) -> None:
     """Set docker_compose_domains via PATCH.
 
@@ -427,6 +473,12 @@ def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False) ->
     JSON-encoded object string: '{"<service>":{"domain":"https://..."}}' — NOT
     the array format [{"name":...,"domain":...}] (that form returns 422).
     Confirmed from live GET /applications response on shop-demo (2026-06-12).
+
+    Pitfall (runbook §4c-2): PATCH 직후 422 'Cannot set docker_compose_domains
+    without docker_compose_raw. Reload the compose file from the git repository
+    first.' — app 생성 직후 Coolify 가 git 에서 compose 를 아직 fetch 하지 못한
+    race condition. GET /applications/{uuid} 의 docker_compose_raw 가 채워질
+    때까지 poll (5s 간격, 최대 120s) 후 재시도한다.
 
     Service name: read from infra/registry/<slug>.yaml preview.domain_service.
     Falls back to "frontend" if key absent (lawfirm/shop backward-compat).
@@ -442,9 +494,40 @@ def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False) ->
             {"name": service_name, "domain": f"https://{slug}.n9n.co.kr"}
         ]
     }
-    _api_request("PATCH", f"/applications/{app_uuid}", token, body=payload, dry_run=dry_run)
-    if not dry_run:
+
+    if dry_run:
+        _api_request("PATCH", f"/applications/{app_uuid}", token, body=payload, dry_run=True)
+        return
+
+    # 1차 시도
+    try:
+        _api_request("PATCH", f"/applications/{app_uuid}", token, body=payload)
         print(f"[deploy_to_coolify] domain patched: https://{slug}.n9n.co.kr → {service_name}.")
+        return
+    except urllib.error.HTTPError as exc:
+        if exc.code != 422:
+            raise
+        # 422 응답 본문을 다시 읽어 docker_compose_raw race 인지 판별
+        # (이미 _api_request 에서 read+출력했으므로 메시지는 stderr 에 있음)
+        # exc.read() 는 소진됐으므로 메시지는 stderr 출력으로 확인 완료.
+        # docker_compose_raw 미적재 race 로 간주하고 poll 진입.
+        print(
+            f"[deploy_to_coolify] PATCH 422 — possible compose-raw race; "
+            f"polling for docker_compose_raw (up to 120s) ...",
+            file=sys.stderr,
+        )
+
+    # 2차: compose raw 가 채워질 때까지 poll 후 재시도
+    loaded = _wait_for_compose_raw(app_uuid, token)
+    if not loaded:
+        print(
+            "[deploy_to_coolify] WARN: proceeding with PATCH despite timeout "
+            "(Coolify may still accept).",
+            file=sys.stderr,
+        )
+
+    _api_request("PATCH", f"/applications/{app_uuid}", token, body=payload)
+    print(f"[deploy_to_coolify] domain patched (retry): https://{slug}.n9n.co.kr → {service_name}.")
 
 
 # ---------------------------------------------------------------------------
