@@ -4,6 +4,20 @@
 
 ## §1 — Growth 상세
 
+### Growth-38d (2026-06-12) — domain-expert v2 reconcile + CEO 지침 반영 + 스코프 확인 발송문
+
+- **domain-expert v2 reconcile (CTO 판정)**: enrollment 흐름을 crm/lead → contact(student overlay) → project/resource-assignment 로 14 baseline 내 매핑 채택. finance invoice 복원 (AP 방향 재확인). crm에 lead·activity 추가, project 도메인 신규 진입 → domains 7개로 확정.
+- **CEO 지침 반영**: Q9·Q10 확인 톤을 무거운 범위 협상 아닌 가벼운 단계 확인으로 조정. 내부 용어(Phase, entity) 노출 없는 평문 발송문 작성.
+- **domains display 일반인 눈높이 최종 점검**: "학생 명단 및 지원·선발 관리" / "사업 참여 학생 배정 관리" / "사업비 집행 및 업체 지급" / "거래 업체 관리" / "교육 기자재 관리" / "사업 서류 관리" / "사업 현황 보고" — 전부 평문 한국어, 내부 용어 없음.
+- **산출물**: `needs-note-edu.md` v4, `profiles/edu-program.yaml` reconcile 완료, `scope-confirm-edu.txt` 신규 (CEO 발송용).
+
+### Growth-38c (2026-06-12) — 교육업 건1 10문항 전부 반영 + profile 갱신
+
+- **10문항 전부 닫힘**: 학생 300명, 담당자 1인, 구축비 1,000만원, 학교 내부 서버·PostgreSQL, 결재 불필요. AP 방향(업체지급) 확정 → finance invoice 제거·procurement 추가.
+- **도메인 6개 확정**: crm, finance(AP), procurement, asset, document, reporting. enrollment·학사관리·LMS 연동은 스코프 협상 전 미진입.
+- **스코프 리스크 + CEO 협상 문안**: Q9 "전체 학사관리" + Q10 "LMS 연동"은 1,000만원·1인 맥락 초과. Phase 1(배치 업로드)/Phase 2(연동 고도화) 단계 제안 문안 작성 — CEO 전달 대기.
+- **산출물**: `needs-note-edu.md` v3, `profiles/edu-program.yaml` 갱신 (auth.local, billing 확정, procurement 추가, security.on-premise).
+
 ### Growth-38b (2026-06-12) — 교육업 건1 follow-up 회신 반영 + draft profile 작성
 
 - **회신 확정**: 기관 유형 = 대학교, 정부사업 수주·추진 중. datasource dialect = postgres (고객 PostgreSQL 준비 완료). 기능 3가지 ①학생 리스트 관리 ②사업비 관리 ③학사관리 (③ 범위 미확정).
@@ -45,7 +59,7 @@
 | # | 고객 | 시작 | 단계 | 상태 |
 |---|---|---|---|---|
 | 1 | 30인 법무법인 (lawfirm-demo) | 2026-06-11 | Step 5 Deliver | 인도 패키지 조립 완료 (`docs/delivery/lawfirm-demo/`) + CISO 보안 게이트 PASS (CAVEAT 3건 해소, Growth-32). CEO 승인 대기 — 외부 전달 책임은 CEO (charter §2) |
-| 2 | 교육업 staff (edu-intake-rehearsal) | 2026-06-12 | Step 2 Discover | 회신 반영 완료. dialect=postgres 확정. 학사관리 범위 Q9·Q10 추가. draft profile 작성 (`profiles/edu-program.draft.yaml`). open loop 10건 — IT 필드·Q2·Q3·Q4·Q6·Q9·Q10 회신 대기. |
+| 2 | 교육업 staff (edu-intake-rehearsal) | 2026-06-12 | Step 2→3 Specify | domain-expert v2 reconcile 완료. domains 7개 확정 (crm·project·finance·procurement·asset·document·reporting). 스코프 확인 발송문 CEO 전달 대기. open loop 잔존 4건 (학사관리 확인·LMS·budget-line·resource-assignment 크로스도메인). |
 
 ### CEO 인터뷰 답변 기록 (lawfirm-demo, 2026-06-11)
 
