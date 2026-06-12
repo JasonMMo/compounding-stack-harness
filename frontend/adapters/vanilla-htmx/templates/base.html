@@ -73,9 +73,22 @@
       {% set domains = g_domains if g_domains else [] %}
       {% if domains %}
       {% for domain in domains %}
-      <div class="sidebar-group">
-        <div class="sidebar-group__label">{{ domain.display }}</div>
-        <ul class="sidebar-nav" role="list">
+      <div class="sidebar-group" data-group-key="{{ domain.key | default(loop.index) }}">
+        <button
+          class="sidebar-group__header"
+          type="button"
+          aria-expanded="true"
+          aria-controls="nav-group-{{ domain.key | default(loop.index) }}">
+          <span class="sidebar-group__label-text">{{ domain.display }}</span>
+          <svg class="sidebar-group__chevron" aria-hidden="true"
+               width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <ul class="sidebar-nav sidebar-nav--accordion is-open"
+            id="nav-group-{{ domain.key | default(loop.index) }}"
+            role="list">
           {% for entity in domain.entities %}
           {% set entity_key = entity.key %}
           <li class="sidebar-nav__item">
@@ -98,9 +111,18 @@
       {% else %}
       {# 폴백: domains 없을 때 entity 평면 목록 (lawfirm-demo 등 구버전 호환) #}
       {% if g_entity_keys %}
-      <div class="sidebar-group">
-        <div class="sidebar-group__label">메뉴</div>
-        <ul class="sidebar-nav" role="list">
+      <div class="sidebar-group" data-group-key="fallback">
+        <button class="sidebar-group__header" type="button"
+                aria-expanded="true" aria-controls="nav-group-fallback">
+          <span class="sidebar-group__label-text">메뉴</span>
+          <svg class="sidebar-group__chevron" aria-hidden="true"
+               width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <ul class="sidebar-nav sidebar-nav--accordion is-open"
+            id="nav-group-fallback" role="list">
           {% for entity_key in g_entity_keys %}
           <li class="sidebar-nav__item">
             <a href="{{ url_for('entity_list', entity_type=entity_key) }}"
