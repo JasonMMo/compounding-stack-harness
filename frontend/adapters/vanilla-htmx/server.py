@@ -444,6 +444,38 @@ def entity_detail(entity_type: str, entity_id: str):
     )
 
 
+@app.get("/entities/<entity_type>/<entity_id>/panel")
+@_require_login
+def entity_detail_partial(entity_type: str, entity_id: str):
+    """Dedicated htmx partial endpoint — always returns detail-panel.html.
+
+    Used by master-detail / top-bottom / modal list templates.
+    Bypasses HX-Request header detection (which can be stripped by reverse proxies).
+    """
+    payload, status = _proxy_request(
+        "GET",
+        _entity_path(entity_type, entity_id),
+        token=_current_token(),
+    )
+    if payload.get("error"):
+        err = payload.get("error", {})
+        code = err.get("code", "INTERNAL")
+        msg = loader.message_ko(code)
+        return f'<div class="error-banner" role="alert">{msg}</div>', status
+
+    manifest_fields = manifest.entity_fields(entity_type)
+    return render_template(
+        "detail-panel.html",
+        entity_type=entity_type,
+        entity_id=entity_id,
+        data=payload.get("data", {}),
+        manifest_fields=manifest_fields,
+        hidden_fields=manifest.hidden_fields(entity_type),
+        entity_label=manifest.label(entity_type) or entity_type,
+        wire_version=loader.wire_version(),
+    )
+
+
 @app.post("/entities/<entity_type>/<entity_id>/edit")
 @_require_login
 def entity_update(entity_type: str, entity_id: str):
