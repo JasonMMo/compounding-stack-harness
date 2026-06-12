@@ -399,3 +399,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: CSS 프레임워크 암묵적 기본값(Pico nav flex-row)은 레이아웃 컴포넌트에 반드시 명시 override — `display: block` 한 줄이 수평 메뉴 버그 전체를 해결한다
 - **Revenue/cost**: LLM=CDO+Engineer agent 2회 spawn / infra 변경 없음 / M2 데모 UI 품질 충족
 - **Open loops**: 건1 scope-confirm 회신 대기 / 건2 거절 회신 대기 / education vertical seed 신설 (M3) / G-14 stale-anchor 가드 / `.npmrc` codegraph 버전 핀
+
+### Growth-47 (2026-06-13) — UX/Design wiki 환류 (KWCAG + 한국어 UX 관행)
+
+- **인격/Axis/Milestone**: CTO (integrator) + CDO (지식 정리) / design (wiki 축) / M2 — 영업 준비 지식 베이스 완성
+- **Why (1줄)**: Growth-40 deep-research 미답 항목(KWCAG·인터랙션 패턴·UX 관행) → wiki 환류 → 실 고객 발굴 전 설계 근거 확보
+- **작업**: `design/refrence` 오타 수정 → `design/reference/`. wiki 신규 2페이지: `knowledge/wiki/design/kwcag.md` (KWCAG 2.2 4원칙·명도대비 수치·ARIA 체크리스트·법적 근거) + `knowledge/wiki/design/korean-ux-conventions.md` (Pretendard 타이포·날짜/금액 표기·폼 레이아웃·버튼 텍스트·테이블 인터랙션·검색패널·모달 관행). wiki index 포인터 2개 추가.
+- **커밋**: b87d766→c2260c9→18f0d14→79e6a71 (4건, pushed)
+- **교훈 (1줄)**: Gemini CLI 미설치 환경에서 외부 리서치 불가 → 훈련 지식으로 KWCAG 2.2·한국 UX 관행 직접 작성 (안정적 표준은 실시간 fetch 없이도 충분)
+- **Revenue/cost**: LLM=없음 (직접 작성) / infra 변경 없음 / wiki 2페이지 = 실 고객 접점 전 설계 지식 완비
+- **Open loops**: 실 고객 발굴 (M2, 숨고·크몽) / education vertical seed / G-14 stale-anchor
