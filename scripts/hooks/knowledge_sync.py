@@ -11,6 +11,7 @@ stdout: hook response JSON (only on match)
 """
 
 import json
+import subprocess
 import sys
 import pathlib
 
@@ -145,6 +146,13 @@ def main():
         }
         sys.stdout.write(json.dumps(output, ensure_ascii=False))
         sys.stdout.flush()
+        # Fire-and-forget: keep BM25 index fresh (fast, no model inference)
+        subprocess.Popen(
+            ["qmd", "update"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            shell=True,  # needed on Windows for .cmd shims
+        )
         sys.exit(0)
 
     except Exception as exc:
