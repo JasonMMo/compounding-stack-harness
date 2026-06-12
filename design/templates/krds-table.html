@@ -1,0 +1,54 @@
+<!--
+  krds-table.html — KRDS 공식 테이블 컴포넌트 스니펫 (v1.1.0)
+  출처: krds-uiux/html/code/table.html
+  주의: KRDS table = semantic 기본 테이블 (Fixed Header/Column 없음)
+        Fixed Header + Fixed Column 이 필요하면 dense-table.html 사용
+  사용: stack.ui_theme = public-sector, 단순 데이터 열람용 테이블
+  접근성: caption, scope="col/row" 완전 구현
+-->
+
+<!--
+  CDN (base.html 또는 layout에 1회만 삽입):
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/krds-uiux@1.1.0/resources/cdn/krds.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/krds-uiux@1.1.0/resources/cdn/krds.min.js"></script>
+-->
+
+<!-- table -->
+<div class="krds-table-wrap">
+  <table class="tbl col data">
+    <caption>테이블 설명 — 화면에는 안 보이나 스크린리더에 필수</caption>
+    <colgroup>
+      <col style="width: 10%;">  <!-- 번호 -->
+      <col style="width: 20%;">  <!-- 제목 -->
+      <col>                       <!-- 내용 (나머지) -->
+      <col style="width: 15%;">  <!-- 날짜 -->
+      <col style="width: 10%;">  <!-- 상태 -->
+    </colgroup>
+    <thead>
+      <tr>
+        <th scope="col">번호</th>
+        <th scope="col">제목</th>
+        <th scope="col">내용</th>
+        <th scope="col">등록일</th>
+        <th scope="col">상태</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">1</th>
+        <td>샘플 항목 1</td>
+        <td>내용이 들어갑니다.</td>
+        <td>2026-06-12</td>
+        <td>활성</td>
+      </tr>
+      <tr>
+        <th scope="row">2</th>
+        <td>샘플 항목 2</td>
+        <td>내용이 들어갑니다.</td>
+        <td>2026-06-11</td>
+        <td>비활성</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<!-- //table -->
