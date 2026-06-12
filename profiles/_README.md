@@ -71,6 +71,9 @@ overlay:
     version: 1.0.0-SNAPSHOT
   vault_agent: false                # M3 ops pack 옵션
   sso_keycloak: false               # M3 ops pack 옵션
+  feedback_url: https://forms.example.com/feedback  # (optional) 데모·preview 피드백 CTA URL.
+                                    # 있으면 홈 화면 하단과 푸터에 "추가 요청·의견 남기기" 링크 렌더.
+                                    # 없으면(키 생략) 미표시.
 
 # ── Defaults ───────────────────────────────────────
 defaults:
