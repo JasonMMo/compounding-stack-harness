@@ -3,6 +3,8 @@ version: "1.0"
 # Dialect-neutral schema; render.py + dialects/<d>.yaml emit target DDL.
 # Multi-tenancy (tenant_id / RLS) is M5-gated — NOT present here.
 # Type vocabulary: uuid | string | text | integer | decimal | boolean | date | timestamp | enum
+# label_ko: 한국어 기본 표시명 (locale=ko-KR 시 manifest entity label 로 사용).
+#   우선순위: profile.domains[].entity_labels[key] > label_ko (locale ko-KR) > 영문 key title-case.
 
 entities:
 
@@ -13,6 +15,7 @@ entities:
   employee:
     domain: hr
     table: hr_employee
+    label_ko: 직원
     primary_key: id
     columns:
       id:              { type: uuid,      nullable: false }
@@ -37,6 +40,7 @@ entities:
   department:
     domain: hr
     table: hr_department
+    label_ko: 부서
     primary_key: id
     columns:
       id:         { type: uuid,   nullable: false }
@@ -58,6 +62,7 @@ entities:
   position:
     domain: hr
     table: hr_position
+    label_ko: 직위
     primary_key: id
     columns:
       id:              { type: uuid,    nullable: false }
@@ -77,6 +82,7 @@ entities:
   leave-request:
     domain: hr
     table: hr_leave_request
+    label_ko: 휴가 신청
     primary_key: id
     columns:
       id:          { type: uuid,  nullable: false }
@@ -104,6 +110,7 @@ entities:
   account:
     domain: finance
     table: finance_account
+    label_ko: 계정
     primary_key: id
     columns:
       id:         { type: uuid,    nullable: false }
@@ -124,6 +131,7 @@ entities:
   journal-entry:
     domain: finance
     table: finance_journal_entry
+    label_ko: 전표 (집행 기록)
     primary_key: id
     columns:
       id:          { type: uuid,    nullable: false }
@@ -151,6 +159,7 @@ entities:
   invoice:
     domain: finance
     table: finance_invoice
+    label_ko: 청구서
     primary_key: id
     columns:
       id:               { type: uuid,    nullable: false }
@@ -178,6 +187,7 @@ entities:
   payment:
     domain: finance
     table: finance_payment
+    label_ko: 수납·지급
     primary_key: id
     columns:
       id:           { type: uuid,    nullable: false }
@@ -204,6 +214,7 @@ entities:
   carrier:
     domain: logistics
     table: logistics_carrier
+    label_ko: 운송사
     primary_key: id
     columns:
       id:                   { type: uuid,    nullable: false }
@@ -219,6 +230,7 @@ entities:
   route:
     domain: logistics
     table: logistics_route
+    label_ko: 운송 경로
     primary_key: id
     columns:
       id:              { type: uuid,    nullable: false }
@@ -241,6 +253,7 @@ entities:
   shipment:
     domain: logistics
     table: logistics_shipment
+    label_ko: 배송
     primary_key: id
     columns:
       id:                   { type: uuid,    nullable: false }
@@ -266,6 +279,7 @@ entities:
   tracking-event:
     domain: logistics
     table: logistics_tracking_event
+    label_ko: 배송 추적 이벤트
     primary_key: id
     columns:
       id:          { type: uuid,      nullable: false }
@@ -291,6 +305,7 @@ entities:
   item:
     domain: inventory
     table: inventory_item
+    label_ko: 품목
     primary_key: id
     columns:
       id:                   { type: uuid,    nullable: false }
@@ -307,6 +322,7 @@ entities:
   warehouse:
     domain: inventory
     table: inventory_warehouse
+    label_ko: 창고
     primary_key: id
     columns:
       id:         { type: uuid,    nullable: false }
@@ -322,6 +338,7 @@ entities:
   stock-level:
     domain: inventory
     table: inventory_stock_level
+    label_ko: 재고 수준
     primary_key: id
     columns:
       id:                 { type: uuid,    nullable: false }
@@ -346,6 +363,7 @@ entities:
   stock-movement:
     domain: inventory
     table: inventory_stock_movement
+    label_ko: 재고 이동
     primary_key: id
     columns:
       id:             { type: uuid,      nullable: false }
@@ -376,6 +394,7 @@ entities:
   price-list:
     domain: sales
     table: sales_price_list
+    label_ko: 가격표
     primary_key: id
     columns:
       id:         { type: uuid,    nullable: false }
@@ -398,6 +417,7 @@ entities:
   discount:
     domain: sales
     table: sales_discount
+    label_ko: 할인
     primary_key: id
     columns:
       id:               { type: uuid,    nullable: false }
@@ -423,6 +443,7 @@ entities:
   sales-order:
     domain: sales
     table: sales_sales_order
+    label_ko: 수주
     primary_key: id
     columns:
       id:            { type: uuid,    nullable: false }
@@ -449,6 +470,7 @@ entities:
   sales-order-line:
     domain: sales
     table: sales_sales_order_line
+    label_ko: 수주 항목
     primary_key: id
     columns:
       id:              { type: uuid,    nullable: false }
@@ -479,6 +501,7 @@ entities:
   contact:
     domain: crm
     table: crm_contact
+    label_ko: 연락처
     primary_key: id
     columns:
       id:           { type: uuid,   nullable: false }
@@ -500,6 +523,7 @@ entities:
   lead:
     domain: crm
     table: crm_lead
+    label_ko: 리드
     primary_key: id
     columns:
       id:              { type: uuid,    nullable: false }
@@ -522,6 +546,7 @@ entities:
   opportunity:
     domain: crm
     table: crm_opportunity
+    label_ko: 영업 기회
     primary_key: id
     columns:
       id:                  { type: uuid,    nullable: false }
@@ -548,6 +573,7 @@ entities:
   activity:
     domain: crm
     table: crm_activity
+    label_ko: 활동 내역
     primary_key: id
     columns:
       id:             { type: uuid,      nullable: false }
@@ -580,6 +606,7 @@ entities:
   vendor:
     domain: procurement
     table: procurement_vendor
+    label_ko: 거래처 (공급업체)
     primary_key: id
     columns:
       id:             { type: uuid,    nullable: false }
@@ -596,6 +623,7 @@ entities:
   requisition:
     domain: procurement
     table: procurement_requisition
+    label_ko: 구매 요청
     primary_key: id
     columns:
       id:              { type: uuid,    nullable: false }
@@ -617,6 +645,7 @@ entities:
   purchase-order:
     domain: procurement
     table: procurement_purchase_order
+    label_ko: 발주서
     primary_key: id
     columns:
       id:                { type: uuid,    nullable: false }
@@ -640,6 +669,7 @@ entities:
   purchase-order-line:
     domain: procurement
     table: procurement_purchase_order_line
+    label_ko: 발주서 항목
     primary_key: id
     columns:
       id:                { type: uuid,    nullable: false }
@@ -666,6 +696,7 @@ entities:
   bom:
     domain: production
     table: production_bom
+    label_ko: 자재 명세서 (BOM)
     primary_key: id
     columns:
       id:          { type: uuid,    nullable: false }
@@ -684,6 +715,7 @@ entities:
   bom-line:
     domain: production
     table: production_bom_line
+    label_ko: BOM 항목
     primary_key: id
     columns:
       id:                { type: uuid,    nullable: false }
@@ -706,6 +738,7 @@ entities:
   work-order:
     domain: production
     table: production_work_order
+    label_ko: 작업 지시
     primary_key: id
     columns:
       id:                { type: uuid,      nullable: false }
@@ -730,6 +763,7 @@ entities:
   operation:
     domain: production
     table: production_operation
+    label_ko: 공정
     primary_key: id
     columns:
       id:            { type: uuid,      nullable: false }
@@ -760,6 +794,7 @@ entities:
   inspection-plan:
     domain: quality
     table: quality_inspection_plan
+    label_ko: 검사 계획
     primary_key: id
     columns:
       id:             { type: uuid,   nullable: false }
@@ -783,6 +818,7 @@ entities:
   inspection-result:
     domain: quality
     table: quality_inspection_result
+    label_ko: 검사 결과
     primary_key: id
     columns:
       id:                  { type: uuid,      nullable: false }
@@ -807,6 +843,7 @@ entities:
   defect:
     domain: quality
     table: quality_defect
+    label_ko: 불량
     primary_key: id
     columns:
       id:                   { type: uuid,   nullable: false }
@@ -830,6 +867,7 @@ entities:
   corrective-action:
     domain: quality
     table: quality_corrective_action
+    label_ko: 시정 조치
     primary_key: id
     columns:
       id:                 { type: uuid,      nullable: false }
@@ -860,6 +898,7 @@ entities:
   project:
     domain: project
     table: project_project
+    label_ko: 프로젝트
     primary_key: id
     columns:
       id:         { type: uuid,    nullable: false }
@@ -882,6 +921,7 @@ entities:
   task:
     domain: project
     table: project_task
+    label_ko: 작업
     primary_key: id
     columns:
       id:              { type: uuid,    nullable: false }
@@ -911,6 +951,7 @@ entities:
   milestone:
     domain: project
     table: project_milestone
+    label_ko: 마일스톤
     primary_key: id
     columns:
       id:          { type: uuid,      nullable: false }
@@ -932,6 +973,7 @@ entities:
   resource-assignment:
     domain: project
     table: project_resource_assignment
+    label_ko: 자원 배정
     primary_key: id
     columns:
       id:              { type: uuid,    nullable: false }
@@ -960,6 +1002,7 @@ entities:
   asset-category:
     domain: asset
     table: asset_category
+    label_ko: 자산 분류
     primary_key: id
     columns:
       id:                       { type: uuid,    nullable: false }
@@ -978,6 +1021,7 @@ entities:
   asset:
     domain: asset
     table: asset_asset
+    label_ko: 자산
     primary_key: id
     columns:
       id:                 { type: uuid,    nullable: false }
@@ -1003,6 +1047,7 @@ entities:
   depreciation-schedule:
     domain: asset
     table: asset_depreciation_schedule
+    label_ko: 감가상각 일정
     primary_key: id
     columns:
       id:                      { type: uuid,    nullable: false }
@@ -1030,6 +1075,7 @@ entities:
   maintenance-record:
     domain: asset
     table: asset_maintenance_record
+    label_ko: 유지보수 기록
     primary_key: id
     columns:
       id:               { type: uuid,      nullable: false }
@@ -1057,6 +1103,7 @@ entities:
   document-category:
     domain: document
     table: document_category
+    label_ko: 문서 분류
     primary_key: id
     columns:
       id:                    { type: uuid,    nullable: false }
@@ -1077,6 +1124,7 @@ entities:
   document:
     domain: document
     table: document_document
+    label_ko: 문서
     primary_key: id
     columns:
       id:                 { type: uuid,   nullable: false }
@@ -1103,6 +1151,7 @@ entities:
   document-version:
     domain: document
     table: document_version
+    label_ko: 문서 버전
     primary_key: id
     columns:
       id:              { type: uuid,    nullable: false }
@@ -1130,6 +1179,7 @@ entities:
   access-rule:
     domain: document
     table: document_access_rule
+    label_ko: 접근 권한
     primary_key: id
     columns:
       id:             { type: uuid,   nullable: false }
@@ -1156,6 +1206,7 @@ entities:
   approval-request:
     domain: approval
     table: approval_request
+    label_ko: 결재 요청
     primary_key: id
     columns:
       id:           { type: uuid,      nullable: false }
@@ -1180,6 +1231,7 @@ entities:
   approval-step:
     domain: approval
     table: approval_step
+    label_ko: 결재 단계
     primary_key: id
     columns:
       id:           { type: uuid,    nullable: false }
@@ -1199,6 +1251,7 @@ entities:
   approver:
     domain: approval
     table: approval_approver
+    label_ko: 결재자
     primary_key: id
     columns:
       id:           { type: uuid,      nullable: false }
@@ -1218,6 +1271,7 @@ entities:
   approval-decision:
     domain: approval
     table: approval_decision
+    label_ko: 결재 결정
     primary_key: id
     columns:
       id:          { type: uuid,      nullable: false }
@@ -1244,6 +1298,7 @@ entities:
   report-definition:
     domain: reporting
     table: reporting_report_definition
+    label_ko: 보고서 정의
     primary_key: id
     columns:
       id:            { type: uuid,    nullable: false }
@@ -1265,6 +1320,7 @@ entities:
   report-schedule:
     domain: reporting
     table: reporting_report_schedule
+    label_ko: 보고서 일정
     primary_key: id
     columns:
       id:                   { type: uuid,      nullable: false }
@@ -1288,6 +1344,7 @@ entities:
   report-parameter:
     domain: reporting
     table: reporting_report_parameter
+    label_ko: 보고서 파라미터
     primary_key: id
     columns:
       id:                   { type: uuid,    nullable: false }
@@ -1311,6 +1368,7 @@ entities:
   report-output:
     domain: reporting
     table: reporting_report_output
+    label_ko: 보고서 출력
     primary_key: id
     columns:
       id:                   { type: uuid,      nullable: false }
@@ -1342,6 +1400,7 @@ entities:
   legal-case:
     domain: legal
     table: legal_case
+    label_ko: 사건
     primary_key: id
     columns:
       id:                   { type: uuid,      nullable: false }
@@ -1372,6 +1431,7 @@ entities:
   precedent:
     domain: legal
     table: legal_precedent
+    label_ko: 판례
     primary_key: id
     columns:
       id:           { type: uuid,   nullable: false }
@@ -1397,6 +1457,7 @@ entities:
   case-party:
     domain: legal
     table: legal_case_party
+    label_ko: 사건 당사자
     primary_key: id
     columns:
       id:         { type: uuid,   nullable: false }
@@ -1420,6 +1481,7 @@ entities:
   case-document:
     domain: legal
     table: legal_case_document
+    label_ko: 사건 서류
     primary_key: id
     columns:
       id:            { type: uuid,      nullable: false }
