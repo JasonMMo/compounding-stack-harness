@@ -17,6 +17,10 @@
 
 - [legal-ai-search-strategy](concepts/legal-ai-search-strategy.md) — A안 augment 패턴: tsvector 1단계 + RAG 2단계, 전략 생성 제외 (updated: 2026-06-11) `[INFERRED]`
 
+## Design
+
+- [korean-ui-patterns](design/korean-ui-patterns.md) — 한국 공공/기업 SI UI 3대 패턴 + KRDS 74개 컴포넌트 + harness 통합 현황 (updated: 2026-06-12) `[SYNTHESIZED]`
+
 ## Syntheses
 
 (없음)
