@@ -15,37 +15,126 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
   <!-- htmx: loaded from CDN for zero-build simplicity; pin to a specific version for production -->
   <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2uH1/8X4vFg8FVGerPTuRNeIPQMNqNZI5cN" crossorigin="anonymous"></script>
+  <script src="{{ url_for('static', filename='js/sidebar.js') }}" defer></script>
 </head>
-<body>
-  {% block nav %}
-  <nav class="top-nav" aria-label="주 탐색">
-    <div class="nav-brand">
-      <a href="{{ url_for('home') }}" class="nav-logo">{{ g_customer_display or 'Compounding Stack' }}</a>
+<body class="app-layout">
+
+  <!-- 스킵 링크 -->
+  <a href="#main" class="skip-link">본문 바로가기</a>
+
+  <!-- 헤더 -->
+  {% block header %}
+  <header class="app-header" role="banner">
+    <div class="header-start">
+      <button class="hamburger-btn btn btn-ghost btn-sm"
+              id="sidebar-toggle-btn"
+              aria-label="메뉴 열기/닫기"
+              aria-expanded="false"
+              aria-controls="app-sidebar">
+        <span aria-hidden="true">☰</span>
+      </button>
+      <a href="{{ url_for('home') }}" class="app-logo"
+         aria-label="{{ g_customer_display or 'Compounding Stack' }} 홈">
+        {{ g_customer_display or 'Compounding Stack' }}
+      </a>
     </div>
-    <div class="nav-actions">
+    <div class="header-actions">
       {% if session.get('user_id') %}
-      <span class="nav-user">{{ session.get('user_id') }}</span>
+      <span class="header-user" aria-label="로그인 사용자">
+        <span class="header-user__avatar" aria-hidden="true">
+          {{ session.get('user_id')[0] | upper }}
+        </span>
+        <span class="header-user__name">{{ session.get('user_id') }}</span>
+      </span>
       <form method="post" action="{{ url_for('logout') }}" style="display:inline">
         <button type="submit" class="btn btn-ghost btn-sm">로그아웃</button>
       </form>
       {% endif %}
       <div class="persona-switcher">
         <label for="persona-select" class="sr-only">페르소나</label>
-        <select id="persona-select" class="persona-select" onchange="document.documentElement.dataset.persona = this.value">
+        <select id="persona-select" class="persona-select"
+                onchange="document.documentElement.dataset.persona = this.value">
           <option value="ops" {% if (persona | default('ops')) == 'ops' %}selected{% endif %}>Ops</option>
           <option value="ceo" {% if (persona | default('ops')) == 'ceo' %}selected{% endif %}>CEO</option>
           <option value="it"  {% if (persona | default('ops')) == 'it'  %}selected{% endif %}>IT</option>
         </select>
       </div>
     </div>
-  </nav>
+  </header>
   {% endblock %}
 
-  <main class="main-content" id="main">
-    {% block content %}{% endblock %}
-  </main>
+  <!-- 바디 (사이드바 + 메인) -->
+  <div class="app-body" id="app-body">
 
-  <footer class="app-footer">
+    <!-- 사이드바 -->
+    {% block sidebar %}
+    <nav class="app-sidebar" id="app-sidebar" aria-label="주 탐색">
+      {% set domains = g_domains if g_domains else [] %}
+      {% if domains %}
+      {% for domain in domains %}
+      <div class="sidebar-group">
+        <div class="sidebar-group__label">{{ domain.display }}</div>
+        <ul class="sidebar-nav" role="list">
+          {% for entity_key in domain.entities %}
+          <li class="sidebar-nav__item">
+            <a href="{{ url_for('entity_list', entity_type=entity_key) }}"
+               class="sidebar-nav__link {% if entity_type is defined and entity_type == entity_key %}sidebar-nav__link--active{% endif %}"
+               {% if entity_type is defined and entity_type == entity_key %}aria-current="page"{% endif %}
+               title="{{ entity_key | replace('-', ' ') | title }}">
+              <!-- 접힘 모드용 첫글자 아바타 -->
+              <span class="sidebar-nav__link-initial" aria-hidden="true">
+                {{ entity_key[0] | upper }}
+              </span>
+              <!-- 전개 모드용 텍스트 -->
+              <span class="sidebar-nav__link-text">
+                {{ entity_key | replace('-', ' ') | title }}
+              </span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+      {% else %}
+      {# 폴백: domains 없을 때 entity 평면 목록 (lawfirm-demo 등 구버전 호환) #}
+      {% if g_entity_keys %}
+      <div class="sidebar-group">
+        <div class="sidebar-group__label">메뉴</div>
+        <ul class="sidebar-nav" role="list">
+          {% for entity_key in g_entity_keys %}
+          <li class="sidebar-nav__item">
+            <a href="{{ url_for('entity_list', entity_type=entity_key) }}"
+               class="sidebar-nav__link {% if entity_type is defined and entity_type == entity_key %}sidebar-nav__link--active{% endif %}"
+               {% if entity_type is defined and entity_type == entity_key %}aria-current="page"{% endif %}
+               title="{{ entity_key | replace('-', ' ') | title }}">
+              <span class="sidebar-nav__link-initial" aria-hidden="true">
+                {{ entity_key[0] | upper }}
+              </span>
+              <span class="sidebar-nav__link-text">
+                {{ entity_key | replace('-', ' ') | title }}
+              </span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% endif %}
+    </nav>
+    {% endblock %}
+
+    <!-- 메인 콘텐츠 -->
+    <main class="app-main" id="main" role="main">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div><!-- .app-body -->
+
+  <!-- 모바일 backdrop -->
+  <div class="drawer-backdrop" id="drawer-backdrop" aria-hidden="true"></div>
+
+  <!-- 푸터 -->
+  <footer class="app-footer" role="contentinfo">
     <span class="footer-version">wire contract {{ wire_version | default('unknown') }}</span>
     {% if g_feedback_url %}
     <span class="footer-sep" aria-hidden="true"> · </span>
