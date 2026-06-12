@@ -43,6 +43,9 @@ domains:
     display: 고객
     entities: [customer, contact, address]
     seen_at: 2026-06-01             # 처음 scaffold 된 날
+    entity_labels:                  # (optional) 고객 고유 entity 표시명 오버라이드.
+      contact: 학생                 #   key = catalog entity slug, value = 표시명.
+      address: 주소                 #   우선순위: entity_labels > catalog label_ko > 영문 key.
   - slug: order
     display: 주문
     entities: [order, order_line, fulfillment]
