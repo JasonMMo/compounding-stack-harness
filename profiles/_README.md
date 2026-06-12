@@ -23,6 +23,7 @@ customer:
 stack:
   frontend: react                   # nexacro | react | vue | vanilla-htmx
   backend:  springboot              # springboot | fastapi | node-express | go-chi
+  ui_theme: saas                    # saas (default: Pico+tokens) | public-sector (KRDS CDN)
   frontend_options:
     react_version: 18
     state: redux-toolkit
