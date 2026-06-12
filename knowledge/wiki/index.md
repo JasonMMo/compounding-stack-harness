@@ -20,6 +20,8 @@
 ## Design
 
 - [korean-ui-patterns](design/korean-ui-patterns.md) — 한국 공공/기업 SI UI 3대 패턴 + KRDS 74개 컴포넌트 + harness 통합 현황 (updated: 2026-06-12) `[SYNTHESIZED]`
+- [kwcag](design/kwcag.md) — KWCAG 2.2 4원칙·명도대비·ARIA 체크리스트, 법적 근거, WCAG 차이점 (updated: 2026-06-13) `[SYNTHESIZED]`
+- [korean-ux-conventions](design/korean-ux-conventions.md) — 타이포그래피·날짜/금액 표기·폼 레이아웃·버튼 텍스트·테이블 인터랙션 실무 기준 (updated: 2026-06-13) `[SYNTHESIZED]`
 
 ## Syntheses
 
