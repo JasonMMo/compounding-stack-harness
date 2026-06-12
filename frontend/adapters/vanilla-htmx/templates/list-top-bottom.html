@@ -42,7 +42,7 @@
       <tbody id="tb-tbody">
         {% for item in items %}
         <tr
-          hx-get="{{ url_for('entity_detail', entity_type=entity_type, entity_id=item.get('id','')) }}"
+          hx-get="{{ url_for('entity_detail_partial', entity_type=entity_type, entity_id=item.get('id','')) }}"
           hx-target="#tb-detail-panel"
           hx-swap="innerHTML"
           role="button"
