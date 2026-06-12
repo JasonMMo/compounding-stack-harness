@@ -4,6 +4,13 @@
 
 ## §1 — Growth 상세
 
+### Growth-38b (2026-06-12) — 교육업 건1 follow-up 회신 반영 + draft profile 작성
+
+- **회신 확정**: 기관 유형 = 대학교, 정부사업 수주·추진 중. datasource dialect = postgres (고객 PostgreSQL 준비 완료). 기능 3가지 ①학생 리스트 관리 ②사업비 관리 ③학사관리 (③ 범위 미확정).
+- **도메인 확정 4개**: crm(contact), finance(account·invoice·payment), document(document·document-version·document-category), reporting(report-definition·report-output). order·asset·학사관리는 Q2·Q6·Q9·Q10 답변 전까지 profile 미진입.
+- **추가 확인 2문항 생성**: Q9 (학사관리 범위 — 가·나·다·라 선택지), Q10 (기존 학사시스템 중복·연동 여부).
+- **산출물**: `out/analysis/intake-rehearsal/needs-note-edu.md` v2 갱신, `profiles/edu-program.draft.yaml` 신규 작성 (status: draft).
+
 ### Growth-38 (2026-06-12) — intake 실제출 2건 triage (교육업 수용 / 예매앱 거절)
 
 - **건1 수용 (교육업 staff)**: `industry: education`, `existing_system: excel_manual`. 선택 6 도메인 (customer/order/asset/finance_ledger/document/report) → catalog 매핑 가능 4개 확정 (crm/asset/document/reporting), 2개 (sales/finance) 는 Q2·Q3 follow-up 필수. IT 필드 전부 공란 — stack/dialect/auth 미결. **결론**: follow-up 2건 + IT 필드 수집 후 profile 초안 가능. 지금 당장 scaffold.py 실행 불가.
@@ -38,7 +45,7 @@
 | # | 고객 | 시작 | 단계 | 상태 |
 |---|---|---|---|---|
 | 1 | 30인 법무법인 (lawfirm-demo) | 2026-06-11 | Step 5 Deliver | 인도 패키지 조립 완료 (`docs/delivery/lawfirm-demo/`) + CISO 보안 게이트 PASS (CAVEAT 3건 해소, Growth-32). CEO 승인 대기 — 외부 전달 책임은 CEO (charter §2) |
-| 2 | 교육업 staff (edu-intake-rehearsal) | 2026-06-12 | Step 1 Intake | 수용 결정. follow-up 8문항 작성 완료. Q2(order 의미)·Q3(정산 주체)·IT 필드 회신 대기. |
+| 2 | 교육업 staff (edu-intake-rehearsal) | 2026-06-12 | Step 2 Discover | 회신 반영 완료. dialect=postgres 확정. 학사관리 범위 Q9·Q10 추가. draft profile 작성 (`profiles/edu-program.draft.yaml`). open loop 10건 — IT 필드·Q2·Q3·Q4·Q6·Q9·Q10 회신 대기. |
 
 ### CEO 인터뷰 답변 기록 (lawfirm-demo, 2026-06-11)
 
