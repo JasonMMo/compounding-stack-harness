@@ -113,7 +113,11 @@ class ManifestLoader:
     def domains(self) -> list[dict[str, Any]]:
         """Domain card list from the manifest.
 
-        Each entry: {slug: str, display: str, entities: [str, ...]}.
+        Each entry: {slug: str, display: str,
+                     entities: [{key: str, label: str}, ...]}.
+        The ``label`` on each entity item carries the resolved 3-tier label
+        (profile entity_labels > catalog label_ko(ko) > English title-case)
+        so templates can render it directly without re-deriving it.
         Returns an empty list when the manifest is not loaded or no domains
         are present (caller renders nothing).
         """
