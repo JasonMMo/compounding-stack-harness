@@ -12,6 +12,17 @@
 {
   "profile": "shop-demo",
   "catalog_version": "1.0",
+
+  "customer_display": "ACME 코퍼레이션",
+  "domains": [
+    {
+      "slug": "sales",
+      "display": "영업",
+      "entities": ["sales-order", "sales-order-line"]
+    }
+  ],
+  "feedback_url": "https://forms.example.com/feedback",
+
   "entities": {
     "<entity-key>": {
       "domain": "sales",
@@ -50,6 +61,18 @@
   }
 }
 ```
+
+### Top-level optional fields (Growth-39)
+
+| Field | Type | Source | When present |
+|---|---|---|---|
+| `customer_display` | string | `profile.customer.display` | scaffold.py passes profile dict; absent in manifest.py CLI mode |
+| `domains` | array | `profile.domains[].{slug,display,entities}` | same as above; entities filtered to those scaffolded |
+| `feedback_url` | string | `profile.overlay.feedback_url` | only when profile sets this key |
+
+`domains[].entities` contains only entity keys that appear in this manifest's `entities` map.
+Frontend reads `customer_display` for the home-screen heading; `domains` for domain cards; `feedback_url` for the CTA link.
+All three are absent (not null) when the manifest was produced by the `manifest.py` CLI without a profile — frontend must handle their absence gracefully.
 
 ## 2. Column Classification Rules
 
