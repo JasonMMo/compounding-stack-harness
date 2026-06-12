@@ -81,4 +81,6 @@
 - **시크릿 절대 chat·커밋 금지** — 볼트 `infra/secrets/*`(gitignored).
 - Windows `NUL` 파일 주의: `> /dev/null` 오용 시 `NUL` 파일 생성.
 - 환경: Node v24 / Python 3.14 / JDK 21 / Docker / WSL postgres / codegraph 0.9.9 / codex CLI 0.118.0.
-- `design/refrence/hostinger-design.png` — untracked, 디렉토리명 오타. 다음 세션에서 처리 여부 결정.
+- **`/context-mode:context-mode` 수동 호출 금지** — PreToolUse hook이 이미 강제. 호출 시 ~500줄 skill 파일이 컨텍스트에 낭비로 로드됨.
+- **Read → ctx_execute_file**: 편집 불필요한 파일 분석은 Read 대신 ctx_execute_file 사용 (Read는 전체 내용이 컨텍스트에 로드됨).
+- **50% 컨텍스트 도달 시 `/compact` 강제** (CLAUDE.md 규칙, 반드시 준수).
