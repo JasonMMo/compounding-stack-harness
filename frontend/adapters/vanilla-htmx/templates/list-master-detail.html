@@ -9,9 +9,9 @@
   </a>
 </div>
 
-{# Search / filter toolbar #}
+{# Search toolbar #}
 <form method="get" action="{{ url_for('entity_list', entity_type=entity_type) }}"
-      class="toolbar" style="margin-bottom: var(--space-stack-sm)">
+      class="toolbar" style="margin-bottom:var(--space-stack-sm)">
   <label for="md-search" class="sr-only">검색</label>
   <input id="md-search" name="search" type="search"
          class="form-input toolbar-search" placeholder="검색..." value="{{ search }}">
@@ -23,10 +23,10 @@
   {% endif %}
 </form>
 
-{# ── Master-Detail split pane ── #}
+{# Master-Detail split pane (left/right) #}
 <div class="master-detail-layout">
 
-  {# ── Master panel (left) ── #}
+  {# ── Master (left) ── #}
   <div class="master-panel">
     <div class="master-panel__scroll">
       {% if items %}
@@ -39,30 +39,21 @@
             {% endfor %}
           </tr>
         </thead>
-        <tbody id="master-list">
+        <tbody id="master-tbody">
           {% for item in items %}
           <tr
             hx-get="{{ url_for('entity_detail', entity_type=entity_type, entity_id=item.get('id', '')) }}"
             hx-target="#detail-panel"
-            hx-select=".tab-screen"
-            hx-push-url="false"
             hx-swap="innerHTML"
-            onclick="
-              document.querySelectorAll('#master-list tr').forEach(r => r.classList.remove('is-selected'));
-              this.classList.add('is-selected');
-            "
             role="button"
             tabindex="0"
             aria-label="{{ item.get(columns[0], '') }} 상세 보기"
-            onkeydown="if(event.key==='Enter'||event.key===' '){this.click();}">
+            onkeydown="if(event.key==='Enter'||event.key===' '){htmx.trigger(this,'click');}">
             {% for col in columns[:3] %}
             <td title="{{ item[col] if item[col] is not none else '' }}">
               {% set val = item[col] %}
-              {% if val is none or val == '' %}
-                <span class="text-empty">—</span>
-              {% else %}
-                {{ val | string | truncate(22, true, '…') }}
-              {% endif %}
+              {% if val is none or val == '' %}<span class="text-empty">—</span>
+              {% else %}{{ val | string | truncate(22, true, '…') }}{% endif %}
             </td>
             {% endfor %}
           </tr>
@@ -71,13 +62,13 @@
       </table>
 
       {% else %}
-      <div class="empty-state" role="status" style="padding: var(--space-inset-xl)">
+      <div class="empty-state" role="status" style="padding:var(--space-inset-xl)">
         <p class="empty-state__message">등록된 {{ entity_label }} 데이터가 없습니다.</p>
         <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}"
-           class="btn btn-primary btn-sm">+ 첫 번째 항목 추가</a>
+           class="btn btn-primary btn-sm">+ 첫 항목 추가</a>
       </div>
       {% endif %}
-    </div>{# /scroll #}
+    </div>
 
     {# Compact pagination #}
     {% if paging_mode == 'offset' %}
@@ -86,21 +77,15 @@
       <div class="master-pagination__btns">
         {% if paging_page > 1 %}
         <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
-                            paging_page=paging_page - 1, paging_size=paging_size, search=search) }}"
-           class="btn btn-sm btn-secondary" aria-label="이전">&lt;</a>
-        {% else %}
-        <button class="btn btn-sm btn-secondary" disabled>&lt;</button>
-        {% endif %}
-
-        <span class="master-pagination__page">{{ paging_page }} / {{ total_pages }}</span>
-
+                            paging_page=paging_page-1, paging_size=paging_size, search=search) }}"
+           class="btn btn-sm btn-secondary">&lt;</a>
+        {% else %}<button class="btn btn-sm btn-secondary" disabled>&lt;</button>{% endif %}
+        <span class="master-pagination__page">{{ paging_page }}/{{ total_pages }}</span>
         {% if paging_page < total_pages %}
         <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
-                            paging_page=paging_page + 1, paging_size=paging_size, search=search) }}"
-           class="btn btn-sm btn-secondary" aria-label="다음">&gt;</a>
-        {% else %}
-        <button class="btn btn-sm btn-secondary" disabled>&gt;</button>
-        {% endif %}
+                            paging_page=paging_page+1, paging_size=paging_size, search=search) }}"
+           class="btn btn-sm btn-secondary">&gt;</a>
+        {% else %}<button class="btn btn-sm btn-secondary" disabled>&gt;</button>{% endif %}
       </div>
     </nav>
     {% endif %}
@@ -116,5 +101,13 @@
     </div>
   </div>
 
-</div>{# /master-detail-layout #}
+</div>
+
+{# Row selection highlight via event delegation #}
+<script>
+document.getElementById('master-tbody')?.addEventListener('htmx:beforeRequest', function(e) {
+  this.querySelectorAll('tr').forEach(r => r.classList.remove('is-selected'));
+  e.target.closest('tr')?.classList.add('is-selected');
+});
+</script>
 {% endblock %}
