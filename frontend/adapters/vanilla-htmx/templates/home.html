@@ -13,11 +13,11 @@
     <div class="card home-domain-card">
       <h2 class="home-domain-title">{{ domain.display }}</h2>
       <ul class="home-entity-list" aria-label="{{ domain.display }} 화면 목록">
-        {% for entity_key in domain.entities %}
+        {% for entity in domain.entities %}
         <li class="home-entity-item">
-          <a href="{{ url_for('entity_list', entity_type=entity_key) }}"
+          <a href="{{ url_for('entity_list', entity_type=entity.key) }}"
              class="btn btn-ghost btn-sm home-entity-link">
-            {{ entity_key | replace('-', ' ') | title }}
+            {{ entity.label }}
           </a>
         </li>
         {% endfor %}
