@@ -412,3 +412,16 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **provisioning→CI/CD→하드닝→결선 완료 (같은 세션)**: VPS live·SSH 키전용·커널패치 / `*.n9n.co.kr` grey-cloud / Coolify traefik LE 자동 TLS / **Coolify API(write+deploy) 배포 end-to-end 검증**(cicd-smoke HTTPS 200) / **8000 클라우드 방화벽 차단(allow 22/80/443) 실측 → CISO 잔여 0** / **scaffold→preview v1**(engineer: `preview_package.py`+Dockerfile×2, DB 없는 2-container, lawfirm-demo 로컬 `/login`·`/health` 200·manifest 14ent). 보안사고 2회→raw-file 규약. 레시피·상세=topology §4·devops.md
 - **Phase 2~자동화 결선 (후속 세션, 같은 Growth)**: Coolify Phase 2 완료 — git-build(`private-deploy-key`+`build_pack=dockercompose`)+manifest persistent-storage RO 마운트로 **lawfirm-demo·shop-demo `.n9n.co.kr` 2 테넌트 live**(독립 검증 HTTPS 200+LE cert). 자동화: `preview_package.py --coolify`(서버 compose 생성)+`deploy_to_coolify.py --slug`(API 4단계+scp+검증 한 줄)+레지스트리 auto-merge(secret_ref 보존). webhook auto-deploy 는 **보류 결정**(Coolify 4.1.2 per-app 필터 부재→repo-push 시 전 테넌트 동시 재배포, 영업 데모 안정성 우선 — 코드는 `--setup-webhook --confirm` 게이트로 보관). **Caddy spike**: 5/5 함정 제거·wildcard DNS-01 cert 0발급·harness 변경 0 으로 기술 우위 확인했으나 **Coolify 유지 결정**(함정이 deploy 스크립트로 이미 캡슐화→전환비용=대시보드 상실+xcaddy+15~30s 다운타임 > 현 이득). 전환 트리거: 테넌트≥5 AND rotate 월1회↑ AND Coolify 함정 미해소. 락인 얕음 입증(artifact portable). 상세=`devops.md`
 - **Open loops**: `.npmrc` codegraph 핀·G-14 stale-anchor 가드 (Growth-34 이월) / 실 고객 발굴 (M2 게이트) / 레지스트리 변경분 per-file 커밋 자동화·CISO SECRET_KEY rotate(Coolify UI 수동)
+
+### Growth-36 (2026-06-12) — preview 디자인 경쟁력 (Phase 0+1) + 504 인시던트 2건 근본 해결
+
+- **인격**: CTO (integrator·검증) + CDO (도구 평가·토큰/CSS 적용) + DevOps (인시던트 진단·deploy 수정)
+- **Axis touched**: frontend (vanilla-htmx 디자인 토큰 강화), creater (compose 템플릿·deploy 스크립트 견고화)
+- **Milestone**: M2 — preview 데모 = 계약 전 설득 자산 → 디자인 품질이 전환율 직결
+- **Why (1줄)**: CEO 지적 — preview 시점은 미계약 상태라 기능+디자인 둘 다 경쟁력 필요
+- **CDO 평가→적용 (Phase 0+1)**: 후보 12종 비교 (`out/analysis/design-tooling-eval.md`) → 기준 = node 빌드 0·CDN 1줄·토큰 추출성·MIT. 채택: **Pretendard Variable**(한국 첫인상 최대효과) + **Pico CSS v2 classless**(`--pico-*`→semantic 토큰 remap, 마크업 변경 0) + **Open Props**(motion/shadow 보충). 탈락: DaisyUI/Basecoat(Tailwind 빌드), Preline/SuperDesign(라이선스 NOASSERTION). 중기: Style Dictionary (M1~M2, react adapter 직전)
+- **시각 검증 루프**: 로컬 python 직접 기동(Docker off 폴백)+Playwright 스크린샷 → Pico `button[type=submit]{width:100%}` 회귀 1건 발견→`button.btn{width:auto}`+`.login-card` scope 전폭 보존으로 해소
+- **결함 3건 연쇄 발견·해결**: (1) tokens.css gitignored 인데 Dockerfile 토큰 빌드 스텝 부재→이미지에 CSS 누락 (COPY design/tokens+RUN build_tokens.py). (2) **504 인시던트**: 1차=Caddy spike 잔재 Caddyfile 이 Traefik file provider 오염(백업 후 삭제+proxy 재시작), 2차=compose 자체 `preview-net` 선언→이중 네트워크→Traefik 이 프록시 미도달 IP 선택하는 bistable(`preview-net` 제거, uuid 넷 단일화). (3) deploy 스크립트 이름-매칭 의존→**registry-first uuid lookup**(구/신 포맷 지원)+description em-dash 가 Coolify validation 422 (ASCII 정화)
+- **교훈 (1줄)**: spike 잔재는 spike 종료 시점에 회수해야 한다 — 평가용 파일 하나가 이틀 뒤 영업 자산 전체를 죽였다. + 외부 시스템 매칭은 이름이 아니라 레지스트리 uuid 가 단일 진실
+- **Revenue/cost**: LLM=agent 5회 spawn(~34만 tok) / infra 불변 / 영업 자산 품질 상승 (두 데모 Pretendard+Pico live: HTTPS 200+tokens.css 12.5KB+LE cert)
+- **Open loops**: Growth-35 이월 전부 / Caddy spike 파일 회수 규약(devops-loop SKILL 반영 후보) / Phase 2 디자인(Franken UI, 계약 후 quality bar)
