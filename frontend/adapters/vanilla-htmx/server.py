@@ -68,6 +68,12 @@ UI_THEME = os.environ.get("UI_THEME", "saas")  # saas | public-sector
 _MD_ENTITIES: set[str] = {
     e.strip() for e in os.environ.get("MASTER_DETAIL_ENTITIES", "").split(",") if e.strip()
 }
+_TB_ENTITIES: set[str] = {  # top/bottom split
+    e.strip() for e in os.environ.get("TOP_BOTTOM_ENTITIES", "").split(",") if e.strip()
+}
+_MODAL_ENTITIES: set[str] = {
+    e.strip() for e in os.environ.get("MODAL_ENTITIES", "").split(",") if e.strip()
+}
 
 
 # ---------------------------------------------------------------------------
@@ -380,7 +386,14 @@ def entity_list(entity_type: str):
     size_int = int(paging_size) if paging_size.isdigit() else 20
     total_pages = max(1, (total + size_int - 1) // size_int) if total else 1
 
-    _tpl = "list-master-detail.html" if entity_type in _MD_ENTITIES else "list.html"
+    if entity_type in _MD_ENTITIES:
+        _tpl = "list-master-detail.html"
+    elif entity_type in _TB_ENTITIES:
+        _tpl = "list-top-bottom.html"
+    elif entity_type in _MODAL_ENTITIES:
+        _tpl = "list-modal.html"
+    else:
+        _tpl = "list.html"
     return render_template(
         _tpl,
         entity_type=entity_type,
@@ -416,8 +429,11 @@ def entity_detail(entity_type: str, entity_id: str):
         return _render_error(payload, status, entity_type)
 
     manifest_fields = manifest.entity_fields(entity_type)
+    # htmx partial request → return fragment only (no base layout)
+    is_partial = bool(request.headers.get("HX-Request"))
+    detail_tpl = "detail-panel.html" if is_partial else "detail.html"
     return render_template(
-        "detail.html",
+        detail_tpl,
         entity_type=entity_type,
         entity_id=entity_id,
         data=payload.get("data", {}),
