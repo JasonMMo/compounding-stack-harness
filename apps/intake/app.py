@@ -7,8 +7,10 @@ apps/intake/app.py — intake 웹폼 FastAPI 앱
 - GET  /edit/{token}: 기존 답변 prefill → 수정 제출
 - GET  /admin      : HTTP Basic auth 의뢰인 목록/상세
 - GET  /health     : 200 JSON
+- GET  /letter/{token}: 안내문 서빙 (PM 작성 HTML, base 템플릿 래핑)
 
 저장: DATA_DIR/clients/<client_id>/meta.json + revisions/<ts>.json (append-only)
+letter 저장: DATA_DIR/letters/<token>.html (신뢰된 내부 산출물)
 """
 from __future__ import annotations
 
@@ -532,6 +534,8 @@ async def edit_submit(request: Request, edit_token: str):
 _CLIENT_ID_RE = re.compile(r"^[0-9a-f]{16,32}$")
 # edit_token: secrets.token_urlsafe(32) → URL-safe base64 43자 (A-Za-z0-9_-)
 _EDIT_TOKEN_RE = re.compile(r"^[A-Za-z0-9_\-]{20,60}$")
+# letter_token: secrets.token_urlsafe(16) → URL-safe base64 22자 (A-Za-z0-9_-)
+_LETTER_TOKEN_RE = re.compile(r"^[A-Za-z0-9_\-]{10,40}$")
 
 
 @app.get("/admin", response_class=HTMLResponse)
@@ -601,6 +605,51 @@ async def admin_list(request: Request, detail: str | None = None):
             "detail_id": detail,
         },
     )
+
+# ---------------------------------------------------------------------------
+# 라우트: GET /letter/{token}
+# ---------------------------------------------------------------------------
+
+@app.get("/letter/{token}", response_class=HTMLResponse)
+async def letter(request: Request, token: str):
+    """신뢰된 내부 안내문(PM 작성)을 base 템플릿에 래핑해 서빙한다.
+
+    letter HTML 파일은 PM 이 작성한 신뢰된 내부 산출물이다.
+    외부 사용자 입력이 아니므로 본문 markup 을 safe 처리한다.
+    단, base 템플릿 변수 주입부(title 등)는 autoescape 를 유지한다.
+
+    token 규약: secrets.token_urlsafe(16) 산출물 (URL-safe, 경로 traversal 차단).
+    파일 위치: DATA_DIR/letters/<token>.html
+    """
+    # BLOCK-2 계승: token 포맷 검증 (path traversal 방어)
+    if not _LETTER_TOKEN_RE.fullmatch(token):
+        raise HTTPException(status_code=404, detail="안내문을 찾을 수 없습니다.")
+
+    letters_dir = _data_dir() / "letters"
+    candidate = (letters_dir / f"{token}.html").resolve()
+    # resolve 이중 방어: 정규화된 경로가 letters_dir 하위여야 한다
+    if not str(candidate).startswith(str(letters_dir.resolve())):
+        raise HTTPException(status_code=404, detail="안내문을 찾을 수 없습니다.")
+
+    if not candidate.exists():
+        raise HTTPException(status_code=404, detail="안내문을 찾을 수 없습니다.")
+
+    body = candidate.read_text(encoding="utf-8")
+
+    # <title> 태그가 있으면 추출해 템플릿 title 변수로 노출, 없으면 기본값
+    import html as _html_mod
+    _title_match = re.search(r"<title[^>]*>(.*?)</title>", body, re.IGNORECASE | re.DOTALL)
+    page_title = _html_mod.unescape(_title_match.group(1).strip()) if _title_match else "안내문"
+
+    return templates.TemplateResponse(
+        request,
+        "letter.html",
+        {
+            "title": page_title,
+            "body": body,
+        },
+    )
+
 
 # ---------------------------------------------------------------------------
 # 라우트: GET /health
