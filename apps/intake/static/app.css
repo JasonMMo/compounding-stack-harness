@@ -1,0 +1,173 @@
+/* apps/intake/static/app.css
+   Pico classless가 기본 스타일을 담당. 여기는 최소 보강만.
+   모바일(숨고/크몽) 유입 중심 — Pico 기본 반응형 신뢰.
+*/
+
+/* 폰트: Pretendard 우선 적용 */
+:root {
+  --pico-font-family: "Pretendard Variable", "Pretendard", sans-serif;
+}
+
+/* ── 헤더 설명 문구: hgroup p 가 Pico 기본으로 너무 흐리게 렌더됨 → 가독 가능한 중간 톤으로 */
+.intake-card hgroup p {
+  color: var(--pico-secondary, #4a5568);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* 폼 카드 — 섹션 구분감 */
+.intake-card {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: var(--pico-spacing);
+}
+
+/* 섹션 fieldset 카드 스타일 */
+.form-section {
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: var(--pico-spacing);
+  margin-bottom: var(--pico-spacing);
+}
+
+/* fieldset legend: 섹션 제목 시각 강조 */
+.form-section legend {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pico-muted-color);
+  padding: 0 0.4em;
+}
+
+/* 필드 그룹 간격 — 기본보다 약간 조밀하게 (스크롤 부담 완화) */
+.field-group {
+  margin-bottom: calc(var(--pico-spacing) * 1.0);
+}
+
+.field-group label {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.field-group small {
+  display: block;
+  margin-top: 2px;
+  margin-bottom: calc(var(--pico-spacing) * 0.35);
+  color: var(--pico-muted-color);
+  font-size: 0.82em;
+  line-height: 1.4;
+}
+
+/* text/email input 높이: Pico 기본 padding이 과도해 조밀하게 */
+.field-group input[type="text"],
+.field-group input[type="email"] {
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+}
+
+/* radio / checkbox 그룹 */
+.radio-group,
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--pico-spacing) * 0.45);
+  margin-top: calc(var(--pico-spacing) * 0.4);
+}
+
+.radio-label,
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pico-spacing) * 0.5);
+  cursor: pointer;
+  font-size: 0.93rem;
+  /* 터치 타깃 최소 44px */
+  min-height: 44px;
+  padding: 0.1rem 0;
+}
+
+/* 필수 마크 */
+.required-mark {
+  color: var(--pico-del-color, #c0392b);
+  margin-left: 2px;
+}
+
+/* 오류 박스 */
+.error-box {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: var(--pico-border-radius);
+  padding: var(--pico-spacing);
+  margin-bottom: var(--pico-spacing);
+  color: #991b1b;
+}
+
+.error-box ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+/* 수정 모드 안내 */
+.edit-notice {
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: var(--pico-border-radius);
+  padding: var(--pico-spacing);
+  margin-bottom: var(--pico-spacing);
+}
+
+/* 제출 버튼 행 — 데스크톱: 오른쪽 정렬 + 자동 너비 / 모바일: 전체 너비 */
+.submit-row {
+  margin-top: calc(var(--pico-spacing) * 1.5);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Pico classless는 article 내 button을 width:100% block으로 처리 → 강제 해제 */
+.submit-row button {
+  width: auto;
+  min-width: 160px;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+@media (max-width: 600px) {
+  .submit-row {
+    justify-content: stretch;
+  }
+  .submit-row button {
+    width: 100%;
+  }
+}
+
+/* 확인 페이지 — 수정 링크 박스 */
+.edit-link-box {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pico-spacing) * 0.75);
+  background: var(--pico-code-background-color, #f8f9fa);
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: calc(var(--pico-spacing) * 0.75);
+  margin-top: calc(var(--pico-spacing) * 0.5);
+  overflow-x: auto;
+  word-break: break-all;
+}
+
+.copy-btn {
+  flex-shrink: 0;
+  padding: calc(var(--pico-spacing) * 0.4) calc(var(--pico-spacing) * 0.75);
+  font-size: 0.85em;
+}
+
+/* admin 테이블 */
+.admin-card table {
+  font-size: 0.9em;
+}
+
+/* honeypot: 완전히 숨김 (display:none이 inline에 있으나 CSS도 보강) */
+input[name="_hp"] {
+  display: none !important;
+  visibility: hidden;
+}
