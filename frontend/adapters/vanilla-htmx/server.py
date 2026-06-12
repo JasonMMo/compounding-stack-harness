@@ -81,14 +81,24 @@ def _inject_manifest_globals() -> dict:
                  Used by base.html sidebar block. Falls back to g_entity_keys
                  when empty (lawfirm-demo / manifests without domains key).
     g_entity_keys — flat entity key list for no-domains fallback sidebar.
+
+    Security: g_domains and g_entity_keys are suppressed for unauthenticated
+    requests so that menu structure (domain labels, entity names) is not
+    exposed to anonymous visitors in the HTML response.
     """
-    domains = manifest.domains()
-    entity_keys = manifest.entity_keys() if not domains else []
+    authenticated = bool(session.get("token"))
+    if authenticated:
+        domains = manifest.domains()
+        entity_keys = manifest.entity_keys() if not domains else []
+    else:
+        domains = []
+        entity_keys = []
     return {
         "g_customer_display": manifest.customer_display(),
         "g_feedback_url": manifest.feedback_url(),
         "g_domains": domains,
         "g_entity_keys": entity_keys,
+        "g_authenticated": authenticated,
     }
 
 # Load contract at startup (G-1 — reads wire-v1.yaml + codes.yaml)
