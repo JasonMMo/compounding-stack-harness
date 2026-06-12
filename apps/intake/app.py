@@ -77,9 +77,25 @@ templates = Jinja2Templates(env=_jinja_env)
 # questions.yaml 로드 (startup 시 캐시, reload 없음)
 # ---------------------------------------------------------------------------
 
+def _normalize_option_value(v: object) -> str:
+    """option value 를 str 로 강제 정규화.
+
+    YAML 1.1 불리언 파싱 방어: yes/no/true/false 가 bool 로 들어올 경우
+    "yes"/"no" 로 복원한다. 그 외 모든 값은 str() 변환.
+    """
+    if isinstance(v, bool):
+        return "yes" if v else "no"
+    return str(v)
+
+
 def _load_questions() -> dict:
     with open(QUESTIONS_YAML, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        data = yaml.safe_load(f)
+    # option value 전수 정규화 (bool 파싱 방어)
+    for q in data.get("questions", []):
+        for opt in q.get("options", []):
+            opt["value"] = _normalize_option_value(opt["value"])
+    return data
 
 _QUESTIONS_CACHE: dict | None = None
 
