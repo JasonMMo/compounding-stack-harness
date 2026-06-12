@@ -10,10 +10,19 @@ Mirrors InMemoryEntityStore.java behavior:
 - findAll: returns list of copies (no filter/sort — done in router)
 - patch: merges only supplied fields; 'id' field not overwritable; NOT_FOUND → None
 - delete: idempotent — missing id returns True (not an error)
+
+Seed file (optional):
+  Set env SEED_FILE=/path/to/seed-data.json to pre-populate the store at
+  module import time. If the file does not exist or is unset, the store
+  starts empty (backward-compatible). Duplicate ids within the same
+  entity_type are skipped (last writer wins — stable because seed is
+  deterministic). Loaded record count is logged once to stdout.
 """
 
 from __future__ import annotations
 
+import json
+import os
 import threading
 import time
 import uuid
@@ -115,5 +124,63 @@ class InMemoryEntityStore:
             self._locks.clear()
 
 
+# ---------------------------------------------------------------------------
+# Seed loader — reads SEED_FILE env at import time (optional)
+# ---------------------------------------------------------------------------
+
+def _load_seed_file(store: "InMemoryEntityStore") -> None:
+    """Load seed-data.json into store if SEED_FILE env is set and file exists.
+
+    Format: { "<entity_type>": [ {id, field...}, ... ], ... }
+    Each record must have an "id" field; records without "id" are skipped.
+    Duplicate ids within an entity_type are silently overwritten (last wins —
+    seed is deterministic so this is safe).
+    Logs one summary line per entity_type to stdout.
+    """
+    seed_path = os.environ.get("SEED_FILE", "").strip()
+    if not seed_path:
+        return  # env unset — backward-compatible empty store
+
+    import pathlib
+    p = pathlib.Path(seed_path)
+    if not p.exists():
+        print(
+            f"[store] WARN: SEED_FILE={seed_path} not found — starting with empty store.",
+            flush=True,
+        )
+        return
+
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"[store] WARN: SEED_FILE parse error ({exc}) — starting with empty store.", flush=True)
+        return
+
+    if not isinstance(data, dict):
+        print("[store] WARN: SEED_FILE root must be a JSON object — starting with empty store.", flush=True)
+        return
+
+    total = 0
+    for entity_type, records in data.items():
+        if not isinstance(records, list):
+            continue
+        bucket, lock = store._get_or_create_bucket(entity_type)
+        loaded = 0
+        with lock:
+            for rec in records:
+                if not isinstance(rec, dict):
+                    continue
+                rid = rec.get("id")
+                if not rid:
+                    continue
+                bucket[str(rid)] = dict(rec)
+                loaded += 1
+        print(f"[store] seed loaded: {entity_type} → {loaded} records", flush=True)
+        total += loaded
+
+    print(f"[store] seed total: {total} records from {seed_path}", flush=True)
+
+
 # Module-level singleton shared across all routers
 entity_store = InMemoryEntityStore()
+_load_seed_file(entity_store)
