@@ -51,6 +51,7 @@
       </a>
     </div>
     <div class="header-actions">
+      <a href="{{ url_for('home') }}" class="btn btn-ghost btn-sm" aria-label="홈으로">⌂ 홈</a>
       <span class="header-user" aria-label="로그인 사용자">
         <span class="header-user__avatar" aria-hidden="true">
           {{ session.get('user_id')[0] | upper }}
