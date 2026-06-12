@@ -1,7 +1,7 @@
-# HANDOFF — 2026-06-12 (Growth-42: KRDS 컴포넌트 분석 + 정적/동적 public-sector 분기)
+# HANDOFF — 2026-06-12 (Growth-43: preview_package.py public-sector 파이프라인 완성)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
-> **다음 작업 = preview_package.py public-sector 분기 (Dockerfile CDN 주입) OR 실 고객 발굴 (M2 게이트)**
+> **다음 작업 = 실 고객 발굴 (M2 게이트) — 인프라·디자인·UI·파이프라인 전 구간 준비 완료**
 
 ## ▶▶▶ 복귀 직후 상태 (확인용)
 
@@ -14,14 +14,21 @@
 - **WebFetch/WebSearch deny** — `.claude/settings.json` 에 deny 설정됨. KRDS GitHub 분석은 codegraph 또는 로컬 클론 후 분석.
 - **가드**: 13개, 0 real FAIL (G-2/G-3 SPEC). 실행 시 `PYTHONIOENCODING=utf-8` 권장.
 
-## ▣ Growth-42 (이번 세션) — KRDS 분석 + 정적/동적 public-sector 분기 완성
+## ▣ Growth-43 (이번 세션) — preview_package.py public-sector 파이프라인 완성
 
-- **KRDS 클론 분석**: `D:\AI\workspace\krds-uiux` (shallow clone, 분석 전용). 74개 컴포넌트 확인. CDN 2파일 (`krds.min.css` 579KB / `krds.min.js` 183KB). jsDelivr 한 줄.
-- **핵심 발견**: KRDS table = semantic (Fixed Header 없음) → 우리 `dense-table.html` 별도 유지 필요. tab/side_navigation = `krds.min.js` 자동 동작.
-- **정적 스니펫 3개**: `design/templates/krds-tab.html` / `krds-table.html` / `krds-side-nav.html` — KRDS 원본 마크업 + CDN 주석 + saas vs public-sector 비교 가이드.
-- **동적 분기**: `token_css_generator.generate(ui_theme="saas"|"public-sector")` — `public-sector` 시 Pico override 106줄 스킵 + KRDS CDN 주석 삽입. `build_tokens.py --ui-theme` CLI arg.
-  - 검증: `saas` 366줄·365 props / `public-sector` 260줄·237 props ✓
-- **커밋**: 1ed1a21→c3df9a3→c3a9a12(G-41) → 9c0d303→c44424c→8a0ff66→b23ee25→8c1ab94(G-42), 8건 pushed.
+- **Dockerfile**: `ARG UI_THEME=saas` + `RUN python build_tokens.py --ui-theme $UI_THEME` — build time에 테마 결정.
+- **preview_package.py**: `_get_ui_theme(slug)` 헬퍼 (profile `stack.ui_theme` 읽기, 기본 `saas`). `write_coolify_compose()` / `write_compose()` 에 `ui_theme` 파라미터 추가. 양쪽 compose 템플릿 frontend `build.args: UI_THEME: {ui_theme}` 주입.
+- **기존 compose 재생성**: lawfirm-demo / shop-demo / edu-program — 모두 `UI_THEME: saas` 추가됨. 하위호환 유지.
+- **검증**: `python preview_package.py --profile lawfirm-demo --coolify` → `UI_THEME: saas` 주입 확인.
+- **public-sector 고객 적용 방법**: profile 에 `stack.ui_theme: public-sector` 추가 → `preview_package.py --profile <slug> --coolify` → compose 에 `UI_THEME: public-sector` 자동 → Dockerfile build 시 Pico override 스킵 + KRDS CDN 주석 포함 tokens.css 생성.
+- **커밋**: e71b3e0(Dockerfile) → c47d243(preview_package) → e6fd9d5→00baa2d→d18bf60(compose 3건), 5건.
+
+## ▣ Growth-42 (직전 세션) — KRDS 분석 + 정적/동적 public-sector 분기
+
+- **KRDS 클론**: `D:\AI\workspace\krds-uiux` (분석 전용). 74개 컴포넌트. CDN jsDelivr 2파일.
+- **핵심**: KRDS table = semantic (Fixed Header 없음) → `dense-table.html` 유지. tab/side_nav = `krds.min.js` 자동.
+- **정적 스니펫**: `design/templates/krds-tab.html` / `krds-table.html` / `krds-side-nav.html`.
+- **동적**: `token_css_generator.generate(ui_theme=...)`, `build_tokens.py --ui-theme`.
 
 ## ▣ Growth-41 (직전 세션) — design/templates 구조 구축 + profile ui_theme
 
@@ -45,8 +52,8 @@
 
 ## 다음 후보
 
-1. **★ preview_package.py public-sector 분기** — profile `stack.ui_theme` 읽어 Dockerfile의 `RUN python build_tokens.py` 에 `--ui-theme public-sector` 자동 주입 + base.html 에 KRDS CDN `<link>`/`<script>` 삽입. 파이프라인 마지막 조각.
-2. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. 인프라·디자인·UI 준비 완료.
+1. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. 인프라·디자인·UI·파이프라인 전 구간 준비 완료. 막는 건 영업뿐.
+2. **base.html KRDS CDN 분기** (보너스) — `public-sector` profile deploy 시 frontend `templates/base.html` 에 KRDS CDN `<link>`/`<script>` 자동 주입. tokens.css 는 이미 올바르게 생성됨; CDN 태그만 미완.
 3. **자동화 잔여 (낮은 우선순위)**: webhook 보류 / SECRET_KEY rotate / G-14 stale-anchor.
 4. **KRDS 클론 정리**: `D:\AI\workspace\krds-uiux` 분석 완료 → 필요 시 삭제 가능.
 
