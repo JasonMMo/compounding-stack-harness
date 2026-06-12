@@ -29,6 +29,8 @@ services:
     build:
       context: .
       dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
+      args:
+        UI_THEME: saas
     environment:
       # Domain routing: set via Coolify API PATCH docker_compose_domains
       # [{"name":"frontend","domain":"https://lawfirm-demo.n9n.co.kr"}]
