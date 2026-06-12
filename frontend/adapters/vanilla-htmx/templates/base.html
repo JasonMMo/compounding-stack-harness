@@ -76,17 +76,18 @@
       <div class="sidebar-group">
         <div class="sidebar-group__label">{{ domain.display }}</div>
         <ul class="sidebar-nav" role="list">
-          {% for entity_key in domain.entities %}
+          {% for entity in domain.entities %}
+          {% set entity_key = entity.key %}
           <li class="sidebar-nav__item">
             <a href="{{ url_for('entity_list', entity_type=entity_key) }}"
                class="sidebar-nav__link {% if entity_type is defined and entity_type == entity_key %}sidebar-nav__link--active{% endif %}"
                {% if entity_type is defined and entity_type == entity_key %}aria-current="page"{% endif %}
-               title="{{ entity_key | replace('-', ' ') | title }}">
+               title="{{ entity.label }}">
               <span class="sidebar-nav__link-initial" aria-hidden="true">
-                {{ entity_key[0] | upper }}
+                {{ entity.label[0] | upper }}
               </span>
               <span class="sidebar-nav__link-text">
-                {{ entity_key | replace('-', ' ') | title }}
+                {{ entity.label }}
               </span>
             </a>
           </li>
