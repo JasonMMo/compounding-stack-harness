@@ -47,6 +47,116 @@ _FONT_SHORTHAND_KEYS = {
 # Reference pattern: {some.dotted.path}
 _REF_RE = re.compile(r"^\{([^}]+)\}$")
 
+# ---------------------------------------------------------------------------
+# Pico CSS v2 override map
+# Maps --pico-* variables to our semantic CSS custom properties so that
+# Pico's classless styles (applied to bare <button>, <table>, <input>, etc.)
+# inherit our design language instead of Pico's default palette.
+# Load order: Open Props → Pico classless → tokens.css → app.css
+# This block is injected into tokens.css at build time so it survives every
+# token rebuild without manual editing.
+# ---------------------------------------------------------------------------
+
+_PICO_OVERRIDES = """\
+  /* Typography */
+  --pico-font-family: var(--font-family-body);
+  --pico-font-family-sans-serif: var(--font-family-body);
+  --pico-font-family-monospace: var(--font-family-mono);
+  --pico-font-size: 87.5%;
+  --pico-line-height: 1.5;
+  --pico-font-weight: var(--font-weight-body);
+
+  /* Colors — surface & text */
+  --pico-background-color: var(--color-surface-2);
+  --pico-color: var(--color-text-1);
+  --pico-muted-color: var(--color-text-3);
+  --pico-muted-border-color: var(--color-border);
+
+  /* Primary action color */
+  --pico-primary: var(--color-primary);
+  --pico-primary-background: var(--color-primary);
+  --pico-primary-border: var(--color-primary);
+  --pico-primary-hover: var(--color-primary-hover);
+  --pico-primary-hover-background: var(--color-primary-hover);
+  --pico-primary-hover-border: var(--color-primary-hover);
+  --pico-primary-focus: var(--color-border-focus);
+  --pico-primary-inverse: var(--color-text-on-primary);
+  --pico-primary-underline: transparent;
+  --pico-primary-hover-underline: transparent;
+
+  /* Secondary (maps to our ghost/secondary tier) */
+  --pico-secondary: var(--color-text-2);
+  --pico-secondary-background: var(--color-surface-1);
+  --pico-secondary-border: var(--color-border-strong);
+  --pico-secondary-hover: var(--color-text-1);
+  --pico-secondary-hover-background: var(--color-surface-2);
+  --pico-secondary-hover-border: var(--color-border-strong);
+  --pico-secondary-focus: var(--color-border-focus);
+  --pico-secondary-inverse: var(--color-text-1);
+  --pico-secondary-underline: transparent;
+  --pico-secondary-hover-underline: transparent;
+
+  /* Borders & radius */
+  --pico-border-color: var(--color-border);
+  --pico-border-radius: var(--radius-control);
+  --pico-border-width: 1px;
+  --pico-outline-width: 2px;
+
+  /* Card */
+  --pico-card-background-color: var(--color-surface-1);
+  --pico-card-border-color: var(--color-border);
+  --pico-card-box-shadow: var(--shadow-card);
+  --pico-card-sectioning-background-color: var(--color-surface-2);
+
+  /* Form elements */
+  --pico-form-element-background-color: var(--color-surface-1);
+  --pico-form-element-border-color: var(--color-border-input);
+  --pico-form-element-color: var(--color-text-1);
+  --pico-form-element-active-background-color: var(--color-surface-1);
+  --pico-form-element-active-border-color: var(--color-border-focus);
+  --pico-form-element-focus-color: var(--color-border-focus);
+  --pico-form-element-placeholder-color: var(--color-text-3);
+  --pico-form-element-invalid-border-color: var(--color-danger);
+  --pico-form-element-invalid-active-border-color: var(--color-danger-hover);
+  --pico-form-element-invalid-focus-color: var(--color-danger);
+  --pico-form-element-valid-border-color: var(--color-success);
+  --pico-form-element-valid-active-border-color: var(--color-success);
+  --pico-form-element-valid-focus-color: var(--color-success);
+  --pico-form-label-font-weight: var(--font-weight-label);
+
+  /* Table */
+  --pico-table-border-color: var(--color-border);
+  --pico-table-row-stripped-background-color: var(--color-surface-2);
+
+  /* Spacing — keep compact to match our density tokens */
+  --pico-spacing: 1rem;
+  --pico-block-spacing-vertical: 0.75rem;
+  --pico-block-spacing-horizontal: 1rem;
+  --pico-form-element-spacing-vertical: 4px;
+  --pico-form-element-spacing-horizontal: 12px;
+
+  /* Box shadow */
+  --pico-box-shadow: var(--shadow-card);
+  --pico-button-box-shadow: var(--shadow-xs);
+  --pico-button-hover-box-shadow: var(--shadow-sm);
+
+  /* Transition */
+  --pico-transition: var(--motion-transition-control);
+
+  /* Nav */
+  --pico-nav-element-spacing-horizontal: var(--space-inset-md);
+  --pico-nav-element-spacing-vertical: var(--space-inset-sm);
+  --pico-nav-link-spacing-horizontal: var(--space-inset-sm);
+  --pico-nav-link-spacing-vertical: var(--space-inset-xs);
+
+  /* Modal overlay */
+  --pico-modal-overlay-background-color: var(--color-surface-overlay);
+
+  /* Code */
+  --pico-code-background-color: var(--color-surface-3);
+  --pico-code-color: var(--color-text-2);\
+"""
+
 
 # ---------------------------------------------------------------------------
 # Path helpers
@@ -272,6 +382,33 @@ def generate(tokens_dir: pathlib.Path | None = None) -> str:
             sections.append(_vars_block(persona_pairs))
             sections.append("}")
             sections.append("")
+
+    # ── 4. Pico CSS v2 override layer ────────────────────────────────────────
+    # Maps --pico-* variables to our semantic tokens so Pico's classless styles
+    # (applied to bare <button>, <table>, <input>, etc.) use our design language.
+    # Emitted here so it survives every token rebuild automatically.
+    # Load order in base.html: Open Props → Pico classless → tokens.css → app.css
+    sections.append("/* ── Pico CSS v2 override — map --pico-* to our semantic tokens ── */")
+    sections.append(":root {")
+    sections.append(_PICO_OVERRIDES)
+    sections.append("}")
+    sections.append("")
+
+    # ── 5. Pico regression fixes ──────────────────────────────────────────────
+    # Pico classless sets `button[type="submit"] { width: 100% }` which bleeds
+    # onto any <button type="submit" class="btn ..."> in toolbars/inline contexts.
+    # Fix: any .btn element overrides width back to auto (inline-flex, self-sized).
+    # Login card full-width is preserved via the .login-card scope rule below.
+    sections.append("/* ── Pico regression fix — button width ── */")
+    sections.append("button.btn {")
+    sections.append("  width: auto;")
+    sections.append("}")
+    sections.append("")
+    sections.append("/* Login card: restore full-width submit inside .login-card */")
+    sections.append(".login-card button.btn[type=submit] {")
+    sections.append("  width: 100%;")
+    sections.append("}")
+    sections.append("")
 
     return "\n".join(sections)
 
