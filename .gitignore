@@ -50,6 +50,9 @@ infra/secrets/*
 !infra/secrets/README.md
 !infra/secrets/*.example
 
+# Intake submissions (의뢰인 PII — 로컬/서버 런타임 데이터, 절대 커밋 금지)
+apps/intake/data/
+
 # CodeGraph index (local-first, tenant-scoped — rebuildable from source)
 .codegraph/
 
