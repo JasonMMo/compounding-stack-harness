@@ -1,4 +1,4 @@
-# HANDOFF — 2026-06-12 (Growth-36: preview 디자인 경쟁력 + 504 근본 해결)
+# HANDOFF — 2026-06-12 (Growth-37: 웹 intake 인터페이스 live)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
 > **다음 작업 = 실 고객 발굴 (M2 게이트)** — preview 파이프라인은 한 줄 명령으로 완성됨. 인프라 작업 더 없이 첫 의뢰만 받으면 됨.
@@ -47,9 +47,17 @@ PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug <slug
 - **deploy 스크립트 견고화**: registry-first uuid lookup (이름 매칭은 fallback, 구 포맷 `coolify_project` 지원) + description ASCII 정화 (em-dash 422). lawfirm Coolify 프로젝트명은 `lawfirm-demo-preview` (불일치 주의 — registry uuid 가 단일 진실).
 - **Dockerfile**: tokens.css gitignored → 빌드타임 생성 스텝 추가 (`COPY design/tokens` + `RUN build_tokens.py`).
 
+## ▣ Growth-37 (2026-06-12 후속 세션) — 웹 intake 인터페이스 (intake.n9n.co.kr live)
+
+- **의뢰인 needs 인터뷰 웹폼**: `apps/intake/` — `questions.yaml`(PM 단일 진실, 질문 수정은 이 파일만) 기반 3 페르소나 분기 폼. 의뢰인 레코드 append-only revision + `/edit/{token}` 재수정 + `/admin`(Basic auth, env 미설정 시 404). 제출→`intake_to_profile.py`→draft profile→두 줄 deploy 로 영업 루프 연결.
+- **CISO 게이트 첫 실전 완주**: BLOCK 3건 발견→수정→재검증 PASS (상세 `out/analysis/intake-security-review.md`).
+- **deploy 함정 2건 추가 학습**: 도메인 서비스명은 registry `preview.domain_service` 키 (디폴트 frontend) / `docker_compose_domains` 는 PATCH=array, GET=string 비대칭 (422).
+- **수동 잔여 (CEO)**: ① Coolify 대시보드에서 intake 앱에 `INTAKE_ADMIN_PASSWORD` env 주입 (전까지 /admin 404 안전) ② rtk 0.34.3→0.42.x 업그레이드 `cargo install --git https://github.com/rtk-ai/rtk --force` (PreToolUse 'hook' not found 에러 해소).
+- **배포 권한**: `Bash(*python scripts/workflow/deploy_to_coolify.py*)` allow 룰 추가됨 — 이제 배포는 CTO 직접 실행.
+
 ## 다음 후보
 
-1. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. **인프라는 준비 끝** — 의뢰 받으면 profile 작성 → 위 두 줄 → 외부 데모. 막는 건 영업뿐. 데모 디자인도 Pretendard+Pico 로 상향 완료.
+1. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. **인프라는 준비 끝** — 의뢰 받으면 profile 작성 → 위 두 줄 → 외부 데모. 막는 건 영업뿐. 데모 디자인 상향 + **intake 폼 (intake.n9n.co.kr) 으로 needs 접수까지 자동화 완료** — 숨고/크몽 프로필에 intake 링크 게재 가능.
 2. **자동화 잔여 (작음, 낮은 우선순위)**: 레지스트리 변경분 per-file 커밋 자동화 / git push→auto-redeploy(webhook 보류 중) / SECRET_KEY rotate(현 Coolify UI 수동).
 3. **engineer: `.npmrc` codegraph 버전 핀** / **G-14 (`--check` stale-anchor)** (Growth-34 이월).
 
