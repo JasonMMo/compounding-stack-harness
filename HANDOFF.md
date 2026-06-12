@@ -1,7 +1,7 @@
-# HANDOFF — 2026-06-12 (Growth-37: 웹 intake 인터페이스 live)
+# HANDOFF — 2026-06-12 (Growth-38: 영업 루프 풀사이클 리허설 — edu-program preview live)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
-> **다음 작업 = 실 고객 발굴 (M2 게이트)** — preview 파이프라인은 한 줄 명령으로 완성됨. 인프라 작업 더 없이 첫 의뢰만 받으면 됨.
+> **다음 작업 = 리허설 건1 추가질문 회신 수령 → profile 갱신, 그리고 실 고객 발굴 (M2 게이트)** — intake→triage→profile→scaffold→preview 전 구간이 실데이터로 1회전 완주됨.
 
 ## ▶▶▶ 복귀 직후 상태 (확인용)
 
@@ -54,6 +54,14 @@ PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug <slug
 - **deploy 함정 2건 추가 학습**: 도메인 서비스명은 registry `preview.domain_service` 키 (디폴트 frontend) / `docker_compose_domains` 는 PATCH=array, GET=string 비대칭 (422).
 - **수동 잔여 처리 완료 (CEO, 같은 날)**: ① `INTAKE_ADMIN_PASSWORD` Coolify env 주입+redeploy → /admin 로그인 동작 확인 (사용자명 임의, 비밀번호=env 값) ② rtk 0.34.3→0.42.2 업그레이드 → PreToolUse 'hook' 에러 해소, RTK 압축 실가동. 대시보드 접근은 SSH 터널 `-L 8000` 만 (8000 방화벽 차단·coolify.n9n.co.kr 라우팅 없음 = 의도된 하드닝).
 - **배포 권한**: `Bash(*python scripts/workflow/deploy_to_coolify.py*)` allow 룰 추가됨 — 이제 배포는 CTO 직접 실행.
+
+## ▣ Growth-38 (2026-06-12 후속 세션) — 영업 루프 풀사이클 리허설
+
+- **리허설**: 지인이 intake 에 실제 2건 제출 → PM triage (건1 수용 / 건2 거절) → follow-up 회신 반영 → draft profile (`profiles/edu-program.yaml`, postgres·crm/finance/document/reporting) → scaffold 9 entities → **`edu-program.n9n.co.kr` live** (HTTPS 200·LE). intake→preview 전 구간 실데이터 검증 완료.
+- **실결함 2건 잡힘**: ① questions.yaml YAML 1.1 bool 함정 (`value: no` → False 저장) — quote+로더 방어+회귀 테스트 ② push 직후 deploy 시 docker_compose_domains 422 race — `_wait_for_compose_raw()` poll+retry 자동 복구 (runbook 함정 등재).
+- **domain-expert 의견** (`out/analysis/intake-rehearsal/domain-mapping-edu.md`): student=customer overlay (catalog enum 확장 ✗) / 정부사업비 budget-line·정산은 baseline 부재 → education vertical seed = M3 첫 후보.
+- **CEO 발송 대기 2건**: ① 건1 추가질문 (`out/analysis/intake-rehearsal/needs-note-edu.md` — 학사관리 범위 Q9·Q10 포함 open 10건) ② 건2 거절 회신 (`out/analysis/intake-rehearsal/reject-reply.md`). 회신 오면 profile 갱신 → 필요 시 재배포.
+- **production 방향 메모**: 고객(한국 대학·정부사업) Vercel 제안은 비추천 — 학생 PII+정부 예산 데이터 국내 상주·기관 통제 요구 가능성, 우리 아티팩트=self-host docker compose. preview 는 n9n.co.kr, production 은 학교 인프라 self-host 권고.
 
 ## 다음 후보
 
