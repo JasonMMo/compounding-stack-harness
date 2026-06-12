@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ entity_label }} 목록{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{{ entity_label }}</h1>
+  <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}" class="btn btn-primary btn-md">
+    + 새로 만들기
+  </a>
+</div>
+
+{# Search toolbar #}
+<form method="get" action="{{ url_for('entity_list', entity_type=entity_type) }}"
+      class="toolbar" style="margin-bottom:var(--space-stack-sm)">
+  <label for="tb-search" class="sr-only">검색</label>
+  <input id="tb-search" name="search" type="search"
+         class="form-input toolbar-search" placeholder="검색..." value="{{ search }}">
+  <input type="hidden" name="paging_mode" value="{{ paging_mode }}">
+  <input type="hidden" name="paging_size" value="{{ paging_size }}">
+  <button type="submit" class="btn btn-secondary btn-sm">검색</button>
+  {% if search %}
+  <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-ghost btn-sm">초기화</a>
+  {% endif %}
+</form>
+
+{# Top / Bottom split #}
+<div class="tb-layout">
+
+  {# ── Master (top) ── #}
+  <div class="tb-master">
+    {% if items %}
+    <table class="master-table" aria-label="{{ entity_label }} 목록">
+      <caption class="sr-only">{{ entity_label }} 목록 (총 {{ total }}건)</caption>
+      <thead>
+        <tr>
+          {% for col in columns %}
+          <th scope="col">{{ col }}</th>
+          {% endfor %}
+          <th scope="col">작업</th>
+        </tr>
+      </thead>
+      <tbody id="tb-tbody">
+        {% for item in items %}
+        <tr
+          hx-get="{{ url_for('entity_detail', entity_type=entity_type, entity_id=item.get('id','')) }}"
+          hx-target="#tb-detail-panel"
+          hx-swap="innerHTML"
+          role="button"
+          tabindex="0"
+          aria-label="{{ item.get(columns[0],'') }} 상세 보기"
+          onkeydown="if(event.key==='Enter'||event.key===' '){htmx.trigger(this,'click');}">
+          {% for col in columns %}
+          <td title="{{ item[col] if item[col] is not none else '' }}">
+            {% set val = item[col] %}
+            {% if val is none or val == '' %}<span class="text-empty">—</span>
+            {% else %}{{ val | string | truncate(28, true, '…') }}{% endif %}
+          </td>
+          {% endfor %}
+          <td>
+            <div class="row-actions">
+              <a href="{{ url_for('entity_detail', entity_type=entity_type, entity_id=item.get('id','')) }}"
+                 class="btn btn-ghost btn-sm">편집</a>
+              <a href="{{ url_for('entity_delete_confirm', entity_type=entity_type, entity_id=item.get('id','')) }}"
+                 class="btn btn-ghost btn-sm btn-danger-ghost">삭제</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% else %}
+    <div class="empty-state" role="status" style="padding:var(--space-inset-xl)">
+      <p class="empty-state__message">등록된 {{ entity_label }} 데이터가 없습니다.</p>
+      <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}"
+         class="btn btn-primary btn-sm">+ 첫 항목 추가</a>
+    </div>
+    {% endif %}
+  </div>{# /tb-master #}
+
+  {# ── Detail panel (bottom) ── #}
+  <div class="tb-detail" id="tb-detail-panel">
+    <div class="detail-panel-placeholder">
+      <div class="detail-panel-placeholder__icon">↑</div>
+      <p class="detail-panel-placeholder__text">
+        위 목록에서 항목을 선택하면<br>상세 정보가 여기에 표시됩니다.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+{# Pagination (below layout) #}
+{% if paging_mode == 'offset' and total_pages > 1 %}
+<nav class="pagination" aria-label="페이지 탐색" style="margin-top:var(--space-stack-sm)">
+  <span class="pagination-count">{{ total }}건 중 {{ (paging_page-1)*paging_size+1 }}–{{ [paging_page*paging_size, total]|min }}건</span>
+  {% if paging_page > 1 %}
+  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
+                      paging_page=paging_page-1, paging_size=paging_size, search=search) }}"
+     class="btn btn-secondary btn-sm">&lt; 이전</a>
+  {% else %}<button class="btn btn-secondary btn-sm" disabled>&lt; 이전</button>{% endif %}
+  {% if paging_page < total_pages %}
+  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
+                      paging_page=paging_page+1, paging_size=paging_size, search=search) }}"
+     class="btn btn-secondary btn-sm">다음 &gt;</a>
+  {% else %}<button class="btn btn-secondary btn-sm" disabled>다음 &gt;</button>{% endif %}
+</nav>
+{% endif %}
+
+{# Row highlight via event delegation #}
+<script>
+document.getElementById('tb-tbody')?.addEventListener('htmx:beforeRequest', function(e) {
+  this.querySelectorAll('tr').forEach(r => r.classList.remove('is-selected'));
+  e.target.closest('tr')?.classList.add('is-selected');
+});
+</script>
+{% endblock %}
