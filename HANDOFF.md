@@ -14,7 +14,14 @@
 - **WebFetch/WebSearch deny** — `.claude/settings.json` 에 deny 설정됨. KRDS GitHub 분석은 codegraph 또는 로컬 클론 후 분석.
 - **가드**: 13개, 0 real FAIL (G-2/G-3 SPEC). 실행 시 `PYTHONIOENCODING=utf-8` 권장.
 
-## ▣ Growth-44 (이번 세션) — base.html KRDS CDN 분기 완성
+## ▣ Growth-45 (이번 세션) — 리서치 자산 wiki 환류
+
+- **문제**: deep-research 결과(`out/analysis/design/korean-ui-research.md`)가 gitignored `out/`에만 있어 자산 미누적.
+- **조치**: `knowledge/wiki/design/korean-ui-patterns.md` 신규 생성 (SYNTHESIZED) — KRDS 74개 컴포넌트·3대 패턴·대기업 디자인 시스템·harness 통합 현황 전부 수록.
+- **wiki index**: `Design` 섹션 추가. `build_graph.py` 재생성 (nodes=6, edges=10).
+- **커밋**: 7ec9637(wiki 페이지) → 5e91131(index), 2건.
+
+## ▣ Growth-44 (직전 세션) — base.html KRDS CDN 분기 완성
 
 - **Dockerfile**: `ENV UI_THEME=$UI_THEME` 추가 — build ARG → runtime env 전파.
 - **server.py**: `UI_THEME = os.environ.get("UI_THEME", "saas")` + context processor `ui_theme` 주입 → 모든 Jinja2 템플릿에서 `{{ ui_theme }}` 참조 가능.
