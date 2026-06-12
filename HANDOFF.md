@@ -82,5 +82,6 @@
 - Windows `NUL` 파일 주의: `> /dev/null` 오용 시 `NUL` 파일 생성.
 - 환경: Node v24 / Python 3.14 / JDK 21 / Docker / WSL postgres / codegraph 0.9.9 / codex CLI 0.118.0.
 - **`/context-mode:context-mode` 수동 호출 금지** — PreToolUse hook이 이미 강제. 호출 시 ~500줄 skill 파일이 컨텍스트에 낭비로 로드됨.
+- **context-mode SessionStart 훅 비활성화** (Growth-47) — `hooks.json`에서 `SessionStart` → `_SessionStart_disabled`로 rename. ROUTING_BLOCK(2KB)+스냅샷(11KB) 제거. **플러그인 업데이트 시 원복** → `C:\Users\cubis\.claude\plugins\cache\context-mode\context-mode\<ver>\hooks\hooks.json`에서 재작업 필요. ctx_execute 도구는 정상 작동.
 - **Read → ctx_execute_file**: 편집 불필요한 파일 분석은 Read 대신 ctx_execute_file 사용 (Read는 전체 내용이 컨텍스트에 로드됨).
 - **50% 컨텍스트 도달 시 `/compact` 강제** (CLAUDE.md 규칙, 반드시 준수).
