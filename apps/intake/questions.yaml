@@ -348,7 +348,7 @@ questions:
         label: "자주 있어요 (주 1회 이상)"
       - value: yes_occasional
         label: "가끔 있어요 (월 1~3회)"
-      - value: no
+      - value: "no"
         label: "없어요"
       - value: unknown
         label: "잘 모르겠어요"
@@ -366,7 +366,7 @@ questions:
         label: "자주 있어요"
       - value: yes_sometimes
         label: "가끔 있어요"
-      - value: no
+      - value: "no"
         label: "없어요"
       - value: not_applicable
         label: "해당 없어요"
@@ -383,7 +383,7 @@ questions:
         label: "자주 있어요"
       - value: yes_sometimes
         label: "가끔 있어요"
-      - value: no
+      - value: "no"
         label: "없어요"
       - value: not_applicable
         label: "해당 없어요"
@@ -517,7 +517,7 @@ questions:
     required: false
     maps_to: overlay.vault_agent
     options:
-      - value: yes
+      - value: "yes"
         label: "가능해요"
       - value: no_policy
         label: "사내 보안 정책상 불가능해요"
