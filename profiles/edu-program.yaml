@@ -2,7 +2,7 @@ version: 1
 
 customer:
   slug: edu-program
-  display: "edu-program (대학 정부사업, 리허설)"
+  display: "대학 정부사업 관리 (시안)"   # 고객 노출 표시명 — 데모 네비/홈 헤딩에 그대로 렌더 (내부 slug 노출 금지)
   status: draft
   # PII 금지 — 실명·이메일·연락처 기재 없음
   industry: education
