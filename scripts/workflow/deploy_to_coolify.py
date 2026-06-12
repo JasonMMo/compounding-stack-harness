@@ -424,15 +424,21 @@ def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False) ->
     """Set docker_compose_domains via PATCH.
 
     Pitfall (runbook §4c): use docker_compose_domains array — NOT fqdn field (422).
+
+    Service name: read from infra/registry/<slug>.yaml preview.domain_service.
+    Falls back to "frontend" if key absent (lawfirm/shop backward-compat).
     """
+    # registry에서 domain_service 읽기 (없으면 "frontend" 디폴트)
+    service_name = _registry_uuid(slug, "domain_service") or "frontend"
+
     payload = {
         "docker_compose_domains": [
-            {"name": "frontend", "domain": f"https://{slug}.n9n.co.kr"}
+            {"name": service_name, "domain": f"https://{slug}.n9n.co.kr"}
         ]
     }
     _api_request("PATCH", f"/applications/{app_uuid}", token, body=payload, dry_run=dry_run)
     if not dry_run:
-        print(f"[deploy_to_coolify] domain patched: https://{slug}.n9n.co.kr → frontend.")
+        print(f"[deploy_to_coolify] domain patched: https://{slug}.n9n.co.kr → {service_name}.")
 
 
 # ---------------------------------------------------------------------------
