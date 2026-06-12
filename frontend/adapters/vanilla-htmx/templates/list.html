@@ -82,10 +82,12 @@
         </td>
         {% endfor %}
         <td class="td td--actions">
-          <a href="{{ url_for('entity_detail', entity_type=entity_type, entity_id=item.get('id', '')) }}"
-             class="btn btn-ghost btn-sm">편집</a>
-          <a href="{{ url_for('entity_delete_confirm', entity_type=entity_type, entity_id=item.get('id', '')) }}"
-             class="btn btn-ghost btn-sm btn-danger-ghost">삭제</a>
+          <div class="row-actions">
+            <a href="{{ url_for('entity_detail', entity_type=entity_type, entity_id=item.get('id', '')) }}"
+               class="btn btn-ghost btn-sm">편집</a>
+            <a href="{{ url_for('entity_delete_confirm', entity_type=entity_type, entity_id=item.get('id', '')) }}"
+               class="btn btn-ghost btn-sm btn-danger-ghost">삭제</a>
+          </div>
         </td>
       </tr>
       {% endfor %}
