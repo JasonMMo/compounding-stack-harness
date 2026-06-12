@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}{{ form_title }}{% endblock %}
+{% block content %}
+<article class="intake-card">
+  <hgroup>
+    <h1>{{ form_title }}</h1>
+    <p>{{ form_description }}</p>
+  </hgroup>
+
+  {% if edit_mode %}
+  <aside class="edit-notice">
+    <p>기존 제출 내용을 수정하고 있습니다. 수정 후 제출하시면 새 버전으로 저장됩니다.</p>
+  </aside>
+  {% endif %}
+
+  {% if errors %}
+  <div role="alert" class="error-box">
+    <ul>
+      {% for err in errors %}
+      <li>{{ err }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if edit_mode %}
+  <form method="post" action="/edit/{{ edit_token }}" novalidate>
+  {% else %}
+  <form method="post" action="/submit" novalidate>
+  {% endif %}
+    <!-- honeypot: 숨겨진 필드 — 봇이 채우면 제출 무시 -->
+    <input type="text" name="_hp" value="" autocomplete="off" tabindex="-1" aria-hidden="true" style="display:none">
+
+    {# 페르소나 섹션 show/hide 제어 스크립트용 #}
+    <div id="form-sections">
+
+    {# 섹션별로 질문 그룹화 #}
+    {% set ns = namespace(current_section="", current_persona="all") %}
+
+    {% for q in questions %}
+      {# 섹션 헤더 변경 감지 #}
+      {% if q.section != ns.current_section %}
+        {% if ns.current_section != "" %}</fieldset>{% endif %}
+        {% set ns.current_section = q.section %}
+        {% set ns.current_persona = q.persona %}
+        <fieldset class="form-section" data-persona="{{ q.persona }}"
+          {% if q.persona != 'all' %}style="display:none"{% endif %}>
+          <legend>{{ q.section }}</legend>
+      {% endif %}
+
+      <div class="field-group">
+        <label for="q_{{ q.id }}">
+          {{ q.label }}
+          {% if q.required %}<span aria-hidden="true" class="required-mark">*</span>{% endif %}
+        </label>
+        {% if q.hint %}
+        <small>{{ q.hint }}</small>
+        {% endif %}
+
+        {# text 입력 #}
+        {% if q.type == 'text' %}
+          {% if q.id == 'contact_email' %}
+          <input type="email" id="q_{{ q.id }}" name="{{ q.id }}"
+            value="{{ prefill.get(q.id, '') }}"
+            {% if q.required %}required{% endif %}
+            autocomplete="email">
+          {% else %}
+          <input type="text" id="q_{{ q.id }}" name="{{ q.id }}"
+            value="{{ prefill.get(q.id, '') }}"
+            {% if q.required %}required{% endif %}>
+          {% endif %}
+
+        {# textarea #}
+        {% elif q.type == 'textarea' %}
+          <textarea id="q_{{ q.id }}" name="{{ q.id }}"
+            {% if q.required %}required{% endif %}
+            rows="4">{{ prefill.get(q.id, '') }}</textarea>
+
+        {# select #}
+        {% elif q.type == 'select' %}
+          <select id="q_{{ q.id }}" name="{{ q.id }}"
+            {% if q.required %}required{% endif %}
+            {% if q.id == 'persona_role' %}onchange="switchPersona(this.value)"{% endif %}>
+            <option value="">-- 선택해 주세요 --</option>
+            {% for opt in q.options %}
+            <option value="{{ opt.value }}"
+              {% if prefill.get(q.id) == opt.value %}selected{% endif %}>
+              {{ opt.label }}
+            </option>
+            {% endfor %}
+          </select>
+
+        {# radio #}
+        {% elif q.type == 'radio' %}
+          <div class="radio-group" role="radiogroup" aria-labelledby="label_{{ q.id }}">
+            {% for opt in q.options %}
+            <label class="radio-label">
+              <input type="radio" name="{{ q.id }}" value="{{ opt.value }}"
+                {% if prefill.get(q.id) == opt.value %}checked{% endif %}
+                {% if q.id == 'persona_role' %}onchange="switchPersona(this.value)"{% endif %}
+                {% if q.required and loop.first %}required{% endif %}>
+              {{ opt.label }}
+            </label>
+            {% endfor %}
+          </div>
+
+        {# multiselect — checkbox 그룹 #}
+        {% elif q.type == 'multiselect' %}
+          <div class="checkbox-group" role="group" aria-labelledby="label_{{ q.id }}">
+            {% for opt in q.options %}
+            <label class="checkbox-label">
+              <input type="checkbox" name="{{ q.id }}" value="{{ opt.value }}"
+                {% if opt.value in prefill.get(q.id, []) %}checked{% endif %}>
+              {{ opt.label }}
+            </label>
+            {% endfor %}
+          </div>
+
+        {% endif %}
+      </div>{# end field-group #}
+    {% endfor %}
+
+    {# 마지막 열린 fieldset 닫기 #}
+    {% if ns.current_section != "" %}</fieldset>{% endif %}
+
+    </div>{# end form-sections #}
+
+    <div class="submit-row">
+      <button type="submit">
+        {% if edit_mode %}수정 내용 제출{% else %}상담 신청하기{% endif %}
+      </button>
+    </div>
+  </form>
+</article>
+
+<script>
+// persona_role 변경 시 해당 섹션만 표시 (vanilla JS, 의존성 없음)
+function switchPersona(role) {
+  // ceo / staff / it 중 하나, 또는 other
+  var sections = document.querySelectorAll('.form-section[data-persona]');
+  sections.forEach(function(sec) {
+    var p = sec.getAttribute('data-persona');
+    if (p === 'all') {
+      sec.style.display = '';
+    } else if (p === role) {
+      sec.style.display = '';
+    } else {
+      sec.style.display = 'none';
+    }
+  });
+}
+
+// 페이지 로드 시 prefill된 persona_role 적용
+(function() {
+  var roleSelect = document.querySelector('select[name="persona_role"]');
+  if (roleSelect && roleSelect.value) {
+    switchPersona(roleSelect.value);
+    return;
+  }
+  var roleRadio = document.querySelector('input[name="persona_role"]:checked');
+  if (roleRadio) {
+    switchPersona(roleRadio.value);
+  }
+})();
+</script>
+{% endblock %}
