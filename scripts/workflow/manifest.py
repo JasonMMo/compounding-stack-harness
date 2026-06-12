@@ -117,6 +117,7 @@ def build_manifest(
     profile_slug: str,
     entity_keys: list[str],
     catalog: dict[str, Any],
+    profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build a screen manifest dict from catalog entities.
 
@@ -128,6 +129,13 @@ def build_manifest(
         Ordered list of catalog entity keys to include.
     catalog:
         Full catalog dict as returned by render.py's load_catalog().
+    profile:
+        Optional full profile dict (loaded by scaffold.py). When provided,
+        ``customer.display``, ``domains[].display``, and
+        ``overlay.feedback_url`` are included in the manifest so the
+        frontend can render a personalised home screen.
+        When None (backward compat / manifest.py CLI), these keys are
+        omitted and the frontend falls back to generic labels.
 
     Returns
     -------
@@ -165,11 +173,53 @@ def build_manifest(
             "hidden_fields": hidden_fields,
         }
 
-    return {
+    manifest: dict[str, Any] = {
         "profile": profile_slug,
         "catalog_version": catalog_version,
         "entities": entities_out,
     }
+
+    # ── Profile-derived display data (optional — absent when profile not passed) ──
+    # Included when scaffold.py passes the full profile dict so the frontend
+    # can render a personalised home screen (customer heading + domain cards).
+    # Absent in manifest → frontend falls back to generic rendering (backward compat).
+    if profile is not None:
+        customer_block: dict[str, Any] = profile.get("customer") or {}
+        customer_display: str = customer_block.get("display", profile_slug)
+        manifest["customer_display"] = customer_display
+
+        # Build domain card list: slug + display + entity keys in that domain.
+        # display fallback: domain slug (hyphens→spaces, title-cased).
+        domain_cards: list[dict[str, Any]] = []
+        for domain_block in profile.get("domains") or []:
+            d_slug: str = domain_block.get("slug", "")
+            raw_display: str = domain_block.get("display", "")
+            if not raw_display:
+                raw_display = " ".join(
+                    w.capitalize() for w in d_slug.replace("-", " ").split()
+                )
+            # Only include entities that are present in this manifest.
+            d_entities: list[str] = [
+                k for k in (domain_block.get("entities") or [])
+                if k in entities_out
+            ]
+            if d_entities:  # skip domains whose entities were not scaffolded
+                domain_cards.append(
+                    {
+                        "slug": d_slug,
+                        "display": raw_display,
+                        "entities": d_entities,
+                    }
+                )
+        manifest["domains"] = domain_cards
+
+        # Optional feedback CTA URL (overlay.feedback_url).
+        overlay: dict[str, Any] = profile.get("overlay") or {}
+        feedback_url: str = overlay.get("feedback_url", "")
+        if feedback_url:
+            manifest["feedback_url"] = feedback_url
+
+    return manifest
 
 
 # ---------------------------------------------------------------------------
