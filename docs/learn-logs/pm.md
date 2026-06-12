@@ -4,6 +4,14 @@
 
 ## §1 — Growth 상세
 
+### Growth-37 (2026-06-12) — 웹 intake 질문 카탈로그 (`apps/intake/questions.yaml`)
+
+- **설계 동기**: 숨고/크몽 의뢰인이 계약 전 스스로 needs를 입력하는 웹폼 필요. PM delivery loop step 0~2 (Intake → Discover → Specify) 를 디지털화하여 담당자 개입 없이 `profiles/<slug>.yaml` 초안이 생성되게 한다.
+- **페르소나 분기 설계**: `persona_role` 질문(공통)으로 ceo/staff/it 를 분기 — 공통 8문항 + ceo 7문항 + staff 7문항 + it 8문항 = 총 30문항. 비기술 페르소나(ceo/staff)에게 stack/dialect 질문을 완전 차단했고, 반대로 it 페르소나에는 사업 예산·성공 기준 질문을 제외했다.
+- **탈출구 원칙**: 모든 select/radio 에 "잘 모르겠어요" 옵션을 포함 — 정보 부족이 이탈 원인이 되지 않도록. PII 최소화: 이메일만 필수, 전화·회사명은 optional.
+- **maps_to 커버리지**: profile 필수 필드 (`customer.industry`, `stack.frontend/backend`, `ddl.dialect`, `domains[].entities`, `datasource.*`, `billing.*`, `overlay.*`) 전부 매핑됨. needs_note 필드 (who/what/why/current/frequency/cost_of_pain) 도 전부 커버. phantom 키 0건 — `presets/ddl/catalog.yaml` 기준 도메인 slug 만 options 에 사용.
+- **단일 진실**: 질문 수정은 `apps/intake/questions.yaml` 만 고친다. engineer 는 이 파일을 읽어 폼을 렌더링하므로 PM 영역과 구현 영역이 분리됨.
+
 ### Growth-23 (2026-06-11) — 인터뷰 질문 시트 초안 + profile 역분석
 
 - **역분석 발견**: shop-demo (이커머스 2도메인 crm+sales) 와 smallmfg-demo (제조 4도메인 hr+hr-leave+approval+asset) 비교 → needs 는 도메인 선택 수 (2~4개) 로 표현된다. smallmfg escalation notes 가 "지금 안 푸는 needs" 를 명시한 점 — 인터뷰에서 미래 needs 포착 질문을 설계하는 근거.
