@@ -62,6 +62,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", "dev-insecure-change-me")
 
 BACKEND_BASE_URL = os.environ.get("BACKEND_BASE_URL", "http://localhost:8080").rstrip("/")
+UI_THEME = os.environ.get("UI_THEME", "saas")  # saas | public-sector
 
 
 # ---------------------------------------------------------------------------
@@ -99,6 +100,7 @@ def _inject_manifest_globals() -> dict:
         "g_domains": domains,
         "g_entity_keys": entity_keys,
         "g_authenticated": authenticated,
+        "ui_theme": UI_THEME,
     }
 
 # Load contract at startup (G-1 — reads wire-v1.yaml + codes.yaml)
