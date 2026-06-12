@@ -35,8 +35,10 @@ COPY frontend/adapters/vanilla-htmx/ ./
 # Copy design tokens and generate tokens.css at build time.
 # tokens.css is .gitignored (generated artifact) so it is absent from the git clone;
 # token_css_generator._tokens_dir() walks up from /app and finds /app/design/tokens/.
+# UI_THEME: "saas" (default, Pico+tokens) | "public-sector" (KRDS CDN, Pico skipped)
+ARG UI_THEME=saas
 COPY design/tokens/ ./design/tokens/
-RUN python build_tokens.py
+RUN python build_tokens.py --ui-theme $UI_THEME
 
 # Copy runtime contract dependency
 COPY middle/contract/ ./middle/contract/
