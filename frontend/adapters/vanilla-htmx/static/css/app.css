@@ -311,10 +311,11 @@ body {
   box-shadow: none;
 }
 
-/* Hostinger-style light sidebar link overrides */
+/* ── Hostinger-style sidebar: fill-only active, tree indent, no left-bar ── */
 .app-sidebar .sidebar-nav__link {
   color: var(--sidebar-text);
-  border-radius: var(--radius-control);
+  border-radius: 6px;
+  padding-left: 20px;           /* 2차 메뉴 들여쓰기 — 트리 구조 */
 }
 .app-sidebar .sidebar-nav__link:hover {
   background: var(--sidebar-item-hover-bg);
@@ -325,8 +326,21 @@ body {
   color: var(--sidebar-item-active-text);
   font-weight: var(--font-weight-heading);
 }
+/* Hostinger: active = fill only, left-bar 없음 */
 .app-sidebar .sidebar-nav__link--active::before {
-  background: var(--sidebar-accent-bar);
+  display: none;
+}
+/* 트리 왼쪽 연결선 힌트 */
+.app-sidebar .sidebar-nav {
+  border-left: 2px solid var(--color-border);
+  margin-left: 20px;
+  padding-left: 0;
+}
+.app-sidebar .sidebar-nav__link-initial {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  flex-shrink: 0;
 }
 
 /* 접힘 상태 텍스트/레이블 숨김 */
@@ -735,10 +749,10 @@ body {
 }
 
 .table-wrapper {
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  background: #FFFFFF;
+  border: 1px solid #E9ECEF;         /* Hostinger: 연한 테두리 */
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);  /* 매우 부드러운 그림자 */
   overflow-x: auto;
   margin-bottom: var(--space-stack-md);
 }
@@ -751,14 +765,15 @@ body {
 }
 
 .th {
-  background: var(--color-surface-3);
+  background: #F8FAFC;          /* Hostinger: 거의 흰색에 가까운 연한 배경 */
   color: var(--color-text-2);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-label);
-  padding: var(--space-inset-sm) var(--space-inset-md);
-  border-bottom: 1px solid var(--color-border-strong);
+  font-weight: var(--font-weight-heading);  /* 헤더는 굵게 */
+  padding: 10px var(--space-inset-md);
+  border-bottom: 2px solid #E9ECEF;  /* 헤더 하단 구분선 강조 */
   text-align: left;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 .th--actions { text-align: right; }
@@ -774,12 +789,14 @@ body {
 .th-sort-link:hover { color: var(--color-primary); }
 
 .td {
-  padding: var(--space-inset-xs) var(--space-inset-md);
-  border-bottom: 1px solid var(--color-border);
+  padding: 12px var(--space-inset-md);  /* Hostinger: 충분한 행 높이 */
+  border-bottom: 1px solid #F0F0F0;     /* 연한 행 구분선 */
   vertical-align: middle;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 320px;
+  color: var(--color-text-1);
+  font-size: var(--font-size-md);
 }
 
 /* 숫자 컬럼 우측 정렬 (spec §5-3) */
@@ -798,9 +815,10 @@ body {
   justify-content: flex-end;
 }
 
-.tr:hover .td { background: var(--color-primary-subtle); }
-.tr--alt .td { background: var(--color-surface-2); }
-.tr--alt:hover .td { background: var(--color-primary-subtle); }
+/* Hostinger: hover = 연회색, 줄무늬 없음 */
+.tr:hover .td { background: #F8FAFC; }
+.tr--alt .td  { background: #FFFFFF; }   /* 줄무늬 제거 */
+.tr--alt:hover .td { background: #F8FAFC; }
 
 .text-empty { color: var(--color-text-3); }
 .text-caption { font-size: var(--font-size-xs); color: var(--color-text-3); }
