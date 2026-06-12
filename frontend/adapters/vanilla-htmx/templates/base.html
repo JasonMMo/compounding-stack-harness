@@ -20,7 +20,7 @@
   {% block nav %}
   <nav class="top-nav" aria-label="주 탐색">
     <div class="nav-brand">
-      <a href="{{ url_for('index') }}" class="nav-logo">Compounding Stack</a>
+      <a href="{{ url_for('home') }}" class="nav-logo">{{ g_customer_display or 'Compounding Stack' }}</a>
     </div>
     <div class="nav-actions">
       {% if session.get('user_id') %}
@@ -47,6 +47,11 @@
 
   <footer class="app-footer">
     <span class="footer-version">wire contract {{ wire_version | default('unknown') }}</span>
+    {% if g_feedback_url %}
+    <span class="footer-sep" aria-hidden="true"> · </span>
+    <a href="{{ g_feedback_url }}" target="_blank" rel="noopener noreferrer"
+       class="footer-feedback-link">추가 요청·의견 남기기</a>
+    {% endif %}
   </footer>
 
   {% block scripts %}{% endblock %}
