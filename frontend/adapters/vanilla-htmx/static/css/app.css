@@ -171,6 +171,7 @@ body {
 /* ── Sidebar (spec §2-3, §3) ─────────────────────────────────────────────── */
 
 .app-sidebar {
+  display: block;               /* Pico <nav> 가 flex row로 덮는 것을 차단 */
   width: var(--space-sidebar-width);
   background: var(--sidebar-bg);
   border-right: 1px solid var(--sidebar-border);
@@ -189,6 +190,7 @@ body {
 
 /* 사이드바 그룹 */
 .sidebar-group {
+  display: block;               /* Pico 상속 flex 차단 */
   margin-bottom: var(--space-stack-md);
 }
 
@@ -251,9 +253,17 @@ body {
 }
 
 .sidebar-nav {
+  display: flex;
+  flex-direction: column;       /* 2차 메뉴 항목 세로 배열 */
   list-style: none;
   margin: 0;
   padding: 0;
+  gap: 0;
+}
+
+.sidebar-nav__item {
+  display: block;               /* Pico <li> 오버라이드 */
+  width: 100%;
 }
 
 .sidebar-nav__link {
