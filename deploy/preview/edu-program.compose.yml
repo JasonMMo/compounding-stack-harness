@@ -39,7 +39,7 @@ services:
       context: .
       dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
       args:
-        UI_THEME: saas
+        UI_THEME: public-sector
     environment:
       # Domain routing: set via Coolify API PATCH docker_compose_domains
       # [{"name":"frontend","domain":"https://edu-program.n9n.co.kr"}]
