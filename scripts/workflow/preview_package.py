@@ -36,6 +36,19 @@ from pathlib import Path
 # Repo root: this file is at scripts/workflow/preview_package.py
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+
+def _get_ui_theme(slug: str) -> str:
+    """Read stack.ui_theme from profiles/<slug>.yaml (default: 'saas')."""
+    try:
+        import yaml  # type: ignore[import]
+        profile_path = REPO_ROOT / "profiles" / f"{slug}.yaml"
+        if not profile_path.exists():
+            return "saas"
+        data = yaml.safe_load(profile_path.read_text(encoding="utf-8"))
+        return (data or {}).get("stack", {}).get("ui_theme", "saas")
+    except Exception:
+        return "saas"
+
 # ---------------------------------------------------------------------------
 # Docker-compose template
 # ---------------------------------------------------------------------------
@@ -76,6 +89,8 @@ services:
     build:
       context: .
       dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
+      args:
+        UI_THEME: {ui_theme}
     environment:
       # Domain routing: set via Coolify API PATCH docker_compose_domains
       # [{{"name":"frontend","domain":"https://{slug}.n9n.co.kr"}}]
@@ -141,6 +156,8 @@ services:
     build:
       context: .
       dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
+      args:
+        UI_THEME: {ui_theme}
     environment:
       # Domain routing: set via Coolify API PATCH docker_compose_domains
       # [{{"name":"frontend","domain":"https://{slug}.n9n.co.kr"}}]
@@ -203,6 +220,8 @@ services:
     build:
       context: {repo_root_posix}
       dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
+      args:
+        UI_THEME: {ui_theme}
     image: compounding-frontend-{slug}:local
     environment:
       FRONTEND_PORT: "5000"
@@ -259,16 +278,21 @@ def _utf8_env() -> dict:
 # Compose writer
 # ---------------------------------------------------------------------------
 
-def write_coolify_compose(slug: str, out_root: Path | None = None) -> Path:
+def write_coolify_compose(slug: str, out_root: Path | None = None, ui_theme: str | None = None) -> Path:
     """Write deploy/preview/<slug>.compose.yml for Coolify deployment.
 
     If out/<slug>/seed-data.json exists, uses the seed-aware template which adds:
       - backend SEED_FILE env var pointing to /data/seed/seed-data.json
       - backend bind-mount: /data/coolify/manifests/<slug>/seed-data.json (ro)
     Otherwise uses the no-seed template (backward-compatible — lawfirm/shop unaffected).
+
+    ui_theme: read from profile stack.ui_theme if not provided (default: "saas").
     """
     deploy_dir = REPO_ROOT / "deploy" / "preview"
     deploy_dir.mkdir(parents=True, exist_ok=True)
+
+    if ui_theme is None:
+        ui_theme = _get_ui_theme(slug)
 
     # Detect seed file existence to select template
     _out = out_root if out_root is not None else (REPO_ROOT / "out")
@@ -281,22 +305,28 @@ def write_coolify_compose(slug: str, out_root: Path | None = None) -> Path:
     else:
         template = _COOLIFY_COMPOSE_TEMPLATE_NO_SEED
 
-    compose_content = template.format(slug=slug)
+    compose_content = template.format(slug=slug, ui_theme=ui_theme)
+    if ui_theme != "saas":
+        print(f"[preview_package] ui_theme={ui_theme} — KRDS CDN build arg injected into frontend.")
 
     compose_path = deploy_dir / f"{slug}.compose.yml"
     compose_path.write_text(compose_content, encoding="utf-8")
     return compose_path
 
 
-def write_compose(slug: str, out_root: Path, frontend_port: int) -> Path:
+def write_compose(slug: str, out_root: Path, frontend_port: int, ui_theme: str | None = None) -> Path:
     out_dir = out_root / slug
     manifest_host = (out_dir / "screen-manifest.json").resolve()
+
+    if ui_theme is None:
+        ui_theme = _get_ui_theme(slug)
 
     compose_content = _COMPOSE_TEMPLATE.format(
         slug=slug,
         repo_root_posix=REPO_ROOT.as_posix(),
         manifest_host_posix=manifest_host.as_posix(),
         frontend_port=frontend_port,
+        ui_theme=ui_theme,
     )
 
     compose_path = out_dir / "docker-compose.yml"
