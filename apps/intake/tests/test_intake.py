@@ -11,6 +11,7 @@ apps/intake/tests/test_intake.py — intake 앱 pytest 스모크 테스트
   7. GET /health → 200
   8. [BLOCK-2] path traversal → 400/404
   9. [FIX-1] admin lockout — 10회 실패 후 429
+ 10. GET /letter/{token} 정상 서빙 / 404 / traversal 차단
 
 실행:
   python -m pytest apps/intake -q
@@ -337,3 +338,45 @@ def test_admin_lockout_after_10_failures(client):
 
     # 정리: lockout 상태 초기화 (다른 테스트 영향 방지)
     intake_app._ADMIN_FAIL[lockout_ip] = []
+
+
+# ---------------------------------------------------------------------------
+# 테스트 10: GET /letter/{token} — 정상 서빙 / 404 / traversal 차단
+# ---------------------------------------------------------------------------
+
+def test_letter_serve_ok(client, tmp_data_dir):
+    """letters/ 에 파일을 직접 넣고 /letter/{token} 이 200 + 본문을 반환한다."""
+    letters_dir = tmp_data_dir / "letters"
+    letters_dir.mkdir(parents=True, exist_ok=True)
+
+    token = "testTokenABC1234xyz"  # _LETTER_TOKEN_RE 에 맞는 토큰
+    content = "<p>안내문 본문입니다.</p>"
+    (letters_dir / f"{token}.html").write_text(content, encoding="utf-8")
+
+    resp = client.get(f"/letter/{token}")
+    assert resp.status_code == 200, f"예상 200, 실제 {resp.status_code}"
+    # 본문 HTML 이 포함돼야 한다
+    assert "안내문 본문입니다" in resp.text
+    # base 템플릿 요소 확인
+    assert "Pretendard" in resp.text or "pico" in resp.text.lower()
+
+
+def test_letter_not_found(client):
+    """존재하지 않는 토큰은 404 를 반환한다."""
+    resp = client.get("/letter/nonExistentToken99X")
+    assert resp.status_code == 404, f"예상 404, 실제 {resp.status_code}"
+
+
+def test_letter_token_traversal_rejected(client):
+    """경로 traversal 시도 토큰은 404 로 차단된다."""
+    # 점-점 슬래시: FastAPI 라우터가 먼저 분해하지만 포맷 검증에서도 차단
+    resp = client.get("/letter/../../etc/passwd")
+    assert resp.status_code in (404, 422), f"traversal이 허용됨: {resp.status_code}"
+
+    # _LETTER_TOKEN_RE 불일치 — 특수문자 포함
+    resp2 = client.get("/letter/<bad>token!")
+    assert resp2.status_code in (404, 422), f"특수문자 토큰이 허용됨: {resp2.status_code}"
+
+    # 너무 짧은 토큰 (9자 미만)
+    resp3 = client.get("/letter/abc")
+    assert resp3.status_code in (404, 422), f"짧은 토큰이 허용됨: {resp3.status_code}"
