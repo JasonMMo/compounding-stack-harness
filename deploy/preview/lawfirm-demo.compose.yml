@@ -2,7 +2,7 @@
 # Coolify dockercompose preview — profile: lawfirm-demo
 # Build context: repo root (Coolify clones whole repo, build context = clone root)
 #
-# Domain: SERVICE_FQDN_FRONTEND magic env → Coolify traefik auto-routing
+# Domain: set via Coolify API PATCH docker_compose_domains (not SERVICE_FQDN_* env)
 # Manifest: server-side persistent file mounted read-only into frontend
 #
 # Coolify deployment:
@@ -10,7 +10,7 @@
 #   docker_compose_location: /deploy/preview/lawfirm-demo.compose.yml
 #   git_repository: git@github.com:JasonMMo/compounding-stack-harness.git
 #   git_branch: master
-#   private_key_uuid: <coolify deploy key uuid>
+#   private_key_uuid: s127pafarr46wlu1r2mre2te
 
 services:
 
