@@ -34,6 +34,7 @@
 | shop-demo.n9n.co.kr (리허설) | 2026-06-12 | deploy (반복 가능성 입증) | **검증 PASS** — 동일 경로 2번째 반복. /login 200, TLS CN=shop-demo, /health 200. 앱 UUID cn56k6xtmhp2njv5ed31xv7t. 런북 신설 | LLM ~$0.3, infra $0 (기존 VPS) |
 | shop-demo.n9n.co.kr (자동화 검증) | 2026-06-12 | deploy (멱등 재배포 — 스크립트) | **PASS** — `deploy_to_coolify.py --slug shop-demo` 단일 명령. 빌드 finished, /login 200, /health 200, TLS CN PASS. preview_package.py --coolify 구조 diff PASS. | LLM ~$0.3, infra $0 |
 | shop-demo.n9n.co.kr (갭1·갭2 자동화) | 2026-06-12 | registry 자동 merge + webhook 조사 | **PASS (갭1)** — 레지스트리 merge(secret_ref/tls/수동 필드 보존, deployed_at=Coolify finished_at). **CTO 컨펌 대기 (갭2b)** — webhook 조사: repo-level 매칭 리스크 확인, `--setup-webhook` 계획 출력 PASS. | LLM ~$0.4, infra $0 |
+| Caddy vs Coolify spike | 2026-06-12 | 평가 (코드 레벨 + 파일 준비) | 함정 5/5 해소 확인. API 호출 6~8 → 1~2. wildcard TLS cert 발급 0. 권고: 현 시점 Coolify 유지 (CEO 대시보드 상실 비용 > 함정 캡슐화 현상태). Docker 오프라인으로 컨테이너 실행 미완 — spike 파일 준비 완료. | LLM ~$0.3, infra $0 |
 
 ### Growth-35 provisioning 1차 (2026-06-11) — preview VPS 부트스트랩
 
@@ -146,3 +147,18 @@
 - **shop-demo 멱등 재배포 검증**: `deploy_to_coolify.py --slug shop-demo` → build finished, /login 200, /health 200, TLS CN=shop-demo.n9n.co.kr PASS. 기존 2 테넌트 무손상.
 - **커밋**: `28c8a49` (preview_package.py), `3575569` (deploy_to_coolify.py), `e11ae34` (runbook).
 - **교훈 (1줄)**: 신규 slug 배포 전체 플로우 = `preview_package.py --profile <slug> --coolify` → compose commit+push → `deploy_to_coolify.py --slug <slug> --dry-run` → `deploy_to_coolify.py --slug <slug>` — 이게 단일 진실.
+
+### Growth-35 Caddy spike (2026-06-12) — Coolify 대체재 평가
+
+- **목적**: Coolify 4.1.2 함정 5개 실측 기준선으로 Caddy+compose 공정 비교.
+- **spike 파일**: `out/spike-caddy/` (docker-compose.yml + Caddyfile + run-spike.ps1). Docker Desktop 오프라인으로 컨테이너 실행 미완 — 코드 레벨 검증으로 대체.
+- **주요 발견**:
+  - 함정 5/5 모두 Caddy+compose 에서 구조적으로 해소 (F-1/F-2: Coolify 전용 API 없음, F-3: env 조회 경로 없음, F-4: 재기동 rotate, F-5: compose project 개별 재배포)
+  - API 호출 수: 6~8 → 1~2로 축소
+  - wildcard TLS (DNS-01 + Cloudflare): 신규 slug cert 발급 0회 (xcaddy 커스텀 빌드 필요)
+  - harness artifact(Dockerfile/compose) 코드 변경 0 — deploy 스크립트 1개 교체만
+  - CEO 대시보드 상실 = 가장 큰 비기술적 비용 (Caddy 에 UI 없음)
+- **권고**: 현 시점 Coolify 유지. 근거 — 함정 5개가 deploy_to_coolify.py 로 이미 캡슐화된 상태에서, CEO 대시보드 상실 + xcaddy 커스텀 빌드 + 15~30s cutover 다운타임 비용이 더 크다.
+- **전환 트리거**: 테넌트 ≥ 5 개 AND SECRET_KEY rotate 월 1회 이상 필요 AND Coolify 4.x 가 F-4/F-5 미해소 확인 시.
+- **전체 비교 문서**: `out/analysis/spike-caddy-vs-coolify.md` (gitignored)
+- **교훈 (1줄)**: 함정이 코드 레벨로 캡슐화된 뒤에는, 전환 비용 계산을 "남은 함정" 이 아닌 "캡슐화 유지 비용 vs 전환 후 ops 비용" 으로 해야 한다.
