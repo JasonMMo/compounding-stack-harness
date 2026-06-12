@@ -1,0 +1,87 @@
+<!--
+  krds-side-nav.html — KRDS 공식 사이드 네비게이션 스니펫 (v1.1.0)
+  출처: krds-uiux/html/code/side_navigation.html
+  구조: 2Depth toggle → 3Depth toggle-popup → 4Depth link (최대 4단계)
+  동작: krds.min.js 가 아코디언 토글 자동 처리
+  비교: 우리 Growth-39 사이드바(CSS+localStorage) vs KRDS LNB(krds.min.js)
+        public-sector 고객 → KRDS LNB 권고
+        saas 고객 → Growth-39 사이드바 유지
+-->
+
+<!--
+  CDN (base.html 또는 layout에 1회만 삽입):
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/krds-uiux@1.1.0/resources/cdn/krds.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/krds-uiux@1.1.0/resources/cdn/krds.min.js"></script>
+-->
+
+<!-- side navigation -->
+<nav class="krds-side-navigation">
+  <h2 class="lnb-tit">메뉴</h2>
+  <!-- lnb-list -->
+  <ul class="lnb-list" role="menubar">
+
+    <!-- 2Depth: 하위 메뉴 있는 항목 (toggle) -->
+    <li class="lnb-item active" role="none">
+      <button type="button" class="lnb-btn lnb-toggle active"
+              role="menuitem" aria-controls="lnbmenu-1" aria-expanded="true">
+        도메인1
+      </button>
+      <!-- lnb-submenu (3Depth) -->
+      <div class="lnb-submenu">
+        <ul id="lnbmenu-1" role="menu">
+
+          <!-- 3Depth: 하위 있는 경우 (popup) -->
+          <li class="lnb-subitem" role="none">
+            <button type="button" class="lnb-btn lnb-toggle-popup"
+                    role="menuitem" aria-controls="lnbmenu-2"
+                    aria-expanded="false" aria-haspopup="true">
+              서브메뉴
+            </button>
+            <!-- 4Depth -->
+            <div class="lnb-submenu-lv2" id="lnbmenu-2" role="menu">
+              <button type="button" class="lnb-btn-tit">서브 타이틀</button>
+              <ul>
+                <li role="none"><a href="#" class="lnb-btn" role="menuitem">항목1</a></li>
+                <li role="none"><a href="#" class="lnb-btn" role="menuitem">항목2</a></li>
+              </ul>
+            </div>
+            <!-- //4Depth -->
+          </li>
+
+          <!-- 3Depth: 링크 항목 (active = aria-current="page") -->
+          <li class="lnb-subitem active" role="none">
+            <a href="#" class="lnb-btn lnb-link" role="menuitem" aria-current="page">
+              현재 페이지
+            </a>
+          </li>
+          <li class="lnb-subitem" role="none">
+            <a href="#" class="lnb-btn lnb-link" role="menuitem">다른 페이지</a>
+          </li>
+
+        </ul>
+      </div>
+      <!-- //lnb-submenu -->
+    </li>
+
+    <!-- 2Depth: 닫힌 항목 -->
+    <li class="lnb-item" role="none">
+      <button type="button" class="lnb-btn lnb-toggle"
+              role="menuitem" aria-controls="lnbmenu-3" aria-expanded="false">
+        도메인2
+      </button>
+      <div class="lnb-submenu">
+        <ul id="lnbmenu-3" role="menu">
+          <li class="lnb-subitem" role="none">
+            <a href="#" class="lnb-btn lnb-link" role="menuitem">항목A</a>
+          </li>
+          <li class="lnb-subitem" role="none">
+            <a href="#" class="lnb-btn lnb-link" role="menuitem">항목B</a>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+  </ul>
+  <!-- //lnb-list -->
+</nav>
+<!-- //side navigation -->
