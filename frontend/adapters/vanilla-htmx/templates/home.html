@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ customer_display or '홈' }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{{ customer_display or '홈' }}</h1>
+</div>
+
+{% if domains %}
+<section aria-label="도메인 목록">
+  <div class="home-domain-grid">
+    {% for domain in domains %}
+    <div class="card home-domain-card">
+      <h2 class="home-domain-title">{{ domain.display }}</h2>
+      <ul class="home-entity-list" aria-label="{{ domain.display }} 화면 목록">
+        {% for entity_key in domain.entities %}
+        <li class="home-entity-item">
+          <a href="{{ url_for('entity_list', entity_type=entity_key) }}"
+             class="btn btn-ghost btn-sm home-entity-link">
+            {{ entity_key | replace('-', ' ') | title }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+{# Fallback: no manifest or no domains — direct link to generic entity list #}
+<div class="empty-state" role="status">
+  <p class="empty-state__message">도메인 정보가 없습니다. 관리자에게 문의하세요.</p>
+</div>
+{% endif %}
+
+{% if feedback_url %}
+<div class="feedback-cta" role="complementary" aria-label="피드백">
+  <a href="{{ feedback_url }}" target="_blank" rel="noopener noreferrer"
+     class="btn btn-secondary btn-md">
+    추가 요청·의견 남기기
+  </a>
+</div>
+{% endif %}
+{% endblock %}
