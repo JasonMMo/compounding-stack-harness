@@ -33,6 +33,10 @@ domains:
     display: 학생 명단 및 지원·선발 관리
     entities: [contact, lead, activity]
     seen_at: 2026-06-12
+    entity_labels:
+      contact: 학생
+      lead: 지원 접수
+      activity: 심사 기록
     # contact: 학생 명단 (contact_type overlay → student, overlays 섹션 참고)
     # lead: 지원 접수(new) → 검토(contacted) → 합격(converted) / 불합격(disqualified)
     # activity: 심사 활동 기록 (type=meeting/note)
@@ -42,6 +46,9 @@ domains:
     display: 사업 참여 학생 배정 관리
     entities: [project, resource-assignment]
     seen_at: 2026-06-12
+    entity_labels:
+      project: 사업
+      resource-assignment: 참여 배정
     # project: 정부사업 1건을 project 로 모델링
     # resource-assignment: 합격 contact(student) → 사업 project 에 배정
     #   (employee_id 대신 contact_id, cross-domain app layer 처리)
@@ -51,6 +58,11 @@ domains:
     display: 사업비 집행 및 업체 지급
     entities: [account, journal-entry, invoice, payment]
     seen_at: 2026-06-12
+    entity_labels:
+      account: 예산 세목
+      journal-entry: 집행 내역
+      invoice: 청구서
+      payment: 지급
     # account: 예산 세목 코드 (type=expense)
     # invoice: 업체 청구서 수취 (counterparty_id → procurement/vendor, AP 방향)
     # payment: 업체 지급 기록
@@ -62,18 +74,28 @@ domains:
     display: 거래 업체 관리
     entities: [vendor]
     seen_at: 2026-06-12
+    entity_labels:
+      vendor: 거래 업체
     # vendor: 사업비 지급 대상 업체 마스터
 
   - slug: asset
     display: 교육 기자재 관리
     entities: [asset, asset-category, maintenance-record]
     seen_at: 2026-06-12
+    entity_labels:
+      asset: 기자재
+      asset-category: 기자재 분류
+      maintenance-record: 점검 이력
     # 교육 기자재 장비 관리 (Q6). asset-category 에 '교육기자재' 코드 추가.
 
   - slug: document
     display: 사업 서류 관리
     entities: [document, document-version, document-category]
     seen_at: 2026-06-12
+    entity_labels:
+      document: 서류
+      document-version: 서류 버전
+      document-category: 서류 분류
     # 증빙·공문 보관. document-category 에 '증빙서류' 코드 추가 (overlay).
     # document-version 으로 공유 버전 혼란 해결.
 
@@ -81,6 +103,9 @@ domains:
     display: 사업 현황 보고
     entities: [report-definition, report-output]
     seen_at: 2026-06-12
+    entity_labels:
+      report-definition: 보고서 양식
+      report-output: 보고서
     # 정부사업 정기 보고.
 
 # ── Overlays ─────────────────────────────────────────
