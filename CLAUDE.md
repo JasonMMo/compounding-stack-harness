@@ -99,6 +99,7 @@
 ## 7. 작업 시 체크리스트
 
 1. 다룬 도메인 지식이 catalog/preset/seed/agent 에 환류되었는가?
+   - **deep-research 결과**: `out/` 초안 후 반드시 `knowledge/wiki/` 환류 (`out/`은 gitignored — 소멸 위험).
 2. 새 구현 패턴이 어댑터/템플릿/contract 로 등록되었는가?
 3. `learn-log.md` 에 1줄 기록되었는가?
 4. **이번 작업의 비용 영향이 측정되었는가?** (LLM 호출 추가, infra 의존 추가 시)
