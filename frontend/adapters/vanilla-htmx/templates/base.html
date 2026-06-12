@@ -15,14 +15,18 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
   <!-- htmx: loaded from CDN for zero-build simplicity; pin to a specific version for production -->
   <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2uH1/8X4vFg8FVGerPTuRNeIPQMNqNZI5cN" crossorigin="anonymous"></script>
+  {% if g_authenticated %}
+  <!-- sidebar.js: 인증 상태에서만 로드 — 비인증 페이지에 JS 없음 -->
   <script src="{{ url_for('static', filename='js/sidebar.js') }}" defer></script>
+  {% endif %}
 </head>
-<body class="app-layout">
+<body class="{{ 'app-layout' if g_authenticated else 'app-layout-minimal' }}">
 
   <!-- 스킵 링크 -->
   <a href="#main" class="skip-link">본문 바로가기</a>
 
-  <!-- 헤더 -->
+  {% if g_authenticated %}
+  {# ── 인증 셸 헤더: 햄버거 + 로고 + 아바타 + 로그아웃 ────────────────── #}
   {% block header %}
   <header class="app-header" role="banner">
     <div class="header-start">
@@ -39,7 +43,6 @@
       </a>
     </div>
     <div class="header-actions">
-      {% if session.get('user_id') %}
       <span class="header-user" aria-label="로그인 사용자">
         <span class="header-user__avatar" aria-hidden="true">
           {{ session.get('user_id')[0] | upper }}
@@ -49,7 +52,6 @@
       <form method="post" action="{{ url_for('logout') }}" style="display:inline">
         <button type="submit" class="btn btn-ghost btn-sm">로그아웃</button>
       </form>
-      {% endif %}
       <div class="persona-switcher">
         <label for="persona-select" class="sr-only">페르소나</label>
         <select id="persona-select" class="persona-select"
@@ -63,10 +65,9 @@
   </header>
   {% endblock %}
 
-  <!-- 바디 (사이드바 + 메인) -->
+  {# ── 인증 바디: 사이드바 + 메인 ─────────────────────────────────────── #}
   <div class="app-body" id="app-body">
 
-    <!-- 사이드바 -->
     {% block sidebar %}
     <nav class="app-sidebar" id="app-sidebar" aria-label="주 탐색">
       {% set domains = g_domains if g_domains else [] %}
@@ -81,11 +82,9 @@
                class="sidebar-nav__link {% if entity_type is defined and entity_type == entity_key %}sidebar-nav__link--active{% endif %}"
                {% if entity_type is defined and entity_type == entity_key %}aria-current="page"{% endif %}
                title="{{ entity_key | replace('-', ' ') | title }}">
-              <!-- 접힘 모드용 첫글자 아바타 -->
               <span class="sidebar-nav__link-initial" aria-hidden="true">
                 {{ entity_key[0] | upper }}
               </span>
-              <!-- 전개 모드용 텍스트 -->
               <span class="sidebar-nav__link-text">
                 {{ entity_key | replace('-', ' ') | title }}
               </span>
@@ -123,7 +122,6 @@
     </nav>
     {% endblock %}
 
-    <!-- 메인 콘텐츠 -->
     <main class="app-main" id="main" role="main">
       {% block content %}{% endblock %}
     </main>
@@ -133,7 +131,6 @@
   <!-- 모바일 backdrop -->
   <div class="drawer-backdrop" id="drawer-backdrop" aria-hidden="true"></div>
 
-  <!-- 푸터 -->
   <footer class="app-footer" role="contentinfo">
     <span class="footer-version">wire contract {{ wire_version | default('unknown') }}</span>
     {% if g_feedback_url %}
@@ -142,6 +139,26 @@
        class="footer-feedback-link">추가 요청·의견 남기기</a>
     {% endif %}
   </footer>
+
+  {% else %}
+  {# ── 비인증 레이아웃: 최소 헤더만, 사이드바·햄버거·도메인 메뉴 없음 ─── #}
+  {# {% block content %} 는 위 인증 분기에 있으므로 여기선 super()로 호출 불가. #}
+  {# 비인증 페이지(login)는 아래 include 패턴으로 main을 직접 렌더한다.        #}
+  <header class="app-header-minimal" role="banner">
+    <span class="app-logo-minimal">{{ g_customer_display or 'Compounding Stack' }}</span>
+  </header>
+
+  <main class="app-main-minimal" id="main" role="main">
+    {# NOTE: 비인증 경로에서 block content 는 렌더되지 않는다.               #}
+    {# login.html 은 unauthenticated_content 블록을 사용한다 (아래 참조).    #}
+    {% block unauthenticated_content %}{% endblock %}
+  </main>
+
+  <footer class="app-footer" role="contentinfo">
+    <span class="footer-version">wire contract {{ wire_version | default('unknown') }}</span>
+  </footer>
+
+  {% endif %}
 
   {% block scripts %}{% endblock %}
 </body>
