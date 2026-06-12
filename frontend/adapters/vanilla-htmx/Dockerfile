@@ -37,6 +37,7 @@ COPY frontend/adapters/vanilla-htmx/ ./
 # token_css_generator._tokens_dir() walks up from /app and finds /app/design/tokens/.
 # UI_THEME: "saas" (default, Pico+tokens) | "public-sector" (KRDS CDN, Pico skipped)
 ARG UI_THEME=saas
+ENV UI_THEME=$UI_THEME
 COPY design/tokens/ ./design/tokens/
 RUN python build_tokens.py --ui-theme $UI_THEME
 
