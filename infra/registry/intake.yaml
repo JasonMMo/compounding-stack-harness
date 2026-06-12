@@ -7,9 +7,9 @@ contact:
   handle: ops
 preview:
   subdomain: intake.n9n.co.kr
-  url: null
-  coolify_project: null
-  coolify_app: null
+  url: https://intake.n9n.co.kr
+  coolify_project: lhwlzbgnyfo250h1ulofmef1
+  coolify_app: qqlzn5zmmen1t1lpri4wxo0m
   coolify_env: production
   deploy_key_github_id: 154181975
   coolify_privkey_uuid: s127pafarr46wlu1r2mre2te
@@ -19,8 +19,8 @@ preview:
   manifest_server_path: null
   # compose 서비스명 = intake (lawfirm/shop의 frontend와 다름 — domain PATCH 대상)
   domain_service: intake
-  status: provisioning
-  deployed_at: null
+  status: live
+  deployed_at: "2026-06-12"
 production:
   install_method: null
   installed_at: null
