@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Admin — 의뢰인 목록{% endblock %}
+{% block content %}
+<article class="intake-card admin-card">
+  <h1>의뢰인 목록</h1>
+
+  {% if clients %}
+  <table>
+    <thead>
+      <tr>
+        <th>이메일</th>
+        <th>회사</th>
+        <th>업종</th>
+        <th>최근 제출일</th>
+        <th>revision</th>
+        <th>상세</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in clients %}
+      <tr>
+        <td>{{ c.email }}</td>
+        <td>{{ c.company or '—' }}</td>
+        <td>{{ c.industry or '—' }}</td>
+        <td>{{ c.updated_at or '—' }}</td>
+        <td>{{ c.rev_count }}</td>
+        <td><a href="/admin?detail={{ c.client_id }}">보기</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>아직 제출된 의뢰가 없습니다.</p>
+  {% endif %}
+
+  {% if detail %}
+  <hr>
+  <h2>상세: {{ detail.meta.email }}</h2>
+  <p>client_id: <code>{{ detail.meta.client_id }}</code></p>
+  <p>생성일: {{ detail.meta.created_at }} / 최근 수정: {{ detail.meta.updated_at }}</p>
+  <p>revision 수: {{ detail.revisions | length }}</p>
+
+  {% for rev in detail.revisions | reverse %}
+  <details {% if loop.first %}open{% endif %}>
+    <summary>Revision: {{ rev.ts }}</summary>
+    <table>
+      <thead>
+        <tr><th>질문 ID</th><th>답변</th></tr>
+      </thead>
+      <tbody>
+        {% for k, v in rev.answers.items() %}
+        <tr>
+          <td><code>{{ k }}</code></td>
+          <td>
+            {% if v is iterable and v is not string %}
+              {{ v | join(', ') }}
+            {% else %}
+              {{ v }}
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </details>
+  {% endfor %}
+  {% endif %}
+</article>
+{% endblock %}
