@@ -1,22 +1,56 @@
 {% extends "base.html" %}
-{% block title %}{{ customer_display or '홈' }}{% endblock %}
+{% block title %}홈 — {{ customer_display or '학사행정 통합 플랫폼' }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <h1 class="page-title">{{ customer_display or '홈' }}</h1>
+
+{# ── Hero 배너 ─────────────────────────────────────────────────────────── #}
+<div class="home-hero">
+  <p class="home-hero__eyebrow">학사행정 통합 플랫폼</p>
+  <h1 class="home-hero__title">
+    안녕하세요,
+    <span class="home-hero__name">{{ customer_display or '관리자' }}</span>님
+  </h1>
+  <p class="home-hero__subtitle">오늘도 효율적인 업무를 시작하세요.</p>
+
+  {% if domains %}
+  <div class="home-hero__stats">
+    <div class="home-hero__stat">
+      <span class="home-hero__stat-value">{{ domains | length }}</span>
+      <span class="home-hero__stat-label">업무 도메인</span>
+    </div>
+    <div class="home-hero__stat">
+      <span class="home-hero__stat-value">
+        {{ domains | map(attribute='entities') | map('length') | sum }}
+      </span>
+      <span class="home-hero__stat-label">관리 화면</span>
+    </div>
+    <div class="home-hero__stat">
+      <span class="home-hero__stat-value">24/7</span>
+      <span class="home-hero__stat-label">운영 가용성</span>
+    </div>
+  </div>
+  {% endif %}
 </div>
 
+{# ── 도메인 카드 그리드 ─────────────────────────────────────────────────── #}
 {% if domains %}
-<section aria-label="도메인 목록">
+<section class="home-domains" aria-label="도메인 목록">
+  <p class="home-domains__heading">업무 도메인 바로가기</p>
   <div class="home-domain-grid">
     {% for domain in domains %}
-    <div class="card home-domain-card">
-      <h2 class="home-domain-title">{{ domain.display }}</h2>
+    <div class="home-domain-card">
+      <div class="home-domain-card__accent"></div>
+      <div class="home-domain-card__header">
+        <div class="home-domain-card__icon" aria-hidden="true">
+          {{ domain.display[0] | upper }}
+        </div>
+        <h2 class="home-domain-card__title">{{ domain.display }}</h2>
+      </div>
       <ul class="home-entity-list" aria-label="{{ domain.display }} 화면 목록">
         {% for entity in domain.entities %}
-        <li class="home-entity-item">
+        <li>
           <a href="{{ url_for('entity_list', entity_type=entity.key) }}"
-             class="btn btn-ghost btn-sm home-entity-link">
+             class="home-entity-link">
             {{ entity.label }}
           </a>
         </li>
@@ -26,19 +60,20 @@
     {% endfor %}
   </div>
 </section>
+
 {% else %}
-{# Fallback: no manifest or no domains — direct link to generic entity list #}
 <div class="empty-state" role="status">
   <p class="empty-state__message">도메인 정보가 없습니다. 관리자에게 문의하세요.</p>
 </div>
 {% endif %}
 
 {% if feedback_url %}
-<div class="feedback-cta" role="complementary" aria-label="피드백">
+<div class="feedback-cta" role="complementary" aria-label="피드백" style="margin-top:var(--space-stack-lg)">
   <a href="{{ feedback_url }}" target="_blank" rel="noopener noreferrer"
      class="btn btn-secondary btn-md">
     추가 요청·의견 남기기
   </a>
 </div>
 {% endif %}
+
 {% endblock %}
