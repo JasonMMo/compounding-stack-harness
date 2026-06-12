@@ -6,12 +6,20 @@
   <title>{% block title %}Compounding Stack{% endblock %}</title>
   <!-- Pretendard Variable — Korean + Latin optimised variable font (OFL-1.1) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+  {% if ui_theme == 'public-sector' %}
+  <!-- KRDS — 행정안전부 디지털 정부 디자인 시스템 (공공기관 의무화 2025) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/krds-uiux@1.1.0/resources/cdn/krds.min.css">
+  <!-- tokens.css: raw/semantic/persona 토큰 (Pico override 섹션 스킵됨 — build_tokens.py --ui-theme public-sector) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/krds-uiux@1.1.0/resources/cdn/krds.min.js" defer></script>
+  {% else %}
   <!-- Open Props — CSS custom property primitives for motion/shadow/easing (MIT) -->
   <link rel="stylesheet" href="https://unpkg.com/open-props/open-props.min.css">
   <!-- Pico CSS v2 classless — semantic HTML baseline styles (MIT). Must load BEFORE tokens.css -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css">
   <!-- tokens.css overrides --pico-* vars with our design tokens; must load AFTER pico -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  {% endif %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
   <!-- htmx: loaded from CDN for zero-build simplicity; pin to a specific version for production -->
   <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2uH1/8X4vFg8FVGerPTuRNeIPQMNqNZI5cN" crossorigin="anonymous"></script>
