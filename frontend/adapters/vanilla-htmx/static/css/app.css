@@ -1141,3 +1141,137 @@ body {
   white-space: pre-wrap;
   word-break: break-all;
 }
+
+/* ── Dense table: sticky header + hover-reveal actions ───────────────────
+   출처: design/templates/dense-table.html 패턴 통합
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Sticky header — max-height 수직 스크롤 활성화 */
+.table-wrapper {
+  max-height: 520px;
+  overflow: auto;
+}
+
+.th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* 첫 번째 열: 좌측 고정 */
+.th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+}
+
+.td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--color-surface-1);
+  font-weight: var(--font-weight-label);
+  border-right: 1px solid var(--color-border);
+}
+
+.tr:hover .td:first-child {
+  background: var(--color-surface-2);
+}
+
+/* Hover-reveal 행 액션 */
+.row-actions {
+  display: flex;
+  gap: var(--space-gap-xs);
+  opacity: 0;
+  transition: opacity .12s;
+  justify-content: flex-end;
+}
+
+.tr:hover .row-actions {
+  opacity: 1;
+}
+
+/* ── Tab screen (from design/templates/tab-form.html) ────────────────────
+   출처: design/templates/tab-form.html + design/templates/krds-tab.html
+   ─────────────────────────────────────────────────────────────────────── */
+
+.tab-screen {
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--space-stack-md);
+}
+
+.tab-header {
+  display: flex;
+  border-bottom: 2px solid var(--color-border);
+  padding: 0 var(--space-inset-md);
+  gap: 2px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+
+.tab-header button {
+  padding: var(--space-inset-xs) var(--space-inset-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-label);
+  color: var(--color-text-2);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color .12s, border-color .12s;
+  white-space: nowrap;
+  font-family: var(--font-family-body);
+}
+
+.tab-header button:hover { color: var(--color-primary); }
+
+.tab-header button.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: var(--font-weight-heading);
+}
+
+.tab-panel {
+  display: none;
+  padding: var(--space-inset-xl);
+}
+
+.tab-panel.active { display: block; }
+
+.tab-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-gap-sm);
+  padding: var(--space-inset-md) var(--space-inset-xl);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+}
+
+/* ── Form grid (2-column layout) ────────────────────────────────────────
+   출처: design/templates/tab-form.html 패턴 통합
+   ─────────────────────────────────────────────────────────────────────── */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-stack-md) var(--space-gap-lg);
+}
+
+.form-grid .span-2 { grid-column: 1 / -1; }
+
+/* 그리드 내 form-field 는 하단 마진 불필요 (gap 이 담당) */
+.form-grid .form-field { margin-bottom: 0; }
+
+.form-section-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-strong, 600);
+  color: var(--color-primary);
+  padding-bottom: var(--space-gap-xs);
+  border-bottom: 1px solid var(--color-primary-subtle);
+  margin-bottom: var(--space-gap-xs);
+  grid-column: 1 / -1;
+}
