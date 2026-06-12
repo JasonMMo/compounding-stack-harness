@@ -74,11 +74,20 @@ PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug <slug
 - **테이블 Hostinger 스타일**: `.th` `#F8FAFC`·semibold·2px 하단선 / `.td` 12px padding·`#F0F0F0` 구분선 / hover `#F8FAFC`(파랑 제거) / 줄무늬 제거 / `table-wrapper` `#E9ECEF` 테두리·부드러운 그림자.
 - **커밋**: 161a61d→046bcbb→fa18df3→56954c2→ccac470→eaa0f5b (6건, pushed). edu-program.n9n.co.kr 스모크 ALL PASS.
 
+## ▣ Growth-40 (2026-06-12 후속 세션) — 한국 업무용 UI 디자인 리서치
+
+- **리서치 완료**: deep-research 2회 (B2B SaaS/공공 SI + 대기업 디자인 시스템). 결과: `out/analysis/design/korean-ui-research.md`
+- **핵심 발견**: ① KRDS(행정안전부, 2025년 의무화) — 빌드 없는 CDN, 공공 SI 고객 영업 포인트 ② 한국 SI 3대 패턴: Dense Table(Fixed Header+Column) / 좌측 트리메뉴(구현 완료) / 탭 기반 화면 ③ 대기업 공통: semantic 토큰 계약 + variant 체계 + 라이트/다크
+- **권고 방향**: profile `stack.ui_theme` 키로 `public-sector`(KRDS) / `saas`(현 Pico+tokens) 분기
+- **설정 추가**: `.claude/settings.json` — WebFetch/WebSearch deny (API 자동 사용 차단)
+- **다음 작업**: KRDS 컴포넌트 목록 직접 확인 → `design/templates/` 구조 결정 → dense-table.html 스니펫 제작
+
 ## 다음 후보
 
-1. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. **인프라는 준비 끝** — 의뢰 받으면 profile 작성 → 위 두 줄 → 외부 데모. 막는 건 영업뿐. 데모 디자인 상향 + **intake 폼 (intake.n9n.co.kr) 으로 needs 접수까지 자동화 완료** — 숨고/크몽 프로필에 intake 링크 게재 가능.
-2. **자동화 잔여 (작음, 낮은 우선순위)**: 레지스트리 변경분 per-file 커밋 자동화 / git push→auto-redeploy(webhook 보류 중) / SECRET_KEY rotate(현 Coolify UI 수동).
-3. **engineer: `.npmrc` codegraph 버전 핀** / **G-14 (`--check` stale-anchor)** (Growth-34 이월).
+1. **★ design/templates/ 구조 구축** — KRDS 분석 후 dense-table.html + tab-form.html 스니펫. profile `stack.ui_theme` 키 추가.
+2. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. 인프라 준비 끝. 막는 건 영업뿐.
+3. **자동화 잔여 (낮은 우선순위)**: webhook 보류 / SECRET_KEY rotate.
+4. **engineer: `.npmrc` codegraph 버전 핀** / **G-14 stale-anchor** (Growth-34 이월).
 
 ## 운영 메모
 
