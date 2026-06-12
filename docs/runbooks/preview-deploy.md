@@ -144,6 +144,8 @@ body:
 
 **함정**: `fqdn` 직접 PATCH 는 422 오류. 반드시 `docker_compose_domains` 배열 방식 사용.
 
+**함정**: app 생성 직후 곧바로 domain PATCH 를 치면 422 `"Cannot set docker_compose_domains without docker_compose_raw. Reload the compose file from the git repository first."` — Coolify 가 아직 git fetch 미완료인 race condition. `deploy_to_coolify.py` 가 `GET /applications/{uuid}` 의 `docker_compose_raw` 필드를 5s 간격, 최대 120s poll 후 자동 재시도한다.
+
 ```
 PATCH http://localhost:8000/api/v1/applications/<app_uuid>
 body:
