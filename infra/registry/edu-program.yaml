@@ -17,7 +17,7 @@ preview:
   compose_file: deploy/preview/edu-program.compose.yml
   manifest_server_path: /data/coolify/manifests/edu-program/screen-manifest.json
   status: live
-  deployed_at: "2026-06-13"
+  deployed_at: "2026-06-12"
   ui_theme: public-sector
 production:
   install_method: null
