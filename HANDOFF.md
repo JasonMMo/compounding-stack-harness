@@ -1,4 +1,4 @@
-# HANDOFF — 2026-06-12 (Growth-38: 영업 루프 풀사이클 리허설 — edu-program preview live)
+# HANDOFF — 2026-06-12 (Growth-39: 아코디언 사이드바 + Hostinger CSS + 테이블 스타일)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
 > **다음 작업 = 리허설 건1 추가질문 회신 수령 → profile 갱신, 그리고 실 고객 발굴 (M2 게이트)** — intake→triage→profile→scaffold→preview 전 구간이 실데이터로 1회전 완주됨.
@@ -63,6 +63,16 @@ PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug <slug
 - **후속 회전 (같은 날)**: 10문항 회신 전부 수령 → profile 확정 7 domains/18 entities (enrollment=crm lead→contact→project, finance AP, procurement/asset 추가) → 재배포. **needs-반영 데모 UI** (display→manifest→메뉴/홈 카드/피드백 CTA — harness 레벨, lawfirm/shop 하위호환). **intake `/letter/{token}` 안내문 URL 기능** (make_letter.py 로 txt→HTML, 서버 `/data/intake/data/letters/` 에 scp — 재배포 불필요). **demo seed**: `seed_demo_data.py --profile <slug>` → `out/<slug>/seed-data.json` → preview_package 가 seed-aware compose 생성, deploy 가 manifest 와 함께 scp, backend `SEED_FILE` startup 적재 (edu 193건 live). **앱 셸**: 상단바(로고·아바타·로그아웃)+좌측 도메인 메뉴(active 3px 바, 모바일 드로어)+우측 업무화면 — CDO 스펙 `out/analysis/design/app-shell-spec.md`, 비인증은 미니멀 분기 (메뉴 메타 차단). **entity 라벨 3단계**: profile `entity_labels` > catalog `label_ko`(locale=ko) > 영문 — catalog 60 entity 에 label_ko 누적, edu 는 18종 고객 용어 (학생·집행 내역·기자재...). 신규 함정: manifest bind-mount 디렉터리화 (runbook 등재 — 복구는 rm+scp+재생성).
 - **CEO 발송 대기 2건**: ① 건1 scope-confirm 안내문 URL `https://intake.n9n.co.kr/letter/iJQQtQPAA8c-CV9J-VK_qQ` (학사관리=사업 범위 우선·LMS=배치 가져오기 단계 동의) ② 건2 거절 회신 (`out/analysis/intake-rehearsal/reject-reply.md`). 동의 회신 오면 acceptance criteria 고정 → 인도 단계.
 - **production 방향 메모**: 고객(한국 대학·정부사업) Vercel 제안은 비추천 — 학생 PII+정부 예산 데이터 국내 상주·기관 통제 요구 가능성, 우리 아티팩트=self-host docker compose. preview 는 n9n.co.kr, production 은 학교 인프라 self-host 권고.
+
+## ▣ Growth-39 (2026-06-12 후속 세션) — 아코디언 사이드바 + Hostinger CSS + 테이블 스타일
+
+- **아코디언 사이드바**: `sidebar-group__header` button + SVG chevron + `sidebar-nav--accordion` (max-height 0→600px CSS transition). JS `initAccordion()` + localStorage `sidebar-accordion-open` 상태 유지.
+- **Hostinger 라이트테마**: 이미지 분석 → WHITE 사이드바 확정. `--sidebar-item-active-bg: #EEF2FF` / `--sidebar-item-active-text: #4F46E5`. active `::before` left-bar 제거(fill-only). 트리 indent: `border-left 2px + padding-left 20px`.
+- **3단계 반응형**: ≥1280px 240px full / 769–1279px 56px CSS-only collapse / <768px drawer.
+- **핵심 버그(Pico override)**: Pico CSS classless 가 `<nav>` 에 `flex-direction: row` 자동 적용 → `.app-sidebar`, `.sidebar-group` 에 `display: block` + `.sidebar-nav { flex-direction: column }` 명시.
+- **토큰 파이프라인**: `tokens.css` gitignored → `design/tokens/semantic.json` `"sidebar"` 섹션 10 토큰 추가 → `build_tokens.py` 재생성 → Docker build time 포함.
+- **테이블 Hostinger 스타일**: `.th` `#F8FAFC`·semibold·2px 하단선 / `.td` 12px padding·`#F0F0F0` 구분선 / hover `#F8FAFC`(파랑 제거) / 줄무늬 제거 / `table-wrapper` `#E9ECEF` 테두리·부드러운 그림자.
+- **커밋**: 161a61d→046bcbb→fa18df3→56954c2→ccac470→eaa0f5b (6건, pushed). edu-program.n9n.co.kr 스모크 ALL PASS.
 
 ## 다음 후보
 
