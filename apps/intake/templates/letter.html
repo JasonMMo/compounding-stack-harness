@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — 안내문{% endblock %}
+{% block content %}
+<article class="intake-card letter-card">
+  {{ body | safe }}
+</article>
+{% endblock %}
