@@ -1,7 +1,7 @@
-# HANDOFF — 2026-06-12 (Growth-43: preview_package.py public-sector 파이프라인 완성)
+# HANDOFF — 2026-06-12 (Growth-44: public-sector 파이프라인 완전 완성 — base.html CDN 분기)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
-> **다음 작업 = 실 고객 발굴 (M2 게이트) — 인프라·디자인·UI·파이프라인 전 구간 준비 완료**
+> **다음 작업 = 실 고객 발굴 (M2 게이트) — 인프라·디자인·UI·파이프라인·KRDS 전 구간 완료. 막는 건 영업뿐.**
 
 ## ▶▶▶ 복귀 직후 상태 (확인용)
 
@@ -14,7 +14,15 @@
 - **WebFetch/WebSearch deny** — `.claude/settings.json` 에 deny 설정됨. KRDS GitHub 분석은 codegraph 또는 로컬 클론 후 분석.
 - **가드**: 13개, 0 real FAIL (G-2/G-3 SPEC). 실행 시 `PYTHONIOENCODING=utf-8` 권장.
 
-## ▣ Growth-43 (이번 세션) — preview_package.py public-sector 파이프라인 완성
+## ▣ Growth-44 (이번 세션) — base.html KRDS CDN 분기 완성
+
+- **Dockerfile**: `ENV UI_THEME=$UI_THEME` 추가 — build ARG → runtime env 전파.
+- **server.py**: `UI_THEME = os.environ.get("UI_THEME", "saas")` + context processor `ui_theme` 주입 → 모든 Jinja2 템플릿에서 `{{ ui_theme }}` 참조 가능.
+- **base.html**: `{% if ui_theme == 'public-sector' %}` 분기 — KRDS CDN(krds.min.css + krds.min.js defer) / `{% else %}` Open Props + Pico + tokens.css.
+- **커밋**: 72bd8d9(Dockerfile ENV) → 9559eca(server) → e341305(base.html), 3건.
+- **전 구간 완성**: profile `stack.ui_theme: public-sector` → compose `UI_THEME: public-sector` → Dockerfile build → tokens.css(Pico 스킵) → runtime ENV → base.html KRDS CDN 로드.
+
+## ▣ Growth-43 (직전 세션) — preview_package.py public-sector 파이프라인
 
 - **Dockerfile**: `ARG UI_THEME=saas` + `RUN python build_tokens.py --ui-theme $UI_THEME` — build time에 테마 결정.
 - **preview_package.py**: `_get_ui_theme(slug)` 헬퍼 (profile `stack.ui_theme` 읽기, 기본 `saas`). `write_coolify_compose()` / `write_compose()` 에 `ui_theme` 파라미터 추가. 양쪽 compose 템플릿 frontend `build.args: UI_THEME: {ui_theme}` 주입.
@@ -53,8 +61,7 @@
 ## 다음 후보
 
 1. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. 인프라·디자인·UI·파이프라인 전 구간 준비 완료. 막는 건 영업뿐.
-2. **base.html KRDS CDN 분기** (보너스) — `public-sector` profile deploy 시 frontend `templates/base.html` 에 KRDS CDN `<link>`/`<script>` 자동 주입. tokens.css 는 이미 올바르게 생성됨; CDN 태그만 미완.
-3. **자동화 잔여 (낮은 우선순위)**: webhook 보류 / SECRET_KEY rotate / G-14 stale-anchor.
+2. **자동화 잔여 (낮은 우선순위)**: webhook 보류 / SECRET_KEY rotate / G-14 stale-anchor.
 4. **KRDS 클론 정리**: `D:\AI\workspace\krds-uiux` 분석 완료 → 필요 시 삭제 가능.
 
 ## 운영 메모
