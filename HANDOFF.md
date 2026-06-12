@@ -52,7 +52,7 @@ PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug <slug
 - **의뢰인 needs 인터뷰 웹폼**: `apps/intake/` — `questions.yaml`(PM 단일 진실, 질문 수정은 이 파일만) 기반 3 페르소나 분기 폼. 의뢰인 레코드 append-only revision + `/edit/{token}` 재수정 + `/admin`(Basic auth, env 미설정 시 404). 제출→`intake_to_profile.py`→draft profile→두 줄 deploy 로 영업 루프 연결.
 - **CISO 게이트 첫 실전 완주**: BLOCK 3건 발견→수정→재검증 PASS (상세 `out/analysis/intake-security-review.md`).
 - **deploy 함정 2건 추가 학습**: 도메인 서비스명은 registry `preview.domain_service` 키 (디폴트 frontend) / `docker_compose_domains` 는 PATCH=array, GET=string 비대칭 (422).
-- **수동 잔여 (CEO)**: ① Coolify 대시보드에서 intake 앱에 `INTAKE_ADMIN_PASSWORD` env 주입 (전까지 /admin 404 안전) ② rtk 0.34.3→0.42.x 업그레이드 `cargo install --git https://github.com/rtk-ai/rtk --force` (PreToolUse 'hook' not found 에러 해소).
+- **수동 잔여 처리 완료 (CEO, 같은 날)**: ① `INTAKE_ADMIN_PASSWORD` Coolify env 주입+redeploy → /admin 로그인 동작 확인 (사용자명 임의, 비밀번호=env 값) ② rtk 0.34.3→0.42.2 업그레이드 → PreToolUse 'hook' 에러 해소, RTK 압축 실가동. 대시보드 접근은 SSH 터널 `-L 8000` 만 (8000 방화벽 차단·coolify.n9n.co.kr 라우팅 없음 = 의도된 하드닝).
 - **배포 권한**: `Bash(*python scripts/workflow/deploy_to_coolify.py*)` allow 룰 추가됨 — 이제 배포는 CTO 직접 실행.
 
 ## 다음 후보
