@@ -374,3 +374,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: 게이트는 비용이 아니라 속도다 — dry-run·CISO 리뷰·스크린샷 검증이 라이브 전에 결함 5건을 잡아 첫 의뢰인 앞 사고를 선제 제거했다
 - **Revenue/cost**: LLM=agent 6회 spawn(~64만 tok) / infra=기존 VPS 앱 1개 추가(증분 0원) / admin env 설정 전 404 안전 기본값
 - **Open loops**: INTAKE_ADMIN_PASSWORD Coolify env 설정(CEO, F-4 수동) / intake 제출→PM triage 운영 절차 pm-delivery-loop SKILL 반영 / FIX-4 CDN SRI(adapter base.html 포함)·FIX-5 webhook argv / rtk 0.34.3→0.42.x 업그레이드(CEO cargo install)
+
+### Growth-38 (2026-06-12) — 영업 루프 풀사이클 리허설: intake 2건 → triage → 회신 반영 → edu-program preview live
+
+- **인격/Axis/Milestone**: CTO (integrator·직접 deploy) + PM (triage·needs note·draft profile) + domain-expert-generic (교육 매핑 의견서) + Engineer (YAML bool·deploy race 수정) / customer (edu-program profile)·creater (deploy 견고화)·expert-agent (교육 vertical 시그널) / M2 — 숨고/크몽 홍보 전 end-to-end 리허설
+- **Why (1줄)**: CEO — "홍보 전에 전체 프로세스를 다시 돌려보고 싶다" (지인이 intake.n9n.co.kr 에 실제 2건 제출)
+- **triage**: 건1 (대학 정부사업 — 학생리스트·사업비·학사관리) 수용+follow-up 8문항 / 건2 (B2C 열차예매 앱) 스코프 밖 거절 회신 작성. "인터뷰 없이 profile 작성 금지" 안티패턴 준수 — 학사관리·order·asset 은 미답으로 profile 제외
+- **실결함 2건 (리허설이 잡음)**: ① `questions.yaml` 무인용 `value: no` → YAML 1.1 bool 함정, 실제 제출 데이터에 `False` 저장 (quote+로더 방어+회귀 테스트+라이브 재검증) ② push 직후 배포 시 `docker_compose_domains` 422 — Coolify 가 git compose 미적재 상태 race → `_wait_for_compose_raw()` poll+retry 자동 복구
+- **회신 반영→live**: postgres 확정 → domains crm/finance/document/reporting draft profile → scaffold 9 entities → **edu-program.n9n.co.kr live** (HTTPS 200·LE cert, push→live 한 회전). idempotent 재실행이 기존 project/app uuid 이름-fallback 재사용 실증
+- **domain-expert 의견**: student 는 catalog enum 확장 ✗ → customer overlay (타 고객 의미 오염 방지) / 정부사업비 budget-line·품의·정산보고는 14 baseline 구조적 부재 → `presets/skills/education/` seed 신설 권고 (M3 첫 vertical 후보 시그널)
+- **교훈 (1줄)**: 리허설은 실데이터로만 드러나는 결함을 잡는다 — 스모크 통과한 폼의 bool 함정도, push-직후 race 도 실제 의뢰 흐름에서만 나타났다
+- **Revenue/cost**: LLM=agent 6회 spawn (리허설 2회전 누적 ~37만 tok) / infra=기존 VPS 앱 1 추가 (증분 0원) / M2 게이트 직전 — 인프라·프로세스 검증 끝, 남은 건 영업
+- **Open loops**: 건1 추가질문 발송 (CEO — 학사관리 범위 Q9·Q10 포함 10건, `out/analysis/intake-rehearsal/needs-note-edu.md`) / 건2 거절 회신 발송 (CEO) / production 배포 방식 고객 합의 (Vercel 비추천→self-host 권고) / education vertical seed 신설 (M3)
