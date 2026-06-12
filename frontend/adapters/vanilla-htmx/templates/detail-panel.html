@@ -1,0 +1,141 @@
+{#
+  detail-panel.html — htmx partial (no base.html extends)
+  Rendered when HX-Request header is present in entity_detail route.
+  Outputs only .tab-screen fragment; parent page's CSS/JS already loaded.
+#}
+{% if error %}
+<div role="alert" class="error-banner" style="margin-bottom:var(--space-stack-sm)">
+  {{ error }}
+  {% if error_details and error_details.fields %}
+  <ul class="error-details">
+    {% for field, msg in error_details.fields.items() %}
+    <li><strong>{{ field }}</strong>: {{ msg }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="tab-screen">
+  <div class="tab-header" role="tablist">
+    <button class="active" type="button" role="tab" aria-selected="true">
+      {{ entity_label | default(entity_type | title) }} 정보
+    </button>
+    <a href="{{ url_for('entity_detail', entity_type=entity_type, entity_id=entity_id) }}"
+       class="btn btn-ghost btn-sm" title="전체 화면으로 보기"
+       style="margin-left:auto;font-size:var(--font-size-xs)">↗ 전체화면</a>
+  </div>
+
+  <form method="post"
+        action="{{ url_for('entity_update', entity_type=entity_type, entity_id=entity_id) }}"
+        novalidate>
+
+    <div class="tab-panel active" role="tabpanel">
+
+      {% if manifest_fields %}
+      {% set hidden_list = hidden_fields | default([]) %}
+      {% for hname in hidden_list %}
+      {% if hname in data %}
+      <div class="form-field form-field--system" style="margin-bottom:var(--space-stack-sm)">
+        <label for="rp-{{ hname }}" class="form-label">{{ hname }}</label>
+        <input id="rp-{{ hname }}" name="{{ hname }}" type="text"
+               class="form-input form-input--readonly"
+               value="{{ data[hname] if data[hname] is not none else '' }}"
+               readonly aria-readonly="true">
+      </div>
+      {% endif %}
+      {% endfor %}
+
+      <div class="form-grid">
+        {% for field in manifest_fields %}
+        {% set field_id = "fp-" ~ field.name %}
+        {% set cur_val = data[field.name] if field.name in data else "" %}
+        <div class="form-field {% if field.control == 'textarea' %}span-2{% endif %}">
+          <label for="{{ field_id }}" class="form-label">
+            {{ field.label }}
+            {% if field.required %}<span aria-hidden="true" class="required-marker">*</span>{% endif %}
+          </label>
+
+          {% if field.control == "textarea" %}
+          <textarea id="{{ field_id }}" name="{{ field.name }}" class="form-input"
+            {% if field.required %}required aria-required="true"{% endif %} rows="3"
+          >{{ cur_val if cur_val is not none else "" }}</textarea>
+
+          {% elif field.control == "number" %}
+          <input id="{{ field_id }}" name="{{ field.name }}" type="number" class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}>
+
+          {% elif field.control == "date" %}
+          <input id="{{ field_id }}" name="{{ field.name }}" type="date" class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}>
+
+          {% elif field.control == "datetime" %}
+          <input id="{{ field_id }}" name="{{ field.name }}" type="datetime-local" class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}>
+
+          {% elif field.control == "checkbox" %}
+          <input id="{{ field_id }}" name="{{ field.name }}" type="checkbox" class="form-checkbox"
+            value="true" {% if cur_val in ("true","True","1",True) %}checked{% endif %}
+            {% if field.required %}required aria-required="true"{% endif %}>
+
+          {% elif field.control == "select" %}
+          <select id="{{ field_id }}" name="{{ field.name }}" class="form-select"
+            {% if field.required %}required aria-required="true"{% endif %}>
+            <option value="">— 선택하세요 —</option>
+            {% for opt in field.options | default([]) %}
+            <option value="{{ opt }}" {% if (cur_val|string)==opt %}selected{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+
+          {% elif field.control == "fk-text" %}
+          <input id="{{ field_id }}" name="{{ field.name }}" type="text" class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}
+            aria-describedby="{{ field_id }}-hint">
+          <span id="{{ field_id }}-hint" class="form-hint form-hint--fk">
+            {{ field.fk_entity | default("") }} — {{ field.note | default("FK") }}
+          </span>
+
+          {% else %}
+          <input id="{{ field_id }}" name="{{ field.name }}" type="text" class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}
+            {% if field.max_length is defined and field.max_length %}maxlength="{{ field.max_length }}"{% endif %}>
+          {% endif %}
+
+        </div>
+        {% endfor %}
+      </div>{# /form-grid #}
+
+      {% else %}
+      {% for key, value in data.items() %}
+      {% set is_system = key in ('id','created_at','updated_at','created_by') %}
+      <div class="form-field {% if is_system %}form-field--system{% endif %}"
+           {% if is_system and persona|default('ops') != 'it' %}data-system-field="true"{% endif %}>
+        <label for="fp-{{ key }}" class="form-label">{{ key }}</label>
+        <input id="fp-{{ key }}" name="{{ key }}" type="text"
+               class="form-input {% if is_system %}form-input--readonly{% endif %}"
+               value="{{ value if value is not none else '' }}"
+               {% if is_system %}readonly aria-readonly="true"{% endif %}>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+    </div>{# /tab-panel #}
+
+    <div class="tab-actions">
+      <a href="{{ url_for('entity_list', entity_type=entity_type) }}"
+         class="btn btn-secondary btn-sm">목록</a>
+      <button type="submit" class="btn btn-primary btn-sm">저장</button>
+    </div>
+
+  </form>
+
+  <div class="detail-footer">
+    <a href="{{ url_for('entity_delete_confirm', entity_type=entity_type, entity_id=entity_id) }}"
+       class="btn btn-danger btn-sm">삭제</a>
+  </div>
+</div>
