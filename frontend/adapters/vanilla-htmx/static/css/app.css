@@ -1148,7 +1148,7 @@ body {
 
 /* Sticky header — max-height 수직 스크롤 활성화 */
 .table-wrapper {
-  max-height: 520px;
+  max-height: calc(100vh - 340px);
   overflow: auto;
 }
 
@@ -1609,7 +1609,7 @@ body {
 }
 
 .login-brand__product {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: var(--font-weight-heading);
   color: #fff;
   letter-spacing: -.03em;
@@ -1618,7 +1618,7 @@ body {
 }
 
 .login-brand__tagline {
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   color: rgba(255,255,255,.7);
   margin: 0;
   line-height: 1.5;
@@ -1748,7 +1748,7 @@ body {
 }
 
 .home-hero__title {
-  font-size: 2rem;
+  font-size: 2.75rem;
   font-weight: var(--font-weight-heading);
   color: #fff;
   letter-spacing: -.02em;
@@ -1759,7 +1759,7 @@ body {
 .home-hero__name { color: #7ec8ff; }
 
 .home-hero__subtitle {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   color: rgba(255,255,255,.65);
   margin: 0;
 }
