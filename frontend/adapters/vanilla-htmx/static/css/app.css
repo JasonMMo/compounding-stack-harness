@@ -1275,3 +1275,150 @@ body {
   margin-bottom: var(--space-gap-xs);
   grid-column: 1 / -1;
 }
+
+/* ── Master-Detail split layout ──────────────────────────────────────────
+   출처: 업무화면 master-detail 패턴 (Growth-48)
+   ─────────────────────────────────────────────────────────────────────── */
+
+.master-detail-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 0;
+  height: calc(100vh - var(--app-header-h) - 160px);
+  min-height: 420px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+/* ── Master panel (left) ── */
+.master-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-1);
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.master-panel__scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.master-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.master-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-surface-2);
+  padding: 6px var(--space-inset-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-heading);
+  color: var(--color-text-2);
+  border-bottom: 2px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.master-table tbody tr {
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  transition: background .08s;
+}
+
+.master-table tbody tr:hover {
+  background: var(--color-surface-2);
+}
+
+.master-table tbody tr.is-selected {
+  background: var(--color-primary-subtle);
+}
+
+.master-table tbody tr.is-selected td {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-label);
+}
+
+.master-table tbody td {
+  padding: 9px var(--space-inset-sm);
+  color: var(--color-text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+/* htmx loading indicator inside master row */
+.master-table tbody tr.htmx-request td:first-child::before {
+  content: "⋯";
+  color: var(--color-primary);
+  margin-right: 4px;
+}
+
+/* compact pagination bar */
+.master-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px var(--space-inset-sm);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  flex-shrink: 0;
+}
+
+.master-pagination__count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-3);
+}
+
+.master-pagination__btns {
+  display: flex;
+  align-items: center;
+  gap: var(--space-gap-xs);
+}
+
+.master-pagination__page {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-2);
+  min-width: 40px;
+  text-align: center;
+}
+
+/* ── Detail panel (right) ── */
+.detail-panel {
+  overflow-y: auto;
+  padding: var(--space-inset-md);
+  background: var(--color-surface-2);
+}
+
+/* detail-panel wraps .tab-screen — remove card's own margin */
+.detail-panel .tab-screen { margin-bottom: 0; }
+
+.detail-panel-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: var(--space-stack-md);
+  color: var(--color-text-3);
+  text-align: center;
+  padding: var(--space-inset-xl);
+}
+
+.detail-panel-placeholder__icon {
+  font-size: 40px;
+  opacity: .25;
+  line-height: 1;
+}
+
+.detail-panel-placeholder__text {
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
