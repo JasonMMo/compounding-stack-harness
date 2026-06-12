@@ -17,6 +17,16 @@
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PYTHONIOENCODING=utf-8 python scripts/hooks/large_file_guard.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
