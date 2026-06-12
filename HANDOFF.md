@@ -1,4 +1,4 @@
-# HANDOFF — 2026-06-12 (Growth-44: public-sector 파이프라인 완전 완성 — base.html CDN 분기)
+# HANDOFF — 2026-06-12 (Growth-46: research-loop skill 정비 + commands 3개 신설)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
 > **다음 작업 = 실 고객 발굴 (M2 게이트) — 인프라·디자인·UI·파이프라인·KRDS 전 구간 완료. 막는 건 영업뿐.**
@@ -13,6 +13,17 @@
 - **context-mode** 활성 — 큰 출력은 `ctx_execute`/`ctx_execute_file`, mutation·git·navigation 만 Bash.
 - **WebFetch/WebSearch deny** — `.claude/settings.json` 에 deny 설정됨. KRDS GitHub 분석은 codegraph 또는 로컬 클론 후 분석.
 - **가드**: 13개, 0 real FAIL (G-2/G-3 SPEC). 실행 시 `PYTHONIOENCODING=utf-8` 권장.
+
+## ▣ Growth-46 (이번 세션) — research-loop skill 정비 + commands 3개
+
+- **skill-creator 적용**: research-loop SKILL.md description pushy 강화, references/ 분리 구조 완성.
+  - 반론 메모: workflow 스킬에 full eval 루프는 비효율 — 정성 평가로 충분. 다음부터 사전 반론 제기.
+- **commands 신설** (모두 `.claude/commands/research/`):
+  - `research:fetch` — `ctx_fetch_and_index` 래퍼, raw 결과 대화 차단
+  - `research:query` — `ctx_search` 배치 래퍼, 해석 후 요약만 반환
+  - `research:wiki-save` — wiki 환류 강제 (프론트매터+index+커밋 일관성) ← 프로젝트 레벨 (global 배치 반론 제기 후 수정)
+- **references 추가**: `.claude/skills/research-loop/references/context-mode-guide.md` — ctx 도구 선택 계층
+- **커밋**: 0320f2e(SKILL) → b487399(guide) → 460f8af(fetch) → 8f7476f(query) → 7968bf5(wiki-save), 5건
 
 ## ▣ Growth-45 (이번 세션) — 리서치 자산 wiki 환류
 
