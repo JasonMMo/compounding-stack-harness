@@ -2,11 +2,16 @@
 {% block title %}{{ entity_label }} 목록{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <h1 class="page-title">{{ entity_label }}</h1>
-  <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}" class="btn btn-primary btn-md">
-    + 새로 만들기
-  </a>
+<div class="entity-header">
+  <div class="entity-header__info">
+    <p class="entity-header__eyebrow">{{ entity_type | replace('-', ' ') }}</p>
+    <h1 class="entity-header__title">{{ entity_label }}</h1>
+    {% if total is defined %}<p class="entity-header__meta">총 {{ total }}건</p>{% endif %}
+  </div>
+  <div class="entity-header__actions">
+    <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}"
+       class="btn btn-md btn-on-dark-primary">+ 새로 만들기</a>
+  </div>
 </div>
 
 {# Search / filter toolbar #}
