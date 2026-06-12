@@ -137,5 +137,18 @@
     "modal-backdrop": "300",
     "modal":     "400",
     "toast":     "500"
+  },
+
+  "sidebar": {
+    "bg":               "#FFFFFF",
+    "border":           "{color.gray.200}",
+    "text":             "{color.gray.700}",
+    "text-muted":       "{color.gray.400}",
+    "item-hover-bg":    "rgba(0,0,0,0.04)",
+    "item-active-bg":   "#EEF2FF",
+    "item-active-text": "#4F46E5",
+    "group-label-color":"{color.gray.500}",
+    "accent-bar":       "#4F46E5",
+    "icon-bg":          "{color.gray.100}"
   }
 }
