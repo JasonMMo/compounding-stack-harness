@@ -49,6 +49,8 @@ services:
       CONTRACT_DIR: "/app/middle/contract"
       PROFILE_MANIFEST: "/data/manifest/screen-manifest.json"
       PYTHONIOENCODING: "utf-8"
+      # Master-detail split layout for browsing-heavy entities
+      MASTER_DETAIL_ENTITIES: "contact,lead,invoice,document"
       # SECRET_KEY injected via Coolify environment variables (not in compose file)
     volumes:
       # Persistent manifest file — scp'd to server before deploy
