@@ -228,16 +228,21 @@ def build_manifest(
                     w.capitalize() for w in d_slug.replace("-", " ").split()
                 )
             # Only include entities that are present in this manifest.
-            d_entities: list[str] = [
-                k for k in (domain_block.get("entities") or [])
+            # Each item carries both the key (for URL routing) and the
+            # resolved label (same 3-tier priority as entities_out[key].label)
+            # so the sidebar/home render the correct localised name without
+            # re-deriving it in the template.
+            d_entity_items: list[dict[str, str]] = [
+                {"key": k, "label": entities_out[k]["label"]}
+                for k in (domain_block.get("entities") or [])
                 if k in entities_out
             ]
-            if d_entities:  # skip domains whose entities were not scaffolded
+            if d_entity_items:  # skip domains whose entities were not scaffolded
                 domain_cards.append(
                     {
                         "slug": d_slug,
                         "display": raw_display,
-                        "entities": d_entities,
+                        "entities": d_entity_items,
                     }
                 )
         manifest["domains"] = domain_cards
