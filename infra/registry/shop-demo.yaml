@@ -18,7 +18,7 @@ preview:
   compose_file: deploy/preview/shop-demo.compose.yml
   manifest_server_path: /data/coolify/manifests/shop-demo/screen-manifest.json
   status: live
-  deployed_at: "2026-06-11"
+  deployed_at: "2026-06-12"
   build_commit: e62abac          # first deploy commit sha
   tls: "Let's Encrypt, CN=shop-demo.n9n.co.kr, exp 2026-09-09"
 production:
