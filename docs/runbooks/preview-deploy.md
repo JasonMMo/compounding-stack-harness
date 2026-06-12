@@ -146,6 +146,8 @@ body:
 
 **함정**: app 생성 직후 곧바로 domain PATCH 를 치면 422 `"Cannot set docker_compose_domains without docker_compose_raw. Reload the compose file from the git repository first."` — Coolify 가 아직 git fetch 미완료인 race condition. `deploy_to_coolify.py` 가 `GET /applications/{uuid}` 의 `docker_compose_raw` 필드를 5s 간격, 최대 120s poll 후 자동 재시도한다.
 
+**함정 (manifest bind-mount 디렉터리화, edu-program 2026-06-12 실측)**: manifest 파일이 서버에 없는 상태로 컨테이너가 먼저 생성되면 docker 가 bind source (`/data/coolify/manifests/<slug>/screen-manifest.json`) 를 **디렉터리**로 만들어 버린다. 이후 scp 는 그 디렉터리 *안으로* 파일을 떨어뜨려 조용히 성공하고, 프론트는 manifest 를 영영 못 읽는다 (증상: 홈에 도메인 카드 없음, 표시명 미적용). 진단: `stat -c '%F' /data/coolify/manifests/<slug>/screen-manifest.json` 이 `directory` 면 적중. 복구: ① `rm -rf` 해당 디렉터리 ② scp 로 파일 재업로드 ③ **redeploy 로 컨테이너 재생성** (docker restart 는 컨테이너 내부 마운트 지점이 디렉터리로 굳어 있어 실패). 예방: 첫 deploy 가 중간 실패하면 scp 단계 완료 여부를 반드시 확인하고 재실행.
+
 ```
 PATCH http://localhost:8000/api/v1/applications/<app_uuid>
 body:
