@@ -1,0 +1,104 @@
+version: 1
+
+customer:
+  slug: edu-program
+  display: "edu-program (대학 정부사업, 리허설)"
+  status: draft
+  # PII 금지 — 실명·이메일·연락처 기재 없음
+  industry: education
+  # note: 기관명 익명 처리. intake ID: 6de793e34dc72956
+
+# ── Stack (preview 검증 조합 — lawfirm-demo 동일) ───────
+stack:
+  frontend: vanilla-htmx   # lawfirm-demo preview PASS 조합 그대로
+  backend:  fastapi         # lawfirm-demo preview PASS 조합 그대로
+  # IT 필드 회신 후 변경 가능 — stack 은 IT-담당자 인터뷰로 확정
+
+# ── DDL ────────────────────────────────────────────────
+ddl:
+  dialect: postgres         # 확정: 고객 PostgreSQL 준비 완료 (회신, 2026-06-12)
+  schema: edu_program
+
+# ── Domains (회신 반영 v1 — open loop 제외) ─────────────
+# 포함 기준: catalog.yaml 에 존재 + 회신에서 needs 확인된 것만.
+# 미포함 사유:
+#   - order(수강신청·기타): Q2 미답, entity 결정 불가
+#   - asset(기자재·소모품): Q6 미답, entity 결정 불가
+#   - 학사관리: Q9·Q10 미답, scope 미확정 — 인터뷰 없이 확장 금지
+domains:
+  - slug: crm
+    display: 학생 리스트 관리
+    entities: [contact]
+    seen_at: 2026-06-12
+    # NOTICE: crm.contact.contact_type enum = [prospect, customer, partner, vendor]
+    # 'student' 값 없음. 교육업 vertical 에서 needs 확인 → domain-expert 판단 대기.
+    # 임시 운용: contact_type = 'customer' 로 매핑하거나, overlay 에서 enum 확장 요청.
+    # 추가 시그널: presets/skills/education/faq.md (미신설) 누적 대상.
+
+  - slug: finance
+    display: 사업비 관리
+    entities: [account, invoice, payment]
+    seen_at: 2026-06-12
+    # 정부사업 예산 집행·증빙·정산 맥락.
+    # invoice+payment (수납 방향) 우선. journal-entry 추가 여부는 Q3 완전 답변 후 결정.
+    # 정부사업 전용 집행코드·증빙 첨부 요건 확인 필요 (현재 미확인 — Q3 후속).
+
+  - slug: document
+    display: 문서 관리
+    entities: [document, document-version, document-category]
+    seen_at: 2026-06-12
+    # 공유 버전 혼란 해결 직결 도메인.
+
+  - slug: reporting
+    display: 사업 보고
+    entities: [report-definition, report-output]
+    seen_at: 2026-06-12
+    # 정부사업 특성상 정기 보고 요건 예상.
+
+# ── Datasource ────────────────────────────────────────
+datasource:
+  username: ${EDU_PROGRAM_DB_USER}
+  password: ${EDU_PROGRAM_DB_PASS}
+  url_template: "jdbc:postgresql://{host}:{port}/{db}"
+  host: localhost           # 온프레미스 vs 클라우드 미확인 — IT 필드 회신 후 확정
+  port: 5432
+  db: edu_program
+
+# ── Overlay ──────────────────────────────────────────
+overlay:
+  shell_app_id: edu-program-portal
+  vault_agent: false
+  sso_keycloak: false
+
+# ── Defaults ─────────────────────────────────────────
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+# ── Cost tracking ─────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: TBD   # CEO 페르소나 전부 공란 — 회신 후 확정
+  prepaid_credits_usd: 0
+  setup_cost_krw: TBD             # Q5 미답
+
+# ── Open Loops (PM 추적) ──────────────────────────────
+# 아래 항목은 회신/인터뷰 후 profile 갱신:
+#   1. stack.frontend/backend — IT 담당자 확인 후 (현재 preview 기본값)
+#   2. datasource.host — 온프레미스 vs 클라우드 미확인
+#   3. domains order — Q2 (수강신청 여부) 답변 후 추가
+#   4. domains asset — Q6 (기자재·소모품) 답변 후 추가
+#   5. domains 학사관리 — Q9·Q10 (범위) 답변 후 추가 여부 결정
+#   6. finance.entities — Q3 (정산 주체) 완전 답변 후 journal-entry 추가 여부 결정
+#   7. crm contact_type 'student' enum — domain-expert 판단 후 overlay 또는 catalog 변경
+#   8. billing — Q5 (예산) 답변 후
+#   9. auth.method — Q4 (사용 인원) 답변 후 (single-user=local, 다중=session)
+#   10. security.data_residency — Q7 (서버 환경) 답변 후
+
+escalation:
+  - "crm.contact_type enum 'student' 없음: domain-expert-education (미신설) 또는 domain-expert-generic 자문 필요 — CTO 경유"
+  - "정부사업 예산 집행코드·증빙 요건: finance 엔티티 커스터마이즈 가능성 — Q3 완전 답변 후 재판단"
+  - "학사관리 scope: Q9·Q10 미답 — 인터뷰 없이 profile 확장 금지"
+
+notes:
+  - "Growth-38 — intake 건1 회신 반영, draft profile 작성 (PM, 2026-06-12)"
+  - "리허설 고객 — PII 마스킹, 실제 배포 전 IT 필드 재확인 필수"
