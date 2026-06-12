@@ -6,6 +6,7 @@
  * This file is the single place where semantic tokens are consumed.
  *
  * Spec: design/patterns/component/{button,form,table}.md
+ *       out/analysis/design/app-shell-spec.md (Growth-36 app shell)
  */
 
 /* ── Reset / base ────────────────────────────────────────────────────────── */
@@ -36,44 +37,318 @@ body {
   border: 0;
 }
 
-/* ── Layout ──────────────────────────────────────────────────────────────── */
+/* ── Global focus ring (spec §5-7) ──────────────────────────────────────── */
 
-.top-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-inset-sm) var(--space-page-gutter);
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-focus-ring);
+}
+
+/* ── Skip link (spec §7) ─────────────────────────────────────────────────── */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-page-gutter);
   background: var(--color-surface-1);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: var(--shadow-card);
+  color: var(--color-primary);
+  padding: var(--space-inset-sm) var(--space-inset-md);
+  border-radius: var(--radius-control);
+  font-weight: var(--font-weight-label);
+  z-index: calc(var(--zindex-sticky) + 100);
+  transition: top 100ms ease;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: var(--space-gap-sm);
+}
+
+/* ── App shell layout (spec §8) ─────────────────────────────────────────── */
+
+:root {
+  --app-header-h: 52px;
+}
+
+.app-layout {
+  display: grid;
+  grid-template-rows: var(--app-header-h) 1fr auto;
+  min-height: 100vh;
+}
+
+.app-body {
+  display: grid;
+  grid-template-columns: var(--space-sidebar-width) 1fr;
+  align-items: start;
+}
+
+.app-body--sidebar-collapsed {
+  grid-template-columns: var(--space-sidebar-width-collapsed) 1fr;
+}
+
+/* ── Header (spec §2-2, §4) ─────────────────────────────────────────────── */
+
+.app-header {
+  height: var(--app-header-h);
   position: sticky;
   top: 0;
   z-index: var(--zindex-sticky);
-}
-
-.nav-brand {
+  background: var(--color-surface-1);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);           /* elevation 0→1 — 디자이너 손길 */
   display: flex;
   align-items: center;
-  gap: var(--space-gap-md);
+  justify-content: space-between;
+  padding: 0 var(--space-page-gutter);
+  gap: var(--space-gap-lg);
 }
 
-.nav-logo {
-  font-size: var(--font-size-lg);
+.header-start {
+  display: flex;
+  align-items: center;
+  gap: var(--space-gap-sm);
+  flex-shrink: 0;
+}
+
+.app-logo {
+  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-heading);
-  color: var(--color-primary);
+  color: var(--color-text-1);
   text-decoration: none;
+  letter-spacing: -0.02em;              /* Pretendard 한글 자간 최적화 */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
+.app-logo:hover { color: var(--color-primary); }
 
-.nav-actions {
+.header-actions {
   display: flex;
   align-items: center;
   gap: var(--space-gap-md);
 }
 
-.nav-user {
+/* 사용자 아바타 배지 (spec §4, §5-3) — 디자이너 손길 */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-gap-xs);
   font-size: var(--font-size-sm);
-  color: var(--color-text-3);
+  color: var(--color-text-2);
 }
+
+.header-user__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-badge);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-strong);
+  flex-shrink: 0;
+}
+
+.header-user__name {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-2);
+}
+
+/* 햄버거 버튼 — 데스크톱에서 collapse 토글, 모바일에서 드로어 토글 */
+.hamburger-btn {
+  display: none;   /* 모바일에서만 표시 — §6-2 */
+  flex-shrink: 0;
+}
+
+/* 데스크톱에서도 collapse 버튼으로 재사용 */
+@media (min-width: 769px) {
+  .hamburger-btn {
+    display: inline-flex;
+  }
+}
+
+/* ── Sidebar (spec §2-3, §3) ─────────────────────────────────────────────── */
+
+.app-sidebar {
+  width: var(--space-sidebar-width);
+  background: var(--color-surface-1);
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(100vh - var(--app-header-h));
+  position: sticky;
+  top: var(--app-header-h);
+  padding: var(--space-stack-sm) 0;
+  transition: width 150ms cubic-bezier(0.2,0,0,1);
+}
+
+.app-sidebar--collapsed {
+  width: var(--space-sidebar-width-collapsed);
+}
+
+/* 사이드바 그룹 */
+.sidebar-group {
+  margin-bottom: var(--space-stack-md);
+}
+
+.sidebar-group__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-strong);
+  color: var(--color-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 var(--space-inset-md) var(--space-gap-xs);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-nav__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-gap-sm);
+  padding: var(--space-inset-xs) var(--space-inset-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-label);
+  color: var(--color-text-2);
+  text-decoration: none;
+  border-radius: var(--radius-control);
+  margin: 1px var(--space-inset-xs);
+  transition: background 100ms ease, color 100ms ease;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-nav__link:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text-1);
+}
+
+/* Active 상태 — 색 + 굵기 + ::before 바 3중 신호 (디자이너 서명 §5-1) */
+.sidebar-nav__link--active {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-heading);
+}
+
+.sidebar-nav__link--active::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 16px;
+  background: var(--color-primary);
+  border-radius: var(--radius-sm, 2px);
+  margin-right: calc(var(--space-gap-sm) - 3px);
+  flex-shrink: 0;
+}
+
+.sidebar-nav__link:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
+/* 접힘 상태 텍스트/레이블 숨김 */
+.app-sidebar--collapsed .sidebar-group__label,
+.app-sidebar--collapsed .sidebar-nav__link-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 150ms ease, width 150ms ease;
+}
+
+/* 첫글자 아바타 (접힘 상태 아이콘 대체) */
+.sidebar-nav__link-initial {
+  display: none;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-badge);
+  background: var(--color-surface-3);
+  color: var(--color-text-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-heading);
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.app-sidebar--collapsed .sidebar-nav__link-initial {
+  display: flex;
+}
+
+/* ── Main content area (spec §2-4) ──────────────────────────────────────── */
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-stack-lg) var(--space-page-gutter);
+  overflow-y: auto;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+
+.app-footer {
+  text-align: center;
+  padding: var(--space-inset-md);
+  color: var(--color-text-3);
+  font-size: var(--font-size-xs);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Mobile drawer (spec §6) ─────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .app-body {
+    display: block;
+  }
+
+  .app-sidebar {
+    position: fixed;
+    left: 0;
+    top: var(--app-header-h);
+    height: calc(100vh - var(--app-header-h));
+    z-index: calc(var(--zindex-sticky) + 50);
+    transform: translateX(-100%);
+    transition: transform 200ms cubic-bezier(0,0,0.2,1);
+    box-shadow: var(--shadow-modal);
+    width: 280px;
+  }
+
+  .app-sidebar--open {
+    transform: translateX(0);
+  }
+
+  .drawer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--color-surface-overlay);
+    z-index: calc(var(--zindex-sticky) + 40);
+  }
+
+  .drawer-backdrop--visible {
+    display: block;
+  }
+
+  .hamburger-btn {
+    display: flex;
+  }
+}
+
+/* 데스크톱에서 drawer 숨김 */
+@media (min-width: 769px) {
+  .drawer-backdrop { display: none !important; }
+  .app-sidebar { transform: none !important; }
+}
+
+/* ── Persona select ──────────────────────────────────────────────────────── */
 
 .persona-select {
   font-size: var(--font-size-sm);
@@ -83,21 +358,6 @@ body {
   background: var(--color-surface-1);
   color: var(--color-text-1);
   cursor: pointer;
-}
-
-.main-content {
-  max-width: var(--space-content-max);
-  margin: 0 auto;
-  padding: var(--space-stack-lg) var(--space-page-gutter);
-}
-
-.app-footer {
-  text-align: center;
-  padding: var(--space-inset-md);
-  color: var(--color-text-3);
-  font-size: var(--font-size-xs);
-  border-top: 1px solid var(--color-border);
-  margin-top: var(--space-stack-xl);
 }
 
 /* ── Page header ─────────────────────────────────────────────────────────── */
@@ -147,7 +407,7 @@ body {
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  transition: var(--motion-transition-control);
+  transition: background 150ms ease, box-shadow 150ms ease, color 150ms ease;
   box-shadow: var(--shadow-xs);
 }
 
@@ -175,7 +435,7 @@ body {
   background: var(--color-primary);
   color: var(--color-text-on-primary);
 }
-.btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); box-shadow: var(--shadow-sm); }
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); box-shadow: var(--shadow-card); }
 .btn-primary:active:not(:disabled) { background: var(--color-primary-active); box-shadow: none; }
 
 .btn-secondary {
@@ -234,7 +494,7 @@ body {
   color: var(--color-text-1);
   font-size: var(--font-size-md);
   font-family: var(--font-family-body);
-  transition: var(--motion-transition-control);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
   box-sizing: border-box;
 }
 
@@ -356,6 +616,14 @@ body {
   max-width: 320px;
 }
 
+/* 숫자 컬럼 우측 정렬 (spec §5-3) */
+.td[data-type="number"] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.02em;
+}
+
 .td--actions {
   text-align: right;
   white-space: nowrap;
@@ -452,7 +720,7 @@ body {
 
 .health-badge {
   font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-heading);
   padding: var(--space-inset-xs) var(--space-inset-md);
   border-radius: var(--radius-badge);
 }
@@ -547,7 +815,7 @@ body {
   margin-bottom: var(--space-stack-sm);
 }
 
-/* ── Home screen — domain card grid ─────────────────────────────────────── */
+/* ── Home screen — domain card grid (spec §5-6 hover lift) ──────────────── */
 
 .home-domain-grid {
   display: grid;
@@ -558,6 +826,14 @@ body {
 
 .home-domain-card {
   padding: var(--space-inset-lg);
+  /* 카드 hover lift — 디자이너 서명 §5-6 */
+  transition: transform 150ms cubic-bezier(0.2,0,0,1),
+              box-shadow 150ms cubic-bezier(0.2,0,0,1);
+}
+
+.home-domain-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-dropdown);
 }
 
 .home-domain-title {
@@ -591,6 +867,42 @@ body {
   text-decoration: underline;
 }
 
+/* ── Empty state (spec §5-4) ────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-stack-md);
+  padding: var(--space-stack-xl) var(--space-page-gutter);
+  text-align: center;
+}
+
+.empty-state__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-badge);
+  background: var(--color-surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xl);
+  color: var(--color-text-3);
+}
+
+.empty-state__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-heading);
+  color: var(--color-text-2);
+  margin: 0;
+}
+
+.empty-state__message {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-3);
+  margin: 0;
+}
+
 /* ── Feedback CTA (home + footer) ───────────────────────────────────────── */
 
 .feedback-cta {
@@ -615,6 +927,22 @@ body {
   color: var(--color-text-3);
   font-size: var(--font-size-xs);
 }
+
+/* ── Breadcrumb (spec §5-5) ─────────────────────────────────────────────── */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-gap-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-3);
+  margin-bottom: var(--space-gap-sm);
+}
+
+.breadcrumb__sep { color: var(--color-border-strong); user-select: none; }
+.breadcrumb__link { color: var(--color-text-link); text-decoration: none; }
+.breadcrumb__link:hover { text-decoration: underline; }
+.breadcrumb__current { color: var(--color-text-2); font-weight: var(--font-weight-label); }
 
 /* ── Code block ──────────────────────────────────────────────────────────── */
 
