@@ -20,170 +20,183 @@
 </div>
 {% endif %}
 
-<div class="card">
+<div class="tab-screen">
+  <div class="tab-header" role="tablist">
+    <button class="active" type="button" role="tab" aria-selected="true">
+      {{ entity_label | default(entity_type | title) }} 정보
+    </button>
+  </div>
+
   <form method="post"
         action="{{ url_for('entity_update', entity_type=entity_type, entity_id=entity_id) }}"
         novalidate>
 
-    {% if manifest_fields %}
-    {# ── Manifest-driven typed form (Phase 2) ──────────────────────────── #}
+    <div class="tab-panel active" role="tabpanel">
 
-    {# Read-only hidden fields: show above the editable fields #}
-    {% set hidden_list = hidden_fields | default([]) %}
-    {% for hname in hidden_list %}
-    {% if hname in data %}
-    {% set hval = data[hname] %}
-    <div class="form-field form-field--system">
-      <label for="ro-{{ hname }}" class="form-label">{{ hname }}</label>
-      <input
-        id="ro-{{ hname }}"
-        name="{{ hname }}"
-        type="text"
-        class="form-input form-input--readonly"
-        value="{{ hval if hval is not none else '' }}"
-        readonly
-        aria-readonly="true"
-      >
-    </div>
-    {% endif %}
-    {% endfor %}
+      {% if manifest_fields %}
+      {# ── Manifest-driven typed form (Phase 2) ──────────────────────────── #}
 
-    {% for field in manifest_fields %}
-    {% set field_id = "field-" ~ field.name %}
-    {% set cur_val = data[field.name] if field.name in data else "" %}
-    <div class="form-field">
-      <label for="{{ field_id }}" class="form-label">
-        {{ field.label }}
-        {% if field.required %}<span aria-hidden="true" class="required-marker">*</span>{% endif %}
-      </label>
+      {# Read-only hidden fields: rendered outside grid at top #}
+      {% set hidden_list = hidden_fields | default([]) %}
+      {% for hname in hidden_list %}
+      {% if hname in data %}
+      {% set hval = data[hname] %}
+      <div class="form-field form-field--system" style="margin-bottom: var(--space-stack-sm)">
+        <label for="ro-{{ hname }}" class="form-label">{{ hname }}</label>
+        <input
+          id="ro-{{ hname }}"
+          name="{{ hname }}"
+          type="text"
+          class="form-input form-input--readonly"
+          value="{{ hval if hval is not none else '' }}"
+          readonly
+          aria-readonly="true"
+        >
+      </div>
+      {% endif %}
+      {% endfor %}
 
-      {% if field.control == "textarea" %}
-      <textarea
-        id="{{ field_id }}"
-        name="{{ field.name }}"
-        class="form-input"
-        {% if field.required %}required aria-required="true"{% endif %}
-        rows="4"
-      >{{ cur_val if cur_val is not none else "" }}</textarea>
+      <div class="form-grid">
+        {% for field in manifest_fields %}
+        {% set field_id = "field-" ~ field.name %}
+        {% set cur_val = data[field.name] if field.name in data else "" %}
+        <div class="form-field {% if field.control == 'textarea' %}span-2{% endif %}">
+          <label for="{{ field_id }}" class="form-label">
+            {{ field.label }}
+            {% if field.required %}<span aria-hidden="true" class="required-marker">*</span>{% endif %}
+          </label>
 
-      {% elif field.control == "number" %}
-      <input
-        id="{{ field_id }}"
-        name="{{ field.name }}"
-        type="number"
-        class="form-input"
-        value="{{ cur_val if cur_val is not none else '' }}"
-        {% if field.required %}required aria-required="true"{% endif %}
-      >
+          {% if field.control == "textarea" %}
+          <textarea
+            id="{{ field_id }}"
+            name="{{ field.name }}"
+            class="form-input"
+            {% if field.required %}required aria-required="true"{% endif %}
+            rows="4"
+          >{{ cur_val if cur_val is not none else "" }}</textarea>
 
-      {% elif field.control == "date" %}
-      <input
-        id="{{ field_id }}"
-        name="{{ field.name }}"
-        type="date"
-        class="form-input"
-        value="{{ cur_val if cur_val is not none else '' }}"
-        {% if field.required %}required aria-required="true"{% endif %}
-      >
+          {% elif field.control == "number" %}
+          <input
+            id="{{ field_id }}"
+            name="{{ field.name }}"
+            type="number"
+            class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}
+          >
 
-      {% elif field.control == "datetime" %}
-      <input
-        id="{{ field_id }}"
-        name="{{ field.name }}"
-        type="datetime-local"
-        class="form-input"
-        value="{{ cur_val if cur_val is not none else '' }}"
-        {% if field.required %}required aria-required="true"{% endif %}
-      >
+          {% elif field.control == "date" %}
+          <input
+            id="{{ field_id }}"
+            name="{{ field.name }}"
+            type="date"
+            class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}
+          >
 
-      {% elif field.control == "checkbox" %}
-      <input
-        id="{{ field_id }}"
-        name="{{ field.name }}"
-        type="checkbox"
-        class="form-checkbox"
-        value="true"
-        {% if cur_val in ("true", "True", "1", True) %}checked{% endif %}
-        {% if field.required %}required aria-required="true"{% endif %}
-      >
+          {% elif field.control == "datetime" %}
+          <input
+            id="{{ field_id }}"
+            name="{{ field.name }}"
+            type="datetime-local"
+            class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}
+          >
 
-      {% elif field.control == "select" %}
-      <select
-        id="{{ field_id }}"
-        name="{{ field.name }}"
-        class="form-select"
-        {% if field.required %}required aria-required="true"{% endif %}
-      >
-        <option value="">— 선택하세요 —</option>
-        {% for opt in field.options | default([]) %}
-        <option value="{{ opt }}" {% if (cur_val | string) == opt %}selected{% endif %}>{{ opt }}</option>
+          {% elif field.control == "checkbox" %}
+          <input
+            id="{{ field_id }}"
+            name="{{ field.name }}"
+            type="checkbox"
+            class="form-checkbox"
+            value="true"
+            {% if cur_val in ("true", "True", "1", True) %}checked{% endif %}
+            {% if field.required %}required aria-required="true"{% endif %}
+          >
+
+          {% elif field.control == "select" %}
+          <select
+            id="{{ field_id }}"
+            name="{{ field.name }}"
+            class="form-select"
+            {% if field.required %}required aria-required="true"{% endif %}
+          >
+            <option value="">— 선택하세요 —</option>
+            {% for opt in field.options | default([]) %}
+            <option value="{{ opt }}" {% if (cur_val | string) == opt %}selected{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+
+          {% elif field.control == "fk-text" %}
+          <input
+            id="{{ field_id }}"
+            name="{{ field.name }}"
+            type="text"
+            class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}
+            aria-describedby="{{ field_id }}-hint"
+          >
+          <span id="{{ field_id }}-hint" class="form-hint form-hint--fk">
+            {{ field.fk_entity | default("") }} — {{ field.note | default("FK dropdown deferred (M1)") }}
+          </span>
+
+          {% else %}
+          {# default: text #}
+          <input
+            id="{{ field_id }}"
+            name="{{ field.name }}"
+            type="text"
+            class="form-input"
+            value="{{ cur_val if cur_val is not none else '' }}"
+            {% if field.required %}required aria-required="true"{% endif %}
+            {% if field.max_length is defined and field.max_length %}maxlength="{{ field.max_length }}"{% endif %}
+          >
+          {% endif %}
+
+        </div>
         {% endfor %}
-      </select>
-
-      {% elif field.control == "fk-text" %}
-      <input
-        id="{{ field_id }}"
-        name="{{ field.name }}"
-        type="text"
-        class="form-input"
-        value="{{ cur_val if cur_val is not none else '' }}"
-        {% if field.required %}required aria-required="true"{% endif %}
-        aria-describedby="{{ field_id }}-hint"
-      >
-      <span id="{{ field_id }}-hint" class="form-hint form-hint--fk">
-        {{ field.fk_entity | default("") }} — {{ field.note | default("FK dropdown deferred (M1)") }}
-      </span>
+      </div>{# /form-grid #}
 
       {% else %}
-      {# default: text — add maxlength only when present in manifest #}
-      <input
-        id="{{ field_id }}"
-        name="{{ field.name }}"
-        type="text"
-        class="form-input"
-        value="{{ cur_val if cur_val is not none else '' }}"
-        {% if field.required %}required aria-required="true"{% endif %}
-        {% if field.max_length is defined and field.max_length %}maxlength="{{ field.max_length }}"{% endif %}
-      >
+      {# ── Generic fallback (no manifest) ─────────────────────────────────── #}
+      {% for key, value in data.items() %}
+      {% set is_system = key in ('id', 'created_at', 'updated_at', 'created_by') %}
+      <div class="form-field {% if is_system %}form-field--system{% endif %}"
+           {% if is_system and persona | default('ops') != 'it' %}data-system-field="true"{% endif %}>
+        <label for="field-{{ key }}" class="form-label">{{ key }}</label>
+        {% if is_system %}
+        <input
+          id="field-{{ key }}"
+          name="{{ key }}"
+          type="text"
+          class="form-input form-input--readonly"
+          value="{{ value if value is not none else '' }}"
+          readonly
+          aria-readonly="true"
+        >
+        {% else %}
+        <input
+          id="field-{{ key }}"
+          name="{{ key }}"
+          type="text"
+          class="form-input"
+          value="{{ value if value is not none else '' }}"
+        >
+        {% endif %}
+      </div>
+      {% endfor %}
       {% endif %}
 
-    </div>
-    {% endfor %}
+    </div>{# /tab-panel #}
 
-    {% else %}
-    {# ── Generic fallback (no manifest or entity absent from manifest) ──── #}
-    {% for key, value in data.items() %}
-    {% set is_system = key in ('id', 'created_at', 'updated_at', 'created_by') %}
-    <div class="form-field {% if is_system %}form-field--system{% endif %}"
-         {% if is_system and persona | default('ops') != 'it' %}data-system-field="true"{% endif %}>
-      <label for="field-{{ key }}" class="form-label">{{ key }}</label>
-      {% if is_system %}
-      <input
-        id="field-{{ key }}"
-        name="{{ key }}"
-        type="text"
-        class="form-input form-input--readonly"
-        value="{{ value if value is not none else '' }}"
-        readonly
-        aria-readonly="true"
-      >
-      {% else %}
-      <input
-        id="field-{{ key }}"
-        name="{{ key }}"
-        type="text"
-        class="form-input"
-        value="{{ value if value is not none else '' }}"
-      >
-      {% endif %}
-    </div>
-    {% endfor %}
-    {% endif %}
-
-    <div class="form-actions">
+    <div class="tab-actions">
       <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-secondary btn-md">취소</a>
       <button type="submit" class="btn btn-primary btn-md">저장</button>
     </div>
+
   </form>
 
   <div class="detail-footer">
