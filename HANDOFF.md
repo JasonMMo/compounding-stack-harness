@@ -1,4 +1,4 @@
-# HANDOFF — 2026-06-12 (Growth-35: preview 자동화 결선 + Coolify 유지 결정)
+# HANDOFF — 2026-06-12 (Growth-36: preview 디자인 경쟁력 + 504 근본 해결)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
 > **다음 작업 = 실 고객 발굴 (M2 게이트)** — preview 파이프라인은 한 줄 명령으로 완성됨. 인프라 작업 더 없이 첫 의뢰만 받으면 됨.
@@ -40,9 +40,16 @@ PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug <slug
 
 **webhook auto-deploy 보류 결정**: Coolify 4.1.2 가 per-app/path 필터 없어 repo-push 시 전 테넌트 동시 재배포 → 영업 데모 안정성 위협. 수동 한 줄 deploy 가 통제·멱등·테넌트 격리. 코드는 `--setup-webhook --confirm` 게이트로 보관(당기지 않음). 재고 조건: per-app 필터 생기거나 테넌트 다수.
 
+## ▣ Growth-36 (2026-06-12 후속 세션) — 디자인 Phase 0+1 + 인시던트 해결
+
+- **디자인**: 두 데모에 **Pretendard Variable + Pico CSS v2 classless + Open Props** live (CDN 3종, node 빌드 0). `--pico-*` remap 은 `token_css_generator.py` 섹션 4·5 (재생성 생존). CDO 평가서 = `out/analysis/design-tooling-eval.md`. 중기 = Style Dictionary (react adapter 직전), Phase 2 = Franken UI (계약 후).
+- **504 인시던트 근본 해결**: ① Caddy spike 잔재 Caddyfile 이 Traefik file provider 오염 (삭제+proxy 재시작, 백업 `/data/coolify/proxy/backups/`) ② compose 자체 `preview-net` → 이중 네트워크 bistable → **제거** (uuid 넷 단일, 템플릿 반영). 컨테이너 재생성 룰렛 소멸 — 실측 단일 넷 확인.
+- **deploy 스크립트 견고화**: registry-first uuid lookup (이름 매칭은 fallback, 구 포맷 `coolify_project` 지원) + description ASCII 정화 (em-dash 422). lawfirm Coolify 프로젝트명은 `lawfirm-demo-preview` (불일치 주의 — registry uuid 가 단일 진실).
+- **Dockerfile**: tokens.css gitignored → 빌드타임 생성 스텝 추가 (`COPY design/tokens` + `RUN build_tokens.py`).
+
 ## 다음 후보
 
-1. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. **인프라는 준비 끝** — 의뢰 받으면 profile 작성 → 위 두 줄 → 외부 데모. 막는 건 영업뿐.
+1. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. **인프라는 준비 끝** — 의뢰 받으면 profile 작성 → 위 두 줄 → 외부 데모. 막는 건 영업뿐. 데모 디자인도 Pretendard+Pico 로 상향 완료.
 2. **자동화 잔여 (작음, 낮은 우선순위)**: 레지스트리 변경분 per-file 커밋 자동화 / git push→auto-redeploy(webhook 보류 중) / SECRET_KEY rotate(현 Coolify UI 수동).
 3. **engineer: `.npmrc` codegraph 버전 핀** / **G-14 (`--check` stale-anchor)** (Growth-34 이월).
 
