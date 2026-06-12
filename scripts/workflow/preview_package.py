@@ -44,7 +44,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # Coolify compose template
 # ---------------------------------------------------------------------------
 
-_COOLIFY_COMPOSE_TEMPLATE = """\
+_COOLIFY_COMPOSE_TEMPLATE_NO_SEED = """\
 # deploy/preview/{slug}.compose.yml
 # Coolify dockercompose preview — profile: {slug}
 # Build context: repo root (Coolify clones whole repo, build context = clone root)
@@ -99,6 +99,74 @@ services:
       - backend
     restart: unless-stopped
 """
+
+_COOLIFY_COMPOSE_TEMPLATE_WITH_SEED = """\
+# deploy/preview/{slug}.compose.yml
+# Coolify dockercompose preview — profile: {slug}
+# Build context: repo root (Coolify clones whole repo, build context = clone root)
+#
+# Domain: set via Coolify API PATCH docker_compose_domains (not SERVICE_FQDN_* env)
+# Manifest: server-side persistent file mounted read-only into frontend
+# Seed: server-side seed-data.json mounted read-only into backend (SEED_FILE)
+#
+# Coolify deployment:
+#   build_pack: dockercompose
+#   docker_compose_location: /deploy/preview/{slug}.compose.yml
+#   git_repository: git@github.com:JasonMMo/compounding-stack-harness.git
+#   git_branch: master
+#   private_key_uuid: s127pafarr46wlu1r2mre2te
+
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/adapters/fastapi/Dockerfile
+    environment:
+      PORT: "8081"
+      PYTHONIOENCODING: "utf-8"
+      SEED_FILE: "/data/seed/seed-data.json"
+    volumes:
+      # Seed data file — scp'd to server before deploy
+      # Path: /data/coolify/manifests/{slug}/seed-data.json
+      - type: bind
+        source: /data/coolify/manifests/{slug}/seed-data.json
+        target: /data/seed/seed-data.json
+        read_only: true
+    # No custom network — Coolify attaches containers to its uuid network only.
+    # Traefik can only reach uuid-net IPs; declaring preview-net caused bistable 504.
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
+    environment:
+      # Domain routing: set via Coolify API PATCH docker_compose_domains
+      # [{{"name":"frontend","domain":"https://{slug}.n9n.co.kr"}}]
+      # Do NOT use SERVICE_FQDN_* env here — set via API, not compose file.
+      FRONTEND_PORT: "5000"
+      BACKEND_BASE_URL: "http://backend:8081"
+      CONTRACT_DIR: "/app/middle/contract"
+      PROFILE_MANIFEST: "/data/manifest/screen-manifest.json"
+      PYTHONIOENCODING: "utf-8"
+      # SECRET_KEY injected via Coolify environment variables (not in compose file)
+    volumes:
+      # Persistent manifest file — scp'd to server before deploy
+      # Path: /data/coolify/manifests/{slug}/screen-manifest.json
+      - type: bind
+        source: /data/coolify/manifests/{slug}/screen-manifest.json
+        target: /data/manifest/screen-manifest.json
+        read_only: true
+    ports:
+      - "5000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+"""
+
+# Backward-compat alias: templates without seed use the no-seed template as default
+_COOLIFY_COMPOSE_TEMPLATE = _COOLIFY_COMPOSE_TEMPLATE_NO_SEED
 
 _COMPOSE_TEMPLATE = """\
 # docker-compose.yml — local preview for profile: {slug}
@@ -191,16 +259,29 @@ def _utf8_env() -> dict:
 # Compose writer
 # ---------------------------------------------------------------------------
 
-def write_coolify_compose(slug: str) -> Path:
+def write_coolify_compose(slug: str, out_root: Path | None = None) -> Path:
     """Write deploy/preview/<slug>.compose.yml for Coolify deployment.
 
-    Template is structurally identical to lawfirm-demo/shop-demo reference files.
-    Only slug-variable parts differ (service name prefix comment, manifest path, domain comment).
+    If out/<slug>/seed-data.json exists, uses the seed-aware template which adds:
+      - backend SEED_FILE env var pointing to /data/seed/seed-data.json
+      - backend bind-mount: /data/coolify/manifests/<slug>/seed-data.json (ro)
+    Otherwise uses the no-seed template (backward-compatible — lawfirm/shop unaffected).
     """
     deploy_dir = REPO_ROOT / "deploy" / "preview"
     deploy_dir.mkdir(parents=True, exist_ok=True)
 
-    compose_content = _COOLIFY_COMPOSE_TEMPLATE.format(slug=slug)
+    # Detect seed file existence to select template
+    _out = out_root if out_root is not None else (REPO_ROOT / "out")
+    seed_path = _out / slug / "seed-data.json"
+    has_seed = seed_path.exists()
+
+    if has_seed:
+        template = _COOLIFY_COMPOSE_TEMPLATE_WITH_SEED
+        print(f"[preview_package] seed file detected at {seed_path} — using seed-aware template.")
+    else:
+        template = _COOLIFY_COMPOSE_TEMPLATE_NO_SEED
+
+    compose_content = template.format(slug=slug)
 
     compose_path = deploy_dir / f"{slug}.compose.yml"
     compose_path.write_text(compose_content, encoding="utf-8")
@@ -231,7 +312,10 @@ def _verify_coolify_compose_structure(slug: str, compose_path: Path) -> bool:
     """Verify generated Coolify compose matches reference templates structurally.
 
     Diffs generated file against shop-demo reference (slug substituted out).
-    Returns True if structurally identical (slug differences only).
+    Returns True if structurally identical (slug differences only), OR if the
+    only differences are seed-specific additions (SEED_FILE env + volumes block).
+    Seed-aware composes are expected to differ from shop-demo — logged as INFO,
+    not WARN.
     """
     import difflib
 
@@ -250,6 +334,24 @@ def _verify_coolify_compose_structure(slug: str, compose_path: Path) -> bool:
         print("[preview_package] structural diff vs shop-demo: PASS (slug differences only).")
         return True
 
+    # Check if differences are only seed-related lines
+    seed_markers = {"SEED_FILE", "seed-data.json", "/data/seed/", "# Seed:", "Seed:"}
+    diff_lines = list(difflib.unified_diff(
+        reference.splitlines(keepends=True),
+        generated_normalized.splitlines(keepends=True),
+        fromfile="shop-demo.compose.yml (reference)",
+        tofile=f"{slug}.compose.yml (generated, slug normalized)",
+        n=0,
+    ))
+    non_seed_diffs = [
+        ln for ln in diff_lines
+        if ln.startswith(("+", "-")) and not ln.startswith(("+++", "---"))
+        and not any(m in ln for m in seed_markers)
+    ]
+    if not non_seed_diffs:
+        print("[preview_package] structural diff vs shop-demo: PASS (seed additions only — expected).")
+        return True
+
     # Show diff for diagnosis
     diff = list(difflib.unified_diff(
         reference.splitlines(keepends=True),
@@ -259,7 +361,7 @@ def _verify_coolify_compose_structure(slug: str, compose_path: Path) -> bool:
         n=3,
     ))
     if diff:
-        print("[preview_package] WARN: structural diff detected (non-slug differences):")
+        print("[preview_package] WARN: structural diff detected (non-slug, non-seed differences):")
         for line in diff:
             print("  " + line.rstrip())
         return False
@@ -313,11 +415,17 @@ def main() -> int:
 
     if args.coolify:
         # Step 2 (Coolify mode): write deploy/preview/<slug>.compose.yml
-        compose_path = write_coolify_compose(slug)
+        compose_path = write_coolify_compose(slug, out_root=out_root)
         print(f"[preview_package] Coolify compose written → {compose_path}")
 
-        # Structural diff verification against reference
-        _verify_coolify_compose_structure(slug, compose_path)
+        # Structural diff verification against reference.
+        # Skip when seed file is present: seed-aware template intentionally adds
+        # backend volumes/SEED_FILE block not present in shop-demo reference.
+        seed_file_exists = (out_root / slug / "seed-data.json").exists()
+        if seed_file_exists:
+            print("[preview_package] structural diff skipped (seed-aware compose — expected additions).")
+        else:
+            _verify_coolify_compose_structure(slug, compose_path)
 
         print()
         print("Coolify next steps:")
