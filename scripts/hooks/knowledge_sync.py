@@ -92,16 +92,8 @@ def _match_rules(rel_parts_tuple):
     return matched
 
 
-def _skill_paths(skill_names):
-    """Return comma-separated skill file paths (repo-relative)."""
-    return ", ".join(
-        f".claude/skills/{name}/SKILL.md" for name in skill_names
-    )
-
-
 def _build_context(file_path_str: str, skill_names: list) -> str:
     skills_list = ", ".join(skill_names)
-    skill_paths = _skill_paths(skill_names)
     # Determine if it's a wiki page (build_graph re-run hint)
     rel = pathlib.Path(file_path_str)
     is_wiki = False
@@ -112,13 +104,10 @@ def _build_context(file_path_str: str, skill_names: list) -> str:
     except ValueError:
         pass
 
-    wiki_hint = " + wiki: build_graph.py 재생성, qmd update" if is_wiki else ""
-
-    return (
-        f"[knowledge-sync] {file_path_str} → 연관 skill ({skills_list}) 절차가 "
-        f"이 변경과 어긋나는지 점검 (CLAUDE.md §7 환류)"
-        f"{wiki_hint}"
-    )
+    rel_name = pathlib.Path(file_path_str).name
+    if is_wiki:
+        return f"[ks] {rel_name} wiki 변경 → 필요 시 loop skill 환류"
+    return f"[ks] {rel_name} → {skills_list} 환류 점검"
 
 
 def main():
