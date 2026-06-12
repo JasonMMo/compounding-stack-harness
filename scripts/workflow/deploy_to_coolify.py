@@ -1200,11 +1200,22 @@ def main() -> int:
     patch_domain(app_uuid, slug, token, dry_run=dry_run)
 
     # Step 4: manifest SCP
-    if not args.skip_scp:
+    # registry의 manifest_server_path: null 이면 manifest 없는 앱 (예: intake) — skip
+    _manifest_path_in_registry = _registry_uuid(slug, "manifest_server_path")
+    _has_no_manifest = _manifest_path_in_registry is None and (
+        REPO_ROOT / "infra" / "registry" / f"{slug}.yaml"
+    ).exists()
+    if args.skip_scp or _has_no_manifest:
+        if _has_no_manifest and not args.skip_scp:
+            print(
+                f"[deploy_to_coolify] manifest SCP skipped "
+                f"(registry manifest_server_path=null for '{slug}')."
+            )
+        else:
+            print("[deploy_to_coolify] --skip-scp: manifest SCP skipped.")
+    else:
         if not scp_manifest(slug, dry_run=dry_run):
             return 1
-    else:
-        print("[deploy_to_coolify] --skip-scp: manifest SCP skipped.")
 
     # Step 5: SECRET_KEY injection
     inject_secret_key(app_uuid, slug, token, dry_run=dry_run)
