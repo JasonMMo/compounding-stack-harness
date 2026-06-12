@@ -535,13 +535,25 @@ def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False) ->
 # ---------------------------------------------------------------------------
 
 def scp_manifest(slug: str, dry_run: bool = False) -> bool:
-    """SCP manifest to server /data/coolify/manifests/<slug>/screen-manifest.json.
+    """SCP manifest (and seed-data.json if present) to server.
+
+    Always uploads:
+      out/<slug>/screen-manifest.json → /data/coolify/manifests/<slug>/screen-manifest.json
+
+    Conditionally uploads (if file exists locally):
+      out/<slug>/seed-data.json → /data/coolify/manifests/<slug>/seed-data.json
+
+    scp order: mkdir first, then manifest, then seed — container bind-mounts
+    require the file to exist before `docker compose up`. Sequence preserves
+    the runbook "scp before deploy" invariant.
 
     Returns True on success.
     """
     manifest_local = REPO_ROOT / "out" / slug / "screen-manifest.json"
+    seed_local = REPO_ROOT / "out" / slug / "seed-data.json"
     remote_dir = f"{MANIFEST_SERVER_BASE}/{slug}"
-    remote_path = f"{remote_dir}/screen-manifest.json"
+    remote_manifest = f"{remote_dir}/screen-manifest.json"
+    remote_seed = f"{remote_dir}/seed-data.json"
 
     if not manifest_local.exists():
         print(
@@ -551,6 +563,12 @@ def scp_manifest(slug: str, dry_run: bool = False) -> bool:
         )
         return False
 
+    has_seed = seed_local.exists()
+    if has_seed:
+        print(f"[deploy_to_coolify] seed file found at {seed_local} — will upload.")
+    else:
+        print(f"[deploy_to_coolify] no seed file at {seed_local} — skipping seed upload.")
+
     mkdir_cmd = [
         "ssh",
         "-i", PREVIEW_SSH_KEY,
@@ -558,17 +576,26 @@ def scp_manifest(slug: str, dry_run: bool = False) -> bool:
         PREVIEW_HOST,
         f"mkdir -p {remote_dir}",
     ]
-    scp_cmd = [
+    scp_manifest_cmd = [
         "scp",
         "-i", PREVIEW_SSH_KEY,
         "-o", "StrictHostKeyChecking=accept-new",
         str(manifest_local),
-        f"{PREVIEW_HOST}:{remote_path}",
+        f"{PREVIEW_HOST}:{remote_manifest}",
+    ]
+    scp_seed_cmd = [
+        "scp",
+        "-i", PREVIEW_SSH_KEY,
+        "-o", "StrictHostKeyChecking=accept-new",
+        str(seed_local),
+        f"{PREVIEW_HOST}:{remote_seed}",
     ]
 
     if dry_run:
         print(f"[DRY-RUN] ssh mkdir -p {remote_dir}")
-        print(f"[DRY-RUN] scp {manifest_local} → {PREVIEW_HOST}:{remote_path}")
+        print(f"[DRY-RUN] scp {manifest_local} → {PREVIEW_HOST}:{remote_manifest}")
+        if has_seed:
+            print(f"[DRY-RUN] scp {seed_local} → {PREVIEW_HOST}:{remote_seed}")
         return True
 
     print(f"[deploy_to_coolify] creating remote dir {remote_dir} ...")
@@ -577,13 +604,21 @@ def scp_manifest(slug: str, dry_run: bool = False) -> bool:
         print(f"[deploy_to_coolify] ERROR: ssh mkdir failed: {result.stderr}", file=sys.stderr)
         return False
 
-    print(f"[deploy_to_coolify] scp manifest → {remote_path} ...")
-    result = subprocess.run(scp_cmd, capture_output=True, text=True)
+    print(f"[deploy_to_coolify] scp manifest → {remote_manifest} ...")
+    result = subprocess.run(scp_manifest_cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"[deploy_to_coolify] ERROR: scp failed: {result.stderr}", file=sys.stderr)
+        print(f"[deploy_to_coolify] ERROR: scp manifest failed: {result.stderr}", file=sys.stderr)
         return False
-
     print(f"[deploy_to_coolify] manifest uploaded.")
+
+    if has_seed:
+        print(f"[deploy_to_coolify] scp seed-data.json → {remote_seed} ...")
+        result = subprocess.run(scp_seed_cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"[deploy_to_coolify] ERROR: scp seed failed: {result.stderr}", file=sys.stderr)
+            return False
+        print(f"[deploy_to_coolify] seed-data.json uploaded.")
+
     return True
 
 
