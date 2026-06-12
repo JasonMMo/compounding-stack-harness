@@ -1,56 +1,99 @@
 {% extends "base.html" %}
-{% block title %}로그인{% endblock %}
+{% block title %}로그인 — {{ g_customer_display or '학사행정 통합 플랫폼' }}{% endblock %}
 
 {% block unauthenticated_content %}
-<div class="login-wrapper">
-  <div class="login-card">
-    <h1 class="login-title">로그인</h1>
+<div class="login-split">
 
-    {% if error %}
-    <div role="alert" aria-live="assertive" class="error-banner">
-      {{ error }}
+  {# ── 왼쪽: 브랜드 패널 ────────────────────────────────────────────────── #}
+  <div class="login-brand" aria-hidden="true">
+    <div class="login-brand__inner">
+      <span class="login-brand__badge">행정안전부 KRDS 준수 시스템</span>
+
+      <div class="login-brand__logo-wrap">
+        {{ (g_customer_display or '학')[0] | upper }}
+      </div>
+
+      <p class="login-brand__product">{{ g_customer_display or '학사행정 통합 플랫폼' }}</p>
+      <p class="login-brand__tagline">
+        교육기관의 모든 행정 업무를 하나의 플랫폼에서 — 빠르고 안전하게.
+      </p>
+
+      <hr class="login-brand__divider">
+
+      <ul class="login-brand__features">
+        <li class="login-brand__feature-item">학생·강의·과정 종합 관리</li>
+        <li class="login-brand__feature-item">재무·조달·자산 실시간 추적</li>
+        <li class="login-brand__feature-item">문서 버전 관리 및 보고서 자동화</li>
+        <li class="login-brand__feature-item">KRDS 표준 접근성 준수 인터페이스</li>
+      </ul>
     </div>
-    {% endif %}
-
-    <form method="post" action="{{ url_for('login_post') }}" novalidate>
-      <div class="form-field">
-        <label for="username" class="form-label">사용자명 <span aria-hidden="true" class="required-marker">*</span></label>
-        <input
-          id="username"
-          name="username"
-          type="text"
-          class="form-input"
-          autocomplete="username"
-          aria-required="true"
-          required
-          autofocus
-        >
-      </div>
-
-      <div class="form-field">
-        <label for="password" class="form-label">비밀번호 <span aria-hidden="true" class="required-marker">*</span></label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          class="form-input"
-          autocomplete="current-password"
-          aria-required="true"
-          required
-        >
-      </div>
-
-      <div class="form-field form-field--checkbox">
-        <label class="checkbox-label">
-          <input type="checkbox" name="remember_me" value="1">
-          로그인 상태 유지
-        </label>
-      </div>
-
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary btn-md">로그인</button>
-      </div>
-    </form>
   </div>
+
+  {# ── 오른쪽: 로그인 폼 ────────────────────────────────────────────────── #}
+  <div class="login-form-panel">
+    <div class="login-card">
+
+      <div>
+        <p class="login-card__eyebrow">관리자 포털</p>
+        <h1 class="login-title">로그인</h1>
+        <p class="login-subtitle">계속하려면 계정 정보를 입력하세요.</p>
+      </div>
+
+      {% if error %}
+      <div role="alert" aria-live="assertive" class="error-banner">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('login_post') }}" novalidate>
+        <div class="form-field">
+          <label for="username" class="form-label">
+            사용자명
+            <span aria-hidden="true" class="required-marker">*</span>
+          </label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            class="form-input"
+            autocomplete="username"
+            aria-required="true"
+            required
+            autofocus
+          >
+        </div>
+
+        <div class="form-field">
+          <label for="password" class="form-label">
+            비밀번호
+            <span aria-hidden="true" class="required-marker">*</span>
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            class="form-input"
+            autocomplete="current-password"
+            aria-required="true"
+            required
+          >
+        </div>
+
+        <div class="form-field form-field--checkbox">
+          <label class="checkbox-label">
+            <input type="checkbox" name="remember_me" value="1">
+            로그인 상태 유지
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-md" style="width:100%">로그인</button>
+        </div>
+      </form>
+
+      <p class="login-card__footer">wire contract {{ wire_version | default('unknown') }}</p>
+    </div>
+  </div>
+
 </div>
 {% endblock unauthenticated_content %}
