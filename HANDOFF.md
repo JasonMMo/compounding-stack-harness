@@ -1,7 +1,7 @@
-# HANDOFF — 2026-06-11 (Growth-35: DevOps 인격 + preview 티어 live + scaffold→preview v1)
+# HANDOFF — 2026-06-12 (Growth-35: preview 자동화 결선 + Coolify 유지 결정)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
-> **다음 작업 = Coolify Phase 2** (아래 ▣ 섹션부터 바로 시작).
+> **다음 작업 = 실 고객 발굴 (M2 게이트)** — preview 파이프라인은 한 줄 명령으로 완성됨. 인프라 작업 더 없이 첫 의뢰만 받으면 됨.
 
 ## ▶▶▶ 복귀 직후 상태 (확인용)
 
@@ -24,30 +24,27 @@ CEO 가 이 harness 로 숨고/크몽 **건당 500만원 1인 비대면 창업**
 - **scaffold→preview v1 (engineer 위임)**: `preview_package.py`+Dockerfile×2+`.dockerignore` → **DB 없는 2-container compose**(백엔드 in-memory store). lawfirm-demo 로컬 `/login`·`/health` 200, manifest 14ent 검증.
 - **보안 사고 2회**(토큰 source·cut 노출) → raw-file 시크릿 규약 hardening (노출 2토큰 CEO 폐기 완료).
 
-## ▣ 다음 작업 — Coolify Phase 2 (로컬 preview → 서버 배포)
+## ▣ preview 파이프라인 — 한 줄 명령으로 완성 (이번 세션 결선)
 
-**목표**: `preview_package.py` 로 로컬 검증된 2-container preview 를 **`<slug>.n9n.co.kr` 로 실제 배포**. profile 한 줄 → 외부 HTTPS preview.
+**profile slug → 외부 HTTPS preview 가 두 줄.** 새 고객 의뢰 오면 이대로:
+```
+PYTHONIOENCODING=utf-8 python scripts/workflow/preview_package.py --profile <slug> --coolify   # 서버용 compose 생성
+PYTHONIOENCODING=utf-8 python scripts/workflow/deploy_to_coolify.py --slug <slug>              # Coolify API 4단계 + manifest scp + 검증 한 방 (레지스트리 auto-merge 포함)
+```
+- **검증된 레시피** = `private-deploy-key` 엔드포인트 + `build_pack=dockercompose`(git-build) + manifest **persistent-storage RO 마운트**(서버 `/data/coolify/manifests/<slug>/screen-manifest.json` → frontend `/data/manifest/`). 함정·재사용 uuid·단계 전부 런북 `docs/runbooks/preview-deploy.md` 에 박힘.
+- **재사용 상수**: server_uuid `n12vdydjpwp81hu5i15n1gsb`, privkey_uuid `s127pafarr46wlu1r2mre2te`(모든 고객 deploy 공용), git deploy key 이미 GitHub 등록(재생성 금지).
+- **현재 live**: `lawfirm-demo.n9n.co.kr` + `shop-demo.n9n.co.kr` (둘 다 가상 고객, HTTPS 200 + LE cert). 멀티테넌트 동작 확인.
+- **함정 (런북 참조)**: docker_compose_location 절대 `/` 경로 / 도메인은 `docker_compose_domains` PATCH(fqdn 필드 422) / SECRET_KEY 가 `/envs` GET `real_value` 평문 노출(조회 시 마스킹).
 
-**왜 로컬 compose 를 그대로 못 올리나**: ① `out/<slug>/docker-compose.yml` 의 build context 가 **절대 Windows 경로**(로컬 전용) ② manifest 가 **host volume bind**(Coolify 서버엔 그 파일 없음).
+**substrate 결정 (이번 세션)**: **Coolify 유지.** Caddy spike 결과 Caddy 가 기술 우위(5/5 함정 제거·wildcard DNS-01 cert 0발급·harness 변경 0)지만, 함정이 `deploy_to_coolify.py` 로 이미 캡슐화돼 현 운영비용≈0 → 전환비용(CEO 대시보드 상실 + `xcaddy` 커스텀 빌드 + 15~30s 다운타임)이 더 큼. **검증·비용산정된 탈출 경로 확보**(spike 파일 `out/spike-caddy/*` + `out/analysis/spike-caddy-vs-coolify.md`). **전환 트리거**: 테넌트≥5 AND SECRET_KEY rotate 월1회↑ 필요 AND Coolify 4.x 함정 미해소 — 셋 다 충족 시 재검토.
 
-**검증된 무기**: `deployment-topology.md §4` 의 Coolify API `dockerimage` 레시피 (pre-built 레지스트리 이미지 → 도메인 → instant_deploy → 외부 HTTPS, 이미 PASS). 와일드카드 `*.n9n.co.kr` 가 `<slug>` DNS 자동 커버.
+**webhook auto-deploy 보류 결정**: Coolify 4.1.2 가 per-app/path 필터 없어 repo-push 시 전 테넌트 동시 재배포 → 영업 데모 안정성 위협. 수동 한 줄 deploy 가 통제·멱등·테넌트 격리. 코드는 `--setup-webhook --confirm` 게이트로 보관(당기지 않음). 재고 조건: per-app 필터 생기거나 테넌트 다수.
 
-**재설계 결정 사항 (CTO 가 Phase 2 시작 시 확정)**:
-1. **이미지 빌드·배급**: adapter 2개를 빌드 → 레지스트리 push. 레지스트리 선택지 — (a) Coolify 내장/서버 로컬 빌드(Coolify 가 git/Dockerfile 에서 빌드) (b) 외부 레지스트리(ghcr/docker hub) push 후 §4 `dockerimage` pull. **(a) 가 §4 dockerimage 와 안 맞을 수 있음 — Coolify "deploy from Dockerfile/compose" 경로 조사 필요** vs (b) 단순.
-2. **manifest 주입 (1 이미지 N 프로필 유지)**: host-bind 대신 — (i) 배포 전 서버에 manifest 파일을 scp/생성하고 Coolify persistent storage 로 마운트 (ii) manifest 내용을 env 로 주입(크기 확인) (iii) 컨테이너 init 이 프로필 URL 에서 fetch. **(i) 가 현 아키텍처에 가장 근접**.
-3. **backend↔frontend 묶기**: Coolify 에서 2-service 를 한 프로젝트로(compose 배포) vs 2 dockerimage 앱(frontend 만 도메인, backend 내부). 후자가 §4 검증 경로에 가까움.
+## 다음 후보
 
-**Phase 2 첫 스텝 (제안)**:
-- (a) Coolify 4.1.2 가 Dockerfile/compose 빌드를 API 로 지원하는지 확인 (`/api/v1/applications/dockerfile` 또는 compose 엔드포인트 조사 — SSH→localhost:8000) → 빌드 경로 확정.
-- (b) lawfirm-demo 로 backend 이미지 1개 먼저 서버 배포(내부) → frontend 이미지 + manifest 주입 → `lawfirm-demo.n9n.co.kr` 도메인 → 외부 HTTPS·로그인 화면 확인.
-- (c) 성공 시 `infra/registry/lawfirm-demo.yaml` 첫 고객 엔트리 작성(`_template.yaml` 기반).
-- 상세 로컬 보고서(참고): `out/analysis/preview-wiring-v1.md` (gitignored, 이 머신).
-
-## 다음 후보 (Phase 2 이후)
-
-1. **첫 고객 preview 리허설** — 가상 고객 1명으로 profile→preview_package→Coolify→`<slug>.n9n.co.kr` HTTPS 전 과정 dogfood + 레지스트리 엔트리.
-2. **engineer: `.npmrc` codegraph 버전 핀** / **G-14 (`--check` stale-anchor)** (Growth-34 이월).
-3. **실 고객 발굴** (M2 게이트) — 숨고/크몽 첫 의뢰.
+1. **★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. **인프라는 준비 끝** — 의뢰 받으면 profile 작성 → 위 두 줄 → 외부 데모. 막는 건 영업뿐.
+2. **자동화 잔여 (작음, 낮은 우선순위)**: 레지스트리 변경분 per-file 커밋 자동화 / git push→auto-redeploy(webhook 보류 중) / SECRET_KEY rotate(현 Coolify UI 수동).
+3. **engineer: `.npmrc` codegraph 버전 핀** / **G-14 (`--check` stale-anchor)** (Growth-34 이월).
 
 ## 운영 메모
 
