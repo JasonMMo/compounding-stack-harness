@@ -1,11 +1,20 @@
-# HANDOFF — 2026-06-12 (Growth-46: research-loop skill 정비 + commands 3개)
+# HANDOFF — 2026-06-13 (Growth-47: UX/Design wiki 환류)
 
 > 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
-> **다음 작업 = 실 고객 발굴 (M2 게이트) — 인프라·디자인·UI·파이프라인·KRDS 전 구간 완료. 막는 건 영업뿐.**
+> **다음 작업 = 실 고객 발굴 (M2 게이트) — 인프라·디자인·UI·파이프라인·KRDS·UX wiki 전 구간 완료. 막는 건 영업뿐.**
+
+## ▣ Growth-47 (이번 세션) — UX/Design wiki 환류
+
+- **design/refrence 오타 수정** → `design/reference/hostinger-design.png` (커밋 b87d766)
+- **wiki 신규 2페이지**:
+  - `knowledge/wiki/design/kwcag.md` — KWCAG 2.2 4원칙·명도대비(4.5:1/3:1)·ARIA 체크리스트·법적 근거(장차법)·WCAG 비교
+  - `knowledge/wiki/design/korean-ux-conventions.md` — Pretendard 타이포·날짜/금액 표기·폼 레이아웃·버튼 텍스트 관행·테이블 인터랙션·검색패널 패턴·모달 관행
+- **wiki index 포인터 2개 추가** (79e6a71)
+- **커밋**: b87d766→c2260c9→18f0d14→79e6a71 (4건, pushed)
 
 ## ▶▶▶ 복귀 직후 상태 (확인용)
 
-- **Git**: clean, master 동기화 (HEAD = 80d7b93, HANDOFF Growth-46).
+- **Git**: clean, master 동기화 (HEAD = 79e6a71, HANDOFF Growth-47).
 - **팀**: 9-인격 (DevOps 합류). `Agent(subagent_type="devops-agent"|"engineer-agent"|"security-agent", ...)` 직접 spawn 가능.
 - **★ preview VPS LIVE**: Hostinger KVM 2 `187.77.140.157` (싱가포르, $8.99/월 24mo). SSH `ssh -i ~/.ssh/n9n_preview_ed25519 root@187.77.140.157` (키 인증만). Coolify 4.1.2 healthy. `*.n9n.co.kr` 자동 HTTPS. **Coolify API CI/CD end-to-end 검증 완료**. 8000/8080/6001/6002 클라우드 방화벽 차단(22/80/443만 허용).
 - **Coolify API 토큰**: `infra/secrets/preview-vps.env` (gitignored). 내용 절대 비출력.
@@ -57,7 +66,7 @@
 ## 다음 후보
 
 1. **★★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. 시스템 전 구간 준비 완료. 막는 건 영업뿐.
-2. **UX/Design Pattern deep-research** — `/research:fetch` + `/research:query` 이제 사용 가능. 미답: KWCAG, 인터랙션 패턴, 한국어 UX 관행.
+2. ~~UX/Design Pattern deep-research~~ — ✅ Growth-47 완료. wiki: kwcag + korean-ux-conventions.
 3. **자동화 잔여** (낮은 우선순위): webhook 보류 / SECRET_KEY rotate / G-14 stale-anchor.
 4. **KRDS 클론 정리**: `D:\AI\workspace\krds-uiux` 분석 완료 → 필요 시 삭제 가능.
 
