@@ -4,6 +4,13 @@
 
 ## §1 — Growth 상세
 
+### Growth-38 (2026-06-12) — intake 실제출 2건 triage (교육업 수용 / 예매앱 거절)
+
+- **건1 수용 (교육업 staff)**: `industry: education`, `existing_system: excel_manual`. 선택 6 도메인 (customer/order/asset/finance_ledger/document/report) → catalog 매핑 가능 4개 확정 (crm/asset/document/reporting), 2개 (sales/finance) 는 Q2·Q3 follow-up 필수. IT 필드 전부 공란 — stack/dialect/auth 미결. **결론**: follow-up 2건 + IT 필드 수집 후 profile 초안 가능. 지금 당장 scaffold.py 실행 불가.
+- **건2 거절 (여객열차 예매 앱)**: `free_notes` 에 "안드로이드 앱, 코레일톡 형식" 명시 — 일반 소비자향 모바일 B2C 앱. 당사 스코프 (기업/기관 내부 업무 self-host harness) 와 완전히 다름. 스코프 외 거절, backlog 등록 불필요. 거절 회신 초안 CEO 이관.
+- **산출물**: `out/analysis/intake-rehearsal/needs-note-edu.md` (건1 needs 분석 + 8개 follow-up 질문 + 도메인 매핑), `out/analysis/intake-rehearsal/reject-reply.md` (건2 CEO 발송용 거절 회신).
+- **FAQ 소재 발생**: "모바일 앱 개발도 가능한가요?" — `presets/skills/generic/faq.md` 누적 대상 (FAQ 파일 신설 트리거).
+
 ### Growth-37 (2026-06-12) — 웹 intake 질문 카탈로그 (`apps/intake/questions.yaml`)
 
 - **설계 동기**: 숨고/크몽 의뢰인이 계약 전 스스로 needs를 입력하는 웹폼 필요. PM delivery loop step 0~2 (Intake → Discover → Specify) 를 디지털화하여 담당자 개입 없이 `profiles/<slug>.yaml` 초안이 생성되게 한다.
@@ -31,6 +38,7 @@
 | # | 고객 | 시작 | 단계 | 상태 |
 |---|---|---|---|---|
 | 1 | 30인 법무법인 (lawfirm-demo) | 2026-06-11 | Step 5 Deliver | 인도 패키지 조립 완료 (`docs/delivery/lawfirm-demo/`) + CISO 보안 게이트 PASS (CAVEAT 3건 해소, Growth-32). CEO 승인 대기 — 외부 전달 책임은 CEO (charter §2) |
+| 2 | 교육업 staff (edu-intake-rehearsal) | 2026-06-12 | Step 1 Intake | 수용 결정. follow-up 8문항 작성 완료. Q2(order 의미)·Q3(정산 주체)·IT 필드 회신 대기. |
 
 ### CEO 인터뷰 답변 기록 (lawfirm-demo, 2026-06-11)
 
