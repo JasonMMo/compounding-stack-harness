@@ -1,0 +1,30 @@
+# infra/registry/intake.yaml
+# Digital asset record — intake 의뢰인 웹폼 앱
+# uuid는 배포 시 deploy_to_coolify.py 가 자동 채움
+slug: intake
+contact:
+  channel: internal
+  handle: ops
+preview:
+  subdomain: intake.n9n.co.kr
+  url: null
+  coolify_project: null
+  coolify_app: null
+  coolify_env: production
+  deploy_key_github_id: 154181975
+  coolify_privkey_uuid: s127pafarr46wlu1r2mre2te
+  server_uuid: n12vdydjpwp81hu5i15n1gsb
+  compose_file: deploy/preview/intake.compose.yml
+  # intake 앱은 screen-manifest 없음 — scp 단계 skip 필요
+  manifest_server_path: null
+  status: provisioning
+  deployed_at: null
+production:
+  install_method: null
+  installed_at: null
+  stack:
+    frontend: vanilla-htmx
+    backend: fastapi
+secret_ref:
+  - vault/intake/admin-password    # INTAKE_ADMIN_PASSWORD — infra/secrets/ gitignored
+cost_note: "preview VPS 공유 (187.77.140.157), Hostinger KVM2 $8.99/mo 귀속분"
