@@ -63,6 +63,25 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-insecure-change-me")
 
 BACKEND_BASE_URL = os.environ.get("BACKEND_BASE_URL", "http://localhost:8080").rstrip("/")
 
+
+# ---------------------------------------------------------------------------
+# Template context processor — inject manifest globals into every template
+# ---------------------------------------------------------------------------
+
+@app.context_processor
+def _inject_manifest_globals() -> dict:
+    """Make customer_display and feedback_url available in all templates.
+
+    This lets base.html render the nav brand and footer feedback CTA
+    without each route handler passing the values explicitly.
+    Routes that also pass these as explicit kwargs will override via the
+    normal Jinja2 template variable precedence (explicit wins).
+    """
+    return {
+        "g_customer_display": manifest.customer_display(),
+        "g_feedback_url": manifest.feedback_url(),
+    }
+
 # Load contract at startup (G-1 — reads wire-v1.yaml + codes.yaml)
 loader = get_loader()
 log.info("Frontend adapter ready. Wire contract version: %s", loader.wire_version())
@@ -208,7 +227,28 @@ def _render_error(payload: dict, status: int, entity_type: str = "") -> str | Re
 def index():
     if not _current_token():
         return redirect(url_for("login_get"))
-    return redirect(url_for("entity_list", entity_type="customer"))
+    return redirect(url_for("home"))
+
+
+# ---------------------------------------------------------------------------
+# Home screen — personalised landing after login
+# ---------------------------------------------------------------------------
+
+@app.get("/home")
+@_require_login
+def home():
+    """Render the post-login landing page.
+
+    Shows customer.display heading + domain cards (with entity links).
+    Falls back gracefully when no manifest is loaded (generic heading).
+    """
+    return render_template(
+        "home.html",
+        customer_display=manifest.customer_display(),
+        domains=manifest.domains(),
+        feedback_url=manifest.feedback_url(),
+        wire_version=loader.wire_version(),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -244,7 +284,7 @@ def login_post():
     session["token"] = payload.get("token", "")
     session["user_id"] = payload.get("user_id", "")
     session["expires_at"] = payload.get("expires_at", "")
-    return redirect(url_for("entity_list", entity_type="customer"))
+    return redirect(url_for("home"))
 
 
 @app.post("/logout")
@@ -328,6 +368,7 @@ def entity_list(entity_type: str):
         sort_field=sort_field,
         sort_direction=sort_direction,
         search=search,
+        entity_label=manifest.label(entity_type) or entity_type,
         wire_version=loader.wire_version(),
     )
 
