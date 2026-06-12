@@ -302,11 +302,43 @@ def _render_needs_note(slug: str, answers: dict, extra_signals: list[str]) -> st
     return "\n".join(lines)
 
 # ---------------------------------------------------------------------------
+# answers 정규화 (기존 저장분 bool 역직렬화 방어)
+# ---------------------------------------------------------------------------
+
+def _normalize_answers(answers: dict) -> dict:
+    """revision JSON 의 bool/str bool 값을 yes/no str 로 정규화.
+
+    YAML 1.1 파싱 결함으로 저장된 True/False (bool) 또는
+    "True"/"False" (str) 를 "yes"/"no" 로 변환한다.
+    multiselect 리스트 내부도 동일 처리.
+    """
+    _BOOL_STR_MAP = {"True": "yes", "False": "no", "true": "yes", "false": "no"}
+
+    def _fix(v: object) -> object:
+        if isinstance(v, bool):
+            return "yes" if v else "no"
+        if isinstance(v, str) and v in _BOOL_STR_MAP:
+            return _BOOL_STR_MAP[v]
+        return v
+
+    result = {}
+    for k, v in answers.items():
+        if isinstance(v, list):
+            result[k] = [_fix(item) for item in v]
+        else:
+            result[k] = _fix(v)
+    return result
+
+
+# ---------------------------------------------------------------------------
 # 변환 메인 로직
 # ---------------------------------------------------------------------------
 
 def convert(answers: dict) -> tuple[dict, list[str]]:
     """answers dict → (profile_data, extra_signals_for_needs_note)."""
+    # 기존 저장분 bool 파싱 결함 정규화
+    answers = _normalize_answers(answers)
+
     extra_signals: list[str] = []
 
     # 기본 정보
