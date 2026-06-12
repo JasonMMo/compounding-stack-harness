@@ -63,6 +63,11 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-insecure-change-me")
 
 BACKEND_BASE_URL = os.environ.get("BACKEND_BASE_URL", "http://localhost:8080").rstrip("/")
 UI_THEME = os.environ.get("UI_THEME", "saas")  # saas | public-sector
+# Comma-separated entity slugs that render in master-detail split layout.
+# Example: MASTER_DETAIL_ENTITIES=contact,lead,invoice,document
+_MD_ENTITIES: set[str] = {
+    e.strip() for e in os.environ.get("MASTER_DETAIL_ENTITIES", "").split(",") if e.strip()
+}
 
 
 # ---------------------------------------------------------------------------
@@ -375,8 +380,9 @@ def entity_list(entity_type: str):
     size_int = int(paging_size) if paging_size.isdigit() else 20
     total_pages = max(1, (total + size_int - 1) // size_int) if total else 1
 
+    _tpl = "list-master-detail.html" if entity_type in _MD_ENTITIES else "list.html"
     return render_template(
-        "list.html",
+        _tpl,
         entity_type=entity_type,
         items=items,
         columns=columns,
