@@ -131,9 +131,9 @@ def build_manifest(
         Full catalog dict as returned by render.py's load_catalog().
     profile:
         Optional full profile dict (loaded by scaffold.py). When provided,
-        ``customer.display``, ``domains[].display``, and
-        ``overlay.feedback_url`` are included in the manifest so the
-        frontend can render a personalised home screen.
+        ``customer.display``, ``domains[].display``,
+        ``overlay.feedback_url``, and ``domains[].entity_labels`` overrides
+        are included / applied so the frontend renders personalised labels.
         When None (backward compat / manifest.py CLI), these keys are
         omitted and the frontend falls back to generic labels.
 
@@ -145,6 +145,27 @@ def build_manifest(
     all_entities: dict[str, Any] = catalog.get("entities", {})
     catalog_version: str = str(catalog.get("version", "1.0"))
 
+    # ── Determine locale for label selection ─────────────────────────────────
+    # profile.defaults.locale drives label_ko preference.
+    # When profile is absent (manifest.py CLI mode) locale is treated as non-KR.
+    _use_ko: bool = False
+    _profile_entity_labels: dict[str, str] = {}  # entity_key → override label
+
+    if profile is not None:
+        defaults_block: dict[str, Any] = profile.get("defaults") or {}
+        locale: str = str(defaults_block.get("locale", ""))
+        _use_ko = locale.startswith("ko")
+
+        # Collect all entity_labels overrides from every domain block.
+        # profile.domains[].entity_labels is a slug→label map (optional key).
+        # Last-write wins if the same key appears in multiple domain blocks
+        # (should not happen, but be deterministic).
+        for domain_block in profile.get("domains") or []:
+            overrides: dict[str, Any] = domain_block.get("entity_labels") or {}
+            for ek, lbl in overrides.items():
+                if lbl:
+                    _profile_entity_labels[ek] = str(lbl)
+
     entities_out: dict[str, Any] = {}
 
     for key in entity_keys:
@@ -153,8 +174,16 @@ def build_manifest(
         table: str = ent.get("table", "")
         columns: dict[str, Any] = ent.get("columns", {})
 
-        # entity label: key with hyphens→spaces, title-cased
-        label = " ".join(word.capitalize() for word in key.replace("-", " ").split())
+        # ── Entity label — three-tier priority ───────────────────────────────
+        # 1. profile.domains[].entity_labels[key]  (customer term, highest)
+        # 2. catalog.label_ko                      (when locale starts with "ko")
+        # 3. key with hyphens→spaces, title-cased  (English fallback)
+        if key in _profile_entity_labels:
+            label = _profile_entity_labels[key]
+        elif _use_ko and ent.get("label_ko"):
+            label = ent["label_ko"]
+        else:
+            label = " ".join(word.capitalize() for word in key.replace("-", " ").split())
 
         fields: list[dict[str, Any]] = []
         hidden_fields: list[str] = []
