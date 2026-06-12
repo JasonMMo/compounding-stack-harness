@@ -17,6 +17,8 @@ preview:
   compose_file: deploy/preview/intake.compose.yml
   # intake 앱은 screen-manifest 없음 — scp 단계 skip 필요
   manifest_server_path: null
+  # compose 서비스명 = intake (lawfirm/shop의 frontend와 다름 — domain PATCH 대상)
+  domain_service: intake
   status: provisioning
   deployed_at: null
 production:
