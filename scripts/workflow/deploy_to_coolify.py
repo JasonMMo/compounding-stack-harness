@@ -423,7 +423,10 @@ def ensure_application(slug: str, project_uuid: str, token: str, dry_run: bool =
 def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False) -> None:
     """Set docker_compose_domains via PATCH.
 
-    Pitfall (runbook §4c): use docker_compose_domains array — NOT fqdn field (422).
+    Pitfall (runbook §4c): Coolify 4.1.2 stores docker_compose_domains as a
+    JSON-encoded object string: '{"<service>":{"domain":"https://..."}}' — NOT
+    the array format [{"name":...,"domain":...}] (that form returns 422).
+    Confirmed from live GET /applications response on shop-demo (2026-06-12).
 
     Service name: read from infra/registry/<slug>.yaml preview.domain_service.
     Falls back to "frontend" if key absent (lawfirm/shop backward-compat).
@@ -431,6 +434,9 @@ def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False) ->
     # registry에서 domain_service 읽기 (없으면 "frontend" 디폴트)
     service_name = _registry_uuid(slug, "domain_service") or "frontend"
 
+    # Coolify 4.1.2 PATCH 포맷: array (GET 응답의 JSON-string 저장과 포맷이 다름).
+    # GET 응답: '{"frontend":{"domain":"..."}}' (string)
+    # PATCH body: [{"name":"frontend","domain":"..."}] (array) — API validation 확인.
     payload = {
         "docker_compose_domains": [
             {"name": service_name, "domain": f"https://{slug}.n9n.co.kr"}
