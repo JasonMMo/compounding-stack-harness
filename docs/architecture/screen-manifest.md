@@ -74,6 +74,20 @@
 Frontend reads `customer_display` for the home-screen heading; `domains` for domain cards; `feedback_url` for the CTA link.
 All three are absent (not null) when the manifest was produced by the `manifest.py` CLI without a profile — frontend must handle their absence gracefully.
 
+### Entity label priority (Growth-39)
+
+Each entity's `label` field in the manifest is resolved by `build_manifest()` at scaffold time using this priority:
+
+| Priority | Source | Condition | Example |
+|---|---|---|---|
+| 1 (highest) | `profile.domains[].entity_labels[key]` | Key present in any domain block's `entity_labels` map | `contact: 학생` |
+| 2 | `catalog.entities[key].label_ko` | `profile.defaults.locale` starts with `ko` AND catalog has `label_ko` | `연락처` |
+| 3 (fallback) | key with hyphens→spaces, Title-cased | Always available | `Contact` |
+
+`entity_labels` is an optional per-domain map in the profile (`profiles/_README.md`).
+`label_ko` is an optional field on every catalog entity (`presets/ddl/catalog.yaml`).
+Logic lives in `scripts/workflow/manifest.py::build_manifest()` — do not reimplement elsewhere.
+
 ## 2. Column Classification Rules
 
 These rules live in `manifest.py::_classify_column()` — do not reimplement elsewhere.
