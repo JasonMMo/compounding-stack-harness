@@ -17,13 +17,15 @@ preview:
   compose_file: deploy/preview/edu-program.compose.yml
   manifest_server_path: /data/coolify/manifests/edu-program/screen-manifest.json
   status: live
-  deployed_at: "2026-06-12"
+  deployed_at: "2026-06-13"
+  ui_theme: public-sector
 production:
   install_method: null
   installed_at: null
   stack:
     frontend: vanilla-htmx
     backend: fastapi
+    ui_theme: public-sector
 secret_ref:
   - vault/edu-program/secret-key    # infra/secrets/edu-program-secret-key.txt
 cost_note: "preview VPS shared (187.77.140.157), Hostinger KVM2 $8.99/mo"
