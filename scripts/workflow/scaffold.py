@@ -154,13 +154,14 @@ def emit_manifest(
     entity_keys: list[str],
     catalog: dict[str, Any],
     out_dir: Path,
+    profile: dict[str, Any] | None = None,
 ) -> Path:
     """Call build_manifest() and write out_dir/screen-manifest.json."""
     workflow_dir = Path(__file__).resolve().parent
     sys.path.insert(0, str(workflow_dir))
     from manifest import build_manifest  # type: ignore[import]
 
-    manifest = build_manifest(profile_slug, entity_keys, catalog)
+    manifest = build_manifest(profile_slug, entity_keys, catalog, profile=profile)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = out_dir / "screen-manifest.json"
@@ -228,8 +229,8 @@ def run_scaffold(
         print(f"ERROR: {e}", file=sys.stderr)
         return 1
 
-    # Step 6: Emit manifest
-    manifest_path = emit_manifest(profile_slug, entity_keys, catalog, out_dir)
+    # Step 6: Emit manifest (pass profile for customer_display / domains / feedback_url)
+    manifest_path = emit_manifest(profile_slug, entity_keys, catalog, out_dir, profile=profile)
 
     # Step 7: Print summary
     manifest_abs = manifest_path.resolve()
