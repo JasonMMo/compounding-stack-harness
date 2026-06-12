@@ -1,0 +1,29 @@
+# infra/registry/edu-program.yaml
+# Auto-created by deploy_to_coolify.py
+# Secret plaintext forbidden: use secret_ref only
+slug: edu-program
+contact:
+  channel: internal
+  handle: demo
+preview:
+  subdomain: edu-program.n9n.co.kr
+  url: https://edu-program.n9n.co.kr
+  coolify_project: fyo0rbaqj7sleyh1smsiv9qs
+  coolify_app: tp0608w5b013sypb4euwplld
+  coolify_env: production
+  deploy_key_github_id: 154181975
+  coolify_privkey_uuid: s127pafarr46wlu1r2mre2te
+  server_uuid: n12vdydjpwp81hu5i15n1gsb
+  compose_file: deploy/preview/edu-program.compose.yml
+  manifest_server_path: /data/coolify/manifests/edu-program/screen-manifest.json
+  status: live
+  deployed_at: "2026-06-12"
+production:
+  install_method: null
+  installed_at: null
+  stack:
+    frontend: vanilla-htmx
+    backend: fastapi
+secret_ref:
+  - vault/edu-program/secret-key    # infra/secrets/edu-program-secret-key.txt
+cost_note: "preview VPS shared (187.77.140.157), Hostinger KVM2 $8.99/mo"
