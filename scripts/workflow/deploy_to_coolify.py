@@ -238,10 +238,10 @@ def check_tunnel(dry_run: bool = False) -> bool:
         if exc.code == 404:
             print("[deploy_to_coolify] tunnel: alive (404 = API responds).")
             return True
-        print(f"[deploy_to_coolify] tunnel: HTTP {exc.code} — may still be alive.", file=sys.stderr)
+        print(f"[deploy_to_coolify] tunnel: HTTP {exc.code} - may still be alive.", file=sys.stderr)
         return True
     except Exception as exc:
-        print(f"[deploy_to_coolify] tunnel: DEAD — {exc}", file=sys.stderr)
+        print(f"[deploy_to_coolify] tunnel: DEAD - {exc}", file=sys.stderr)
         print(
             "[deploy_to_coolify] Reactivate with:\n"
             f"  ssh -i {PREVIEW_SSH_KEY} -fN -o ServerAliveInterval=30 "
@@ -255,21 +255,69 @@ def check_tunnel(dry_run: bool = False) -> bool:
 # Project ensure
 # ---------------------------------------------------------------------------
 
+def _registry_uuid(slug: str, key: str) -> str | None:
+    """Return a uuid from infra/registry/<slug>.yaml for the given nested key under preview:.
+
+    Supports both new format (nested under preview:) and old flat top-level key.
+    Returns None if not found or blank.
+    """
+    registry_path = REPO_ROOT / "infra" / "registry" / f"{slug}.yaml"
+    if not registry_path.exists():
+        return None
+    lines = registry_path.read_text(encoding="utf-8").splitlines(keepends=True)
+    # Try nested lookup first (standard format: preview.coolify_project / preview.coolify_app)
+    value = _yaml_get(lines, f"  {key}")
+    if not value:
+        # Fallback: old flat top-level key (e.g. coolify_project: <uuid>)
+        value = _yaml_get(lines, key)
+    return value if value else None
+
+
 def ensure_project(slug: str, token: str, dry_run: bool = False) -> str | None:
     """Return project_uuid for slug, creating if necessary (idempotent).
 
+    Lookup order:
+      1. Registry file (infra/registry/<slug>.yaml) preview.coolify_project uuid
+         — GET /projects/{uuid} to confirm it still exists.
+      2. Name-match against GET /projects list.
+      3. Create new project as fallback.
+
     In dry_run: prints create payload and returns a placeholder UUID.
     """
+    # 1. Registry-first: skip name matching entirely if uuid known
+    known_uuid = _registry_uuid(slug, "coolify_project")
+    if known_uuid:
+        try:
+            proj = _api_request(
+                "GET", f"/projects/{known_uuid}", token,
+                dry_run=False, mutating=False,
+            )
+            if proj and proj.get("uuid"):
+                uuid = proj["uuid"]
+                print(
+                    f"[deploy_to_coolify] project '{slug}' found via registry uuid={uuid} - reusing."
+                )
+                return uuid
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                print(
+                    f"[deploy_to_coolify] WARN: registry uuid {known_uuid} returned 404 "
+                    f"— falling back to name lookup."
+                )
+            else:
+                raise
+
+    # 2. Name-match fallback
     projects = _api_request("GET", "/projects", token, dry_run=dry_run, mutating=False)
     if projects:
         for proj in projects:
             if proj.get("name") == slug:
                 uuid = proj["uuid"]
-                print(f"[deploy_to_coolify] project '{slug}' already exists — reusing uuid={uuid}.")
+                print(f"[deploy_to_coolify] project '{slug}' found by name - reusing uuid={uuid}.")
                 return uuid
 
-    # Create new project
-    payload = {"name": slug, "description": f"Preview — {slug}"}
+    # 3. Create new project — ASCII-safe description (Coolify 4.1.2 validation)
+    payload = {"name": slug, "description": f"Preview - {slug}"}
     if dry_run:
         _api_request("POST", "/projects", token, body=payload, dry_run=True)
         return f"DRY-RUN-PROJECT-UUID-{slug}"
@@ -287,9 +335,38 @@ def ensure_project(slug: str, token: str, dry_run: bool = False) -> str | None:
 def ensure_application(slug: str, project_uuid: str, token: str, dry_run: bool = False) -> str | None:
     """Return app_uuid for slug, creating if necessary (idempotent).
 
+    Lookup order:
+      1. Registry file (infra/registry/<slug>.yaml) preview.coolify_app uuid
+         — GET /applications/{uuid} to confirm it still exists.
+      2. Name-match against GET /applications list.
+      3. Create new application as fallback.
+
     Pitfall (runbook §4b): docker_compose_location MUST start with '/'.
     """
-    # Check if app already exists under any project
+    # 1. Registry-first: skip name matching entirely if uuid known
+    known_app_uuid = _registry_uuid(slug, "coolify_app")
+    if known_app_uuid:
+        try:
+            app = _api_request(
+                "GET", f"/applications/{known_app_uuid}", token,
+                dry_run=False, mutating=False,
+            )
+            if app and app.get("uuid"):
+                uuid = app["uuid"]
+                print(
+                    f"[deploy_to_coolify] application '{slug}' found via registry uuid={uuid} - reusing."
+                )
+                return uuid
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                print(
+                    f"[deploy_to_coolify] WARN: registry app uuid {known_app_uuid} returned 404 "
+                    f"— falling back to name lookup."
+                )
+            else:
+                raise
+
+    # 2. Name-match fallback
     apps = _api_request("GET", "/applications", token, dry_run=dry_run, mutating=False)
     if apps:
         # API may return list or dict with data key
@@ -297,7 +374,7 @@ def ensure_application(slug: str, project_uuid: str, token: str, dry_run: bool =
         for app in app_list:
             if app.get("name") == slug:
                 uuid = app["uuid"]
-                print(f"[deploy_to_coolify] application '{slug}' already exists — reusing uuid={uuid}.")
+                print(f"[deploy_to_coolify] application '{slug}' found by name - reusing uuid={uuid}.")
                 return uuid
 
     compose_location = f"/deploy/preview/{slug}.compose.yml"
@@ -453,7 +530,7 @@ def inject_secret_key(app_uuid: str, slug: str, token: str, dry_run: bool = Fals
     except urllib.error.HTTPError as exc:
         if exc.code == 409:
             print(
-                f"[deploy_to_coolify] SECRET_KEY already exists on app (409 — idempotent skip)."
+                f"[deploy_to_coolify] SECRET_KEY already exists on app (409 - idempotent skip)."
             )
         else:
             raise
@@ -537,7 +614,7 @@ def validate_preview(slug: str) -> bool:
             continue
 
         status = "PASS" if code == 200 else "FAIL"
-        print(f"[deploy_to_coolify]   HTTP {code} — {status}")
+        print(f"[deploy_to_coolify]   HTTP {code} - {status}")
         if code != 200:
             all_pass = False
 
@@ -563,9 +640,9 @@ def validate_preview(slug: str) -> bool:
         cert_text = cert_result.stdout.decode("utf-8", errors="replace")
         expected_cn = f"CN={slug}.n9n.co.kr"
         if expected_cn in cert_text and "Let's Encrypt" in cert_text:
-            print(f"[deploy_to_coolify]   TLS CN — PASS ({expected_cn}, issuer=Let's Encrypt)")
+            print(f"[deploy_to_coolify]   TLS CN - PASS ({expected_cn}, issuer=Let's Encrypt)")
         else:
-            print(f"[deploy_to_coolify]   TLS CN — WARN: {cert_text.strip()}")
+            print(f"[deploy_to_coolify]   TLS CN - WARN: {cert_text.strip()}")
     except Exception as exc:
         print(f"[deploy_to_coolify]   TLS check skipped: {exc}")
 
@@ -577,12 +654,22 @@ def validate_preview(slug: str) -> bool:
 # ---------------------------------------------------------------------------
 
 def _yaml_get(lines: list[str], key: str) -> str | None:
-    """Return the scalar value of a top-level YAML key from raw lines, or None."""
+    """Return the scalar value of a top-level YAML key from raw lines, or None.
+
+    Strips inline comments (# …), surrounding whitespace, and enclosing quotes
+    so that lines like:
+        coolify_project: kjjjc67jyiksda35jqly02h7      # project_uuid
+        coolify_project: "kjjjc67jyiksda35jqly02h7"
+    both return the bare uuid string.
+    """
     pattern = re.compile(r"^" + re.escape(key) + r":\s*(.*)")
     for line in lines:
         m = pattern.match(line)
         if m:
-            v = m.group(1).strip().strip('"').strip("'")
+            raw = m.group(1)
+            # Strip inline comment first, then whitespace, then enclosing quotes
+            raw = re.sub(r"\s*#.*$", "", raw)
+            v = raw.strip().strip('"').strip("'").strip()
             return v if v not in ("null", "", "~") else None
     return None
 
@@ -829,7 +916,7 @@ def commit_compose_file(slug: str, dry_run: bool = False) -> bool:
         capture_output=True, text=True, cwd=str(REPO_ROOT),
     )
     if not status_result.stdout.strip():
-        print(f"[deploy_to_coolify] {compose_rel} already committed and clean — skipping commit.")
+        print(f"[deploy_to_coolify] {compose_rel} already committed and clean - skipping commit.")
         return True
 
     add_result = subprocess.run(
@@ -1072,7 +1159,7 @@ def main() -> int:
         plan = show_webhook_registration_plan(args.slug, app_uuid_found, token)
 
         if args.confirm:
-            print(f"[deploy_to_coolify] --confirm received — registering GitHub webhook ...")
+            print(f"[deploy_to_coolify] --confirm received - registering GitHub webhook ...")
             ok = register_github_webhook(args.slug, app_uuid_found, token)
             return 0 if ok else 1
         return 0
@@ -1081,7 +1168,7 @@ def main() -> int:
     dry_run: bool = args.dry_run
 
     if dry_run:
-        print(f"[deploy_to_coolify] DRY-RUN mode — no mutations will be made.")
+        print(f"[deploy_to_coolify] DRY-RUN mode - no mutations will be made.")
 
     print(f"[deploy_to_coolify] slug={slug}")
 
@@ -1144,7 +1231,7 @@ def main() -> int:
     if deploy_uuid:
         success = poll_deployment(deploy_uuid, token)
         if not success:
-            print("[deploy_to_coolify] Build failed — check Coolify logs.", file=sys.stderr)
+            print("[deploy_to_coolify] Build failed - check Coolify logs.", file=sys.stderr)
             return 1
 
     # Step 8: external validation
