@@ -50,6 +50,9 @@ class ManifestLoader:
         self._entities: dict[str, Any] = {}
         self._profile: str = ""
         self._loaded: bool = False
+        self._customer_display: str = ""
+        self._domains: list[dict[str, Any]] = []
+        self._feedback_url: str = ""
 
         if not path_str:
             log.info(
@@ -74,6 +77,9 @@ class ManifestLoader:
 
         self._entities = doc.get("entities", {})
         self._profile = doc.get("profile", "")
+        self._customer_display = doc.get("customer_display", "")
+        self._domains = doc.get("domains", [])
+        self._feedback_url = doc.get("feedback_url", "")
         self._loaded = True
         log.info(
             "ManifestLoader: loaded profile='%s', %d entities from '%s'",
@@ -95,6 +101,31 @@ class ManifestLoader:
     def entity_keys(self) -> list[str]:
         """All entity keys present in the manifest."""
         return list(self._entities.keys())
+
+    def customer_display(self) -> str:
+        """Human-readable customer name from profile.customer.display.
+
+        Returns an empty string when the manifest is not loaded or the field
+        is absent (caller should fall back to generic heading).
+        """
+        return self._customer_display
+
+    def domains(self) -> list[dict[str, Any]]:
+        """Domain card list from the manifest.
+
+        Each entry: {slug: str, display: str, entities: [str, ...]}.
+        Returns an empty list when the manifest is not loaded or no domains
+        are present (caller renders nothing).
+        """
+        return list(self._domains)
+
+    def feedback_url(self) -> str:
+        """Optional feedback CTA URL from profile.overlay.feedback_url.
+
+        Returns an empty string when absent — caller must check truthiness
+        before rendering the link.
+        """
+        return self._feedback_url
 
     def label(self, entity_type: str) -> str | None:
         """
