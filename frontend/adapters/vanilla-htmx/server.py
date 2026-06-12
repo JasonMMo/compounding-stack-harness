@@ -70,16 +70,25 @@ BACKEND_BASE_URL = os.environ.get("BACKEND_BASE_URL", "http://localhost:8080").r
 
 @app.context_processor
 def _inject_manifest_globals() -> dict:
-    """Make customer_display and feedback_url available in all templates.
+    """Make customer_display, feedback_url, domains and entity_keys available in all templates.
 
-    This lets base.html render the nav brand and footer feedback CTA
+    This lets base.html render the nav brand, sidebar, and footer feedback CTA
     without each route handler passing the values explicitly.
     Routes that also pass these as explicit kwargs will override via the
     normal Jinja2 template variable precedence (explicit wins).
+
+    g_domains  — list of {slug, display, entities[]} for sidebar domain groups.
+                 Used by base.html sidebar block. Falls back to g_entity_keys
+                 when empty (lawfirm-demo / manifests without domains key).
+    g_entity_keys — flat entity key list for no-domains fallback sidebar.
     """
+    domains = manifest.domains()
+    entity_keys = manifest.entity_keys() if not domains else []
     return {
         "g_customer_display": manifest.customer_display(),
         "g_feedback_url": manifest.feedback_url(),
+        "g_domains": domains,
+        "g_entity_keys": entity_keys,
     }
 
 # Load contract at startup (G-1 — reads wire-v1.yaml + codes.yaml)
