@@ -13,6 +13,7 @@ customer:
 stack:
   frontend: vanilla-htmx           # DB 이해도 없는 1인 담당자 → 단순 스택 적합
   backend:  fastapi                 # lawfirm-demo preview PASS 조합 유지
+  ui_theme: public-sector           # 교육기관 = 공공기관 → KRDS 디자인 시스템
 
 # ── DDL ──────────────────────────────────────────────
 ddl:
