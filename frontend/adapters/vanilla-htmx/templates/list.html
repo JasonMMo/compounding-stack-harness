@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{ entity_type }} 목록{% endblock %}
+{% block title %}{{ entity_label }} 목록{% endblock %}
 
 {% block content %}
 <div class="page-header">
-  <h1 class="page-title">{{ entity_type | title }}</h1>
+  <h1 class="page-title">{{ entity_label }}</h1>
   <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}" class="btn btn-primary btn-md">
     + 새로 만들기
   </a>
