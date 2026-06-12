@@ -1422,3 +1422,111 @@ body {
   font-size: var(--font-size-sm);
   line-height: 1.6;
 }
+
+/* ── Top/Bottom split layout ─────────────────────────────────────────────
+   출처: growth-48 상/하 분할 패턴
+   ─────────────────────────────────────────────────────────────────────── */
+
+.tb-layout {
+  display: grid;
+  grid-template-rows: 260px 1fr;
+  height: calc(100vh - var(--app-header-h) - 160px);
+  min-height: 480px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.tb-master {
+  overflow: auto;
+  background: var(--color-surface-1);
+  border-bottom: 2px solid var(--color-border);
+}
+
+/* tb-master reuses master-table styles */
+
+.tb-detail {
+  overflow-y: auto;
+  padding: var(--space-inset-md);
+  background: var(--color-surface-2);
+}
+
+.tb-detail .tab-screen { margin-bottom: 0; }
+
+/* ── Modal (dialog) pattern ──────────────────────────────────────────────
+   출처: growth-48 팝업 detail 패턴 — HTML <dialog> 기반
+   ─────────────────────────────────────────────────────────────────────── */
+
+.detail-modal {
+  border: none;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-modal, 0 20px 60px rgba(0,0,0,.3));
+  padding: 0;
+  width: min(90vw, 860px);
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-modal::backdrop {
+  background: rgba(0, 0, 0, .45);
+  backdrop-filter: blur(2px);
+}
+
+.detail-modal[open] {
+  display: flex;
+}
+
+.detail-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-inset-sm) var(--space-inset-md);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  flex-shrink: 0;
+}
+
+.detail-modal__title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-heading);
+  color: var(--color-text-2);
+}
+
+.detail-modal__close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-3);
+  padding: 2px 6px;
+  border-radius: var(--radius-control);
+  line-height: 1;
+}
+
+.detail-modal__close:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text-1);
+}
+
+.detail-modal__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-inset-md);
+  background: var(--color-surface-2);
+}
+
+.detail-modal__body .tab-screen { margin-bottom: 0; }
+
+/* htmx loading spinner inside modal */
+.detail-modal__body:empty::after {
+  content: "불러오는 중…";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: var(--color-text-3);
+  font-size: var(--font-size-sm);
+}
