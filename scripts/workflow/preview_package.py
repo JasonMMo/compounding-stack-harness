@@ -68,8 +68,8 @@ services:
     environment:
       PORT: "8081"
       PYTHONIOENCODING: "utf-8"
-    networks:
-      - preview-net
+    # No custom network — Coolify attaches containers to its uuid network only.
+    # Traefik can only reach uuid-net IPs; declaring preview-net caused bistable 504.
     restart: unless-stopped
 
   frontend:
@@ -97,13 +97,7 @@ services:
       - "5000"
     depends_on:
       - backend
-    networks:
-      - preview-net
     restart: unless-stopped
-
-networks:
-  preview-net:
-    driver: bridge
 """
 
 _COMPOSE_TEMPLATE = """\
