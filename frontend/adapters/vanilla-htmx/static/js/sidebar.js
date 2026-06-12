@@ -1,17 +1,16 @@
 /**
- * sidebar.js — App shell sidebar toggle + mobile drawer.
- * Spec: out/analysis/design/app-shell-spec.md §11
- * Vanilla JS only, no build step, 50 lines or less.
+ * sidebar.js — App shell sidebar toggle + mobile drawer + accordion groups.
+ * Spec: out/analysis/design/accordion-sidebar-spec.md (Hostinger-style light theme)
+ * Vanilla JS only, no build step.
  */
 (function () {
   'use strict';
 
-  var STORAGE_KEY = 'sidebar-collapsed';
-  var MOBILE_BP = 768;
+  var STORAGE_KEY   = 'sidebar-collapsed';
+  var ACCORDION_KEY = 'sidebar-accordion-open';
+  var MOBILE_BP     = 768;
 
-  function isMobile() {
-    return window.innerWidth <= MOBILE_BP;
-  }
+  function isMobile() { return window.innerWidth <= MOBILE_BP; }
 
   function applyCollapsed(body, sidebar, btn, collapsed) {
     if (collapsed) {
@@ -38,18 +37,65 @@
     btn.setAttribute('aria-expanded', 'false');
   }
 
+  function getOpenGroups() {
+    try {
+      var raw = localStorage.getItem(ACCORDION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function saveOpenGroups(keys) {
+    try { localStorage.setItem(ACCORDION_KEY, JSON.stringify(keys)); } catch (e) {}
+  }
+
+  function setGroupOpen(header, nav, open) {
+    header.setAttribute('aria-expanded', String(open));
+    nav.classList.toggle('is-open', open);
+  }
+
+  function initAccordion(sidebar) {
+    var headers = sidebar.querySelectorAll('.sidebar-group__header');
+    if (!headers.length) { return; }
+    var saved = getOpenGroups();
+
+    headers.forEach(function (header) {
+      var group    = header.closest('.sidebar-group');
+      var groupKey = group ? group.dataset.groupKey : null;
+      var nav      = document.getElementById(header.getAttribute('aria-controls'));
+      if (!nav) { return; }
+
+      var isOpen = (saved !== null && groupKey) ? (saved.indexOf(groupKey) !== -1) : true;
+      setGroupOpen(header, nav, isOpen);
+
+      header.addEventListener('click', function () {
+        var nowOpen = nav.classList.contains('is-open');
+        setGroupOpen(header, nav, !nowOpen);
+        var openKeys = [];
+        sidebar.querySelectorAll('.sidebar-group__header').forEach(function (h) {
+          var g = h.closest('.sidebar-group');
+          if (g && h.getAttribute('aria-expanded') === 'true') {
+            openKeys.push(g.dataset.groupKey || '');
+          }
+        });
+        saveOpenGroups(openKeys);
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    var btn = document.getElementById('sidebar-toggle-btn');
-    var body = document.getElementById('app-body');
-    var sidebar = document.getElementById('app-sidebar');
+    var btn      = document.getElementById('sidebar-toggle-btn');
+    var body     = document.getElementById('app-body');
+    var sidebar  = document.getElementById('app-sidebar');
     var backdrop = document.getElementById('drawer-backdrop');
     if (!btn || !body || !sidebar || !backdrop) { return; }
 
-    // Restore desktop collapsed state from localStorage
     if (!isMobile()) {
-      var saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === '1') { applyCollapsed(body, sidebar, btn, true); }
+      if (localStorage.getItem(STORAGE_KEY) === '1') {
+        applyCollapsed(body, sidebar, btn, true);
+      }
     }
+
+    initAccordion(sidebar);
 
     btn.addEventListener('click', function () {
       if (isMobile()) {
@@ -63,9 +109,7 @@
       }
     });
 
-    backdrop.addEventListener('click', function () {
-      closeDrawer(sidebar, backdrop, btn);
-    });
+    backdrop.addEventListener('click', function () { closeDrawer(sidebar, backdrop, btn); });
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && sidebar.classList.contains('app-sidebar--open')) {
