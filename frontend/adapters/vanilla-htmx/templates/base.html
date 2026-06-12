@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Compounding Stack{% endblock %}</title>
+  <!-- Pretendard Variable — Korean + Latin optimised variable font (OFL-1.1) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+  <!-- Open Props — CSS custom property primitives for motion/shadow/easing (MIT) -->
+  <link rel="stylesheet" href="https://unpkg.com/open-props/open-props.min.css">
+  <!-- Pico CSS v2 classless — semantic HTML baseline styles (MIT). Must load BEFORE tokens.css -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css">
+  <!-- tokens.css overrides --pico-* vars with our design tokens; must load AFTER pico -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
   <!-- htmx: loaded from CDN for zero-build simplicity; pin to a specific version for production -->
