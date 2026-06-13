@@ -1,0 +1,94 @@
+version: 1
+
+customer:
+  slug: manufacturing-demo
+  display: "소규모 제조업 (데모)"
+  status: draft
+  industry: manufacturing
+
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi
+  ui_theme: saas
+
+ddl:
+  dialect: postgres
+  schema: manufacturing_demo
+
+auth:
+  method: local
+
+domains:
+  - slug: production
+    display: 생산·작업지시 관리
+    entities: [work-order, bom, production-plan, production-result]
+    seen_at: 2026-06-13
+    entity_labels:
+      work-order: 작업지시
+      bom: BOM (자재명세)
+      production-plan: 생산계획
+      production-result: 생산실적
+
+  - slug: quality
+    display: 품질·검사 관리
+    entities: [inspection-plan, inspection-result, defect, ncr]
+    seen_at: 2026-06-13
+    entity_labels:
+      inspection-plan: 검사계획
+      inspection-result: 검사결과
+      defect: 불량
+      ncr: 부적합 보고
+
+  - slug: inventory
+    display: 자재·재고 관리
+    entities: [item, warehouse, stock-level, stock-movement]
+    seen_at: 2026-06-13
+    entity_labels:
+      item: 품목
+      warehouse: 창고·공정
+      stock-level: 재고 현황
+      stock-movement: 입출고
+
+  - slug: procurement
+    display: 구매·협력사 관리
+    entities: [vendor, purchase-order, purchase-order-line]
+    seen_at: 2026-06-13
+    entity_labels:
+      vendor: 협력사
+      purchase-order: 발주
+      purchase-order-line: 발주 품목
+
+  - slug: hr
+    display: 인력 관리
+    entities: [employee, department, position]
+    seen_at: 2026-06-13
+    entity_labels:
+      employee: 직원
+      department: 부서
+      position: 직위
+
+datasource:
+  username: ${MANUFACTURING_DEMO_DB_USER}
+  password: ${MANUFACTURING_DEMO_DB_PASS}
+  url_template: "postgresql://{host}:{port}/{db}"
+  host: localhost
+  port: 5432
+  db: manufacturing_demo
+
+overlay:
+  shell_app_id: manufacturing-demo-portal
+  vault_agent: false
+  sso_keycloak: false
+  feedback_url: https://intake.n9n.co.kr/
+
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+billing:
+  setup_cost_krw: TBD
+  llm_budget_usd_per_month: TBD
+  prepaid_credits_usd: 0
+
+notes:
+  - "Growth-54 — M2 데모 시리즈 (소규모 제조업 타겟)"
