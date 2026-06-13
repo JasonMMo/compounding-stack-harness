@@ -485,3 +485,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **커밋**: HANDOFF+learn-log 업데이트만 (코드 변경 없음)
 - **Revenue/cost**: LLM=없음 / API 호출 5회 / 운영 부채 해소
 - **Open loops**: Supabase adapter
+
+### Growth-56 (2026-06-13) — manifest 디렉터리 버그 수정 + 6개 demo 화면 복구
+
+- **인격/Axis/Milestone**: CTO+Engineer / creater 축 / M2 — 데모 품질
+- **Why (1줄)**: 6개 demo app에서 화면이 비어있는 원인이 screen-manifest.json이 파일 아닌 디렉터리로 bind-mount된 버그였음
+- **근본원인**: Docker bind-mount race — 컨테이너가 SCP 전에 기동되면 source 경로에 빈 디렉터리 생성. SCP가 그 안에 파일을 넣어 mount가 깨짐. edu-program만 정상이었던 이유: 이전에 별도 SCP 경로로 파일이 이미 있었음.
+- **작업**: 서버에서 6개 slug manifest 디렉터리→파일로 수정 (cp→rm→mv). 컨테이너 restart. deploy_to_coolify.py에 SCP 전 `rm -rf {remote_manifest}` 가드 추가.
+- **커밋**: 3e9250a (deploy_to_coolify.py fix)
+- **교훈 (1줄)**: SCP 대상이 이미 디렉터리면 파일로 덮어쓰지 않고 그 안에 들어간다 — SCP 전 rm -rf 필수
+- **Revenue/cost**: LLM=없음 / restart 6회 / 데모 품질 복구
+- **Open loops**: Supabase adapter
