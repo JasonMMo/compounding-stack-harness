@@ -1,0 +1,99 @@
+version: 1
+
+customer:
+  slug: construction-demo
+  display: "소규모 건설·시공 (데모)"
+  status: draft
+  industry: generic
+
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi
+  ui_theme: saas
+
+ddl:
+  dialect: postgres
+  schema: construction_demo
+
+auth:
+  method: local
+
+domains:
+  - slug: project
+    display: 공사·현장 관리
+    entities: [project, task, milestone, resource-assignment]
+    seen_at: 2026-06-13
+    entity_labels:
+      project: 공사 현장
+      task: 작업
+      milestone: 공정 마일스톤
+      resource-assignment: 인력 배치
+
+  - slug: procurement
+    display: 자재·협력사 관리
+    entities: [vendor, requisition, purchase-order, purchase-order-line]
+    seen_at: 2026-06-13
+    entity_labels:
+      vendor: 협력사
+      requisition: 자재 청구
+      purchase-order: 발주
+      purchase-order-line: 발주 품목
+
+  - slug: hr
+    display: 인력 관리
+    entities: [employee, department, position, leave-request]
+    seen_at: 2026-06-13
+    entity_labels:
+      employee: 직원
+      leave-request: 휴가 신청
+
+  - slug: approval
+    display: 결재
+    entities: [approval-request, approval-step, approver, approval-decision]
+    seen_at: 2026-06-13
+    entity_labels:
+      approval-request: 결재 요청
+      approval-decision: 결재 결정
+
+  - slug: document
+    display: 현장 서류 관리
+    entities: [document-category, document, document-version]
+    seen_at: 2026-06-13
+    entity_labels:
+      document: 서류
+      document-category: 서류 분류
+
+  - slug: asset
+    display: 장비·설비 관리
+    entities: [asset-category, asset, maintenance-record]
+    seen_at: 2026-06-13
+    entity_labels:
+      asset: 장비
+      asset-category: 장비 분류
+      maintenance-record: 점검 이력
+
+datasource:
+  username: ${CONSTRUCTION_DEMO_DB_USER}
+  password: ${CONSTRUCTION_DEMO_DB_PASS}
+  url_template: "postgresql://{host}:{port}/{db}"
+  host: localhost
+  port: 5432
+  db: construction_demo
+
+overlay:
+  shell_app_id: construction-demo-portal
+  vault_agent: false
+  sso_keycloak: false
+  feedback_url: https://intake.n9n.co.kr/
+
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+billing:
+  setup_cost_krw: TBD
+  llm_budget_usd_per_month: TBD
+  prepaid_credits_usd: 0
+
+notes:
+  - "Growth-49 — M2 데모 시리즈 (소규모 건설·시공 타겟)"
