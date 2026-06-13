@@ -1,0 +1,83 @@
+{
+  "contact": [
+    {"id": "con001", "name": "김은정", "company": "서울시 평생학습센터", "phone": "02-1234-5678", "email": "ej.kim@sll.seoul.kr", "type": "customer"},
+    {"id": "con002", "name": "박찬우", "company": "경기도 인재개발원", "phone": "031-9876-5432", "email": "cw.park@ghi.gyeonggi.kr", "type": "customer"},
+    {"id": "con003", "name": "이소연", "company": "한국직업능력개발원", "phone": "044-415-5001", "email": "sy.lee@krivet.re.kr", "type": "partner"},
+    {"id": "con004", "name": "최태범", "company": "기업 HRD팀장 (익명)", "phone": "010-5555-1234", "email": "tb.choi@corp-hrd.kr", "type": "prospect"}
+  ],
+  "lead": [
+    {"id": "led001", "name": "신하영", "company": "삼성전자 HRD", "phone": "010-2222-8888", "source": "referral", "status": "qualified"},
+    {"id": "led002", "name": "권도훈", "company": "서울대학교 평생교육원", "phone": "010-6666-3333", "source": "web", "status": "contacted"}
+  ],
+  "activity": [
+    {"id": "act001", "contact_id": "con001", "type": "meeting", "subject": "2026년 직업교육 프로그램 기획", "note": "수강 인원 500명 목표 논의", "status": "done"},
+    {"id": "act002", "contact_id": "con002", "type": "demo", "subject": "LMS 데모 시연", "note": "온라인 강의 플랫폼 요구사항 청취", "status": "done"},
+    {"id": "act003", "contact_id": "con004", "type": "call", "subject": "기업맞춤 교육 제안", "note": "직무역량 강화 패키지 문의 수신", "status": "pending"}
+  ],
+  "project": [
+    {"id": "prj001", "name": "2026 서울 평생학습 디지털 역량 과정", "client_id": "con001", "status": "in_progress", "budget_krw": 85000000, "start_date": "2026-03-01", "end_date": "2026-11-30"},
+    {"id": "prj002", "name": "경기도 공무원 AI 활용 교육", "client_id": "con002", "status": "in_progress", "budget_krw": 45000000, "start_date": "2026-04-01", "end_date": "2026-08-31"}
+  ],
+  "resource-assignment": [
+    {"id": "ra001", "project_id": "prj001", "employee_id": "emp001", "role": "PM", "allocated_hours": 300},
+    {"id": "ra002", "project_id": "prj001", "employee_id": "emp002", "role": "강사", "allocated_hours": 480},
+    {"id": "ra003", "project_id": "prj002", "employee_id": "emp003", "role": "커리큘럼 설계", "allocated_hours": 200},
+    {"id": "ra004", "project_id": "prj002", "employee_id": "emp002", "role": "강사", "allocated_hours": 160}
+  ],
+  "vendor": [
+    {"id": "vnd001", "name": "(주)이러닝솔루션", "contact": "02-4567-8901", "category": "LMS", "status": "active"},
+    {"id": "vnd002", "name": "영상제작스튜디오", "contact": "02-5678-9012", "category": "콘텐츠제작", "status": "active"}
+  ],
+  "account": [
+    {"id": "acc001", "name": "교육용역매출", "code": "4100", "type": "revenue"},
+    {"id": "acc002", "name": "강사비", "code": "5100", "type": "cost"},
+    {"id": "acc003", "name": "외상매출금", "code": "1110", "type": "asset"},
+    {"id": "acc004", "name": "운영비", "code": "6100", "type": "expense"}
+  ],
+  "journal-entry": [
+    {"id": "je001", "date": "2026-06-01", "description": "서울 학습센터 2분기 교육비 청구", "debit_account_id": "acc003", "credit_account_id": "acc001", "amount_krw": 28000000},
+    {"id": "je002", "date": "2026-06-05", "description": "강사비 지급 (5월분)", "debit_account_id": "acc002", "credit_account_id": "acc003", "amount_krw": 8000000}
+  ],
+  "invoice": [
+    {"id": "inv001", "contact_id": "con001", "project_id": "prj001", "total_krw": 28000000, "status": "paid", "due_date": "2026-06-30", "note": "2026-Q2 교육 용역비"},
+    {"id": "inv002", "contact_id": "con002", "project_id": "prj002", "total_krw": 15000000, "status": "sent", "due_date": "2026-07-15", "note": "AI 교육 1차 중간금"}
+  ],
+  "payment": [
+    {"id": "pay001", "invoice_id": "inv001", "amount_krw": 28000000, "method": "bank_transfer", "status": "confirmed", "paid_date": "2026-06-20"}
+  ],
+  "asset": [
+    {"id": "ast001", "category_id": "act001", "name": "강의용 프로젝터 (Epson EB-L735U)", "serial_no": "EPSON-L735U-001", "status": "active", "purchase_date": "2025-02-15"},
+    {"id": "ast002", "category_id": "act001", "name": "LMS 서버 (온프레미스)", "serial_no": "SVR-LMS-001", "status": "active", "purchase_date": "2024-09-01"},
+    {"id": "ast003", "category_id": "act002", "name": "강의실 화이트보드 세트", "serial_no": "WB-001", "status": "active", "purchase_date": "2025-06-01"}
+  ],
+  "asset-category": [
+    {"id": "act001", "name": "강의 장비", "code": "EDU"},
+    {"id": "act002", "name": "교실 비품", "code": "FUR"}
+  ],
+  "maintenance-record": [
+    {"id": "mnt001", "asset_id": "ast001", "type": "scheduled", "date": "2026-05-15", "note": "램프 교체 및 필터 청소", "status": "done"},
+    {"id": "mnt002", "asset_id": "ast002", "type": "repair", "date": "2026-06-01", "note": "스토리지 증설 (2TB)", "status": "done"}
+  ],
+  "document-category": [
+    {"id": "dct001", "name": "커리큘럼", "code": "CUR"},
+    {"id": "dct002", "name": "계약서", "code": "CTR"},
+    {"id": "dct003", "name": "수강자료", "code": "MAT"}
+  ],
+  "document": [
+    {"id": "doc001", "category_id": "dct001", "name": "2026 디지털역량 커리큘럼 v2", "project_id": "prj001", "status": "active"},
+    {"id": "doc002", "category_id": "dct002", "name": "서울학습센터 교육 위탁 계약서", "project_id": "prj001", "status": "active"},
+    {"id": "doc003", "category_id": "dct003", "name": "AI 교육 강의자료 패키지", "project_id": "prj002", "status": "active"}
+  ],
+  "document-version": [
+    {"id": "dv001", "document_id": "doc001", "version": "v1.0", "uploaded_by": "emp001", "note": "초안"},
+    {"id": "dv002", "document_id": "doc001", "version": "v2.0", "uploaded_by": "emp002", "note": "고객 피드백 반영"}
+  ],
+  "report-definition": [
+    {"id": "rpd001", "name": "프로젝트별 수익성", "entity_type": "project", "filters": "{}", "status": "active"},
+    {"id": "rpd002", "name": "월별 강의 완료 현황", "entity_type": "resource-assignment", "filters": "{}", "status": "active"}
+  ],
+  "report-output": [
+    {"id": "rpo001", "report_definition_id": "rpd001", "period": "2026-Q2", "row_count": 2, "status": "ready"},
+    {"id": "rpo002", "report_definition_id": "rpd002", "period": "2026-05", "row_count": 4, "status": "ready"}
+  ]
+}
