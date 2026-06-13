@@ -380,6 +380,16 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - Catches surfaced: 없음. escalation 없음.
 - Cost: ~10 turns / ~$0.3 추정
 
+### Growth-58 (2026-06-13) — Supabase backend adapter (PostgREST) 구현
+
+- Files touched (신규): `backend/adapters/supabase/{supabase_client.py, supabase_store.py, main.py, requirements.txt, Dockerfile, tests/__init__.py, tests/test_supabase_store.py}`, `presets/ddl/supabase-rls/README.md`; 수정: `backend/adapters/supabase/README.md` (planned→implemented).
+- Architecture (CTO 결정): **fastapi adapter ZERO-TOUCH**. seam = `main.py`에서 공유 라우터 import 전에 `sys.modules["store"]=supabase_store` 주입 + fastapi dir를 `sys.path`에 추가 → routers의 `from store import entity_store`가 PostgREST store로 해결. routers/wire_response/catalog_validator/contract_loader 재구현 없이 재사용 (G-1 격리 준수).
+- SupabaseEntityStore: InMemoryEntityStore와 동일 6-메서드. PostgREST 시맨틱 — create=POST+`Prefer:return=representation`, find_by_id=`?id=eq.{id}&limit=1`, patch=PATCH(`id` strip)+representation→0행이면 None, delete=`?id=eq.{id}` 멱등 True. slug→table은 catalog.yaml `table` 필드(fallback `-`→`_`). id/created_at/updated_at는 Postgres 기본값(gen_random_uuid/now()) 위임 → in-memory(epoch ms int)와 timestamp 표현이 다름(문서화).
+- Tests added: 16 passed (httpx.MockTransport, 라이브 네트워크 0). create/find hit·miss/patch hit·miss+id보호/delete 멱등/slug-table 적중·fallback.
+- Validation: py_compile OK, pytest 16 green, `diagnose.py` 신규 가드 위반 0 (기존 G-8/G-9/G-13 실패는 무관). **L4 live 미실행** — Supabase 프로젝트 미프로비저닝.
+- Catches surfaced: status.health가 공유 라우터라 PostgREST 연결성을 실제 체크하지 않음(M1 허용). Open loops: L4 live(SUPABASE_URL/SERVICE_ROLE_KEY) / GoTrue auth(현재 demo/demo 재사용) / filter·sort·paging PostgREST pushdown(스케일) / 텍스트 timestamp 표현 divergence.
+- Cost: engineer subagent ~55k tok / 34 tool-use / 1 envelope 반환 (main context 격리).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
