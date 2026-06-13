@@ -458,3 +458,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: Coolify force_domain_override 는 대상 앱만 패치하지 않고 기존 앱 도메인도 덮어쓰지 않는다 — 수동 복구 필요
 - **Revenue/cost**: LLM=없음 / 재배포 1회 / demo.n9n.co.kr 정상화 → 고객 체험 6개 업종 완비
 - **Open loops**: 5개 데모 seed data / manufacturing-demo / Supabase adapter
+### Growth-53 (2026-06-13) — 6개 데모 seed data 내장 + 배포
+
+- **인격/Axis/Milestone**: CTO+Engineer / backend 축 / M2 — 데모 품질 향상
+- **Why (1줄)**: 데모 앱 빈 화면은 고객 체험 품질을 저하 → 업종별 현실적 샘플 데이터로 즉시 개선
+- **작업**: seed-data/{slug}.json 6개 생성(한국 업종 현실 데이터). Dockerfile COPY seed-data/ 추가. 6개 compose SEED_FILE 환경변수 추가. 전체 재배포 HTTP 200 확인.
+- **커밋**: 257d1a4~8f6d53d (13 커밋)
+- **교훈 (1줄)**: seed data를 repo에 번들하면 서버 SCP 없이 이미지 빌드 시 자동 포함 — bind-mount보다 단순
+- **Revenue/cost**: LLM=없음 / 재배포 6회 / 데모 품질 향상 → 영업 접점 강화
+- **Open loops**: manufacturing-demo 추가 / Coolify stale app 정리 / Supabase adapter
