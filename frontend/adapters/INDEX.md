@@ -9,6 +9,7 @@ All adapters implement the contract in `docs/architecture/frontend-adapter-contr
 |---------|-------|------|--------|
 | [vanilla-htmx](vanilla-htmx/) | Python/Flask + htmx | 5000 | M1 baseline |
 | [react](react/) | Vite + React 18 + TypeScript | 5173 | M1 2nd adapter |
+| [capacitor](capacitor/) | Capacitor 6 native shell (wraps vanilla-htmx PWA) | — | scaffold — Growth-49 |
 
 ## Pluggability
 
