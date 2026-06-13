@@ -44,7 +44,7 @@
 | **G-5** | 축이 2개 이상 자산을 가졌는데 manifest (INDEX/_README) 없음 | Lesson 5 | `scripts/diagnose.py::g5_asset_exposure_harness` (PASS, Growth-7 middle+skill manifest — glob `**/*.seed.md` 강화) |
 | **G-6** | 다테넌트/SaaS 힌트가 M5 게이트 전에 코드 진입 | Lesson 6 | `scripts/diagnose.py::g6_self_host_single_mode` (PASS, `.m5-saas-gate-open` 로 해제) |
 | **G-7** | 매출 로드맵 milestone 에 페르소나·시간 표현 누락 | Lesson 7 | `scripts/diagnose.py::g7_persona_driven_gating` (PASS 2026-05-29 Growth-3: positioning.md → roadmap 페르소나 인수 라인으로 해소) |
-| **G-8** | 파일/디렉터리명에 비-ASCII 또는 unsafe 문자 | CLAUDE.md §10 | `scripts/diagnose.py::g8_ascii_slug` (PASS) |
+| **G-8** | 파일/디렉터리명에 비-ASCII 또는 unsafe 문자 | CLAUDE.md §10 | `scripts/diagnose.py::g8_ascii_slug` (PASS, Growth-60 — Apple `@Nx` 레티나 에셋은 `*.xcassets` 번들 안에서만 면제 `_APPLE_ASSET_NAME`; 그 밖의 `@`·비-ASCII 는 여전히 검출) |
 | **G-9** | main §6 슬림 엔트리가 본문 10행 초과 또는 슬림 §6 200행 초과 | Growth-4 charter | `scripts/diagnose.py::g9_main_log_slim` (PASS, Growth-5a 박힘) |
 | **G-10** | ddl catalog 무결성 — seed entity ⊄ catalog / dangling FK / 비-closed-set 타입 | Growth-10 | `scripts/diagnose.py::g10_ddl_catalog_integrity` (PASS, Growth-10 — 56 entity, seed⊆catalog, dangling FK 0, type closed-set) |
 | **G-11** | creater orchestrator(`scripts/workflow/*.py`)가 catalog 파싱을 render.py 위임 없이 재선언 | Growth-14 | `scripts/diagnose.py::g11_creater_catalog_single_source` (PASS, Growth-14 — scaffold.py+manifest.py 모두 `load_catalog` import 경유, 로컬 재선언 0) |
@@ -390,3 +390,11 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **상세**: 본 엔트리로 충분 (메커니컬 회전 — Growth-20 정책 그대로). 검색: `ledger-index.py --symbol <name>`
 - **결정 (CTO Auto)**: 오래된 것부터 contiguous 이동 (rotation 정책 불변), founding 1~3 은 divider 앞 유지. cut point = Growth-33 (최근 26 엔트리 슬림 유지)
 - **Open loops**: 없음 — 다음 회전은 cap 재접근 시
+
+### Growth-60 (2026-06-14) — G-8 가드에 Apple `@Nx` 레티나 에셋 면제 추가
+
+- **인격/Axis/Milestone**: CTO (가드 정밀화) / creater (diagnose.py G-8) / M2 — Capacitor iOS 어댑터 호환
+- **1줄 rollup**: Capacitor iOS `AppIcon-512@2x.png` 의 `@` 가 G-8 오탐 → 삭제(빌드 깨짐) 대신 가드 면제. `_APPLE_ASSET_NAME` (`@[123]x(~idiom)?`) AND `*.xcassets` 조상 디렉터리 **이중 게이트** — 그 밖의 `@`·비-ASCII(한글 등)는 여전히 FAIL. negative test 6 케이스 확인. G-8 PASS (621 entries).
+- **상세**: 본 엔트리로 충분. §2 G-8 카탈로그 행 갱신
+- **결정 (CTO Auto)**: 면제 범위 = `.xcassets` 번들 내부로 한정 (전체 ios 디렉터리 제외 ✗ — 번들 안 진짜 위반 은폐 방지). 코드 generator 버그 아님 (Growth-59 후속의 `${slug}` 와 달리 정당한 Apple 관습)
+- **Open loops**: 없음
