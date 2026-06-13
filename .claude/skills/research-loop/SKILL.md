@@ -61,4 +61,4 @@ related: <연관 파일>
 
 ## 출력 규약
 
-wiki 경로 + 핵심 발견 3줄 + 다음 세션 권고 작업만 반환한다.
+raw 리서치 결과·전문(全文)·추출 텍스트는 인덱스(컨텍스트 밖) 또는 `knowledge/wiki/` 에 쓰고, main 으로는 **wiki 경로 + 핵심 발견 3줄 + 다음 세션 권고 작업만** 반환한다 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
