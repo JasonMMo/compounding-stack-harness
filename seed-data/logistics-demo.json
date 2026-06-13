@@ -1,0 +1,84 @@
+{
+  "carrier": [
+    {"id": "car001", "name": "한진택배", "contact": "1588-0011", "type": "domestic", "status": "active"},
+    {"id": "car002", "name": "CJ대한통운", "contact": "1588-1255", "type": "domestic", "status": "active"},
+    {"id": "car003", "name": "롯데택배", "contact": "1588-2121", "type": "domestic", "status": "active"},
+    {"id": "car004", "name": "DHL Express", "contact": "1588-0001", "type": "international", "status": "active"}
+  ],
+  "route": [
+    {"id": "rte001", "name": "서울-부산", "origin": "서울 물류센터", "destination": "부산 항만", "distance_km": 450, "carrier_id": "car001", "status": "active"},
+    {"id": "rte002", "name": "서울-인천", "origin": "서울 물류센터", "destination": "인천 공항", "distance_km": 60, "carrier_id": "car002", "status": "active"},
+    {"id": "rte003", "name": "수도권 순환", "origin": "서울 물류센터", "destination": "수도권 배송처", "distance_km": 120, "carrier_id": "car003", "status": "active"}
+  ],
+  "shipment": [
+    {"id": "shp001", "tracking_no": "HJ20260613001", "carrier_id": "car001", "route_id": "rte001", "status": "in_transit", "weight_kg": 15.5, "sender": "삼성전자(주)", "receiver": "부산 전자부품 상사"},
+    {"id": "shp002", "tracking_no": "CJ20260613045", "carrier_id": "car002", "route_id": "rte002", "status": "delivered", "weight_kg": 8.2, "sender": "LG생활건강", "receiver": "인천 도매상"},
+    {"id": "shp003", "tracking_no": "LT20260612112", "carrier_id": "car003", "route_id": "rte003", "status": "pending", "weight_kg": 22.0, "sender": "(주)대원", "receiver": "경기 유통센터"},
+    {"id": "shp004", "tracking_no": "HJ20260611088", "carrier_id": "car001", "route_id": "rte001", "status": "delivered", "weight_kg": 5.0, "sender": "아모레퍼시픽", "receiver": "부산 뷰티샵"}
+  ],
+  "tracking-event": [
+    {"id": "trk001", "shipment_id": "shp001", "status": "pickup", "location": "서울 물류센터", "note": "집화 완료"},
+    {"id": "trk002", "shipment_id": "shp001", "status": "in_transit", "location": "대전 허브", "note": "허브 경유"},
+    {"id": "trk003", "shipment_id": "shp002", "status": "delivered", "location": "인천 도매상", "note": "배송 완료 (수령인: 김철수)"},
+    {"id": "trk004", "shipment_id": "shp003", "status": "pending", "location": "서울 물류센터", "note": "집화 대기"}
+  ],
+  "contact": [
+    {"id": "con001", "name": "박영호", "company": "삼성전자(주)", "phone": "010-1234-5678", "email": "park@samsung.com", "type": "shipper"},
+    {"id": "con002", "name": "이미진", "company": "LG생활건강", "phone": "010-9876-5432", "email": "lee@lg.com", "type": "shipper"},
+    {"id": "con003", "name": "최준혁", "company": "부산 전자부품 상사", "phone": "051-456-7890", "email": "choi@busan-elec.kr", "type": "receiver"},
+    {"id": "con004", "name": "정수연", "company": "경기 유통센터", "phone": "031-234-5678", "email": "jung@gyeonggi-dist.kr", "type": "receiver"}
+  ],
+  "activity": [
+    {"id": "act001", "contact_id": "con001", "type": "call", "subject": "배송 지연 문의", "note": "부산행 화물 1일 지연 안내", "status": "done"},
+    {"id": "act002", "contact_id": "con002", "type": "email", "subject": "계약 갱신 안내", "note": "연간 계약 갱신 제안 발송", "status": "pending"},
+    {"id": "act003", "contact_id": "con003", "type": "visit", "subject": "현장 확인", "note": "하역 시설 점검 방문", "status": "done"}
+  ],
+  "warehouse": [
+    {"id": "wh001", "name": "서울 물류센터", "address": "경기도 하남시 미사대로 123", "capacity_sqm": 5000, "status": "active"},
+    {"id": "wh002", "name": "부산 항만 창고", "address": "부산시 남구 용호로 45", "capacity_sqm": 3000, "status": "active"},
+    {"id": "wh003", "name": "인천 공항 창고", "address": "인천시 중구 공항로 272", "capacity_sqm": 1500, "status": "active"}
+  ],
+  "item": [
+    {"id": "itm001", "sku": "ELEC-001", "name": "반도체 부품 박스", "unit": "박스", "weight_kg": 5.0, "category": "전자부품"},
+    {"id": "itm002", "sku": "COSM-001", "name": "화장품 세트", "unit": "케이스", "weight_kg": 2.5, "category": "생활용품"},
+    {"id": "itm003", "sku": "FOOD-001", "name": "냉장 식품 팔레트", "unit": "팔레트", "weight_kg": 200.0, "category": "식품"},
+    {"id": "itm004", "sku": "TOOL-001", "name": "공구 세트", "unit": "박스", "weight_kg": 8.0, "category": "공구"}
+  ],
+  "stock-level": [
+    {"id": "stk001", "warehouse_id": "wh001", "item_id": "itm001", "quantity": 150, "min_threshold": 20},
+    {"id": "stk002", "warehouse_id": "wh001", "item_id": "itm002", "quantity": 80, "min_threshold": 10},
+    {"id": "stk003", "warehouse_id": "wh002", "item_id": "itm003", "quantity": 12, "min_threshold": 3},
+    {"id": "stk004", "warehouse_id": "wh003", "item_id": "itm004", "quantity": 45, "min_threshold": 5}
+  ],
+  "stock-movement": [
+    {"id": "smv001", "warehouse_id": "wh001", "item_id": "itm001", "type": "in", "quantity": 50, "ref_no": "IN-20260610-001", "note": "삼성전자 입고"},
+    {"id": "smv002", "warehouse_id": "wh001", "item_id": "itm002", "type": "out", "quantity": 20, "ref_no": "OUT-20260611-001", "note": "LG 출고"},
+    {"id": "smv003", "warehouse_id": "wh002", "item_id": "itm003", "type": "in", "quantity": 5, "ref_no": "IN-20260612-001", "note": "냉장 식품 입고"}
+  ],
+  "department": [
+    {"id": "dep001", "name": "운송팀", "code": "TRS"},
+    {"id": "dep002", "name": "창고관리팀", "code": "WHS"},
+    {"id": "dep003", "name": "영업팀", "code": "SAL"},
+    {"id": "dep004", "name": "경영지원팀", "code": "ADM"}
+  ],
+  "position": [
+    {"id": "pos001", "name": "팀장", "level": 4},
+    {"id": "pos002", "name": "과장", "level": 3},
+    {"id": "pos003", "name": "대리", "level": 2},
+    {"id": "pos004", "name": "사원", "level": 1}
+  ],
+  "employee": [
+    {"id": "emp001", "name": "김대호", "department_id": "dep001", "position_id": "pos001", "email": "dh.kim@logistics-demo.kr", "phone": "010-1111-2222", "status": "active"},
+    {"id": "emp002", "name": "이수진", "department_id": "dep002", "position_id": "pos002", "email": "sj.lee@logistics-demo.kr", "phone": "010-3333-4444", "status": "active"},
+    {"id": "emp003", "name": "박민준", "department_id": "dep003", "position_id": "pos003", "email": "mj.park@logistics-demo.kr", "phone": "010-5555-6666", "status": "active"},
+    {"id": "emp004", "name": "최유진", "department_id": "dep004", "position_id": "pos004", "email": "yj.choi@logistics-demo.kr", "phone": "010-7777-8888", "status": "active"}
+  ],
+  "report-definition": [
+    {"id": "rpd001", "name": "월별 배송 실적", "entity_type": "shipment", "filters": "{}", "status": "active"},
+    {"id": "rpd002", "name": "창고별 재고 현황", "entity_type": "stock-level", "filters": "{}", "status": "active"}
+  ],
+  "report-output": [
+    {"id": "rpo001", "report_definition_id": "rpd001", "period": "2026-05", "row_count": 128, "status": "ready"},
+    {"id": "rpo002", "report_definition_id": "rpd002", "period": "2026-06", "row_count": 4, "status": "ready"}
+  ]
+}
