@@ -70,48 +70,50 @@ def main() -> int:
         return 1
     print("[demo-portal] tunnel: alive.")
 
-    # 2. Create project
-    proj = _api("POST", "/projects", token, {
-        "name": SLUG,
-        "description": "Demo portal landing page",
-    })
-    proj_uuid = proj.get("uuid", "")
+    # 2. Find or create project (check existing first to avoid duplicates)
+    proj_uuid = ""
+    projects = _api("GET", "/projects", token)
+    for p in (projects if isinstance(projects, list) else []):
+        if p.get("name") == SLUG:
+            proj_uuid = p["uuid"]
+            print(f"[demo-portal] project reused: uuid={proj_uuid}.")
+            break
     if not proj_uuid:
-        # Try to find existing
-        projects = _api("GET", "/projects", token)
-        for p in (projects if isinstance(projects, list) else []):
-            if p.get("name") == SLUG:
-                proj_uuid = p["uuid"]
-                break
+        proj = _api("POST", "/projects", token, {
+            "name": SLUG,
+            "description": "Demo portal landing page",
+        })
+        proj_uuid = proj.get("uuid", "")
     if not proj_uuid:
         print("[demo-portal] ERROR: could not create/find project.")
         return 1
-    print(f"[demo-portal] project uuid={proj_uuid}.")
+    print(f"[demo-portal] project: {proj_uuid}.")
 
-    # 3. Create application
-    payload = {
-        "type": "public",
-        "name": SLUG,
-        "project_uuid": proj_uuid,
-        "server_uuid": "n12vdydjpwp81hu5i15n1gsb",
-        "environment_name": "production",
-        "git_repository": GIT_REPO,
-        "git_branch": GIT_BRANCH,
-        "build_pack": "dockercompose",
-        "docker_compose_location": COMPOSE_LOCATION,
-        "private_key_uuid": PRIVATE_KEY_UUID,
-        "instant_deploy": False,
-    }
-    app = _api("POST", "/applications/private-deploy-key", token, payload)
-    app_uuid = app.get("uuid", "")
+    # 3. Find or create application (check existing first to avoid duplicates)
+    app_uuid = ""
+    apps = _api("GET", "/applications", token)
+    app_list = apps if isinstance(apps, list) else apps.get("data", [])
+    for a in app_list:
+        if a.get("name") == SLUG:
+            app_uuid = a["uuid"]
+            print(f"[demo-portal] app reused: uuid={app_uuid}.")
+            break
     if not app_uuid:
-        # Already exists?
-        apps = _api("GET", "/applications", token)
-        app_list = apps if isinstance(apps, list) else apps.get("data", [])
-        for a in app_list:
-            if a.get("name") == SLUG:
-                app_uuid = a["uuid"]
-                break
+        payload = {
+            "type": "public",
+            "name": SLUG,
+            "project_uuid": proj_uuid,
+            "server_uuid": "n12vdydjpwp81hu5i15n1gsb",
+            "environment_name": "production",
+            "git_repository": GIT_REPO,
+            "git_branch": GIT_BRANCH,
+            "build_pack": "dockercompose",
+            "docker_compose_location": COMPOSE_LOCATION,
+            "private_key_uuid": PRIVATE_KEY_UUID,
+            "instant_deploy": False,
+        }
+        app = _api("POST", "/applications/private-deploy-key", token, payload)
+        app_uuid = app.get("uuid", "")
     if not app_uuid:
         print("[demo-portal] ERROR: could not create/find app.")
         return 1
@@ -127,7 +129,7 @@ def main() -> int:
 
     domain_payload = [{"name": "portal", "domain": DOMAIN}]
     patch = _api("PATCH", f"/applications/{app_uuid}", token,
-                 {"docker_compose_domains": domain_payload})
+                 {"docker_compose_domains": domain_payload, "force_domain_override": True})
     if patch:
         print(f"[demo-portal] domain patched: {DOMAIN} -> portal.")
 
