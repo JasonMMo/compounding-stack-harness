@@ -1,0 +1,94 @@
+{
+  "contact": [
+    {"id": "con001", "name": "조현수", "company": "삼성SDS(주)", "phone": "010-1234-5678", "email": "hs.cho@sds.co.kr", "type": "customer"},
+    {"id": "con002", "name": "박지영", "company": "LG CNS", "phone": "010-9876-5432", "email": "jy.park@lgcns.com", "type": "customer"},
+    {"id": "con003", "name": "이준호", "company": "신한금융IT(주)", "phone": "010-5555-7777", "email": "jh.lee@shinhan-it.kr", "type": "customer"},
+    {"id": "con004", "name": "최아름", "company": "스타트업A", "phone": "010-3333-1111", "email": "ar.choi@startup-a.io", "type": "prospect"}
+  ],
+  "lead": [
+    {"id": "led001", "name": "김태양", "company": "카카오엔터프라이즈", "phone": "010-7777-2222", "source": "conference", "status": "qualified"},
+    {"id": "led002", "name": "송민경", "company": "SKT 디지털", "phone": "010-6666-8888", "source": "web", "status": "contacted"},
+    {"id": "led003", "name": "황준영", "company": "현대오토에버", "phone": "010-4444-5555", "source": "referral", "status": "new"}
+  ],
+  "opportunity": [
+    {"id": "opp001", "contact_id": "con001", "name": "클라우드 마이그레이션 프로젝트", "value_krw": 800000000, "stage": "proposal", "close_date": "2026-08-31"},
+    {"id": "opp002", "contact_id": "con002", "name": "AI 운영 자동화 PoC", "value_krw": 250000000, "stage": "negotiation", "close_date": "2026-07-15"},
+    {"id": "opp003", "contact_id": "con003", "name": "금융 데이터 분석 플랫폼", "value_krw": 450000000, "stage": "won", "close_date": "2026-06-01"}
+  ],
+  "activity": [
+    {"id": "act001", "contact_id": "con001", "type": "meeting", "subject": "기술 제안 미팅", "note": "클라우드 아키텍처 제안 발표", "status": "done"},
+    {"id": "act002", "contact_id": "con002", "type": "demo", "subject": "AI 자동화 데모", "note": "고객사 기술팀 데모 진행", "status": "done"},
+    {"id": "act003", "contact_id": "con004", "type": "call", "subject": "초기 요구사항 파악", "note": "SaaS 전환 니즈 확인", "status": "pending"}
+  ],
+  "project": [
+    {"id": "prj001", "name": "삼성SDS 클라우드 마이그레이션", "client_id": "con001", "status": "in_progress", "budget_krw": 800000000, "start_date": "2026-06-01", "end_date": "2026-12-31"},
+    {"id": "prj002", "name": "신한금융IT 데이터 플랫폼", "client_id": "con003", "status": "in_progress", "budget_krw": 450000000, "start_date": "2026-04-01", "end_date": "2026-09-30"},
+    {"id": "prj003", "name": "LG CNS AI PoC", "client_id": "con002", "status": "bidding", "budget_krw": 250000000, "start_date": "2026-07-01", "end_date": "2026-10-31"}
+  ],
+  "task": [
+    {"id": "tsk001", "project_id": "prj001", "name": "인프라 현황 분석", "assignee_id": "emp001", "status": "done", "due_date": "2026-06-15"},
+    {"id": "tsk002", "project_id": "prj001", "name": "마이그레이션 설계", "assignee_id": "emp002", "status": "in_progress", "due_date": "2026-07-15"},
+    {"id": "tsk003", "project_id": "prj002", "name": "데이터 파이프라인 구축", "assignee_id": "emp003", "status": "in_progress", "due_date": "2026-07-31"},
+    {"id": "tsk004", "project_id": "prj002", "name": "대시보드 개발", "assignee_id": "emp004", "status": "pending", "due_date": "2026-08-31"}
+  ],
+  "milestone": [
+    {"id": "mls001", "project_id": "prj001", "name": "AS-IS 분석 완료", "due_date": "2026-06-30", "status": "done"},
+    {"id": "mls002", "project_id": "prj001", "name": "파일럿 마이그레이션", "due_date": "2026-08-31", "status": "pending"},
+    {"id": "mls003", "project_id": "prj002", "name": "데이터 수집 완료", "due_date": "2026-07-15", "status": "in_progress"}
+  ],
+  "resource-assignment": [
+    {"id": "ra001", "project_id": "prj001", "employee_id": "emp001", "role": "PM", "allocated_hours": 500},
+    {"id": "ra002", "project_id": "prj001", "employee_id": "emp002", "role": "클라우드 아키텍트", "allocated_hours": 800},
+    {"id": "ra003", "project_id": "prj002", "employee_id": "emp003", "role": "데이터 엔지니어", "allocated_hours": 600},
+    {"id": "ra004", "project_id": "prj002", "employee_id": "emp004", "role": "프론트엔드 개발자", "allocated_hours": 400}
+  ],
+  "department": [
+    {"id": "dep001", "name": "기술본부", "code": "TEC"},
+    {"id": "dep002", "name": "영업본부", "code": "SAL"},
+    {"id": "dep003", "name": "컨설팅본부", "code": "CON"},
+    {"id": "dep004", "name": "경영지원팀", "code": "ADM"}
+  ],
+  "position": [
+    {"id": "pos001", "name": "본부장", "level": 5},
+    {"id": "pos002", "name": "수석연구원", "level": 4},
+    {"id": "pos003", "name": "선임연구원", "level": 3},
+    {"id": "pos004", "name": "연구원", "level": 2}
+  ],
+  "employee": [
+    {"id": "emp001", "name": "나현진", "department_id": "dep001", "position_id": "pos001", "email": "hj.na@itservice-demo.kr", "phone": "010-1111-2222", "status": "active"},
+    {"id": "emp002", "name": "문석준", "department_id": "dep001", "position_id": "pos002", "email": "sj.moon@itservice-demo.kr", "phone": "010-3333-4444", "status": "active"},
+    {"id": "emp003", "name": "류하은", "department_id": "dep003", "position_id": "pos003", "email": "he.ryu@itservice-demo.kr", "phone": "010-5555-6666", "status": "active"},
+    {"id": "emp004", "name": "임도현", "department_id": "dep001", "position_id": "pos004", "email": "dh.im@itservice-demo.kr", "phone": "010-7777-8888", "status": "active"}
+  ],
+  "leave-request": [
+    {"id": "lv001", "employee_id": "emp003", "type": "annual", "start_date": "2026-06-25", "end_date": "2026-06-27", "status": "approved"},
+    {"id": "lv002", "employee_id": "emp004", "type": "annual", "start_date": "2026-07-01", "end_date": "2026-07-02", "status": "pending"}
+  ],
+  "sales-order": [
+    {"id": "so001", "contact_id": "con003", "status": "confirmed", "total_krw": 450000000, "order_date": "2026-03-15"},
+    {"id": "so002", "contact_id": "con001", "status": "draft", "total_krw": 800000000, "order_date": "2026-05-30"}
+  ],
+  "sales-order-line": [
+    {"id": "sol001", "sales_order_id": "so001", "description": "데이터 플랫폼 구축", "quantity": 1, "unit_price_krw": 350000000},
+    {"id": "sol002", "sales_order_id": "so001", "description": "유지보수 1년", "quantity": 1, "unit_price_krw": 100000000},
+    {"id": "sol003", "sales_order_id": "so002", "description": "클라우드 마이그레이션", "quantity": 1, "unit_price_krw": 800000000}
+  ],
+  "price-list": [
+    {"id": "prl001", "name": "IT서비스 표준 단가 2026", "effective_from": "2026-01-01", "effective_to": "2026-12-31", "status": "active"}
+  ],
+  "invoice": [
+    {"id": "inv001", "contact_id": "con003", "sales_order_id": "so001", "total_krw": 150000000, "status": "paid", "due_date": "2026-05-15", "note": "1차 선금"},
+    {"id": "inv002", "contact_id": "con003", "sales_order_id": "so001", "total_krw": 200000000, "status": "sent", "due_date": "2026-07-31", "note": "중도금"}
+  ],
+  "payment": [
+    {"id": "pay001", "invoice_id": "inv001", "amount_krw": 150000000, "method": "bank_transfer", "status": "confirmed", "paid_date": "2026-04-30"}
+  ],
+  "report-definition": [
+    {"id": "rpd001", "name": "프로젝트 수익성 분석", "entity_type": "project", "filters": "{}", "status": "active"},
+    {"id": "rpd002", "name": "영업 파이프라인 요약", "entity_type": "opportunity", "filters": "{}", "status": "active"}
+  ],
+  "report-output": [
+    {"id": "rpo001", "report_definition_id": "rpd001", "period": "2026-Q2", "row_count": 3, "status": "ready"},
+    {"id": "rpo002", "report_definition_id": "rpd002", "period": "2026-06", "row_count": 3, "status": "ready"}
+  ]
+}
