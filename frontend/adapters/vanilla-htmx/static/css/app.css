@@ -73,13 +73,14 @@ body {
 .app-layout {
   display: grid;
   grid-template-rows: var(--app-header-h) 1fr auto;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .app-body {
   display: grid;
   grid-template-columns: var(--space-sidebar-width) 1fr;
-  align-items: start;
+  overflow: hidden;
 }
 
 .app-body--sidebar-collapsed {
@@ -391,6 +392,7 @@ body {
 .app-main {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   padding: var(--space-stack-lg) var(--space-page-gutter);
   overflow-y: auto;
 }
@@ -810,9 +812,7 @@ body {
 .td--actions {
   text-align: right;
   white-space: nowrap;
-  display: flex;
-  gap: var(--space-gap-xs);
-  justify-content: flex-end;
+  vertical-align: middle;
 }
 
 /* Hostinger: hover = 연회색, 줄무늬 없음 */
