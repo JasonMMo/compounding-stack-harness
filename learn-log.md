@@ -496,3 +496,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: SCP 대상이 이미 디렉터리면 파일로 덮어쓰지 않고 그 안에 들어간다 — SCP 전 rm -rf 필수
 - **Revenue/cost**: LLM=없음 / restart 6회 / 데모 품질 복구
 - **Open loops**: Supabase adapter
+
+### Growth-57 (2026-06-13) — 데모 3종 결함 일괄 수정 (화면 공백·계정 표기·테이블 가독성)
+
+- **인격/Axis/Milestone**: CTO+Engineer / frontend·creater 축 / M2 — 데모 품질
+- **Why (1줄)**: 고객 향 데모에서 화면 공백·잘못된 로그인 안내·검정 위 검정 글자 3종 동시 발견 — 영업 신뢰도 직결
+- **#1 화면 공백**: construction/itservice 컨테이너가 Growth-56 manifest fix 이전(10:38) 생성분이라 stale 디렉터리 inode를 계속 마운트. Coolify `restart`는 컨테이너 recreate 안 함 → `start?force=true`(재clone+recreate)로 해결. 교훈: bind-mount inode 교체엔 restart 부족, force deploy 필요.
+- **#2 계정 표기**: portal 카드 8곳 admin/demo1234 → demo/demo (실제 auth.py _DEMO_USERS=demo/demo와 불일치 해소).
+- **#3 테이블 가독성**: Pico v2 classless가 prefers-color-scheme:dark 자동감지 → 홀수 row 다크 배경 + td 텍스트(#111827) 겹쳐 검정 위 검정. base.html `data-theme="light"` 강제 + master-table zebra 명시 토큰(odd=surface-1/even=surface-2) 이중 방어. edu(public-sector, Pico 미사용)는 무영향이라 정상이었음.
+- **커밋**: f0c1acb(portal) 91f1919(base.html) 267a0b7(app.css)
+- **교훈 (1줄)**: 디자인이 라이트 전용이면 <html data-theme="light"> 명시 — Pico/브라우저 다크모드 자동적용이 토큰과 충돌
+- **Revenue/cost**: LLM=없음 / force deploy 8회 / 데모 3종 결함 제거
+- **Open loops**: Supabase adapter
