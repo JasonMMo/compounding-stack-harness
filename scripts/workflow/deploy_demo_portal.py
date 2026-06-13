@@ -127,14 +127,15 @@ def main() -> int:
 
     domain_payload = [{"name": "portal", "domain": DOMAIN}]
     patch = _api("PATCH", f"/applications/{app_uuid}", token,
-                 {"docker_compose_domains": json.dumps(domain_payload)})
+                 {"docker_compose_domains": domain_payload})
     if patch:
         print(f"[demo-portal] domain patched: {DOMAIN} -> portal.")
 
-    # 5. Deploy
-    deploy = _api("POST", f"/applications/{app_uuid}/deploy", token,
-                  {"force": False})
-    dep_uuid = deploy.get("deployment_uuid", "")
+    time.sleep(3)
+
+    # 5. Deploy — Coolify uses GET /start (not POST /deploy)
+    deploy = _api("GET", f"/applications/{app_uuid}/start", token, body=None)
+    dep_uuid = deploy.get("deployment_uuid") or deploy.get("uuid", "")
     if not dep_uuid:
         print("[demo-portal] ERROR: deploy did not return deployment_uuid.")
         return 1
