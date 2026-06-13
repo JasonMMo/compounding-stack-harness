@@ -13,6 +13,7 @@
 
 | Agent | 역할 | 책임 영역 |
 |---|---|---|
+| [dba-agent.md](dba-agent.md) | DBA | ERD·스키마 설계·DDL 산출·정규화·인덱스·마이그레이션·catalog.yaml 환류 |
 | [engineer-agent.md](engineer-agent.md) | Engineer | 구현·refactor·adapter·script·테스트 코드 |
 | [qa-agent.md](qa-agent.md) | CQO | 가드 통과 기준·4계층 풀테스트 게이트·머지 BLOCK |
 | [marketing-agent.md](marketing-agent.md) | CMO | 포지셔닝·메시지·런칭·sales enablement |
