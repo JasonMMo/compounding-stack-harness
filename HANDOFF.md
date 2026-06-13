@@ -93,6 +93,12 @@ Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 - `demo-portal/index.html` — 7번째 카드 추가, "7가지 업종" 업데이트
 - **트러블슈팅**: deploy_to_coolify.py 실행 전 파일 커밋·푸시 필수 (미커밋 시 compose_raw null)
 
+### Growth-57 — 데모 3종 결함 일괄 수정 (2026-06-13)
+- **#1 화면 공백**: construction/itservice 컨테이너가 stale 디렉터리 inode 마운트 중 — Coolify `restart`로는 recreate 안 됨. `start?force=true`로 재clone+recreate하여 해결
+- **#2 계정 표기**: portal 카드 8곳 `admin/demo1234` → `demo/demo` (실제 백엔드와 일치)
+- **#3 테이블 가독성**: Pico 다크모드 zebra-stripe로 검정 위 검정 → `base.html data-theme="light"` + master-table zebra 명시 토큰
+- 커밋: `f0c1acb` `91f1919` `267a0b7`. saas 데모 6 + portal force redeploy, 전체 HTTP 200 + 타이틀/CSS 반영 검증
+
 ### Growth-56 — manifest 디렉터리 버그 수정 + demo 화면 복구 (2026-06-13)
 - **버그**: 6개 demo app 화면 비어있음 — screen-manifest.json이 파일 아닌 **디렉터리**로 bind-mount됨
 - **근본원인**: Docker bind-mount race (컨테이너 선기동 → source 경로에 빈 dir 생성 → SCP가 그 안에 파일 저장)
