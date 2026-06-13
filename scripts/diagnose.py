@@ -526,6 +526,13 @@ _ASCII_SAFE = re.compile(r"^[A-Za-z0-9._\-/]+$")
 # so G-8 skips the same build/artefact directories as G-1 and G-6.
 _PATH_IGNORE_PREFIX = ("docs/scaffolds",)
 
+# Apple asset-catalog retina-scale naming, e.g. AppIcon-512@2x.png, icon@3x~ipad.png.
+# The '@Nx' scale suffix is a REQUIRED Apple convention inside *.xcassets bundles
+# (Capacitor iOS adapter generates these). Renaming would break the iOS build, so
+# G-8 exempts the '@Nx' token — but ONLY inside an *.xcassets ancestor, so a truly
+# bad non-ASCII name elsewhere (or a non-Apple file in the bundle) is still caught.
+_APPLE_ASSET_NAME = re.compile(r"^[A-Za-z0-9._\-]+@[123]x(~[a-z]+)?\.[A-Za-z0-9]+$")
+
 
 def g8_ascii_slug() -> GuardResult:
     """G-8 / CLAUDE.md §10 — all repo paths use ASCII slugs only.
@@ -533,6 +540,8 @@ def g8_ascii_slug() -> GuardResult:
     Detection: walk the repo, flag any file or directory whose name contains
     non-ASCII characters or characters outside [A-Za-z0-9._-].
     Generated/build directories are excluded (same set as G-1/G-6).
+    Exemption: Apple '@Nx' retina assets inside *.xcassets bundles (see
+    _APPLE_ASSET_NAME) — the '@' is a required Apple naming convention.
     """
     violations: list[str] = []
     checked = 0
@@ -546,6 +555,11 @@ def g8_ascii_slug() -> GuardResult:
         checked += 1
         name = path.name
         if not _ASCII_SAFE.match(name):
+            # Apple retina-asset exemption: '@Nx' token inside an *.xcassets bundle.
+            if _APPLE_ASSET_NAME.match(name) and any(
+                part.endswith(".xcassets") for part in rel_parts
+            ):
+                continue
             violations.append(f"non-ASCII or unsafe path component: {rel_str}")
     return GuardResult(
         "G-8", "ASCII-slug paths", "CLAUDE.md §10",
