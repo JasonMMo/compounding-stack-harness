@@ -1,0 +1,84 @@
+version: 1
+
+customer:
+  slug: logistics-demo
+  display: "소규모 물류 운송 (데모)"
+  status: draft
+  industry: logistics
+
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi
+  ui_theme: saas
+
+ddl:
+  dialect: postgres
+  schema: logistics_demo
+
+auth:
+  method: local
+
+domains:
+  - slug: logistics
+    display: 배송·운송 관리
+    entities: [carrier, route, shipment, tracking-event]
+    seen_at: 2026-06-13
+    entity_labels:
+      carrier: 운송사
+      route: 노선
+      shipment: 화물
+      tracking-event: 배송 이력
+
+  - slug: crm
+    display: 화주 관리
+    entities: [contact, activity]
+    seen_at: 2026-06-13
+    entity_labels:
+      contact: 화주
+      activity: 상담 기록
+
+  - slug: inventory
+    display: 창고·재고 관리
+    entities: [warehouse, item, stock-level, stock-movement]
+    seen_at: 2026-06-13
+    entity_labels:
+      warehouse: 창고
+      item: 품목
+      stock-level: 재고 현황
+      stock-movement: 입출고
+
+  - slug: hr
+    display: 인사 관리
+    entities: [employee, department, position]
+    seen_at: 2026-06-13
+
+  - slug: reporting
+    display: 운송 실적 보고
+    entities: [report-definition, report-output]
+    seen_at: 2026-06-13
+
+datasource:
+  username: ${LOGISTICS_DEMO_DB_USER}
+  password: ${LOGISTICS_DEMO_DB_PASS}
+  url_template: "postgresql://{host}:{port}/{db}"
+  host: localhost
+  port: 5432
+  db: logistics_demo
+
+overlay:
+  shell_app_id: logistics-demo-portal
+  vault_agent: false
+  sso_keycloak: false
+  feedback_url: https://intake.n9n.co.kr/
+
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+billing:
+  setup_cost_krw: TBD
+  llm_budget_usd_per_month: TBD
+  prepaid_credits_usd: 0
+
+notes:
+  - "Growth-49 — M2 데모 시리즈 (소규모 물류 운송 타겟)"
