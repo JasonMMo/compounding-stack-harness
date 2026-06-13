@@ -466,7 +466,7 @@ def _wait_for_compose_raw(app_uuid: str, token: str, poll_interval: int = 5, max
     return False
 
 
-def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False) -> None:
+def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False, extra_domains: list[str] | None = None) -> None:
     """Set docker_compose_domains via PATCH.
 
     Pitfall (runbook §4c): Coolify 4.1.2 stores docker_compose_domains as a
@@ -489,9 +489,11 @@ def patch_domain(app_uuid: str, slug: str, token: str, dry_run: bool = False) ->
     # Coolify 4.1.2 PATCH 포맷: array (GET 응답의 JSON-string 저장과 포맷이 다름).
     # GET 응답: '{"frontend":{"domain":"..."}}' (string)
     # PATCH body: [{"name":"frontend","domain":"..."}] (array) — API validation 확인.
+    primary = f"https://{slug}.n9n.co.kr"
+    all_domains = ",".join([primary] + (extra_domains or []))
     payload = {
         "docker_compose_domains": [
-            {"name": service_name, "domain": f"https://{slug}.n9n.co.kr"}
+            {"name": service_name, "domain": all_domains}
         ]
     }
 
@@ -1327,7 +1329,13 @@ def main() -> int:
         return 1
 
     # Step 3: domain PATCH
-    patch_domain(app_uuid, slug, token, dry_run=dry_run)
+    _reg_path = REPO_ROOT / "infra" / "registry" / f"{slug}.yaml"
+    _extra = []
+    if _reg_path.exists():
+        import yaml as _yaml
+        _reg = _yaml.safe_load(_reg_path.read_text(encoding="utf-8"))
+        _extra = (_reg.get("preview") or {}).get("extra_domains") or []
+    patch_domain(app_uuid, slug, token, dry_run=dry_run, extra_domains=_extra)
 
     # Step 4: manifest SCP
     # registry의 manifest_server_path: null 이면 manifest 없는 앱 (예: intake) — skip
