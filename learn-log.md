@@ -398,3 +398,11 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **상세**: 본 엔트리로 충분. §2 G-8 카탈로그 행 갱신
 - **결정 (CTO Auto)**: 면제 범위 = `.xcassets` 번들 내부로 한정 (전체 ios 디렉터리 제외 ✗ — 번들 안 진짜 위반 은폐 방지). 코드 generator 버그 아님 (Growth-59 후속의 `${slug}` 와 달리 정당한 Apple 관습)
 - **Open loops**: 없음
+
+### Growth-61 (2026-06-14) — G-13 해소: research-loop SKILL 출력 규약 링크 추가
+
+- **인격/Axis/Milestone**: CTO (가드 해소) / creater (research-loop SKILL) / 전 milestone 공통
+- **1줄 rollup**: research-loop `## 출력 규약` 에 `subagent-output-protocol.md` 링크 누락 → security-loop 관용구대로 envelope §4 문장 + 링크 추가. G-13 PASS (9 loops). 전 가드 0 FAIL (11 PASS / 2 SPEC).
+- **상세**: 본 엔트리로 충분. 링크 타깃 존재 확인, `../../../` depth 다른 loop 와 동일
+- **결정 (CTO Auto)**: 기존 `## 출력 규약` 섹션에 링크만 보강 (재작성 ✗) — 최소 임팩트
+- **Open loops**: 없음 — 코드 가드 전부 green
