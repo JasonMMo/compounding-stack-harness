@@ -63,6 +63,12 @@ docs/learn-logs/_index.md
 # Local tooling artifact (observation/memory vault — not repo state)
 .context/
 
+# Serena MCP project cache (local LSP/symbol index — rebuildable, not repo state)
+.serena/
+
+# Claude Code session report exports (per-session HTML artifact — not repo state)
+session-report-*.html
+
 # Generated design-token CSS (build artifact — single source = design/tokens/*.json).
 # build_tokens.py regenerates it; tracking it would risk drift from the JSON source.
 # (Contrast: gradle-wrapper.jar above is tracked because it is NOT derivable from repo source.)
