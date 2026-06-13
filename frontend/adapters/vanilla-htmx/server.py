@@ -284,6 +284,48 @@ def home():
 
 
 # ---------------------------------------------------------------------------
+# Demo shortcut routes — /type1 /type2 /type3
+# Redirect to the first entity of each layout pattern so demo.n9n.co.kr/type1
+# lands directly on a master-detail screen without knowing the entity slug.
+# ---------------------------------------------------------------------------
+
+def _first(entity_set: set[str]) -> str | None:
+    """Return first slug (stable: sorted) from a set, or None if empty."""
+    items = sorted(entity_set)
+    return items[0] if items else None
+
+
+@app.get("/type1")
+@_require_login
+def demo_type1():
+    """Master-detail pattern — first entity in MASTER_DETAIL_ENTITIES."""
+    slug = _first(_MD_ENTITIES)
+    if not slug:
+        return redirect(url_for("home"))
+    return redirect(url_for("entity_list", entity_type=slug))
+
+
+@app.get("/type2")
+@_require_login
+def demo_type2():
+    """Top-bottom pattern — first entity in TOP_BOTTOM_ENTITIES."""
+    slug = _first(_TB_ENTITIES)
+    if not slug:
+        return redirect(url_for("home"))
+    return redirect(url_for("entity_list", entity_type=slug))
+
+
+@app.get("/type3")
+@_require_login
+def demo_type3():
+    """Modal pattern — first entity in MODAL_ENTITIES."""
+    slug = _first(_MODAL_ENTITIES)
+    if not slug:
+        return redirect(url_for("home"))
+    return redirect(url_for("entity_list", entity_type=slug))
+
+
+# ---------------------------------------------------------------------------
 # Login / Logout  (auth.login / auth.logout)
 # ---------------------------------------------------------------------------
 
