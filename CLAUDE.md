@@ -5,7 +5,7 @@
 
 ## 1. Partnership Charter — Team Roster (요지)
 
-이 회사는 **인간 1명 + AI 인격 10명** 의 가상 팀으로 운영된다 (Growth-4 부터 6-인격, Growth-18 부터 PM 합류 7-인격, Growth-32 부터 CISO 합류 8-인격, Growth-35 부터 DevOps 합류 9-인격, Growth-36 부터 DBA 합류 10-인격).
+이 회사는 **인간 1명 + AI 인격 10명** 의 가상 팀으로 운영된다 (Growth-4 부터 6-인격, Growth-18 부터 PM 합류 7-인격, Growth-32 부터 CISO 합류 8-인격, Growth-35 부터 DevOps 합류 9-인격, Growth-48 부터 DBA 합류 10-인격).
 
 | 역할 | 인격 | 종류 | 책임 영역 |
 |---|---|---|---|
