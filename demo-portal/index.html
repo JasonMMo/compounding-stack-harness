@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>업종별 맞춤 ERP 데모 — Compounding Stack</title>
+  <meta name="description" content="소규모 기업을 위한 업종별 맞춤 ERP 솔루션. 물류·유통·건설·IT서비스·무역 데모를 직접 체험해보세요.">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #1e3a5f;
+      --navy-dark: #152b47;
+      --navy-light: #2a5080;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --text: #1a202c;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --radius: 12px;
+      --shadow: 0 2px 8px rgba(30,58,95,.08), 0 0 0 1px rgba(30,58,95,.06);
+      --shadow-hover: 0 8px 24px rgba(30,58,95,.14), 0 0 0 1px rgba(30,58,95,.08);
+    }
+
+    body {
+      font-family: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: white;
+      text-align: center;
+      padding: 3.5rem 1.5rem 2.5rem;
+    }
+    .header-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.2);
+      color: rgba(255,255,255,.9);
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      padding: .3rem .8rem;
+      border-radius: 999px;
+      margin-bottom: 1.2rem;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: .75rem;
+    }
+    header p {
+      font-size: 1rem;
+      color: rgba(255,255,255,.78);
+      max-width: 540px;
+      margin: 0 auto 1.8rem;
+    }
+    .header-cta {
+      display: inline-block;
+      background: white;
+      color: var(--navy);
+      font-weight: 700;
+      font-size: .9rem;
+      padding: .65rem 1.4rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .header-cta:hover { opacity: .88; }
+
+    /* ── Main ── */
+    main {
+      flex: 1;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+      width: 100%;
+    }
+
+    .section-label {
+      text-align: center;
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: .6rem;
+    }
+    .section-title {
+      text-align: center;
+      font-size: clamp(1.25rem, 3vw, 1.6rem);
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: .5rem;
+    }
+    .section-desc {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: .95rem;
+      max-width: 500px;
+      margin: 0 auto 2.5rem;
+    }
+
+    /* ── Demo Grid ── */
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .demo-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: .9rem;
+      transition: box-shadow .2s, transform .2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .demo-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      line-height: 1;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .card-tag {
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      color: var(--accent);
+      background: #eff6ff;
+      padding: .2rem .55rem;
+      border-radius: 999px;
+    }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0;
+    }
+    .card-desc {
+      font-size: .88rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      flex: 1;
+    }
+    .card-domains {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+    }
+    .domain-chip {
+      font-size: .72rem;
+      color: #475569;
+      background: #f1f5f9;
+      padding: .18rem .5rem;
+      border-radius: 4px;
+    }
+    .card-link {
+      margin-top: .25rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .card-link::after { content: '→'; }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 3rem 0;
+    }
+
+    /* ── CTA Section ── */
+    .cta-section {
+      background: var(--navy);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: white;
+    }
+    .cta-section h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: .6rem;
+    }
+    .cta-section p {
+      color: rgba(255,255,255,.75);
+      font-size: .9rem;
+      margin-bottom: 1.5rem;
+    }
+    .cta-btn {
+      display: inline-block;
+      background: white;
+      color: var(--navy);
+      font-weight: 700;
+      font-size: .9rem;
+      padding: .7rem 1.6rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .cta-btn:hover { opacity: .88; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: .78rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Login hint ── */
+    .login-hint {
+      margin-top: .5rem;
+      font-size: .75rem;
+      color: var(--text-muted);
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .4rem .7rem;
+      display: inline-block;
+    }
+
+    @media (max-width: 640px) {
+      .demo-grid { grid-template-columns: 1fr; }
+      header { padding: 2.5rem 1rem 2rem; }
+      main { padding: 2rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">소규모 기업 맞춤 ERP</div>
+  <h1>업종별 데모를 직접<br>체험해 보세요</h1>
+  <p>개발팀 없이도 업무 시스템을 운영할 수 있습니다.<br>원하는 업종의 데모를 클릭해 바로 확인하세요.</p>
+  <a href="https://intake.n9n.co.kr/" class="header-cta">우리 회사에 맞게 문의하기 →</a>
+</header>
+
+<main>
+  <p class="section-label">5가지 업종 데모</p>
+  <h2 class="section-title">우리 업종은 어디에 해당하나요?</h2>
+  <p class="section-desc">아래 카드를 클릭하면 실제 동작하는 데모 시스템으로 이동합니다.<br>로그인 계정: <strong>admin</strong> / <strong>demo1234</strong></p>
+
+  <div class="demo-grid">
+
+    <a class="demo-card" href="https://logistics-demo.n9n.co.kr" target="_blank" rel="noopener">
+      <span class="card-icon">🚚</span>
+      <div class="card-meta">
+        <span class="card-tag">물류·운송</span>
+      </div>
+      <h3 class="card-title">소규모 물류 운송</h3>
+      <p class="card-desc">화물 접수부터 배송 추적까지. 화주 관리, 창고 재고 현황, 운송 실적 보고를 한 화면에서.</p>
+      <div class="card-domains">
+        <span class="domain-chip">화물·노선</span>
+        <span class="domain-chip">창고·재고</span>
+        <span class="domain-chip">화주 관리</span>
+        <span class="domain-chip">실적 보고</span>
+      </div>
+      <span class="card-link">데모 보기</span>
+      <span class="login-hint">admin / demo1234</span>
+    </a>
+
+    <a class="demo-card" href="https://distribution-demo.n9n.co.kr" target="_blank" rel="noopener">
+      <span class="card-icon">📦</span>
+      <div class="card-meta">
+        <span class="card-tag">도매·유통</span>
+      </div>
+      <h3 class="card-title">중소 도매 유통</h3>
+      <p class="card-desc">수주·재고·매입을 한 화면에. 거래처별 단가 관리, 세금계산서 발행·수금까지 자동화.</p>
+      <div class="card-domains">
+        <span class="domain-chip">수주·단가</span>
+        <span class="domain-chip">재고·창고</span>
+        <span class="domain-chip">구매·발주</span>
+        <span class="domain-chip">정산·수금</span>
+      </div>
+      <span class="card-link">데모 보기</span>
+      <span class="login-hint">admin / demo1234</span>
+    </a>
+
+    <a class="demo-card" href="https://construction-demo.n9n.co.kr" target="_blank" rel="noopener">
+      <span class="card-icon">🏗️</span>
+      <div class="card-meta">
+        <span class="card-tag">건설·시공</span>
+      </div>
+      <h3 class="card-title">소규모 건설·시공</h3>
+      <p class="card-desc">현장별 공정 관리와 협력사 자재 발주. 결재, 현장 서류, 장비 점검 이력까지 한 번에.</p>
+      <div class="card-domains">
+        <span class="domain-chip">공사 현장</span>
+        <span class="domain-chip">자재 발주</span>
+        <span class="domain-chip">결재 흐름</span>
+        <span class="domain-chip">서류·장비</span>
+      </div>
+      <span class="card-link">데모 보기</span>
+      <span class="login-hint">admin / demo1234</span>
+    </a>
+
+    <a class="demo-card" href="https://itservice-demo.n9n.co.kr" target="_blank" rel="noopener">
+      <span class="card-icon">💻</span>
+      <div class="card-meta">
+        <span class="card-tag">IT 서비스</span>
+      </div>
+      <h3 class="card-title">IT 서비스·에이전시</h3>
+      <p class="card-desc">고객 영업부터 프로젝트 납품까지. 태스크, 계약·수금, 인력 투입 현황 관리.</p>
+      <div class="card-domains">
+        <span class="domain-chip">고객·영업</span>
+        <span class="domain-chip">프로젝트</span>
+        <span class="domain-chip">계약·수금</span>
+        <span class="domain-chip">인력 관리</span>
+      </div>
+      <span class="card-link">데모 보기</span>
+      <span class="login-hint">admin / demo1234</span>
+    </a>
+
+    <a class="demo-card" href="https://trading-demo.n9n.co.kr" target="_blank" rel="noopener">
+      <span class="card-icon">🌏</span>
+      <div class="card-meta">
+        <span class="card-tag">무역·수출입</span>
+      </div>
+      <h3 class="card-title">소규모 무역·수출입</h3>
+      <p class="card-desc">해외 공급처 발주, 수출 오더, 인보이스 정산과 무역 서류 보관을 통합 관리.</p>
+      <div class="card-domains">
+        <span class="domain-chip">발주·수입</span>
+        <span class="domain-chip">수출 오더</span>
+        <span class="domain-chip">인보이스</span>
+        <span class="domain-chip">무역서류</span>
+      </div>
+      <span class="card-link">데모 보기</span>
+      <span class="login-hint">admin / demo1234</span>
+    </a>
+
+  </div>
+
+  <hr class="divider">
+
+  <div class="cta-section">
+    <h2>우리 회사에 딱 맞는 시스템이 필요하신가요?</h2>
+    <p>업종·규모·예산에 맞게 2주 안에 구축해드립니다. 먼저 요구사항을 남겨주세요.</p>
+    <a href="https://intake.n9n.co.kr/" class="cta-btn">무료 요구사항 상담 신청 →</a>
+  </div>
+</main>
+
+<footer>
+  © 2026 Compounding Stack — <a href="https://intake.n9n.co.kr/" style="color:inherit">intake.n9n.co.kr</a>
+</footer>
+
+</body>
+</html>
