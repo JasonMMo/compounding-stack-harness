@@ -1,0 +1,29 @@
+# infra/registry/trading-demo.yaml
+# Auto-created by deploy_to_coolify.py
+# Secret plaintext forbidden: use secret_ref only
+slug: trading-demo
+contact:
+  channel: internal
+  handle: demo
+preview:
+  subdomain: trading-demo.n9n.co.kr
+  url: https://trading-demo.n9n.co.kr
+  coolify_project: nht8iq7b5zx7zzorivc6wjdi
+  coolify_app: ybawqjqryxst5ofwnekaxpak
+  coolify_env: production
+  deploy_key_github_id: 154181975
+  coolify_privkey_uuid: s127pafarr46wlu1r2mre2te
+  server_uuid: n12vdydjpwp81hu5i15n1gsb
+  compose_file: deploy/preview/trading-demo.compose.yml
+  manifest_server_path: /data/coolify/manifests/trading-demo/screen-manifest.json
+  status: live
+  deployed_at: "2026-06-13"
+production:
+  install_method: null
+  installed_at: null
+  stack:
+    frontend: vanilla-htmx
+    backend: fastapi
+secret_ref:
+  - vault/trading-demo/secret-key    # infra/secrets/trading-demo-secret-key.txt
+cost_note: "preview VPS shared (187.77.140.157), Hostinger KVM2 $8.99/mo"
