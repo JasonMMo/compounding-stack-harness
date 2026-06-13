@@ -8,6 +8,8 @@ contact:
 preview:
   subdomain: edu-program.n9n.co.kr
   url: https://edu-program.n9n.co.kr
+  extra_domains:
+    - https://demo.n9n.co.kr
   coolify_project: fyo0rbaqj7sleyh1smsiv9qs
   coolify_app: tp0608w5b013sypb4euwplld
   coolify_env: production
@@ -17,7 +19,7 @@ preview:
   compose_file: deploy/preview/edu-program.compose.yml
   manifest_server_path: /data/coolify/manifests/edu-program/screen-manifest.json
   status: live
-  deployed_at: "2026-06-12"
+  deployed_at: "2026-06-13"
   ui_theme: public-sector
 production:
   install_method: null
