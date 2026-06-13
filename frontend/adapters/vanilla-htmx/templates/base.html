@@ -22,7 +22,7 @@
   {% endif %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
   <!-- htmx: loaded from CDN for zero-build simplicity; pin to a specific version for production -->
-  <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2uH1/8X4vFg8FVGerPTuRNeIPQMNqNZI5cN" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
   {% if g_authenticated %}
   <!-- sidebar.js: 인증 상태에서만 로드 — 비인증 페이지에 JS 없음 -->
   <script src="{{ url_for('static', filename='js/sidebar.js') }}" defer></script>
