@@ -9,6 +9,8 @@
 | **springboot-jakarta** | Spring Boot 3.2.5 / Jakarta EE / Java 17 / Gradle | M1 — 23/23 compliance, L1/L4 green | 8080 | Growth-7 |
 | **fastapi** | FastAPI / Uvicorn (ASGI) / Python 3.11+ | M1 — L1 16/16, shared compliance suite green | 8081 | Growth-11 |
 
+| **supabase** | Supabase Python SDK + PostgREST / managed PostgreSQL | planned — scaffold 만 존재 | cloud / self-host | Growth-48 |
+
 > 로드맵 후보 (swappable-layers.md §7): node-express (ts), go-chi. javax lane Spring 은 금융 레거시 게이트 시.
 
 ## 공통 계약 (모든 backend adapter)
