@@ -1,0 +1,12 @@
+# deploy/preview/demo-portal.compose.yml
+# Coolify dockercompose -- static demo landing page at demo.n9n.co.kr
+# nginx:alpine serves demo-portal/index.html
+
+services:
+  portal:
+    build:
+      context: .
+      dockerfile: demo-portal/Dockerfile
+    ports:
+      - "80"
+    restart: unless-stopped
