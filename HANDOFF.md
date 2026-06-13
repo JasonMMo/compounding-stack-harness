@@ -1,8 +1,8 @@
-# Session Handoff — 2026-06-13 (updated)
+# Session Handoff — 2026-06-14 (updated)
 
 ## Session 범위
 
-Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배포 + 데모 포털 구축 + 6개 데모 seed data 내장 배포 + **manufacturing-demo 7번째 업종 추가**.
+Growth-49 ~ Growth-58 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배포 + 데모 포털 구축 + 6개 데모 seed data 내장 배포 + manufacturing-demo 7번째 업종 추가 + Coolify stale 정리 + manifest 디렉터리 버그 수정 + 데모 3종 결함 일괄 수정 + **Supabase backend adapter 구현(P3)**.
 
 ---
 
@@ -141,15 +141,31 @@ Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 - 어댑터 코드·RLS 가이드·유닛테스트 16 green. **L4 live만 보류** (Supabase 프로젝트 프로비저닝 시 실행)
 - 활성화: customer profile `stack.backend: supabase` + env SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY
 
+### P3-a — Supabase L4 live (Supabase 프로젝트 필요)
+- 프로비저닝 후 `SUPABASE_URL`+`SUPABASE_SERVICE_ROLE_KEY` → `pytest` → `uvicorn main:app --port 8081` + HTTP smoke
+
+### P4 — GoTrue auth 통합(현재 demo/demo) / PostgREST filter·sort·paging pushdown(스케일)
+
+### ~~P5 — G-9 가드 위반 해소 (learn-log §6 270줄 > 200 cap)~~ ✅ Growth-59 완료
+- Growth-21~32 (12 엔트리) → `growth-archive.md` 회전 (4번째). 166행 PASS, 34행 헤드룸
+
 ---
 
 ## 최신 git (master)
 
 ```
-17f18da  feat(portal): manufacturing-demo 7번째 카드 추가 + 섹션 "7가지" 업데이트
+6704030  log(growth-58): HANDOFF — Supabase adapter 완료, P3 종결(L4만 보류)
+f0613fe  log(growth-58): §6 슬림 rollup + engineer ledger pointer
+ceae041  log(growth-58): engineer ledger — Supabase adapter 상세 기록
+6aa0698  docs(supabase): README planned->implemented + seam/env/오픈루프 문서화
 ```
 
-모든 변경사항 push 완료.
+모든 커밋 push 완료 (`6704030`가 origin/master HEAD).
+
+### 미커밋 / untracked (의도적 미커밋 — 다음 세션 판단)
+- `M frontend/adapters/capacitor/package.json` + `?? package-lock.json` — P2 로컬 setup 산출물 (npm install 흔적)
+- `?? deploy/preview${slug}.compose.yml` — 리터럴 `${slug}` 파일명 (G-8 ASCII slug 가드가 잡는 오발생 파일, 삭제 후보)
+- `?? .serena/`, `?? session-report-20260613-0123.html` — 툴/세션 산출물, gitignore 후보
 
 ---
 
