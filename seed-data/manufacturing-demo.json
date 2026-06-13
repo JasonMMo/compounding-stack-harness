@@ -1,0 +1,97 @@
+{
+  "item": [
+    {"id": "itm001", "sku": "RAW-STEEL-001", "name": "냉연 강판 1.2t×1219×2438", "unit": "장", "category": "원자재", "unit_price_krw": 38000},
+    {"id": "itm002", "sku": "RAW-AL-001", "name": "알루미늄 압출재 50×50×3000", "unit": "본", "category": "원자재", "unit_price_krw": 12500},
+    {"id": "itm003", "sku": "PRT-BOLT-M8", "name": "볼트 M8×30 (100EA/봉)", "unit": "봉", "category": "부품", "unit_price_krw": 4800},
+    {"id": "itm004", "sku": "PRT-MOTOR-001", "name": "서보모터 200W", "unit": "EA", "category": "부품", "unit_price_krw": 185000},
+    {"id": "itm005", "sku": "FIN-BRACKET-001", "name": "브라켓 어셈블리 A형", "unit": "EA", "category": "완제품", "unit_price_krw": 320000},
+    {"id": "itm006", "sku": "FIN-FRAME-001", "name": "자동화 프레임 B형", "unit": "EA", "category": "완제품", "unit_price_krw": 850000}
+  ],
+  "bom": [
+    {"id": "bom001", "finished_item_id": "itm005", "name": "브라켓 어셈블리 A형 BOM", "version": "v1.2", "status": "active"},
+    {"id": "bom002", "finished_item_id": "itm006", "name": "자동화 프레임 B형 BOM", "version": "v2.0", "status": "active"}
+  ],
+  "production-plan": [
+    {"id": "pp001", "item_id": "itm005", "planned_qty": 200, "start_date": "2026-06-01", "end_date": "2026-06-20", "status": "in_progress"},
+    {"id": "pp002", "item_id": "itm006", "planned_qty": 50, "start_date": "2026-06-15", "end_date": "2026-07-10", "status": "in_progress"},
+    {"id": "pp003", "item_id": "itm005", "planned_qty": 300, "start_date": "2026-07-01", "end_date": "2026-07-25", "status": "planned"}
+  ],
+  "work-order": [
+    {"id": "wo001", "production_plan_id": "pp001", "work_order_no": "WO-20260601-001", "item_id": "itm005", "qty": 100, "status": "in_progress", "assigned_to": "emp002", "due_date": "2026-06-10"},
+    {"id": "wo002", "production_plan_id": "pp001", "work_order_no": "WO-20260611-002", "item_id": "itm005", "qty": 100, "status": "pending", "assigned_to": "emp003", "due_date": "2026-06-20"},
+    {"id": "wo003", "production_plan_id": "pp002", "work_order_no": "WO-20260615-003", "item_id": "itm006", "qty": 25, "status": "in_progress", "assigned_to": "emp002", "due_date": "2026-06-30"}
+  ],
+  "production-result": [
+    {"id": "pr001", "work_order_id": "wo001", "good_qty": 95, "defect_qty": 5, "completed_date": "2026-06-09", "note": "절삭 공차 이탈 5EA"},
+    {"id": "pr002", "work_order_id": "wo003", "good_qty": 20, "defect_qty": 2, "completed_date": "2026-06-25", "note": "도장 불량 2EA 재작업 예정"}
+  ],
+  "inspection-plan": [
+    {"id": "isp001", "item_id": "itm005", "name": "브라켓 출하 검사", "type": "outgoing", "sampling_rate": 10, "status": "active"},
+    {"id": "isp002", "item_id": "itm001", "name": "강판 수입 검사", "type": "incoming", "sampling_rate": 5, "status": "active"}
+  ],
+  "inspection-result": [
+    {"id": "isr001", "inspection_plan_id": "isp001", "work_order_id": "wo001", "inspected_qty": 10, "pass_qty": 9, "fail_qty": 1, "inspector_id": "emp004", "date": "2026-06-09"},
+    {"id": "isr002", "inspection_plan_id": "isp002", "purchase_order_id": "po001", "inspected_qty": 5, "pass_qty": 5, "fail_qty": 0, "inspector_id": "emp004", "date": "2026-06-02"}
+  ],
+  "defect": [
+    {"id": "def001", "work_order_id": "wo001", "item_id": "itm005", "defect_type": "치수불량", "qty": 3, "disposition": "rework", "date": "2026-06-09"},
+    {"id": "def002", "work_order_id": "wo001", "item_id": "itm005", "defect_type": "도장불량", "qty": 2, "disposition": "scrap", "date": "2026-06-09"},
+    {"id": "def003", "work_order_id": "wo003", "item_id": "itm006", "defect_type": "도장불량", "qty": 2, "disposition": "rework", "date": "2026-06-25"}
+  ],
+  "ncr": [
+    {"id": "ncr001", "defect_id": "def001", "ncr_no": "NCR-20260609-001", "root_cause": "지그 마모로 인한 공차 초과", "corrective_action": "지그 교체 및 재설정", "status": "closed"},
+    {"id": "ncr002", "defect_id": "def003", "ncr_no": "NCR-20260625-001", "root_cause": "도장 두께 미달", "corrective_action": "도장 공정 파라미터 재조정 중", "status": "open"}
+  ],
+  "warehouse": [
+    {"id": "wh001", "name": "원자재 창고", "code": "RM", "capacity_sqm": 1200, "status": "active"},
+    {"id": "wh002", "name": "부품 창고", "code": "PRT", "capacity_sqm": 800, "status": "active"},
+    {"id": "wh003", "name": "완제품 창고", "code": "FG", "capacity_sqm": 600, "status": "active"},
+    {"id": "wh004", "name": "생산 공정 (1라인)", "code": "L1", "capacity_sqm": 500, "status": "active"}
+  ],
+  "stock-level": [
+    {"id": "stk001", "warehouse_id": "wh001", "item_id": "itm001", "quantity": 80, "min_threshold": 20},
+    {"id": "stk002", "warehouse_id": "wh001", "item_id": "itm002", "quantity": 150, "min_threshold": 30},
+    {"id": "stk003", "warehouse_id": "wh002", "item_id": "itm003", "quantity": 40, "min_threshold": 10},
+    {"id": "stk004", "warehouse_id": "wh002", "item_id": "itm004", "quantity": 12, "min_threshold": 5},
+    {"id": "stk005", "warehouse_id": "wh003", "item_id": "itm005", "quantity": 95, "min_threshold": 20},
+    {"id": "stk006", "warehouse_id": "wh003", "item_id": "itm006", "quantity": 20, "min_threshold": 5}
+  ],
+  "stock-movement": [
+    {"id": "smv001", "warehouse_id": "wh001", "item_id": "itm001", "type": "in", "quantity": 100, "ref_no": "IN-20260601-001", "note": "협력사 입고"},
+    {"id": "smv002", "warehouse_id": "wh004", "item_id": "itm001", "type": "out", "quantity": 40, "ref_no": "WO-20260601-001-PICK", "note": "WO001 자재 불출"},
+    {"id": "smv003", "warehouse_id": "wh003", "item_id": "itm005", "type": "in", "quantity": 95, "ref_no": "WO-20260601-001-IN", "note": "WO001 완성품 입고"}
+  ],
+  "vendor": [
+    {"id": "vnd001", "name": "(주)한국철강", "contact": "054-111-2222", "category": "원자재", "status": "active"},
+    {"id": "vnd002", "name": "대성알루미늄", "contact": "032-333-4444", "category": "원자재", "status": "active"},
+    {"id": "vnd003", "name": "삼화모터(주)", "contact": "031-555-6666", "category": "전장부품", "status": "active"}
+  ],
+  "purchase-order": [
+    {"id": "po001", "vendor_id": "vnd001", "status": "received", "total_krw": 3800000, "order_date": "2026-05-28", "expected_date": "2026-06-01"},
+    {"id": "po002", "vendor_id": "vnd002", "status": "in_transit", "total_krw": 1875000, "order_date": "2026-06-05", "expected_date": "2026-06-12"},
+    {"id": "po003", "vendor_id": "vnd003", "status": "confirmed", "total_krw": 2220000, "order_date": "2026-06-10", "expected_date": "2026-06-20"}
+  ],
+  "purchase-order-line": [
+    {"id": "pol001", "purchase_order_id": "po001", "item_id": "itm001", "quantity": 100, "unit_price_krw": 38000},
+    {"id": "pol002", "purchase_order_id": "po002", "item_id": "itm002", "quantity": 150, "unit_price_krw": 12500},
+    {"id": "pol003", "purchase_order_id": "po003", "item_id": "itm004", "quantity": 12, "unit_price_krw": 185000}
+  ],
+  "department": [
+    {"id": "dep001", "name": "생산팀", "code": "PRD"},
+    {"id": "dep002", "name": "품질팀", "code": "QA"},
+    {"id": "dep003", "name": "자재팀", "code": "MAT"},
+    {"id": "dep004", "name": "경영지원팀", "code": "ADM"}
+  ],
+  "position": [
+    {"id": "pos001", "name": "공장장", "level": 5},
+    {"id": "pos002", "name": "팀장", "level": 4},
+    {"id": "pos003", "name": "반장", "level": 3},
+    {"id": "pos004", "name": "사원", "level": 1}
+  ],
+  "employee": [
+    {"id": "emp001", "name": "한재홍", "department_id": "dep001", "position_id": "pos001", "email": "jh.han@manufacturing-demo.kr", "phone": "010-1111-2222", "status": "active"},
+    {"id": "emp002", "name": "신보람", "department_id": "dep001", "position_id": "pos003", "email": "br.shin@manufacturing-demo.kr", "phone": "010-3333-4444", "status": "active"},
+    {"id": "emp003", "name": "오기태", "department_id": "dep001", "position_id": "pos003", "email": "gt.oh@manufacturing-demo.kr", "phone": "010-5555-6666", "status": "active"},
+    {"id": "emp004", "name": "유지현", "department_id": "dep002", "position_id": "pos002", "email": "jh.yoo@manufacturing-demo.kr", "phone": "010-7777-8888", "status": "active"}
+  ]
+}
