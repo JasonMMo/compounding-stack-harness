@@ -1080,6 +1080,61 @@ def commit_compose_file(slug: str, dry_run: bool = False) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Git push guard — Coolify pulls from GitHub, so unpushed commits = old code
+# ---------------------------------------------------------------------------
+
+def push_unpushed_commits(dry_run: bool = False) -> bool:
+    """Auto-push commits that are ahead of origin/master before deploying.
+
+    Coolify pulls from the GitHub repo on every deploy trigger. If local
+    commits are not pushed, Coolify builds old code and returns HTTP 200 —
+    silent failure that is hard to diagnose.
+    """
+    count_result = subprocess.run(
+        ["git", "rev-list", "origin/master..HEAD", "--count"],
+        capture_output=True, text=True, cwd=str(REPO_ROOT),
+    )
+    if count_result.returncode != 0:
+        # Cannot reach remote (no network, no remote) — warn but continue
+        print(
+            "[deploy_to_coolify] WARNING: could not check unpushed commits "
+            f"({count_result.stderr.strip()}). Proceeding.",
+            file=sys.stderr,
+        )
+        return True
+
+    count = count_result.stdout.strip()
+    try:
+        n = int(count)
+    except ValueError:
+        n = 0
+
+    if n == 0:
+        print("[deploy_to_coolify] git: all commits pushed — no push needed.")
+        return True
+
+    print(f"[deploy_to_coolify] git: {n} unpushed commit(s) detected — pushing before deploy.")
+
+    if dry_run:
+        print(f"[DRY-RUN] git push origin master  ({n} commits)")
+        return True
+
+    push_result = subprocess.run(
+        ["git", "push", "origin", "master"],
+        capture_output=True, text=True, cwd=str(REPO_ROOT),
+    )
+    if push_result.returncode != 0:
+        print(
+            f"[deploy_to_coolify] ERROR: git push failed:\n{push_result.stderr}",
+            file=sys.stderr,
+        )
+        return False
+
+    print(f"[deploy_to_coolify] git push OK ({n} commits pushed).")
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Webhook helpers (Gap 2b — GitHub push → Coolify auto-redeploy)
 # ---------------------------------------------------------------------------
 
@@ -1312,7 +1367,11 @@ def main() -> int:
         if not commit_compose_file(slug, dry_run=dry_run):
             return 1
 
-    # Step 0b: tunnel check
+    # Step 0b: push unpushed commits (Coolify pulls from GitHub — must push first)
+    if not push_unpushed_commits(dry_run=dry_run):
+        return 1
+
+    # Step 0c: tunnel check
     if not check_tunnel(dry_run=dry_run):
         return 1
 
