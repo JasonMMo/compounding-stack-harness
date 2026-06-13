@@ -1911,7 +1911,7 @@ body {
 .entity-header__info { position: relative; z-index: 1; }
 
 .entity-header__eyebrow {
-  font-size: 0.65rem;
+  font-size: 1.1rem;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: rgba(255,255,255,.5);
