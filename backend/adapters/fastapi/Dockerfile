@@ -29,6 +29,9 @@ COPY backend/adapters/fastapi/ ./
 COPY middle/contract/ /app/middle/contract/
 COPY presets/ddl/ /app/presets/ddl/
 
+# Copy seed data (SEED_FILE env var selects which file to load at startup)
+COPY seed-data/ /app/seed-data/
+
 EXPOSE 8081
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
