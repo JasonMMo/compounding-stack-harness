@@ -93,6 +93,12 @@ Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 - `demo-portal/index.html` — 7번째 카드 추가, "7가지 업종" 업데이트
 - **트러블슈팅**: deploy_to_coolify.py 실행 전 파일 커밋·푸시 필수 (미커밋 시 compose_raw null)
 
+### Growth-56 — manifest 디렉터리 버그 수정 + demo 화면 복구 (2026-06-13)
+- **버그**: 6개 demo app 화면 비어있음 — screen-manifest.json이 파일 아닌 **디렉터리**로 bind-mount됨
+- **근본원인**: Docker bind-mount race (컨테이너 선기동 → source 경로에 빈 dir 생성 → SCP가 그 안에 파일 저장)
+- **핫픽스**: 서버 6개 manifest 디렉터리→파일로 수정, 컨테이너 restart (HTTP 200 확인)
+- **재발방지**: `deploy_to_coolify.py::scp_manifest()` — SCP 전 `rm -rf {remote_manifest}` 가드 추가 (`3e9250a`)
+
 ### Growth-55 — Coolify stale app 정리 (2026-06-13)
 - `gwdizi7tws4yabv25xnbph0w` (demo-portal 중복) DELETE — HTTP 200
 - project `xngfun8b14dchdujcwl3898c` (빈 project) DELETE — HTTP 200
