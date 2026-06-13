@@ -11,6 +11,7 @@ services:
     environment:
       PORT: "8081"
       PYTHONIOENCODING: "utf-8"
+      SEED_FILE: "/app/seed-data/distribution-demo.json"
     restart: unless-stopped
 
   frontend:
