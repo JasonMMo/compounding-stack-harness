@@ -1,39 +1,109 @@
-# backend/adapters/supabase — Supabase Backend Adapter (Planned)
+# backend/adapters/supabase — Supabase Backend Adapter
 
-> **상태**: scaffold (미구현). Supabase managed PostgreSQL + Auth + Storage 를 middle wire-protocol contract 와 연결하는 adapter.
+> **상태**: implemented (M1). Supabase managed PostgreSQL + PostgREST 를
+> middle wire-protocol contract 와 연결하는 swap-compatible backend adapter.
 
 ## 목적
 
-소규모 고객이 자체 DB 서버 운영 부담 없이 Supabase 의 hosted PostgreSQL 을 사용할 수 있도록 한다.
+소규모 고객이 자체 DB 서버 운영 부담 없이 Supabase 의 hosted PostgreSQL 을
+사용할 수 있도록 한다. Customer profile 에서 `stack.backend: supabase` 를
+지정하면 fastapi 대신 이 adapter 가 활성화된다.
 
 | 항목 | 설명 |
 |---|---|
 | kind | `supabase` |
-| 스택 | Supabase JS/Python SDK + PostgREST |
-| 상태 | planned — customer profile `stack.backend: supabase` 지정 시 활성화 |
-| 포트(기본) | N/A (managed cloud or self-hosted Supabase) |
+| 스택 | PostgREST (via httpx) + FastAPI shared routers |
+| 상태 | implemented — unit tests 16/16 PASS |
+| 포트(기본) | 8081 (env `PORT` 로 변경 가능) |
 
 ## 격리 원칙
 
 - middle contract (`middle/contract/wire-v1.yaml`) 를 **읽기만** 한다. 재구현 금지 (G-1).
-- Supabase SDK 호출은 이 adapter 내부에만 위치. 다른 adapter 나 server.py 에 누출 금지.
+- PostgREST 호출은 `supabase_client.py` / `supabase_store.py` 내부에만 위치.
 - 교체: `stack.backend: supabase` → `stack.backend: fastapi` 로만 변경하면 된다.
 
-## 구현 계획
+## sys.modules 세임(Seam) 메커니즘
 
-1. `supabase_client.py` — Supabase Python 클라이언트 초기화 (SUPABASE_URL, SUPABASE_ANON_KEY env vars)
-2. `store.py` — InMemoryStore 와 동일 인터페이스, 내부만 Supabase REST/PostgREST 로 교체
-3. 8 wire key REST 경로 구현 (backend/adapters/INDEX.md §공통 계약 동일)
-4. RLS (Row Level Security) 정책 가이드 — 고객용 `presets/ddl/supabase-rls/` 에 배치
-5. 공유 compliance suite 통과 — `ADAPTER_BASE_URL=<supabase-url> pytest tests/adapters/springboot-jakarta/ -v`
+`main.py` 는 shared fastapi routers 를 import 하기 **전에** 다음 순서로 실행한다:
+
+```python
+import supabase_store
+sys.modules["store"] = supabase_store   # routers의 `from store import entity_store` → 우리 것
+sys.path.insert(0, FASTAPI_DIR)         # shared wire_response, catalog_validator, routers/* 공유
+from routers import auth, entity, status
+```
+
+fastapi adapter 파일을 **한 줄도 수정하지 않고** store 만 교체한다. Open-closed 원칙.
+
+## 파일 구성
+
+| 파일 | 역할 |
+|---|---|
+| `supabase_client.py` | httpx.Client 팩토리 + 모듈 레벨 싱글톤. env 검증 (fail-fast). |
+| `supabase_store.py` | `SupabaseEntityStore` + `entity_store` 싱글톤. 6-method interface. catalog slug→table 해석. |
+| `main.py` | 세임 주입 + FastAPI app (auth/entity/status 라우터). |
+| `requirements.txt` | fastapi, uvicorn, httpx, pyyaml, python-dotenv |
+| `Dockerfile` | 빌드 컨텍스트 = repo root. fastapi adapter dir + middle/contract + presets/ddl 복사. |
+| `tests/test_supabase_store.py` | httpx.MockTransport 기반 unit tests (16개). |
+| `../../presets/ddl/supabase-rls/README.md` | RLS 정책 가이드 + copy-paste SQL 템플릿. |
 
 ## 환경 변수
 
 ```
 SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_ANON_KEY=<anon-key>
-SUPABASE_SERVICE_ROLE_KEY=<service-role-key>   # 서버사이드 전용
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>   # 서버사이드 전용 — RLS 우회
 ```
+
+두 변수 중 하나라도 없으면 서버 시작 시 `RuntimeError` 로 즉시 실패한다.
+
+`SUPABASE_ANON_KEY` 는 이 adapter 에서 사용하지 않는다 (서버사이드 전용 설계).
+
+## 실행
+
+```bash
+# 로컬
+cd backend/adapters/supabase
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... uvicorn main:app --port 8081
+
+# Docker (repo root 에서)
+docker build -f backend/adapters/supabase/Dockerfile -t compounding-supabase .
+docker run -e SUPABASE_URL=... -e SUPABASE_SERVICE_ROLE_KEY=... -p 8081:8081 compounding-supabase
+```
+
+## 테스트 실행
+
+```bash
+cd backend/adapters/supabase
+pip install httpx pyyaml
+python -m pytest tests/ -q
+# Expected: 16 passed
+```
+
+## Slug → Table 해석
+
+`presets/ddl/catalog.yaml` 의 `table:` 필드를 import 시 캐시한다.
+
+| 예시 | 해석 |
+|---|---|
+| `employee` | `hr_employee` (catalog hit) |
+| `department` | `hr_department` (catalog hit) |
+| `stock-level` | `stock_level` (catalog miss → hyphen→underscore fallback) |
+
+## Open Loops (구현 보류 항목)
+
+1. **L4 live 테스트**: Supabase 프로젝트 미존재 → live 테스트 미실행. 수동으로
+   `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` 설정 후 HTTP smoke test 가능.
+
+2. **Supabase Auth (GoTrue) 통합 보류**: 현재 shared `routers/auth.py` 의
+   in-memory demo/demo 인증 재사용. 실제 multi-user 인증은 GoTrue JWT +
+   per-user RLS 정책 필요 (M5 milestone 예정).
+
+3. **filter/sort/paging 푸시다운 보류**: 현재 entity router 가 Python 에서
+   처리. 대규모 테이블에서는 PostgREST WHERE/ORDER BY/LIMIT/OFFSET 으로
+   푸시다운해야 성능 확보 가능 (TODO in `supabase_store.py::find_all`).
+
+4. **RLS 정책**: `presets/ddl/supabase-rls/README.md` 에 스타터 SQL 템플릿
+   제공. service_role 은 RLS 를 자동 우회. 테넌트별 정책은 M5 범위.
 
 ## self-host 옵션
 
