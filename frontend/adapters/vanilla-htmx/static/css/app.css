@@ -1347,6 +1347,15 @@ body {
   transition: background .08s;
 }
 
+/* Explicit zebra striping with light-theme tokens — overrides Pico's
+   prefers-color-scheme:dark stripe (which rendered dark-on-dark text). */
+.master-table tbody tr:nth-child(odd) {
+  background: var(--color-surface-1);
+}
+.master-table tbody tr:nth-child(even) {
+  background: var(--color-surface-2);
+}
+
 .master-table tbody tr:hover {
   background: var(--color-surface-2);
 }
