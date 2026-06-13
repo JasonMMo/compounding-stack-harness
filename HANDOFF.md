@@ -40,7 +40,7 @@ Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 
 | URL | 용도 |
 |---|---|
-| https://demo.n9n.co.kr | 데모 포털 (6개 업종 카드) |
+| https://demo.n9n.co.kr | 데모 포털 (7개 업종 카드) |
 | https://logistics-demo.n9n.co.kr/login | 물류·운송 |
 | https://distribution-demo.n9n.co.kr/login | 도매·유통 |
 | https://construction-demo.n9n.co.kr/login | 건설·시공 |
@@ -59,7 +59,7 @@ Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 |---|---|
 | edu-program | `tp0608w5b013sypb4euwplld` |
 | demo-portal (active) | `s6872cr0asfp02sc0vgw8wi2` |
-| demo-portal (stale dup) | `gwdizi7tws4yabv25xnbph0w` |
+| demo-portal (stale dup) | ~~`gwdizi7tws4yabv25xnbph0w`~~ (Growth-55에서 삭제) |
 | logistics-demo | `hmb6jp67w6stmhsdi6e4h73o` |
 | distribution-demo | `gufoc3trwh2umw53k93bjdyp` |
 | construction-demo | `l3dyahzqjssm4l15tjpc75cj` |
@@ -93,6 +93,11 @@ Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 - `demo-portal/index.html` — 7번째 카드 추가, "7가지 업종" 업데이트
 - **트러블슈팅**: deploy_to_coolify.py 실행 전 파일 커밋·푸시 필수 (미커밋 시 compose_raw null)
 
+### Growth-55 — Coolify stale app 정리 (2026-06-13)
+- `gwdizi7tws4yabv25xnbph0w` (demo-portal 중복) DELETE — HTTP 200
+- project `xngfun8b14dchdujcwl3898c` (빈 project) DELETE — HTTP 200
+- active app `s6872cr0asfp02sc0vgw8wi2` 생존 확인
+
 ### Growth-53 — 6개 데모 seed data 내장 (2026-06-13)
 - `seed-data/logistics-demo.json` + 5개 추가 — 업종별 한국 현실 데이터 (carrier/shipment/vendor/employee 등)
 - `backend/adapters/fastapi/Dockerfile` — `COPY seed-data/ /app/seed-data/` 추가
@@ -104,8 +109,8 @@ Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 
 ## 오픈 루프 (우선순위 순)
 
-### P1 — demo-portal 중복 project 정리
-- Coolify UI에서 stale app(`gwdizi7tws4yabv25xnbph0w`) + 빈 project 삭제
+### ~~P1 — demo-portal 중복 project 정리~~ ✅ Growth-55 완료
+- stale app(`gwdizi7tws4yabv25xnbph0w`) + 빈 project(`xngfun8b14dchdujcwl3898c`) API로 삭제
 
 ### ~~P2 — manufacturing-demo 추가~~ ✅ Growth-54 완료
 
