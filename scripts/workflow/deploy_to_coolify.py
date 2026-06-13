@@ -567,9 +567,9 @@ def scp_manifest(slug: str, dry_run: bool = False) -> bool:
 
     has_seed = seed_local.exists()
     if has_seed:
-        print(f"[deploy_to_coolify] seed file found at {seed_local} — will upload.")
+        print(f"[deploy_to_coolify] seed file found at {seed_local} - will upload.")
     else:
-        print(f"[deploy_to_coolify] no seed file at {seed_local} — skipping seed upload.")
+        print(f"[deploy_to_coolify] no seed file at {seed_local} - skipping seed upload.")
 
     mkdir_cmd = [
         "ssh",
@@ -1110,10 +1110,10 @@ def push_unpushed_commits(dry_run: bool = False) -> bool:
         n = 0
 
     if n == 0:
-        print("[deploy_to_coolify] git: all commits pushed — no push needed.")
+        print("[deploy_to_coolify] git: all commits pushed - no push needed.")
         return True
 
-    print(f"[deploy_to_coolify] git: {n} unpushed commit(s) detected — pushing before deploy.")
+    print(f"[deploy_to_coolify] git: {n} unpushed commit(s) detected - pushing before deploy.")
 
     if dry_run:
         print(f"[DRY-RUN] git push origin master  ({n} commits)")
