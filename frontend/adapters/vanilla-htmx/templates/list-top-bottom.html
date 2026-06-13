@@ -9,8 +9,7 @@
     {% if total is defined %}<p class="entity-header__meta">총 {{ total }}건</p>{% endif %}
   </div>
   <div class="entity-header__actions">
-    <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}"
-       class="btn btn-md btn-on-dark-primary">+ 새로 만들기</a>
+    <a href="{{ url_for('home') }}" class="btn btn-md btn-on-dark">⌂ 홈</a>
   </div>
 </div>
 
@@ -22,10 +21,12 @@
          class="form-input toolbar-search" placeholder="검색..." value="{{ search }}">
   <input type="hidden" name="paging_mode" value="{{ paging_mode }}">
   <input type="hidden" name="paging_size" value="{{ paging_size }}">
-  <button type="submit" class="btn btn-secondary btn-sm">검색</button>
+  <button type="submit" class="btn btn-secondary btn-sm">조회</button>
   {% if search %}
   <a href="{{ url_for('entity_list', entity_type=entity_type) }}" class="btn btn-ghost btn-sm">초기화</a>
   {% endif %}
+  <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}"
+     class="btn btn-primary btn-sm">+ 추가</a>
 </form>
 
 {# Top / Bottom split #}
