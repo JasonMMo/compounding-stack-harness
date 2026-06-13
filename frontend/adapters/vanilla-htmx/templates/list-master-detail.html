@@ -75,25 +75,6 @@
       {% endif %}
     </div>
 
-    {# Compact pagination #}
-    {% if paging_mode == 'offset' %}
-    <nav class="master-pagination" aria-label="페이지 탐색">
-      <span class="master-pagination__count">총 {{ total }}건</span>
-      <div class="master-pagination__btns">
-        {% if paging_page > 1 %}
-        <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
-                            paging_page=paging_page-1, paging_size=paging_size, search=search) }}"
-           class="btn btn-sm btn-secondary">&lt;</a>
-        {% else %}<button class="btn btn-sm btn-secondary" disabled>&lt;</button>{% endif %}
-        <span class="master-pagination__page">{{ paging_page }}/{{ total_pages }}</span>
-        {% if paging_page < total_pages %}
-        <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
-                            paging_page=paging_page+1, paging_size=paging_size, search=search) }}"
-           class="btn btn-sm btn-secondary">&gt;</a>
-        {% else %}<button class="btn btn-sm btn-secondary" disabled>&gt;</button>{% endif %}
-      </div>
-    </nav>
-    {% endif %}
   </div>{# /master-panel #}
 
   {# ── Detail panel (right) ── #}
