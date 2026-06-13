@@ -1,0 +1,108 @@
+{
+  "project": [
+    {"id": "prj001", "name": "판교 오피스 인테리어", "client": "(주)넥슨코리아", "status": "in_progress", "budget_krw": 280000000, "start_date": "2026-04-01", "end_date": "2026-08-31"},
+    {"id": "prj002", "name": "강남 상가 리모델링", "client": "강남빌딩관리(주)", "status": "in_progress", "budget_krw": 150000000, "start_date": "2026-05-15", "end_date": "2026-07-31"},
+    {"id": "prj003", "name": "분당 아파트 발코니 확장", "client": "분당아파트조합", "status": "bidding", "budget_krw": 90000000, "start_date": "2026-07-01", "end_date": "2026-09-30"},
+    {"id": "prj004", "name": "인천 물류창고 신축", "client": "(주)인천물류", "status": "completed", "budget_krw": 420000000, "start_date": "2025-10-01", "end_date": "2026-03-31"}
+  ],
+  "task": [
+    {"id": "tsk001", "project_id": "prj001", "name": "설계도 검토", "assignee_id": "emp001", "status": "done", "due_date": "2026-04-15"},
+    {"id": "tsk002", "project_id": "prj001", "name": "철거 작업", "assignee_id": "emp002", "status": "done", "due_date": "2026-05-10"},
+    {"id": "tsk003", "project_id": "prj001", "name": "전기 배선 공사", "assignee_id": "emp003", "status": "in_progress", "due_date": "2026-06-30"},
+    {"id": "tsk004", "project_id": "prj001", "name": "마감재 시공", "assignee_id": "emp002", "status": "pending", "due_date": "2026-07-31"},
+    {"id": "tsk005", "project_id": "prj002", "name": "외벽 도장", "assignee_id": "emp004", "status": "in_progress", "due_date": "2026-06-25"}
+  ],
+  "milestone": [
+    {"id": "mls001", "project_id": "prj001", "name": "착공", "due_date": "2026-04-15", "status": "done"},
+    {"id": "mls002", "project_id": "prj001", "name": "골조 완료", "due_date": "2026-05-31", "status": "done"},
+    {"id": "mls003", "project_id": "prj001", "name": "전기·설비 완료", "due_date": "2026-06-30", "status": "in_progress"},
+    {"id": "mls004", "project_id": "prj001", "name": "준공 검사", "due_date": "2026-08-15", "status": "pending"}
+  ],
+  "resource-assignment": [
+    {"id": "ra001", "project_id": "prj001", "employee_id": "emp001", "role": "현장소장", "allocated_hours": 400},
+    {"id": "ra002", "project_id": "prj001", "employee_id": "emp002", "role": "시공팀장", "allocated_hours": 600},
+    {"id": "ra003", "project_id": "prj002", "employee_id": "emp003", "role": "전기기사", "allocated_hours": 280},
+    {"id": "ra004", "project_id": "prj002", "employee_id": "emp004", "role": "도장기사", "allocated_hours": 160}
+  ],
+  "vendor": [
+    {"id": "vnd001", "name": "(주)대림자재", "contact": "02-3456-7890", "category": "건자재", "status": "active"},
+    {"id": "vnd002", "name": "한화건설자재", "contact": "02-2345-6789", "category": "전기자재", "status": "active"},
+    {"id": "vnd003", "name": "서울도장협력", "contact": "02-1234-5678", "category": "도장", "status": "active"}
+  ],
+  "requisition": [
+    {"id": "req001", "project_id": "prj001", "name": "마감재 구매", "requested_by": "emp001", "status": "approved", "total_krw": 12000000},
+    {"id": "req002", "project_id": "prj001", "name": "전기 케이블 구매", "requested_by": "emp003", "status": "pending", "total_krw": 3500000}
+  ],
+  "purchase-order": [
+    {"id": "po001", "vendor_id": "vnd001", "requisition_id": "req001", "status": "delivered", "total_krw": 12000000, "order_date": "2026-05-20"},
+    {"id": "po002", "vendor_id": "vnd002", "requisition_id": "req002", "status": "pending", "total_krw": 3500000, "order_date": "2026-06-10"}
+  ],
+  "purchase-order-line": [
+    {"id": "pol001", "purchase_order_id": "po001", "description": "포세린 타일 200장", "quantity": 200, "unit_price_krw": 35000},
+    {"id": "pol002", "purchase_order_id": "po001", "description": "석고보드 50장", "quantity": 50, "unit_price_krw": 18000},
+    {"id": "pol003", "purchase_order_id": "po002", "description": "HFCO 2.5mm² 케이블 100m", "quantity": 100, "unit_price_krw": 8500}
+  ],
+  "department": [
+    {"id": "dep001", "name": "시공팀", "code": "CST"},
+    {"id": "dep002", "name": "설계팀", "code": "DES"},
+    {"id": "dep003", "name": "영업팀", "code": "SAL"},
+    {"id": "dep004", "name": "총무팀", "code": "ADM"}
+  ],
+  "position": [
+    {"id": "pos001", "name": "현장소장", "level": 5},
+    {"id": "pos002", "name": "팀장", "level": 4},
+    {"id": "pos003", "name": "기사", "level": 3},
+    {"id": "pos004", "name": "사원", "level": 1}
+  ],
+  "employee": [
+    {"id": "emp001", "name": "강태호", "department_id": "dep001", "position_id": "pos001", "email": "th.kang@construction-demo.kr", "phone": "010-1111-2222", "status": "active"},
+    {"id": "emp002", "name": "오미경", "department_id": "dep001", "position_id": "pos002", "email": "mk.oh@construction-demo.kr", "phone": "010-3333-4444", "status": "active"},
+    {"id": "emp003", "name": "윤재성", "department_id": "dep002", "position_id": "pos003", "email": "js.yoon@construction-demo.kr", "phone": "010-5555-6666", "status": "active"},
+    {"id": "emp004", "name": "서지원", "department_id": "dep003", "position_id": "pos004", "email": "jw.seo@construction-demo.kr", "phone": "010-7777-8888", "status": "active"}
+  ],
+  "leave-request": [
+    {"id": "lv001", "employee_id": "emp002", "type": "annual", "start_date": "2026-06-20", "end_date": "2026-06-21", "status": "approved"},
+    {"id": "lv002", "employee_id": "emp004", "type": "sick", "start_date": "2026-06-13", "end_date": "2026-06-13", "status": "approved"}
+  ],
+  "approval-request": [
+    {"id": "apr001", "title": "마감재 구매 승인", "requester_id": "emp001", "type": "purchase", "ref_id": "req001", "status": "approved"},
+    {"id": "apr002", "title": "전기자재 구매 승인", "requester_id": "emp003", "type": "purchase", "ref_id": "req002", "status": "pending"}
+  ],
+  "approval-step": [
+    {"id": "aps001", "approval_request_id": "apr001", "step_no": 1, "approver_id": "emp002", "status": "approved"},
+    {"id": "aps002", "approval_request_id": "apr002", "step_no": 1, "approver_id": "emp002", "status": "pending"}
+  ],
+  "approver": [
+    {"id": "apv001", "employee_id": "emp001", "approval_type": "purchase", "limit_krw": 50000000},
+    {"id": "apv002", "employee_id": "emp002", "approval_type": "purchase", "limit_krw": 20000000}
+  ],
+  "approval-decision": [
+    {"id": "apd001", "approval_step_id": "aps001", "decision": "approved", "comment": "견적 적정, 승인"}
+  ],
+  "document-category": [
+    {"id": "dct001", "name": "설계도면", "code": "DWG"},
+    {"id": "dct002", "name": "계약서", "code": "CTR"},
+    {"id": "dct003", "name": "준공서류", "code": "CMP"}
+  ],
+  "document": [
+    {"id": "doc001", "category_id": "dct001", "name": "판교 오피스 평면도", "project_id": "prj001", "status": "active"},
+    {"id": "doc002", "category_id": "dct002", "name": "판교 오피스 공사계약서", "project_id": "prj001", "status": "active"},
+    {"id": "doc003", "category_id": "dct003", "name": "인천 물류창고 준공확인서", "project_id": "prj004", "status": "active"}
+  ],
+  "document-version": [
+    {"id": "dv001", "document_id": "doc001", "version": "v1.0", "uploaded_by": "emp001", "note": "초안"},
+    {"id": "dv002", "document_id": "doc001", "version": "v1.1", "uploaded_by": "emp001", "note": "구조 변경 반영"}
+  ],
+  "asset-category": [
+    {"id": "act001", "name": "중장비", "code": "EQP"},
+    {"id": "act002", "name": "공구", "code": "TLS"}
+  ],
+  "asset": [
+    {"id": "ast001", "category_id": "act001", "name": "굴삭기 320D", "serial_no": "CAT-320D-2024-001", "status": "active", "purchase_date": "2024-03-15"},
+    {"id": "ast002", "category_id": "act002", "name": "임팩트 드릴 세트", "serial_no": "MAKITA-001-SET", "status": "active", "purchase_date": "2025-01-10"}
+  ],
+  "maintenance-record": [
+    {"id": "mnt001", "asset_id": "ast001", "type": "scheduled", "date": "2026-05-01", "note": "정기 오일 교환", "status": "done"},
+    {"id": "mnt002", "asset_id": "ast001", "type": "repair", "date": "2026-06-01", "note": "유압 호스 교체", "status": "done"}
+  ]
+}
