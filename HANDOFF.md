@@ -2,7 +2,7 @@
 
 ## Session 범위
 
-Growth-49 ~ Growth-53 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배포 + 데모 포털 구축 + **6개 데모 seed data 내장 배포**.
+Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배포 + 데모 포털 구축 + 6개 데모 seed data 내장 배포 + **manufacturing-demo 7번째 업종 추가**.
 
 ---
 
@@ -47,6 +47,7 @@ Growth-49 ~ Growth-53 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 | https://itservice-demo.n9n.co.kr/login | IT서비스 |
 | https://trading-demo.n9n.co.kr/login | 무역·수출입 |
 | https://edu-program.n9n.co.kr/login | 교육기관 (6번째 카드) |
+| https://manufacturing-demo.n9n.co.kr/login | 제조업 (7번째 카드) |
 
 로그인: `admin` / `demo1234`
 
@@ -64,6 +65,7 @@ Growth-49 ~ Growth-53 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 | construction-demo | `l3dyahzqjssm4l15tjpc75cj` |
 | itservice-demo | `iguqvhla1cnhhjm14f3xgi2h` |
 | trading-demo | `ybawqjqryxst5ofwnekaxpak` |
+| manufacturing-demo | `ufbllprbzrg8pktn9yfhsybq` |
 | server | `n12vdydjpwp81hu5i15n1gsb` |
 
 ---
@@ -83,6 +85,14 @@ Growth-49 ~ Growth-53 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 
 ## 완료 추가
 
+### Growth-54 — manufacturing-demo 7번째 업종 추가 (2026-06-13)
+- `profiles/manufacturing-demo.yaml` — production·quality·inventory·procurement·hr 5 도메인
+- `presets/ddl/catalog.yaml` — production-plan·production-result·ncr 3개 엔티티 신규 추가
+- `seed-data/manufacturing-demo.json` — 97 레코드 (work-order·BOM·defect·ncr 등)
+- `deploy/preview/manufacturing-demo.compose.yml` + Coolify 배포
+- `demo-portal/index.html` — 7번째 카드 추가, "7가지 업종" 업데이트
+- **트러블슈팅**: deploy_to_coolify.py 실행 전 파일 커밋·푸시 필수 (미커밋 시 compose_raw null)
+
 ### Growth-53 — 6개 데모 seed data 내장 (2026-06-13)
 - `seed-data/logistics-demo.json` + 5개 추가 — 업종별 한국 현실 데이터 (carrier/shipment/vendor/employee 등)
 - `backend/adapters/fastapi/Dockerfile` — `COPY seed-data/ /app/seed-data/` 추가
@@ -97,15 +107,12 @@ Growth-49 ~ Growth-53 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 ### P1 — demo-portal 중복 project 정리
 - Coolify UI에서 stale app(`gwdizi7tws4yabv25xnbph0w`) + 빈 project 삭제
 
-### P2 — manufacturing-demo 추가
-- `profiles/manufacturing-demo.yaml` 작성 (production/quality 도메인 포함)
-- compose + 배포 스크립트 추가
-- 포털 카드 7번째 추가
+### ~~P2 — manufacturing-demo 추가~~ ✅ Growth-54 완료
 
-### P3 — Capacitor 로컬 플랫폼 setup
+### P2 — Capacitor 로컬 플랫폼 setup
 - `frontend/adapters/capacitor/` 에서 직접 실행: `npm install && npm run add:android && npm run add:ios`
 
-### P4 — Supabase backend adapter 구현
+### P3 — Supabase backend adapter 구현
 - 현재 `backend/adapters/supabase/README.md` 스캐폴드만 존재
 - M3 이후 SaaS 모드 전제조건
 
@@ -114,7 +121,7 @@ Growth-49 ~ Growth-53 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 ## 최신 git (master)
 
 ```
-8f6d53d  feat(deploy): edu-program SEED_FILE 경로를 repo 내장 방식으로 전환
+17f18da  feat(portal): manufacturing-demo 7번째 카드 추가 + 섹션 "7가지" 업데이트
 ```
 
 모든 변경사항 push 완료.
@@ -123,7 +130,7 @@ Growth-49 ~ Growth-53 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 
 ## 다음 세션 시작 체크리스트
 
-1. `https://demo.n9n.co.kr` 접속 확인 (6개 카드 표시)
-2. 임의 데모 URL 접속 후 목록 화면에 데이터 표시 확인
-3. 오픈 루프 P1 (Coolify 정리) 또는 P2 (manufacturing-demo) 중 선택
+1. `https://demo.n9n.co.kr` 접속 확인 (7개 카드 표시)
+2. `https://manufacturing-demo.n9n.co.kr/login` — 데이터 표시 확인
+3. 오픈 루프 P1 (Coolify stale app 정리) 또는 P3 (Supabase adapter) 중 선택
 4. SSH 터널 확인: `ssh -L 8000:localhost:8000 n9n_preview` 후 `curl http://localhost:8000/api/v1/version`
