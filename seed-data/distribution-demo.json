@@ -1,0 +1,79 @@
+{
+  "contact": [
+    {"id": "con001", "name": "이재현", "company": "(주)서울도매", "phone": "010-1234-5678", "email": "lee@seoul-wholesale.kr", "type": "customer"},
+    {"id": "con002", "name": "김미나", "company": "대구유통센터", "phone": "010-9876-5432", "email": "kim@daegu-dist.kr", "type": "customer"},
+    {"id": "con003", "name": "박성호", "company": "부산직배", "phone": "010-5555-1234", "email": "park@busan-direct.kr", "type": "customer"},
+    {"id": "con004", "name": "정예린", "company": "광주식자재", "phone": "010-4444-9999", "email": "jung@gwangju-food.kr", "type": "prospect"}
+  ],
+  "lead": [
+    {"id": "led001", "name": "최동현", "company": "수원마트체인", "phone": "010-2222-7777", "source": "referral", "status": "contacted"},
+    {"id": "led002", "name": "한수영", "company": "전국편의점협", "phone": "010-8888-3333", "source": "web", "status": "new"}
+  ],
+  "vendor": [
+    {"id": "vnd001", "name": "(주)농심", "contact": "1588-3101", "category": "식품", "status": "active", "payment_terms": "net30"},
+    {"id": "vnd002", "name": "오뚜기(주)", "contact": "1588-7101", "category": "식품", "status": "active", "payment_terms": "net30"},
+    {"id": "vnd003", "name": "(주)유한킴벌리", "contact": "1588-4560", "category": "생활용품", "status": "active", "payment_terms": "net45"},
+    {"id": "vnd004", "name": "CJ제일제당", "contact": "1588-2828", "category": "식품", "status": "active", "payment_terms": "net30"}
+  ],
+  "purchase-order": [
+    {"id": "po001", "vendor_id": "vnd001", "status": "received", "total_krw": 5800000, "order_date": "2026-06-01", "expected_date": "2026-06-08"},
+    {"id": "po002", "vendor_id": "vnd002", "status": "in_transit", "total_krw": 3200000, "order_date": "2026-06-05", "expected_date": "2026-06-12"},
+    {"id": "po003", "vendor_id": "vnd003", "status": "pending", "total_krw": 1950000, "order_date": "2026-06-10", "expected_date": "2026-06-17"},
+    {"id": "po004", "vendor_id": "vnd004", "status": "received", "total_krw": 7100000, "order_date": "2026-05-28", "expected_date": "2026-06-04"}
+  ],
+  "purchase-order-line": [
+    {"id": "pol001", "purchase_order_id": "po001", "item_id": "itm001", "quantity": 200, "unit_price_krw": 12000},
+    {"id": "pol002", "purchase_order_id": "po001", "item_id": "itm002", "quantity": 100, "unit_price_krw": 34000},
+    {"id": "pol003", "purchase_order_id": "po002", "item_id": "itm003", "quantity": 150, "unit_price_krw": 8500},
+    {"id": "pol004", "purchase_order_id": "po003", "item_id": "itm004", "quantity": 300, "unit_price_krw": 6500}
+  ],
+  "item": [
+    {"id": "itm001", "sku": "AGR-SHIN-001", "name": "신라면 박스(40봉)", "unit": "박스", "unit_price_krw": 12000, "category": "라면"},
+    {"id": "itm002", "sku": "AGR-OTOGI-001", "name": "오뚜기 3분 카레 세트", "unit": "세트", "unit_price_krw": 34000, "category": "즉석식품"},
+    {"id": "itm003", "sku": "AGR-CHUN-001", "name": "청정원 고추장 5kg", "unit": "통", "unit_price_krw": 8500, "category": "양념"},
+    {"id": "itm004", "sku": "LIV-KIMBERLY-001", "name": "뽀삐 화장지 30롤", "unit": "묶음", "unit_price_krw": 6500, "category": "생활용품"},
+    {"id": "itm005", "sku": "AGR-CJ-001", "name": "스팸 클래식 200g×8", "unit": "박스", "unit_price_krw": 28000, "category": "통조림"}
+  ],
+  "warehouse": [
+    {"id": "wh001", "name": "중앙 물류창고", "address": "경기도 이천시 마장면 장암리 100", "capacity_sqm": 8000, "status": "active"},
+    {"id": "wh002", "name": "부산 지역창고", "address": "부산시 강서구 신호산단로 55", "capacity_sqm": 3500, "status": "active"}
+  ],
+  "stock-level": [
+    {"id": "stk001", "warehouse_id": "wh001", "item_id": "itm001", "quantity": 480, "min_threshold": 50},
+    {"id": "stk002", "warehouse_id": "wh001", "item_id": "itm002", "quantity": 210, "min_threshold": 30},
+    {"id": "stk003", "warehouse_id": "wh001", "item_id": "itm003", "quantity": 320, "min_threshold": 40},
+    {"id": "stk004", "warehouse_id": "wh002", "item_id": "itm004", "quantity": 880, "min_threshold": 100},
+    {"id": "stk005", "warehouse_id": "wh002", "item_id": "itm005", "quantity": 155, "min_threshold": 20}
+  ],
+  "stock-movement": [
+    {"id": "smv001", "warehouse_id": "wh001", "item_id": "itm001", "type": "in", "quantity": 200, "ref_no": "IN-20260601-001", "note": "농심 입고"},
+    {"id": "smv002", "warehouse_id": "wh001", "item_id": "itm001", "type": "out", "quantity": 80, "ref_no": "OUT-20260603-001", "note": "서울도매 출고"},
+    {"id": "smv003", "warehouse_id": "wh002", "item_id": "itm004", "type": "in", "quantity": 300, "ref_no": "IN-20260605-001", "note": "유한킴벌리 입고"}
+  ],
+  "price-list": [
+    {"id": "prl001", "name": "일반 단가표 2026-H1", "effective_from": "2026-01-01", "effective_to": "2026-06-30", "status": "active"},
+    {"id": "prl002", "name": "대형거래처 단가표 2026-H1", "effective_from": "2026-01-01", "effective_to": "2026-06-30", "status": "active"}
+  ],
+  "discount": [
+    {"id": "dsc001", "name": "대형거래처 5%", "rate": 5.0, "min_order_krw": 1000000, "status": "active"},
+    {"id": "dsc002", "name": "현금결제 2%", "rate": 2.0, "min_order_krw": 0, "status": "active"}
+  ],
+  "sales-order": [
+    {"id": "so001", "contact_id": "con001", "status": "shipped", "total_krw": 2640000, "order_date": "2026-06-08", "expected_date": "2026-06-11"},
+    {"id": "so002", "contact_id": "con002", "status": "confirmed", "total_krw": 1820000, "order_date": "2026-06-10", "expected_date": "2026-06-15"},
+    {"id": "so003", "contact_id": "con003", "status": "draft", "total_krw": 980000, "order_date": "2026-06-12", "expected_date": "2026-06-18"}
+  ],
+  "sales-order-line": [
+    {"id": "sol001", "sales_order_id": "so001", "item_id": "itm001", "quantity": 100, "unit_price_krw": 13200},
+    {"id": "sol002", "sales_order_id": "so001", "item_id": "itm005", "quantity": 50, "unit_price_krw": 29000},
+    {"id": "sol003", "sales_order_id": "so002", "item_id": "itm002", "quantity": 40, "unit_price_krw": 36000},
+    {"id": "sol004", "sales_order_id": "so003", "item_id": "itm003", "quantity": 80, "unit_price_krw": 9000}
+  ],
+  "invoice": [
+    {"id": "inv001", "contact_id": "con001", "sales_order_id": "so001", "total_krw": 2640000, "status": "paid", "due_date": "2026-07-08"},
+    {"id": "inv002", "contact_id": "con002", "sales_order_id": "so002", "total_krw": 1820000, "status": "sent", "due_date": "2026-07-10"}
+  ],
+  "payment": [
+    {"id": "pay001", "invoice_id": "inv001", "amount_krw": 2640000, "method": "bank_transfer", "status": "confirmed", "paid_date": "2026-06-20"}
+  ]
+}
