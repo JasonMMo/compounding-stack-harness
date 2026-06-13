@@ -409,3 +409,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: Gemini CLI 미설치 환경에서 외부 리서치 불가 → 훈련 지식으로 KWCAG 2.2·한국 UX 관행 직접 작성 (안정적 표준은 실시간 fetch 없이도 충분)
 - **Revenue/cost**: LLM=없음 (직접 작성) / infra 변경 없음 / wiki 2페이지 = 실 고객 접점 전 설계 지식 완비
 - **Open loops**: 실 고객 발굴 (M2, 숨고·크몽) / education vertical seed / G-14 stale-anchor
+
+### Growth-48 (2026-06-13) — DBA 인격 신설 (10번째) + Supabase 전략 논의
+
+- **인격/Axis/Milestone**: CTO (전략) + DBA 신설 / ddl 축 강화 / M2 — 소규모 고객 셀프서비스 DB 설계 지원
+- **Why (1줄)**: 소규모 고객은 DB 설계 경험이 없어 프로젝트 시작점(ERD→DDL)에서 병목 → DBA agent 가 공백 해소
+- **작업**: `.claude/agents/dba-agent.md` 신설 (ERD·정규화·DDL 산출·마이그레이션·catalog.yaml 환류 담당). INDEX.md·CLAUDE.md §1 팀 로스터 갱신. Supabase = 추후 `backend/adapters/supabase/` adapter로 격리 예정 (vendor lock-in 방지).
+- **커밋**: 649762e→1f504f3→ca897c6 (3건)
+- **교훈 (1줄)**: domain-expert(무엇을 만들지) ↔ DBA(어떻게 저장할지) 분업이 명확해야 소규모 고객 셀프서비스가 가능
+- **Revenue/cost**: LLM=없음 / infra 변경 없음 / 소규모 고객 DB 설계 병목 해소 → M2 전환율 개선 기대
+- **Open loops**: 5개 industry demo variants / PWA 구현 / Supabase backend adapter / G-14 stale-anchor
