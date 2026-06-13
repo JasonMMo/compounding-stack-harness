@@ -95,22 +95,6 @@
 
 </div>
 
-{# Pagination (below layout) #}
-{% if paging_mode == 'offset' and total_pages > 1 %}
-<nav class="pagination" aria-label="페이지 탐색" style="margin-top:var(--space-stack-sm)">
-  <span class="pagination-count">{{ total }}건 중 {{ (paging_page-1)*paging_size+1 }}–{{ [paging_page*paging_size, total]|min }}건</span>
-  {% if paging_page > 1 %}
-  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
-                      paging_page=paging_page-1, paging_size=paging_size, search=search) }}"
-     class="btn btn-secondary btn-sm">&lt; 이전</a>
-  {% else %}<button class="btn btn-secondary btn-sm" disabled>&lt; 이전</button>{% endif %}
-  {% if paging_page < total_pages %}
-  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset',
-                      paging_page=paging_page+1, paging_size=paging_size, search=search) }}"
-     class="btn btn-secondary btn-sm">다음 &gt;</a>
-  {% else %}<button class="btn btn-secondary btn-sm" disabled>다음 &gt;</button>{% endif %}
-</nav>
-{% endif %}
 
 {# Row highlight via event delegation #}
 <script>
