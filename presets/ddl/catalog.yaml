@@ -787,6 +787,49 @@ entities:
     #   machine_id resolves to an external resource registry; FK omitted (not a seed entity).
     #   Sequence-order enforcement — application layer.
 
+  production-plan:
+    domain: production
+    table: production_plan
+    label_ko: 생산 계획
+    primary_key: id
+    columns:
+      id:          { type: uuid,      nullable: false }
+      created_at:  { type: timestamp, nullable: false }
+      updated_at:  { type: timestamp, nullable: false }
+      item_id:     { type: uuid,      nullable: false,
+                     fk: { entity: item, column: id, on_delete: restrict } }
+      planned_qty: { type: decimal,   precision: 14, scale: 4, nullable: false }
+      start_date:  { type: date,      nullable: false }
+      end_date:    { type: date,      nullable: false }
+      status:      { type: enum,      values: [draft, confirmed, in-progress, completed, cancelled], nullable: false }
+    constraints:
+      - { type: check, expr: "end_date >= start_date" }
+      - { type: check, expr: "planned_qty > 0" }
+    indexes:
+      - { columns: [item_id] }
+      - { columns: [status] }
+
+  production-result:
+    domain: production
+    table: production_result
+    label_ko: 생산 실적
+    primary_key: id
+    columns:
+      id:             { type: uuid,      nullable: false }
+      created_at:     { type: timestamp, nullable: false }
+      updated_at:     { type: timestamp, nullable: false }
+      work_order_id:  { type: uuid,      nullable: false,
+                        fk: { entity: work-order, column: id, on_delete: restrict } }
+      good_qty:       { type: decimal,   precision: 14, scale: 4, nullable: false }
+      defect_qty:     { type: decimal,   precision: 14, scale: 4, nullable: false }
+      completed_date: { type: date,      nullable: false }
+      note:           { type: text,      nullable: true }
+    constraints:
+      - { type: check, expr: "good_qty >= 0" }
+      - { type: check, expr: "defect_qty >= 0" }
+    indexes:
+      - { columns: [work_order_id] }
+
   # ─────────────────────────────────────────────
   # QUALITY
   # ─────────────────────────────────────────────
@@ -890,6 +933,31 @@ entities:
       - { columns: [status] }
     # DDL notes:
     #   Cannot close without verified_by + verified_at — application layer.
+
+  ncr:
+    domain: quality
+    table: quality_ncr
+    label_ko: 부적합 보고 (NCR)
+    primary_key: id
+    columns:
+      id:                { type: uuid,   nullable: false }
+      created_at:        { type: timestamp, nullable: false }
+      updated_at:        { type: timestamp, nullable: false }
+      ncr_number:        { type: string, length: 64, nullable: false, unique: true }
+      defect_id:         { type: uuid,   nullable: false,
+                           fk: { entity: defect, column: id, on_delete: restrict } }
+      root_cause:        { type: text,   nullable: true }
+      corrective_action: { type: text,   nullable: true }
+      status:            { type: enum,   values: [open, in-review, closed], nullable: false }
+      raised_by:         { type: uuid,   nullable: false,
+                           fk: { entity: employee, column: id, on_delete: restrict } }
+      due_date:          { type: date,   nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [defect_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   NCR captures the non-conformance event; corrective-action is the resulting response.
 
   # ─────────────────────────────────────────────
   # PROJECT
