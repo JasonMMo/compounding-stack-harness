@@ -508,3 +508,10 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: 디자인이 라이트 전용이면 <html data-theme="light"> 명시 — Pico/브라우저 다크모드 자동적용이 토큰과 충돌
 - **Revenue/cost**: LLM=없음 / force deploy 8회 / 데모 3종 결함 제거
 - **Open loops**: Supabase adapter
+
+### Growth-58 (2026-06-13) — Supabase backend adapter (PostgREST) 구현
+
+- **인격/Axis/Milestone**: Engineer (구현) + CTO (seam 설계) / backend 축 / M3 — SaaS 전제(hosted PG)
+- **1줄 rollup**: fastapi adapter ZERO-TOUCH, `sys.modules["store"]` 주입 seam으로 공유 라우터 재사용 + PostgREST store만 교체. 16 유닛테스트 green, L4 live 보류(Supabase 프로젝트 미프로비저닝). 커밋 5af6921~6aa0698 (8개).
+- **상세**: [engineer ledger Growth-58](docs/learn-logs/engineer.md)
+- **Open loops**: L4 live / GoTrue auth / PostgREST pushdown · **G-9 §6 200줄 초과(270) — Growth-30~40대 growth-archive.md 이관 필요**
