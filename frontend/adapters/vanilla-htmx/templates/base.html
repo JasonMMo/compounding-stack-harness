@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Compounding Stack{% endblock %}</title>
+  <!-- PWA -->
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#1e3a5f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CS">
   <!-- Pretendard Variable — Korean + Latin optimised variable font (OFL-1.1) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
   {% if ui_theme == 'public-sector' %}
@@ -27,6 +34,14 @@
   <!-- sidebar.js: 인증 상태에서만 로드 — 비인증 페이지에 JS 없음 -->
   <script src="{{ url_for('static', filename='js/sidebar.js') }}" defer></script>
   {% endif %}
+  <!-- PWA service worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
 </head>
 <body class="{{ 'app-layout' if g_authenticated else 'app-layout-minimal' }}">
 
