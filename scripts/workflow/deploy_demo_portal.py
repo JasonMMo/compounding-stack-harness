@@ -93,7 +93,7 @@ def main() -> int:
         "type": "public",
         "name": SLUG,
         "project_uuid": proj_uuid,
-        "server_uuid": "mwgsocco840cws8wssocg4w4",
+        "server_uuid": "n12vdydjpwp81hu5i15n1gsb",
         "environment_name": "production",
         "git_repository": GIT_REPO,
         "git_branch": GIT_BRANCH,
