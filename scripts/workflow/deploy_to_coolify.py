@@ -584,6 +584,16 @@ def scp_manifest(slug: str, dry_run: bool = False) -> bool:
         PREVIEW_HOST,
         f"mkdir -p {remote_dir}",
     ]
+    # Docker bind-mount race: if container started before SCP, Docker creates an empty
+    # directory at the bind-mount source path. SCP would then write the file *inside*
+    # the directory instead of replacing it. Remove any stale directory first.
+    rm_stale_dir_cmd = [
+        "ssh",
+        "-i", PREVIEW_SSH_KEY,
+        "-o", "StrictHostKeyChecking=accept-new",
+        PREVIEW_HOST,
+        f"[ -d {remote_manifest} ] && rm -rf {remote_manifest} || true",
+    ]
     scp_manifest_cmd = [
         "scp",
         "-i", PREVIEW_SSH_KEY,
@@ -601,6 +611,7 @@ def scp_manifest(slug: str, dry_run: bool = False) -> bool:
 
     if dry_run:
         print(f"[DRY-RUN] ssh mkdir -p {remote_dir}")
+        print(f"[DRY-RUN] ssh rm -rf {remote_manifest} (if directory)")
         print(f"[DRY-RUN] scp {manifest_local} → {PREVIEW_HOST}:{remote_manifest}")
         if has_seed:
             print(f"[DRY-RUN] scp {seed_local} → {PREVIEW_HOST}:{remote_seed}")
@@ -611,6 +622,8 @@ def scp_manifest(slug: str, dry_run: bool = False) -> bool:
     if result.returncode != 0:
         print(f"[deploy_to_coolify] ERROR: ssh mkdir failed: {result.stderr}", file=sys.stderr)
         return False
+
+    subprocess.run(rm_stale_dir_cmd, capture_output=True, text=True)
 
     print(f"[deploy_to_coolify] scp manifest → {remote_manifest} ...")
     result = subprocess.run(scp_manifest_cmd, capture_output=True, text=True)
