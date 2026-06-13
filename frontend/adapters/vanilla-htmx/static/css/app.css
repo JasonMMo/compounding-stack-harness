@@ -412,6 +412,8 @@ body {
 @media (max-width: 768px) {
   .app-body {
     display: block;
+    height: 100%;
+    overflow-y: auto;
   }
 
   .app-sidebar {
