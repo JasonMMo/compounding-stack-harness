@@ -189,6 +189,16 @@ body {
   width: var(--space-sidebar-width-collapsed);
 }
 
+/* 사이드바 홈 링크 (모바일 드로어 첫 항목) */
+.sidebar-home-link {
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-stack-md);
+  padding-bottom: var(--space-stack-sm);
+}
+.sidebar-home-link__anchor {
+  font-weight: var(--font-weight-heading);
+}
+
 /* 사이드바 그룹 */
 .sidebar-group {
   display: block;               /* Pico 상속 flex 차단 */
