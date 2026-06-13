@@ -1,0 +1,95 @@
+version: 1
+
+customer:
+  slug: itservice-demo
+  display: "소규모 IT 서비스·에이전시 (데모)"
+  status: draft
+  industry: generic
+
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi
+  ui_theme: saas
+
+ddl:
+  dialect: postgres
+  schema: itservice_demo
+
+auth:
+  method: local
+
+domains:
+  - slug: crm
+    display: 고객·영업 관리
+    entities: [contact, lead, opportunity, activity]
+    seen_at: 2026-06-13
+    entity_labels:
+      contact: 고객사
+      lead: 잠재 고객
+      opportunity: 수주 기회
+      activity: 영업 활동
+
+  - slug: project
+    display: 프로젝트 관리
+    entities: [project, task, milestone, resource-assignment]
+    seen_at: 2026-06-13
+    entity_labels:
+      project: 프로젝트
+      task: 태스크
+      milestone: 마일스톤
+      resource-assignment: 인력 투입
+
+  - slug: hr
+    display: 인력 관리
+    entities: [employee, department, position, leave-request]
+    seen_at: 2026-06-13
+    entity_labels:
+      leave-request: 휴가 신청
+
+  - slug: sales
+    display: 계약·매출 관리
+    entities: [sales-order, sales-order-line, price-list]
+    seen_at: 2026-06-13
+    entity_labels:
+      sales-order: 계약
+      sales-order-line: 계약 항목
+      price-list: 단가표
+
+  - slug: finance
+    display: 매출 정산
+    entities: [invoice, payment]
+    seen_at: 2026-06-13
+    entity_labels:
+      invoice: 세금계산서
+      payment: 수금
+
+  - slug: reporting
+    display: 경영 현황 보고
+    entities: [report-definition, report-output]
+    seen_at: 2026-06-13
+
+datasource:
+  username: ${ITSERVICE_DEMO_DB_USER}
+  password: ${ITSERVICE_DEMO_DB_PASS}
+  url_template: "postgresql://{host}:{port}/{db}"
+  host: localhost
+  port: 5432
+  db: itservice_demo
+
+overlay:
+  shell_app_id: itservice-demo-portal
+  vault_agent: false
+  sso_keycloak: false
+  feedback_url: https://intake.n9n.co.kr/
+
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+billing:
+  setup_cost_krw: TBD
+  llm_budget_usd_per_month: TBD
+  prepaid_credits_usd: 0
+
+notes:
+  - "Growth-49 — M2 데모 시리즈 (소규모 IT 서비스·에이전시 타겟)"
