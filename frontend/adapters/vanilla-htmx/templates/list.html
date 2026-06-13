@@ -34,18 +34,6 @@
   {% endif %}
 </form>
 
-{# Paging mode switcher #}
-<div class="paging-mode-switcher">
-  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='offset', paging_size=paging_size) }}"
-     class="btn btn-sm {% if paging_mode == 'offset' %}btn-primary{% else %}btn-secondary{% endif %}">
-    페이지 이동
-  </a>
-  <a href="{{ url_for('entity_list', entity_type=entity_type, paging_mode='cursor', paging_size=paging_size) }}"
-     class="btn btn-sm {% if paging_mode == 'cursor' %}btn-primary{% else %}btn-secondary{% endif %}">
-    커서 로드
-  </a>
-</div>
-
 {# Table #}
 {% if items %}
 <div class="table-wrapper" role="region" aria-label="{{ entity_type }} 목록">
