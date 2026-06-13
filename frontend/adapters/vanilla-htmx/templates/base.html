@@ -79,6 +79,12 @@
 
     {% block sidebar %}
     <nav class="app-sidebar" id="app-sidebar" aria-label="주 탐색">
+      <div class="sidebar-home-link">
+        <a href="{{ url_for('home') }}" class="sidebar-nav__link sidebar-home-link__anchor">
+          <span class="sidebar-nav__link-initial" aria-hidden="true">⌂</span>
+          <span class="sidebar-nav__link-text">홈 (인트로)</span>
+        </a>
+      </div>
       {% set domains = g_domains if g_domains else [] %}
       {% if domains %}
       {% for domain in domains %}
