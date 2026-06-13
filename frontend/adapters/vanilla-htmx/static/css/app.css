@@ -1908,24 +1908,33 @@ body {
   pointer-events: none;
 }
 
-.entity-header__info { position: relative; z-index: 1; }
-
-.entity-header__eyebrow {
-  font-size: 1.1rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.5);
-  margin: 0 0 3px;
+.entity-header__info {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
 }
 
+.entity-header__eyebrow { display: none; }
+
 .entity-header__title {
-  font-size: 1.25rem;
+  font-size: 1.45rem;
   font-weight: var(--font-weight-heading);
   color: #fff;
   letter-spacing: -.01em;
-  margin: 0 0 2px;
+  margin: 0;
   line-height: 1.2;
 }
+
+.entity-header__meta {
+  font-size: 0.85em;
+  color: rgba(255,255,255,.8);
+  font-weight: 400;
+  margin: 0;
+}
+.entity-header__meta::before { content: '('; }
+.entity-header__meta::after  { content: ')'; }
 
 .entity-header__meta {
   font-size: 0.7rem;
