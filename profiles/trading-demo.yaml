@@ -1,0 +1,102 @@
+version: 1
+
+customer:
+  slug: trading-demo
+  display: "소규모 무역·수출입 (데모)"
+  status: draft
+  industry: generic
+
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi
+  ui_theme: saas
+
+ddl:
+  dialect: postgres
+  schema: trading_demo
+
+auth:
+  method: local
+
+domains:
+  - slug: procurement
+    display: 수입·구매 관리
+    entities: [vendor, requisition, purchase-order, purchase-order-line]
+    seen_at: 2026-06-13
+    entity_labels:
+      vendor: 해외 공급처
+      requisition: 구매 요청
+      purchase-order: 발주서
+      purchase-order-line: 발주 품목
+
+  - slug: sales
+    display: 수출·판매 관리
+    entities: [sales-order, sales-order-line, price-list, discount]
+    seen_at: 2026-06-13
+    entity_labels:
+      sales-order: 수출 오더
+      sales-order-line: 오더 품목
+      price-list: 수출 단가표
+      discount: 할인 조건
+
+  - slug: inventory
+    display: 재고 관리
+    entities: [item, warehouse, stock-level, stock-movement]
+    seen_at: 2026-06-13
+    entity_labels:
+      item: 품목
+      warehouse: 창고
+      stock-level: 재고 현황
+      stock-movement: 입출고
+
+  - slug: finance
+    display: 외환·정산 관리
+    entities: [account, journal-entry, invoice, payment]
+    seen_at: 2026-06-13
+    entity_labels:
+      account: 계정 과목
+      journal-entry: 전표
+      invoice: 인보이스
+      payment: 수금·지급
+
+  - slug: document
+    display: 무역 서류 관리
+    entities: [document-category, document, document-version]
+    seen_at: 2026-06-13
+    entity_labels:
+      document: 무역 서류
+      document-category: 서류 종류
+
+  - slug: crm
+    display: 바이어·거래처 관리
+    entities: [contact, activity]
+    seen_at: 2026-06-13
+    entity_labels:
+      contact: 바이어
+      activity: 상담 기록
+
+datasource:
+  username: ${TRADING_DEMO_DB_USER}
+  password: ${TRADING_DEMO_DB_PASS}
+  url_template: "postgresql://{host}:{port}/{db}"
+  host: localhost
+  port: 5432
+  db: trading_demo
+
+overlay:
+  shell_app_id: trading-demo-portal
+  vault_agent: false
+  sso_keycloak: false
+  feedback_url: https://intake.n9n.co.kr/
+
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+billing:
+  setup_cost_krw: TBD
+  llm_budget_usd_per_month: TBD
+  prepaid_credits_usd: 0
+
+notes:
+  - "Growth-49 — M2 데모 시리즈 (소규모 무역·수출입 타겟)"
