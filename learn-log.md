@@ -476,3 +476,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈 (1줄)**: deploy_to_coolify.py는 미커밋 파일이 있으면 compose_raw 로드 실패 — 커밋·푸시 먼저, 배포 나중
 - **Revenue/cost**: LLM=없음 / 재배포 2회 / 데모 포트폴리오 7업종 완비
 - **Open loops**: Coolify stale app 정리 / Supabase adapter
+
+### Growth-55 (2026-06-13) — Coolify stale app 정리
+
+- **인격/Axis/Milestone**: CTO (infra) / — / M2 — 운영 위생
+- **Why (1줄)**: Growth-51 배포 당시 demo-portal이 중복 생성됨 — stale app + 빈 project 제거로 Coolify UI 정리
+- **작업**: DELETE /applications/gwdizi7tws4yabv25xnbph0w (HTTP 200). DELETE /projects/xngfun8b14dchdujcwl3898c (HTTP 200). active app s6872cr0asfp02sc0vgw8wi2 생존 확인.
+- **커밋**: HANDOFF+learn-log 업데이트만 (코드 변경 없음)
+- **Revenue/cost**: LLM=없음 / API 호출 5회 / 운영 부채 해소
+- **Open loops**: Supabase adapter
