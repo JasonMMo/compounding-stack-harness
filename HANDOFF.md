@@ -93,6 +93,14 @@ Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 - `demo-portal/index.html` — 7번째 카드 추가, "7가지 업종" 업데이트
 - **트러블슈팅**: deploy_to_coolify.py 실행 전 파일 커밋·푸시 필수 (미커밋 시 compose_raw null)
 
+### Growth-58 — Supabase backend adapter 구현 (2026-06-13)
+- **목적**: M3 SaaS 전제 — 고객이 자체 DB 운영 없이 hosted PostgreSQL 사용
+- **설계(zero-touch)**: `main.py`에서 `sys.modules["store"]=supabase_store` 주입 → 공유 라우터(fastapi adapter)의 `from store import entity_store`가 PostgREST store로 해결. fastapi adapter·middle/contract 무수정
+- **구현**: `backend/adapters/supabase/{supabase_client,supabase_store,main}.py` + Dockerfile + requirements + tests(16 green) + `presets/ddl/supabase-rls/README.md`. slug→table은 catalog.yaml `table` 필드
+- **검증**: pytest 16 PASS, py_compile OK, 신규 가드 위반 0. **L4 live 미실행** (Supabase 프로젝트 없음)
+- 커밋 `5af6921`~`6aa0698` (8개). 상세: engineer ledger Growth-58
+- **남은 오픈루프**: L4 live(SUPABASE_URL/SERVICE_ROLE_KEY) / GoTrue auth(현재 demo/demo) / filter·sort·paging PostgREST pushdown
+
 ### Growth-57 — 데모 3종 결함 일괄 수정 (2026-06-13)
 - **#1 화면 공백**: construction/itservice 컨테이너가 stale 디렉터리 inode 마운트 중 — Coolify `restart`로는 recreate 안 됨. `start?force=true`로 재clone+recreate하여 해결
 - **#2 계정 표기**: portal 카드 8곳 `admin/demo1234` → `demo/demo` (실제 백엔드와 일치)
@@ -129,9 +137,9 @@ Growth-49 ~ Growth-54 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 ### P2 — Capacitor 로컬 플랫폼 setup
 - `frontend/adapters/capacitor/` 에서 직접 실행: `npm install && npm run add:android && npm run add:ios`
 
-### P3 — Supabase backend adapter 구현
-- 현재 `backend/adapters/supabase/README.md` 스캐폴드만 존재
-- M3 이후 SaaS 모드 전제조건
+### ~~P3 — Supabase backend adapter 구현~~ ✅ Growth-58 완료 (코드+테스트)
+- 어댑터 코드·RLS 가이드·유닛테스트 16 green. **L4 live만 보류** (Supabase 프로젝트 프로비저닝 시 실행)
+- 활성화: customer profile `stack.backend: supabase` + env SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY
 
 ---
 
