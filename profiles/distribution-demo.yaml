@@ -1,0 +1,91 @@
+version: 1
+
+customer:
+  slug: distribution-demo
+  display: "중소 도매 유통 (데모)"
+  status: draft
+  industry: generic
+
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi
+  ui_theme: saas
+
+ddl:
+  dialect: postgres
+  schema: distribution_demo
+
+auth:
+  method: local
+
+domains:
+  - slug: sales
+    display: 수주·판매 관리
+    entities: [sales-order, sales-order-line, price-list, discount]
+    seen_at: 2026-06-13
+    entity_labels:
+      sales-order: 수주
+      sales-order-line: 수주 품목
+      price-list: 단가표
+      discount: 할인 정책
+
+  - slug: inventory
+    display: 재고·창고 관리
+    entities: [item, warehouse, stock-level, stock-movement]
+    seen_at: 2026-06-13
+    entity_labels:
+      item: 상품
+      warehouse: 창고
+      stock-level: 재고 현황
+      stock-movement: 입출고
+
+  - slug: procurement
+    display: 구매·공급처 관리
+    entities: [vendor, purchase-order, purchase-order-line]
+    seen_at: 2026-06-13
+    entity_labels:
+      vendor: 공급처
+      purchase-order: 발주
+      purchase-order-line: 발주 품목
+
+  - slug: crm
+    display: 거래처 관리
+    entities: [contact, lead]
+    seen_at: 2026-06-13
+    entity_labels:
+      contact: 거래처
+      lead: 신규 거래처 유망
+
+  - slug: finance
+    display: 매입·매출 정산
+    entities: [invoice, payment]
+    seen_at: 2026-06-13
+    entity_labels:
+      invoice: 세금계산서
+      payment: 수금·지급
+
+datasource:
+  username: ${DISTRIBUTION_DEMO_DB_USER}
+  password: ${DISTRIBUTION_DEMO_DB_PASS}
+  url_template: "postgresql://{host}:{port}/{db}"
+  host: localhost
+  port: 5432
+  db: distribution_demo
+
+overlay:
+  shell_app_id: distribution-demo-portal
+  vault_agent: false
+  sso_keycloak: false
+  feedback_url: https://intake.n9n.co.kr/
+
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+billing:
+  setup_cost_krw: TBD
+  llm_budget_usd_per_month: TBD
+  prepaid_credits_usd: 0
+
+notes:
+  - "Growth-49 — M2 데모 시리즈 (중소 도매 유통 타겟)"
