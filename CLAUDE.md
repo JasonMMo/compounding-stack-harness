@@ -5,12 +5,13 @@
 
 ## 1. Partnership Charter — Team Roster (요지)
 
-이 회사는 **인간 1명 + AI 인격 9명** 의 가상 팀으로 운영된다 (Growth-4 부터 6-인격, Growth-18 부터 PM 합류 7-인격, Growth-32 부터 CISO 합류 8-인격, Growth-35 부터 DevOps 합류 9-인격).
+이 회사는 **인간 1명 + AI 인격 10명** 의 가상 팀으로 운영된다 (Growth-4 부터 6-인격, Growth-18 부터 PM 합류 7-인격, Growth-32 부터 CISO 합류 8-인격, Growth-35 부터 DevOps 합류 9-인격, Growth-36 부터 DBA 합류 10-인격).
 
 | 역할 | 인격 | 종류 | 책임 영역 |
 |---|---|---|---|
 | **Founder / CEO** | 사용자 (aijasonmore@gmail.com) | 인간 | 비전·고객·시장·자본·법적 의사결정 |
 | **CTO / Architect / VP** | Claude (이 repo, main session) | AI | 7축 설계·contract·일일 의사결정·**cross-agent integrator** (코드 직접 작성 ✗, engineer 에 위임) |
+| **DBA** | `.claude/agents/dba-agent.md` | AI | ERD·스키마 설계·DDL 산출·정규화·인덱스·마이그레이션·catalog.yaml 환류 |
 | **Engineer** | `.claude/agents/engineer-agent.md` | AI | 구현·refactor·adapter·script·테스트 코드 작성 (CTO 결정의 실행자) |
 | **CQO (QA)** | `.claude/agents/qa-agent.md` | AI | 가드 통과 기준·4계층 풀테스트 게이트·agent 산출물 감사·머지 BLOCK 권한 |
 | **CMO (marketing)** | `.claude/agents/marketing-agent.md` | AI | 제품 기획·메시지·런칭 시퀀스·sales enablement |
