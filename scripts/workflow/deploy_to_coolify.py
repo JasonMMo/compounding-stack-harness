@@ -56,6 +56,12 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+# Windows cp949 terminals cannot encode em-dash; reconfigure stdout/stderr to UTF-8.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # yaml: stdlib only — we use a minimal hand-rolled approach to preserve
 # comments and hand-written fields (PyYAML is not guaranteed installed).
 # We merge only the specific known keys rather than full parse+dump.
@@ -1279,13 +1285,13 @@ def register_github_webhook(slug: str, app_uuid: str, token: str) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Idempotent Coolify preview deployment — runbook §4 single command.",
+        description="Idempotent Coolify preview deployment - runbook SS4 single command.",
     )
     parser.add_argument("--slug", required=True, help="Profile slug (e.g. shop-demo)")
     parser.add_argument(
         "--dry-run", action="store_true",
         help=(
-            "Print payloads only — no POST/PATCH/deploy. Token and secret values omitted. "
+            "Print payloads only - no POST/PATCH/deploy. Token and secret values omitted. "
             "Always run this first for verification."
         ),
     )
