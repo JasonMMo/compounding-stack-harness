@@ -1,0 +1,42 @@
+# deploy/preview/logistics-demo.compose.yml
+# Coolify dockercompose preview -- profile: logistics-demo
+# Build context: repo root (Coolify clones whole repo, build context = clone root)
+#
+# Domain: https://logistics-demo.n9n.co.kr (set via Coolify API PATCH docker_compose_domains)
+# Manifest: server-side persistent file mounted read-only into frontend
+# No seed data (demo starts empty -- scp seed-data.json to enable pre-populated data)
+
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/adapters/fastapi/Dockerfile
+    environment:
+      PORT: "8081"
+      PYTHONIOENCODING: "utf-8"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
+      args:
+        UI_THEME: saas
+    environment:
+      FRONTEND_PORT: "5000"
+      BACKEND_BASE_URL: "http://backend:8081"
+      CONTRACT_DIR: "/app/middle/contract"
+      PROFILE_MANIFEST: "/data/manifest/screen-manifest.json"
+      PYTHONIOENCODING: "utf-8"
+      # SECRET_KEY injected via Coolify environment variables (not in compose file)
+    volumes:
+      - type: bind
+        source: /data/coolify/manifests/logistics-demo/screen-manifest.json
+        target: /data/manifest/screen-manifest.json
+        read_only: true
+    ports:
+      - "5000"
+    depends_on:
+      - backend
+    restart: unless-stopped
