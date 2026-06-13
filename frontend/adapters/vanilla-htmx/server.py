@@ -44,6 +44,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_from_directory,
     session,
     url_for,
 )
@@ -252,7 +253,17 @@ def _render_error(payload: dict, status: int, entity_type: str = "") -> str | Re
 
 
 # ---------------------------------------------------------------------------
-# Static assets
+# Static assets — root-level PWA files (scope must be "/" not "/static/")
+# ---------------------------------------------------------------------------
+
+@app.get("/sw.js")
+def service_worker():
+    return send_from_directory(app.static_folder or "static", "sw.js",
+                               mimetype="application/javascript")
+
+
+# ---------------------------------------------------------------------------
+# Routes
 # ---------------------------------------------------------------------------
 
 @app.route("/")
