@@ -1,0 +1,101 @@
+{
+  "contact": [
+    {"id": "con001", "name": "황성민", "company": "Tokyo Trading Co.", "phone": "+81-3-1234-5678", "email": "smin.hwang@tokyo-trading.jp", "country": "JP", "type": "customer"},
+    {"id": "con002", "name": "Linda Chen", "company": "Shenzhen Import Ltd.", "phone": "+86-755-9876-5432", "email": "linda@sz-import.cn", "country": "CN", "type": "customer"},
+    {"id": "con003", "name": "James Kim", "company": "Korea Export GmbH", "phone": "+49-30-5555-0000", "email": "james@ke-gmbh.de", "country": "DE", "type": "customer"},
+    {"id": "con004", "name": "박종현", "company": "(주)한국수출", "phone": "010-2222-3333", "email": "jh.park@kr-export.co.kr", "country": "KR", "type": "supplier"}
+  ],
+  "activity": [
+    {"id": "act001", "contact_id": "con001", "type": "email", "subject": "Q3 수출 물량 협의", "note": "도쿄 바이어 요청 수량 검토", "status": "done"},
+    {"id": "act002", "contact_id": "con002", "type": "call", "subject": "LC 조건 협의", "note": "신용장 개설 조건 확인", "status": "done"},
+    {"id": "act003", "contact_id": "con003", "type": "meeting", "subject": "유럽 규격 적합 확인", "note": "CE 인증 서류 제출 일정 조율", "status": "pending"}
+  ],
+  "vendor": [
+    {"id": "vnd001", "name": "(주)대한패키징", "contact": "02-3344-5566", "category": "포장재", "status": "active", "country": "KR"},
+    {"id": "vnd002", "name": "동양운송(주)", "contact": "02-4455-6677", "category": "운송", "status": "active", "country": "KR"},
+    {"id": "vnd003", "name": "Asia Logistics Pte", "contact": "+65-6100-2000", "category": "포워딩", "status": "active", "country": "SG"}
+  ],
+  "requisition": [
+    {"id": "req001", "name": "Q2 수출 포장재", "requested_by": "emp001", "status": "approved", "total_krw": 4200000},
+    {"id": "req002", "name": "싱가포르 포워딩 계약", "requested_by": "emp002", "status": "pending", "total_krw": 2800000}
+  ],
+  "purchase-order": [
+    {"id": "po001", "vendor_id": "vnd001", "status": "delivered", "total_krw": 4200000, "order_date": "2026-05-15", "expected_date": "2026-05-25"},
+    {"id": "po002", "vendor_id": "vnd002", "status": "confirmed", "total_krw": 1850000, "order_date": "2026-06-01", "expected_date": "2026-06-08"}
+  ],
+  "purchase-order-line": [
+    {"id": "pol001", "purchase_order_id": "po001", "description": "수출용 골판지 박스 500개", "quantity": 500, "unit_price_krw": 5200},
+    {"id": "pol002", "purchase_order_id": "po001", "description": "에어캡 20m×50롤", "quantity": 50, "unit_price_krw": 38000},
+    {"id": "pol003", "purchase_order_id": "po002", "description": "부산↔인천 내륙운송 10톤", "quantity": 1, "unit_price_krw": 1850000}
+  ],
+  "item": [
+    {"id": "itm001", "sku": "EXP-COSM-001", "name": "한방 화장품 세트 (수출용)", "unit": "세트", "hs_code": "330499", "unit_price_usd": 45.0},
+    {"id": "itm002", "sku": "EXP-FOOD-001", "name": "한국 라면 혼합 박스", "unit": "박스", "hs_code": "190230", "unit_price_usd": 22.5},
+    {"id": "itm003", "sku": "EXP-ELEC-001", "name": "LED 조명 키트", "unit": "세트", "hs_code": "940540", "unit_price_usd": 38.0},
+    {"id": "itm004", "sku": "EXP-GARMENT-001", "name": "프리미엄 면 티셔츠 (10장)", "unit": "팩", "hs_code": "610910", "unit_price_usd": 68.0}
+  ],
+  "warehouse": [
+    {"id": "wh001", "name": "인천 수출 보세창고", "address": "인천시 중구 항동7가 1-1", "capacity_sqm": 2000, "status": "active"},
+    {"id": "wh002", "name": "부산 항만 창고", "address": "부산시 중구 충장대로 100", "capacity_sqm": 3000, "status": "active"}
+  ],
+  "stock-level": [
+    {"id": "stk001", "warehouse_id": "wh001", "item_id": "itm001", "quantity": 240, "min_threshold": 30},
+    {"id": "stk002", "warehouse_id": "wh001", "item_id": "itm002", "quantity": 580, "min_threshold": 50},
+    {"id": "stk003", "warehouse_id": "wh002", "item_id": "itm003", "quantity": 160, "min_threshold": 20},
+    {"id": "stk004", "warehouse_id": "wh002", "item_id": "itm004", "quantity": 95, "min_threshold": 10}
+  ],
+  "stock-movement": [
+    {"id": "smv001", "warehouse_id": "wh001", "item_id": "itm001", "type": "in", "quantity": 100, "ref_no": "IN-20260601-001", "note": "제조사 입고"},
+    {"id": "smv002", "warehouse_id": "wh001", "item_id": "itm002", "type": "out", "quantity": 200, "ref_no": "OUT-20260608-001", "note": "일본 수출 선적"}
+  ],
+  "sales-order": [
+    {"id": "so001", "contact_id": "con001", "status": "shipped", "total_usd": 13500, "incoterms": "FOB", "order_date": "2026-05-20"},
+    {"id": "so002", "contact_id": "con002", "status": "confirmed", "total_usd": 9000, "incoterms": "CIF", "order_date": "2026-06-03"},
+    {"id": "so003", "contact_id": "con003", "status": "draft", "total_usd": 6800, "incoterms": "DAP", "order_date": "2026-06-10"}
+  ],
+  "sales-order-line": [
+    {"id": "sol001", "sales_order_id": "so001", "item_id": "itm001", "quantity": 200, "unit_price_usd": 45.0},
+    {"id": "sol002", "sales_order_id": "so001", "item_id": "itm002", "quantity": 100, "unit_price_usd": 22.5},
+    {"id": "sol003", "sales_order_id": "so002", "item_id": "itm002", "quantity": 200, "unit_price_usd": 22.5},
+    {"id": "sol004", "sales_order_id": "so002", "item_id": "itm003", "quantity": 100, "unit_price_usd": 38.0},
+    {"id": "sol005", "sales_order_id": "so003", "item_id": "itm004", "quantity": 100, "unit_price_usd": 68.0}
+  ],
+  "price-list": [
+    {"id": "prl001", "name": "수출 표준 단가 USD 2026", "currency": "USD", "effective_from": "2026-01-01", "effective_to": "2026-12-31", "status": "active"}
+  ],
+  "discount": [
+    {"id": "dsc001", "name": "대량주문 3%", "rate": 3.0, "min_order_usd": 5000, "status": "active"},
+    {"id": "dsc002", "name": "신규거래처 5%", "rate": 5.0, "min_order_usd": 0, "status": "active"}
+  ],
+  "account": [
+    {"id": "acc001", "name": "수출매출", "code": "4100", "type": "revenue"},
+    {"id": "acc002", "name": "매출원가", "code": "5100", "type": "cost"},
+    {"id": "acc003", "name": "외상매출금", "code": "1110", "type": "asset"},
+    {"id": "acc004", "name": "운영비", "code": "6100", "type": "expense"}
+  ],
+  "journal-entry": [
+    {"id": "je001", "date": "2026-06-08", "description": "일본 수출 매출 인식", "debit_account_id": "acc003", "credit_account_id": "acc001", "amount_krw": 18225000},
+    {"id": "je002", "date": "2026-06-08", "description": "매출원가 인식", "debit_account_id": "acc002", "credit_account_id": "acc003", "amount_krw": 10000000}
+  ],
+  "invoice": [
+    {"id": "inv001", "contact_id": "con001", "sales_order_id": "so001", "total_usd": 13500, "status": "paid", "due_date": "2026-07-08"},
+    {"id": "inv002", "contact_id": "con002", "sales_order_id": "so002", "total_usd": 9000, "status": "sent", "due_date": "2026-07-31"}
+  ],
+  "payment": [
+    {"id": "pay001", "invoice_id": "inv001", "amount_usd": 13500, "method": "tt", "status": "confirmed", "paid_date": "2026-06-25", "note": "T/T 전신환 수령"}
+  ],
+  "document-category": [
+    {"id": "dct001", "name": "선적서류", "code": "SHP"},
+    {"id": "dct002", "name": "통관서류", "code": "CUS"},
+    {"id": "dct003", "name": "계약서", "code": "CTR"}
+  ],
+  "document": [
+    {"id": "doc001", "category_id": "dct001", "name": "BL_SO001_20260608", "sales_order_id": "so001", "status": "active"},
+    {"id": "doc002", "category_id": "dct001", "name": "PACKING_LIST_SO001", "sales_order_id": "so001", "status": "active"},
+    {"id": "doc003", "category_id": "dct002", "name": "수출신고필증_SO001", "sales_order_id": "so001", "status": "active"}
+  ],
+  "document-version": [
+    {"id": "dv001", "document_id": "doc001", "version": "v1.0", "uploaded_by": "emp001", "note": "최종 BL"},
+    {"id": "dv002", "document_id": "doc002", "version": "v1.0", "uploaded_by": "emp001", "note": "포장 명세 확정"}
+  ]
+}
