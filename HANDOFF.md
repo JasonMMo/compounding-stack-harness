@@ -1,87 +1,129 @@
-# HANDOFF — 2026-06-13 (Growth-47: UX/Design wiki 환류)
+# Session Handoff — 2026-06-13 (updated)
 
-> 다음 세션 인계. 단일 진실은 `learn-log.md` + `docs/learn-logs/<role>.md` — 이 파일은 *지금 어디고 다음은 뭔지*만.
-> **다음 작업 = 실 고객 발굴 (M2 게이트) — 인프라·디자인·UI·파이프라인·KRDS·UX wiki 전 구간 완료. 막는 건 영업뿐.**
+## Session 범위
 
-## ▣ Growth-47 (이번 세션) — UX/Design wiki 환류
+Growth-49 ~ Growth-53 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배포 + 데모 포털 구축 + **6개 데모 seed data 내장 배포**.
 
-- **design/refrence 오타 수정** → `design/reference/hostinger-design.png` (커밋 b87d766)
-- **wiki 신규 2페이지**:
-  - `knowledge/wiki/design/kwcag.md` — KWCAG 2.2 4원칙·명도대비(4.5:1/3:1)·ARIA 체크리스트·법적 근거(장차법)·WCAG 비교
-  - `knowledge/wiki/design/korean-ux-conventions.md` — Pretendard 타이포·날짜/금액 표기·폼 레이아웃·버튼 텍스트 관행·테이블 인터랙션·검색패널 패턴·모달 관행
-- **wiki index 포인터 2개 추가** (79e6a71)
-- **커밋**: b87d766→c2260c9→18f0d14→79e6a71 (4건, pushed)
+---
 
-## ▶▶▶ 복귀 직후 상태 (확인용)
+## 완료 항목
 
-- **Git**: clean, master 동기화 (HEAD = 79e6a71, HANDOFF Growth-47).
-- **팀**: 9-인격 (DevOps 합류). `Agent(subagent_type="devops-agent"|"engineer-agent"|"security-agent", ...)` 직접 spawn 가능.
-- **★ preview VPS LIVE**: Hostinger KVM 2 `187.77.140.157` (싱가포르, $8.99/월 24mo). SSH `ssh -i ~/.ssh/n9n_preview_ed25519 root@187.77.140.157` (키 인증만). Coolify 4.1.2 healthy. `*.n9n.co.kr` 자동 HTTPS. **Coolify API CI/CD end-to-end 검증 완료**. 8000/8080/6001/6002 클라우드 방화벽 차단(22/80/443만 허용).
-- **Coolify API 토큰**: `infra/secrets/preview-vps.env` (gitignored). 내용 절대 비출력.
-- **context-mode** 활성 — 큰 출력은 `ctx_execute`/`ctx_execute_file`, mutation·git·navigation 만 Bash.
-- **WebFetch/WebSearch deny** — `.claude/settings.json` deny 설정. 외부 리서치는 context-mode 또는 codegraph.
-- **가드**: 13개, 0 real FAIL. `PYTHONIOENCODING=utf-8` 권장.
+### Growth-49 — Capacitor adapter scaffold
+- `frontend/adapters/capacitor/capacitor.config.ts` — remote server mode (`server.url: https://edu-program.n9n.co.kr`)
+- `frontend/adapters/capacitor/package.json` — @capacitor/cli ^8.4.0, typescript ^6.0.3
+- `frontend/adapters/capacitor/.gitignore`
+- **로컬 작업 미완**: `npm install && npm run add:android && npm run add:ios` 는 로컬에서 직접 실행 필요
 
-## ▣ Growth-46 (이번 세션) — research-loop skill 정비 + commands
+### Growth-50 — 5개 업종 데모 profile 생성
+- `profiles/logistics-demo.yaml`
+- `profiles/distribution-demo.yaml`
+- `profiles/construction-demo.yaml`
+- `profiles/itservice-demo.yaml`
+- `profiles/trading-demo.yaml`
 
-- **skill-creator 적용**: SKILL.md description pushy 강화, references/ 구조 완성.
-  - **핵심 교훈**: workflow 스킬에 full eval 루프는 비효율 — 반론 제기 후 스킵.
-- **commands 신설** (`.claude/commands/research/`):
-  - `research:fetch` — `ctx_fetch_and_index` 래퍼, raw 결과 대화 차단
-  - `research:query` — `ctx_search` 배치 래퍼, 해석 후 요약만 반환
-  - `research:wiki-save` — wiki 환류 강제, 프론트매터+index+커밋 일관성 (프로젝트 레벨)
-- **references 추가**: `research-loop/references/context-mode-guide.md`
-- **메모리 갱신**: `feedback_pushback.md` — CTO로서 비효율 제안에 냉철하게 반론 제기
-- **커밋**: 0320f2e→b487399→460f8af→8f7476f→7968bf5→80d7b93, 6건
+### Growth-51 — 5개 데모 + 포털 Coolify 배포
+- `deploy/preview/{slug}.compose.yml` 5개 생성
+- `deploy/preview/demo-portal.compose.yml` 생성
+- `demo-portal/Dockerfile` + `demo-portal/index.html` 생성
+- `scripts/workflow/deploy_demo_portal.py` 생성
+- Windows cp949 인코딩 버그 픽스: `deploy_to_coolify.py`, `scaffold.py`에 `sys.stdout.reconfigure(encoding="utf-8")` 추가
 
-## ▣ Growth-45 — 리서치 자산 wiki 환류
+### Growth-52 — 도메인 라우팅 충돌 해결 + edu-demo 카드 추가
+- `demo.n9n.co.kr` -> edu-program 으로 포워딩되던 문제 해결
+  - edu-program(uuid: `tp0608w5b013sypb4euwplld`) 도메인을 `edu-program.n9n.co.kr` 단독으로 복구
+- `demo-portal/index.html` 6번째 카드(교육기관) 추가
+- 포털 재배포 완료
 
-- `knowledge/wiki/design/korean-ui-patterns.md` 신규 생성 (KRDS + 한국 SI 3대 패턴 + harness 통합)
-- wiki index Design 섹션 추가. CLAUDE.md §7 환류 정책 추가.
+---
 
-## ▣ Growth-44 — base.html KRDS CDN 분기 완성
+## 라이브 상태 (모두 HTTP 200 확인)
 
-- **전 구간 완성**: profile `stack.ui_theme: public-sector` → compose `UI_THEME` → Dockerfile ENV → tokens.css(Pico 스킵) → base.html Jinja2 KRDS CDN.
-- Dockerfile `ENV UI_THEME=$UI_THEME` (build ARG → runtime 전파). server.py context_processor. base.html `{% if ui_theme == 'public-sector' %}`.
+| URL | 용도 |
+|---|---|
+| https://demo.n9n.co.kr | 데모 포털 (6개 업종 카드) |
+| https://logistics-demo.n9n.co.kr/login | 물류·운송 |
+| https://distribution-demo.n9n.co.kr/login | 도매·유통 |
+| https://construction-demo.n9n.co.kr/login | 건설·시공 |
+| https://itservice-demo.n9n.co.kr/login | IT서비스 |
+| https://trading-demo.n9n.co.kr/login | 무역·수출입 |
+| https://edu-program.n9n.co.kr/login | 교육기관 (6번째 카드) |
 
-## ▣ Growth-43 — preview_package.py public-sector 파이프라인
+로그인: `admin` / `demo1234`
 
-- `_get_ui_theme(slug)` 헬퍼. compose 템플릿 `args: UI_THEME: {ui_theme}`. 기존 compose 재생성(하위호환).
+---
 
-## ▣ Growth-42 — KRDS 분석 + 정적/동적 분기
+## Coolify 앱 UUID 맵
 
-- KRDS 클론 `D:\AI\workspace\krds-uiux` (74컴포넌트, CDN 2파일).
-- `design/templates/`: krds-tab / krds-table / krds-side-nav / dense-table / tab-form.
-- `token_css_generator.generate(ui_theme=...)`, `build_tokens.py --ui-theme`.
+| slug | uuid |
+|---|---|
+| edu-program | `tp0608w5b013sypb4euwplld` |
+| demo-portal (active) | `s6872cr0asfp02sc0vgw8wi2` |
+| demo-portal (stale dup) | `gwdizi7tws4yabv25xnbph0w` |
+| logistics-demo | `hmb6jp67w6stmhsdi6e4h73o` |
+| distribution-demo | `gufoc3trwh2umw53k93bjdyp` |
+| construction-demo | `l3dyahzqjssm4l15tjpc75cj` |
+| itservice-demo | `iguqvhla1cnhhjm14f3xgi2h` |
+| trading-demo | `ybawqjqryxst5ofwnekaxpak` |
+| server | `n12vdydjpwp81hu5i15n1gsb` |
 
-## ▣ Growth-35~41 — 인프라·디자인 기반 (참조용)
+---
 
-- **G-41**: design/templates 구조, profile ui_theme 키.
-- **G-39**: 아코디언 사이드바 + Hostinger CSS (edu-program.n9n.co.kr PASS).
-- **G-38**: 영업 루프 풀사이클 리허설 — intake→preview 전 구간 실검증.
-- **G-37**: 웹 intake 인터페이스 (intake.n9n.co.kr live), CISO 게이트 첫 완주.
-- **G-36**: 디자인 Phase 0+1 (Pretendard+Pico+Open Props), 504 근본 해결.
-- **G-35**: DevOps 9번째 인격 신설, Hostinger KVM2 + Coolify + CI/CD end-to-end.
+## 인프라 핵심 사실 (다음 세션 필독)
 
-## 다음 후보
+- **FastAPI 백엔드**: `InMemoryEntityStore` 사용 — PostgreSQL 없음. 데모 앱 시작 시 빈 화면이 정상.
+  씨드 데이터가 필요하면 `SEED_FILE` 환경변수로 JSON 경로 지정.
+- **Compose build context**: Coolify는 repo root 기준 — `COPY demo-portal/index.html` (not `COPY index.html`)
+- **Coolify race condition**: 앱 생성 후 `docker_compose_raw` 로드까지 10~15초. domain PATCH 전 polling 필요.
+- **Coolify 배포 엔드포인트**: `GET /applications/{uuid}/start` (POST /deploy 아님)
+- **domain PATCH**: `{"docker_compose_domains": [...], "force_domain_override": True}` — raw list, json.dumps 금지
+- **토큰 보안**: `TOKEN=$(tr -d ' \t\r\n' < infra/secrets/coolify_api_token)` 길이만 확인. 값 출력 절대 금지.
+- **SSH key**: `~/.ssh/n9n_preview_ed25519` (repo 외부 operator-local)
 
-1. **★★ 실 고객 발굴 (M2 게이트)** — 숨고/크몽 첫 의뢰. 시스템 전 구간 준비 완료. 막는 건 영업뿐.
-2. ~~UX/Design Pattern deep-research~~ — ✅ Growth-47 완료. wiki: kwcag + korean-ux-conventions.
-3. **자동화 잔여** (낮은 우선순위): webhook 보류 / SECRET_KEY rotate / G-14 stale-anchor.
-4. **KRDS 클론 정리**: `D:\AI\workspace\krds-uiux` 분석 완료 → 필요 시 삭제 가능.
+---
 
-## CTO 행동 규범 (이번 세션 확립)
+## 완료 추가
 
-- **반론 먼저**: 유저 제안이 비효율·기술 불량이면 실행 전 냉철하게 반론 제기 + 대안 제시.
-- 유저가 고수하면 따름. 침묵 = 동의 금지.
+### Growth-53 — 6개 데모 seed data 내장 (2026-06-13)
+- `seed-data/logistics-demo.json` + 5개 추가 — 업종별 한국 현실 데이터 (carrier/shipment/vendor/employee 등)
+- `backend/adapters/fastapi/Dockerfile` — `COPY seed-data/ /app/seed-data/` 추가
+- 6개 compose — `SEED_FILE: /app/seed-data/{slug}.json` 환경변수 추가
+- edu-program compose: 기존 bind-mount 방식 제거 → repo 내장 방식으로 전환
+- 전 슬러그 재배포 완료 — HTTP 200 확인
 
-## 운영 메모
+---
 
-- 파일당 별도 커밋 / `Co-Authored-By: Claude Sonnet 4.6` (현 모델) / master push CTO 자동 (private repo).
-- **시크릿 절대 chat·커밋 금지** — 볼트 `infra/secrets/*`(gitignored).
-- Windows `NUL` 파일 주의: `> /dev/null` 오용 시 `NUL` 파일 생성.
-- 환경: Node v24 / Python 3.14 / JDK 21 / Docker / WSL postgres / codegraph 0.9.9 / codex CLI 0.118.0.
-- **`/context-mode:context-mode` 수동 호출 금지** — PreToolUse hook이 이미 강제. 호출 시 ~500줄 skill 파일이 컨텍스트에 낭비로 로드됨.
-- **context-mode SessionStart 훅 비활성화** (Growth-47) — `hooks.json`에서 `SessionStart` → `_SessionStart_disabled`로 rename. ROUTING_BLOCK(2KB)+스냅샷(11KB) 제거. **플러그인 업데이트 시 원복** → `C:\Users\cubis\.claude\plugins\cache\context-mode\context-mode\<ver>\hooks\hooks.json`에서 재작업 필요. ctx_execute 도구는 정상 작동.
-- **Read → ctx_execute_file**: 편집 불필요한 파일 분석은 Read 대신 ctx_execute_file 사용 (Read는 전체 내용이 컨텍스트에 로드됨).
-- **50% 컨텍스트 도달 시 `/compact` 강제** (CLAUDE.md 규칙, 반드시 준수).
+## 오픈 루프 (우선순위 순)
+
+### P1 — demo-portal 중복 project 정리
+- Coolify UI에서 stale app(`gwdizi7tws4yabv25xnbph0w`) + 빈 project 삭제
+
+### P2 — manufacturing-demo 추가
+- `profiles/manufacturing-demo.yaml` 작성 (production/quality 도메인 포함)
+- compose + 배포 스크립트 추가
+- 포털 카드 7번째 추가
+
+### P3 — Capacitor 로컬 플랫폼 setup
+- `frontend/adapters/capacitor/` 에서 직접 실행: `npm install && npm run add:android && npm run add:ios`
+
+### P4 — Supabase backend adapter 구현
+- 현재 `backend/adapters/supabase/README.md` 스캐폴드만 존재
+- M3 이후 SaaS 모드 전제조건
+
+---
+
+## 최신 git (master)
+
+```
+8f6d53d  feat(deploy): edu-program SEED_FILE 경로를 repo 내장 방식으로 전환
+```
+
+모든 변경사항 push 완료.
+
+---
+
+## 다음 세션 시작 체크리스트
+
+1. `https://demo.n9n.co.kr` 접속 확인 (6개 카드 표시)
+2. 임의 데모 URL 접속 후 목록 화면에 데이터 표시 확인
+3. 오픈 루프 P1 (Coolify 정리) 또는 P2 (manufacturing-demo) 중 선택
+4. SSH 터널 확인: `ssh -L 8000:localhost:8000 n9n_preview` 후 `curl http://localhost:8000/api/v1/version`
