@@ -390,6 +390,17 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - Catches surfaced: status.health가 공유 라우터라 PostgREST 연결성을 실제 체크하지 않음(M1 허용). Open loops: L4 live(SUPABASE_URL/SERVICE_ROLE_KEY) / GoTrue auth(현재 demo/demo 재사용) / filter·sort·paging PostgREST pushdown(스케일) / 텍스트 timestamp 표현 divergence.
 - Cost: engineer subagent ~55k tok / 34 tool-use / 1 envelope 반환 (main context 격리).
 
+### Growth-63 (2026-06-14) — Pipeline 장애 대응 웹 대시보드 (localhost·LLM 0·PII-free)
+
+- Files touched (신규): `scripts/workflow/pipeline_dashboard.py`, `scripts/workflow/tests/test_pipeline_dashboard.py`; 수정: `scripts/workflow/pipeline_monitor.py` (DEFECT_ACTIONS+action_hint, aggregate_health 버그픽스), `scripts/workflow/pipeline_status.py` (drill-in owner+action 패리티), `scripts/workflow/tests/test_pipeline_monitor.py` (DEFECT_ACTIONS 커버리지).
+- 목적/맥락 (CTO 결정): Phase 8 CLI 모니터 위에 **장애 빠른 드릴인**용 로컬 웹 화면. 파운더가 노드별 에러/deadlock breakdown 을 시각적으로 진단. 불변: **127.0.0.1 전용 / LLM 0 / PII-free / 병렬 스토어 안 만들고 monitor 투영만 재사용**.
+- pipeline_dashboard.py: `http.server.ThreadingHTTPServer`, stdlib only. 순수함수 `render_dashboard_html(cases, health, now, *, evidence_dir, mirror_dir)`. 렌더 = 헤더+mirror 신선도 → **Incidents triage**(상단·severity 정렬·`#case-<slug>` 앵커) → Health 카드 → Alerts → 케이스별 컬러 노드 칩 → 실패/stall **drill-in**(권장액션+owner 배지+런북 링크 / SLA breakdown(dwell/sla/%·AUTO|HUMAN·OVER SLA) / 접이식 inline evidence(html.escape) / copy-paste 다음 단계+codex 프롬프트). 재사용: monitor 의 `NODES/load_cases/project_node_states/aggregate_health/action_hint/_load_processed` + `pipeline_status.analyze_node_with_llm`(프롬프트 생성만, **호출 안 함**). `_pii_safe_case` 화이트리스트 `{client_id,slug,triage_status,score,pipeline_events}`. CLI `--host/--port/--cases-dir/--evidence-dir/--once`, 15s auto-refresh.
+- pipeline_monitor.py: `DEFECT_ACTIONS` (10 DEFECT_TAXONOMY → `{owner,action,runbook_anchor}`) + `action_hint()` 단일 진실(CLI·대시보드 공유). 버그픽스 — `aggregate_health` loop 후 stray `if ts=="closed"` 블록 제거(빈 cases UnboundLocalError + closed 중복 계산).
+- Tests added: dashboard 38 (빈 페이지/칩/drill-in/PII-leak 가드/duration/incidents 정렬+앵커/evidence html.escape XSS(`<script>`→`&lt;`)/evidence tail cap/codex+CLI 명령 present) + monitor DEFECT_ACTIONS 파라미터 커버리지. **전체 111 PASS, 가드 FAIL 0**.
+- Validation: 라이브 서버 HTTP 200(8787 WinError 10013 점유 → 7654 우회 데모), PII grep 0건, html.escape XSS 단위테스트 통과. 데모 후 서버 중지 + `out/demo-*` 전량 삭제(repo clean). 커밋 `d031800`~`cc810a6` (8개).
+- Catches/Open loops: 8787 은 HEADROOM 모니터링 서비스 점유 → 대시보드 기본 포트 충돌 시 `--port` 우회. 외부/원격 접속은 미결(메모리 [[todo-external-pipeline-monitor]], Cloudflare Tunnel+Access 후보) — 명시 요청 시에만.
+- Cost: 문서화 세션(이 환류) 소량 / 구현은 engineer subagent 2회 (이전 세션, envelope 반환).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
