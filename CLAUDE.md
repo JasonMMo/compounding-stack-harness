@@ -44,13 +44,16 @@
 | **skill** (Stage 1) | `presets/skills/<industry>/*.seed.md` | Karpathy seed 형식 |
 | **ddl** (Stage 2) | `presets/ddl/catalog.yaml` + dialect 어댑터 | dialect: postgres/hsqldb/mysql/oracle |
 | **middle** (Stage 3) | `middle/contract/` — wire-protocol 단일 진실 | 이전 repo 의 mybatis 축이 일반화됨 |
-| **frontend** (Stage 4) | `frontend/adapters/<kind>/` | nexacro / react / vue / vanilla-htmx — pluggable |
+| **frontend** (Stage 4) | `frontend/adapters/<kind>/` | nexacro / react / vue / vanilla-htmx / landing-astro — pluggable |
 | **backend** (Stage 4) | `backend/adapters/<kind>/` | springboot / fastapi / node-express / go — pluggable |
 | **creater** (Orchestrator) | `.claude/commands/` + `scripts/workflow/` | 7축을 한 번에 엮는 thin orchestration |
 | **customer** | `profiles/<slug>.yaml` | 고객 고유 관습 한 장 |
 | **expert-agent** ★ | `.claude/agents/domain-expert-<industry>.md` | **7번째 축, 새 repo 의 핵심 차별화** |
+| **theme** (visual-asset) ★ | `presets/themes/<slug>/` + `presets/site-sections/catalog.yaml` | **8번째 축 — marketing-site deliverable 의 비주얼 누적 (CDO 큐레이션). 한 테마가 전 고객 재사용** |
 
-> 이전 repo 의 6축 (skill/ddl/mybatis/nexacro/creater/customer) 중 `mybatis` → `middle` 로 일반화, `nexacro` → `frontend` (pluggable) 로 일반화, `expert-agent` 가 신규 7번째 축.
+> 이전 repo 의 6축 (skill/ddl/mybatis/nexacro/creater/customer) 중 `mybatis` → `middle` 로 일반화, `nexacro` → `frontend` (pluggable) 로 일반화, `expert-agent` 가 신규 7번째 축. **theme** 은 Growth-65 신설 8번째 축.
+
+> **deliverable_kind** (profile `stack.deliverable_kind`): `business-system`(default, entity→DDL→typed-form) | `marketing-site`(site-manifest→테마→landing-astro). 후자는 entity/DDL 축을 bypass 하고 theme·site-sections 축을 탄다. 웹에이전시형 고객 대응 (Growth-65, B급 professional 자동화). 설계: [`docs/architecture/site-manifest.md`](docs/architecture/site-manifest.md).
 
 **원칙 위반 신호**: "이번만 임시로", "다음에 정리하자", "한 번만 쓸 코드인데" — 이 표현이 떠오르면 catalog/template/preset/agent definition 등록부터 찾는다.
 
