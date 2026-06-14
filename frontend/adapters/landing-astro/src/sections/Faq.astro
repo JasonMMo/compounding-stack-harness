@@ -1,0 +1,99 @@
+---
+/**
+ * Faq.astro — FAQ Accordion section (type: faq).
+ * Variants: single-col | two-col
+ * Style hints: divider (line|space|none), icon (chevron|plus|arrow), animation (collapse|fade)
+ */
+interface FaqItem {
+  question: string
+  answer: string
+}
+
+interface StyleHints {
+  divider?: string
+  icon?: string
+  animation?: string
+}
+
+interface Props {
+  copy: Record<string, string>
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+  items?: FaqItem[]
+}
+
+const {
+  copy = {},
+  variant = 'single-col',
+  styleHints = {},
+  motionPreset = 'reveal-on-scroll',
+  items = [],
+} = Astro.props
+
+const iconType = styleHints.icon ?? 'chevron'
+const divider = styleHints.divider ?? 'line'
+
+const dividerClass: Record<string, string> = {
+  line: 'border-b border-[var(--color-border,#E5E7EB)]',
+  space: 'mb-4',
+  none: '',
+}
+
+const displayItems: FaqItem[] = items.length > 0 ? items : [
+  { question: 'What is included in each plan?', answer: 'Each plan includes core features tailored to your growth stage. See the pricing section for details.' },
+  { question: 'Can I upgrade or downgrade at any time?', answer: 'Yes, you can change your plan at any time. Changes take effect at the next billing cycle.' },
+  { question: 'Is there a free trial?', answer: 'We offer a 14-day free trial on all plans — no credit card required.' },
+]
+---
+
+<section
+  class="w-full py-[var(--space-section-y,112px)] px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-1,#fff)]"
+  data-motion={motionPreset}
+>
+  <div class="max-w-[var(--space-container-max,1200px)] mx-auto">
+    {copy.headline && (
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-[var(--color-text-1,#111827)] mb-4" style="font-family: var(--font-family-display, inherit);">
+          {copy.headline}
+        </h2>
+        {copy.subhead && (
+          <p class="text-lg text-[var(--color-text-2,#374151)] max-w-2xl mx-auto">
+            {copy.subhead}
+          </p>
+        )}
+      </div>
+    )}
+
+    <div class={variant === 'two-col' ? 'grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0' : 'max-w-2xl mx-auto'}>
+      {displayItems.map((item, i) => (
+        <details
+          class={`group py-5 ${dividerClass[divider] ?? ''} ${i === 0 && divider === 'line' ? 'border-t border-[var(--color-border,#E5E7EB)]' : ''}`}
+        >
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-[var(--color-text-1,#111827)] hover:text-[var(--color-primary,#6D28D9)] transition-colors">
+            <span>{item.question}</span>
+            {iconType === 'chevron' && (
+              <svg class="w-5 h-5 flex-shrink-0 ml-4 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            )}
+            {iconType === 'plus' && (
+              <svg class="w-5 h-5 flex-shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path class="group-open:hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                <path class="hidden group-open:block" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+              </svg>
+            )}
+            {iconType === 'arrow' && (
+              <svg class="w-5 h-5 flex-shrink-0 ml-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            )}
+          </summary>
+          <p class="mt-3 text-[var(--color-text-2,#374151)] leading-relaxed">
+            {item.answer}
+          </p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
