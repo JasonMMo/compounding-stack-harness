@@ -24,6 +24,7 @@ main session (CTO) 의 context 에는 *판정과 결정에 필요한 것*만 들
 |---|---|---|
 | 인격별 누적 학습·판정 상세 | `docs/learn-logs/<role>.md` | 이미 각 loop step "기록·환류" 에 박혀 있음 |
 | 인도물 단위 리뷰 (보안/QA/디자인 등) | `docs/delivery/<slug>/<role>-review.md` | 인도 패키지에 동행 |
+| 인도물 단위 Needs-Fit 리뷰 | `docs/delivery/<slug>/needs-fit-review.md` | PII strip 필수 |
 | 일회성 스크래치 분석 (탐색·조사) | `out/analysis/<topic>.md` | **gitignored** (`out/`) — 재생성 가능 |
 
 ## 4. 반환 Envelope (main 으로 돌아가는 것)
