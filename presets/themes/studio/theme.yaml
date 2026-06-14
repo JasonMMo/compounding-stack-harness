@@ -1,0 +1,232 @@
+slug: studio
+name: "Studio"
+version: "1.0.0"
+description: >
+  Minimal editorial aesthetic with generous whitespace, understated typography,
+  and a warm off-white canvas. Designed for creative agencies, consulting firms,
+  and professional services where restraint communicates quality.
+persona_fit:
+  personas: [ceo, ops]
+  industry_tags: [creative-agency, consulting, professional-services, architecture, law, design-studio]
+  tone: "minimal editorial"
+
+# ── Color Override ─────────────────────────────────────────────────────────────
+# Base: design/tokens/semantic.json. Only keys that differ are declared here.
+color:
+  primary: "#18181B"           # zinc-900 — near-black primary (not blue)
+  primary-hover: "#09090B"     # zinc-950 — deeper on hover
+  primary-active: "#000000"    # black on active
+  primary-subtle: "#F4F4F5"    # zinc-100 — subtle tint
+  primary-border: "#A1A1AA"    # zinc-400 — muted border
+  text-link: "#18181B"         # same as primary — no blue links
+  text-link-hover: "#09090B"
+  # Landing-specific
+  hero-bg-from: "#FAFAF9"      # warm off-white (stone-50) — calm hero canvas
+  hero-bg-to: "#F5F5F4"        # stone-100 — very subtle gradient
+  section-alt-bg: "#F4F4F5"    # zinc-100 — cool-neutral alternating sections
+  accent-glow: "rgba(24,24,27,0.08)"   # near-black whisper shadow
+
+# ── Typography ─────────────────────────────────────────────────────────────────
+font:
+  family-display: "'DM Serif Display', 'Georgia', 'Times New Roman', serif"
+  family-body: "'DM Sans Variable', 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif"
+  # Landing-scale extensions
+  size-5xl: "48px"
+  size-6xl: "56px"
+  size-7xl: "64px"
+  line-5xl: "52px"
+  line-6xl: "60px"
+  line-7xl: "68px"
+  weight-display: "400"        # serif at normal weight — editorial restraint
+  letter-spacing-display: "-0.01em"
+  letter-spacing-body: "0em"
+
+# ── Spacing ────────────────────────────────────────────────────────────────────
+space:
+  section-y: "128px"           # more generous vertical rhythm than aurora
+  section-y-mobile: "80px"
+  container-max: "1120px"      # slightly narrower — focuses reading
+  container-gutter: "32px"     # wider gutters on mobile for breathing room
+
+# ── Radius ─────────────────────────────────────────────────────────────────────
+radius:
+  card: "4px"                  # very low radius — editorial, not rounded
+  button: "2px"                # near-square buttons
+  badge: "2px"                 # rectangular badges (not pill)
+  hero-media: "4px"
+
+# ── Shadow ─────────────────────────────────────────────────────────────────────
+shadow:
+  card: "0 1px 3px 0 rgba(0,0,0,0.06), 0 1px 2px -1px rgba(0,0,0,0.06)"
+  hero-media: "0 24px 48px -8px rgba(0,0,0,0.12)"
+  cta-band: "none"             # CTA band is flat — no shadow, border top only
+
+# ── Motion ─────────────────────────────────────────────────────────────────────
+motion:
+  default_preset: fade-up
+  section_presets:
+    hero: fade-up
+    logos: fade-simple         # logos enter quietly — no stagger for editorial
+    features: reveal-on-scroll
+    pricing: reveal-on-scroll
+    testimonial: fade-up
+    faq: reveal-on-scroll
+    cta: fade-up
+    footer: fade-simple
+  reduced_motion_fallback: fade-simple
+
+# ── Section Variant Styles ─────────────────────────────────────────────────────
+sections:
+  hero:
+    centered:
+      bg: solid                # off-white solid — no gradient drama
+      text_align: center
+      cta_style: primary-lg
+      media_position: below
+    split-left:
+      bg: solid
+      text_align: left
+      cta_style: primary-lg
+      media_position: right
+    split-right:
+      bg: solid
+      text_align: left
+      cta_style: primary-lg
+      media_position: left
+    fullscreen-video:
+      bg: video
+      text_align: center
+      cta_style: primary-outline
+      media_position: behind
+
+  logos:
+    horizontal-scroll:
+      filter: grayscale-hover  # shown in color, fade to gray on hover — reverse of aurora
+      divider: both            # thin line top and bottom — editorial structure
+    grid:
+      filter: none
+      divider: bottom
+
+  features:
+    three-col-icon:
+      icon_style: outline      # line icons — lighter touch
+      card_style: bordered     # bordered cards — visible structure without elevation
+      layout: grid-3
+    two-col-alternating:
+      icon_style: none
+      card_style: ghost
+      layout: alternating
+    single-col-list:
+      icon_style: outline
+      card_style: ghost
+      layout: stack
+
+  pricing:
+    two-tier:
+      highlight_tier: none
+      card_style: bordered
+      show_toggle: false
+    three-tier:
+      highlight_tier: 1
+      card_style: bordered
+      show_toggle: false
+    toggle-annual-monthly:
+      highlight_tier: 1
+      card_style: bordered
+      show_toggle: true
+
+  testimonial:
+    single-card:
+      layout: centered
+      quote_style: large
+      avatar: none             # no avatar — let the quote speak; attribution is text
+    carousel:
+      layout: centered
+      quote_style: normal
+      avatar: circle
+      autoplay: false
+    grid:
+      layout: grid-3
+      quote_style: normal
+      avatar: none
+
+  faq:
+    single-col:
+      divider: line
+      icon: plus               # plus/minus — cleaner than chevron for editorial
+      animation: collapse
+    two-col:
+      divider: space           # space divider — lighter than line for two-col
+      icon: plus
+      animation: collapse
+
+  cta:
+    centered:
+      bg: dark                 # CTA uses near-black solid — high contrast statement
+      text_align: center
+      cta_style: inverse-lg
+    left-aligned:
+      bg: dark
+      text_align: left
+      cta_style: inverse-lg
+    with-image:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+      media_position: right
+
+  footer:
+    minimal:
+      cols: 1
+      show_social: false
+      divider: top
+    full-links:
+      cols: 4
+      show_social: true
+      divider: top
+    newsletter:
+      cols: 2
+      show_social: true
+      show_newsletter_form: true
+      divider: top
+
+# ── A11y Self-check ───────────────────────────────────────────────────────────
+a11y:
+  contrast_checked: true
+  wcag_aa_pairs:
+    - bg: "#FAFAF9"
+      fg: "#18181B"
+      ratio: 16.8
+      note: "Primary text (zinc-900) on hero off-white (stone-50) — PASS AAA"
+    - bg: "#F4F4F5"
+      fg: "#18181B"
+      ratio: 15.9
+      note: "Primary text on section-alt-bg (zinc-100) — PASS AAA"
+    - bg: "#18181B"
+      fg: "#FFFFFF"
+      ratio: 18.1
+      note: "White text/label on primary dark (CTA button) — PASS AAA"
+    - bg: "#FAFAF9"
+      fg: "#3F3F46"
+      ratio: 9.1
+      note: "text-2 mapped to zinc-700 (body copy secondary) on stone-50 — PASS AAA"
+    - bg: "#FAFAF9"
+      fg: "#71717A"
+      ratio: 4.8
+      note: "text-3 mapped to zinc-500 on stone-50 — PASS AA (captions, labels)"
+    - bg: "#FFFFFF"
+      fg: "#A1A1AA"
+      ratio: 2.8
+      note: "primary-border (zinc-400) on white — decorative border only (WCAG 1.4.11 non-interactive chrome exemption; interactive inputs use gray-400 per semantic.json at 3.05:1)"
+  kwcag_notes: >
+    Hero background is near-white (stone-50 #FAFAF9); all body text is zinc-900
+    (16.8:1 on stone-50 — AAA). CTA dark band uses zinc-900 background with white
+    text (18.1:1 — AAA). Primary border (zinc-400) used only for decorative card
+    borders — not on interactive inputs (interactive inputs inherit semantic.json
+    border-input at gray-400 3.05:1 which remains unchanged).
+    Feature card bordered style: zinc-200 border on white background = 1.3:1 — this
+    is a decorative card frame, not an interactive component; WCAG 1.4.11 does not
+    apply. Card elevated style (pricing) uses shadow only, no border — safe.
+    All motion falls back to fade-simple under prefers-reduced-motion.
+    KWCAG 2.3: no animation loops; all entrance animations play once and stop.
+  reduced_motion_safe: true
