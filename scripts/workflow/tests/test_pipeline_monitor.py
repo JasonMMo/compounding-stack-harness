@@ -39,6 +39,8 @@ from pipeline_emit import (  # noqa: E402
 )
 from pipeline_monitor import (  # noqa: E402
     NODES,
+    DEFECT_TAXONOMY,
+    DEFECT_ACTIONS,
     NodeState,
     Alert,
     load_cases,
@@ -46,6 +48,7 @@ from pipeline_monitor import (  # noqa: E402
     detect_stalls,
     aggregate_health,
     render_summary,
+    action_hint,
 )
 from pipeline_status import (  # noqa: E402
     render_status_table,
@@ -618,6 +621,50 @@ class TestG14Guard:
 
         result = g14(cases_dir=cases_dir)
         assert result.status == "PASS", f"Expected PASS, got {result.status}: {result.violations}"
+
+
+# ---------------------------------------------------------------------------
+# DEFECT_ACTIONS / action_hint tests
+# ---------------------------------------------------------------------------
+
+class TestDefectActions:
+    @pytest.mark.parametrize("defect_class", sorted(DEFECT_TAXONOMY))
+    def test_every_taxonomy_class_covered(self, defect_class: str):
+        """Every class in DEFECT_TAXONOMY must have an entry in DEFECT_ACTIONS."""
+        assert defect_class in DEFECT_ACTIONS, (
+            f"DEFECT_ACTIONS missing entry for {defect_class!r}"
+        )
+
+    @pytest.mark.parametrize("defect_class", sorted(DEFECT_TAXONOMY))
+    def test_action_hint_returns_dict_with_required_keys(self, defect_class: str):
+        hint = action_hint(defect_class)
+        assert "owner" in hint
+        assert "action" in hint
+        assert "runbook_anchor" in hint
+
+    @pytest.mark.parametrize("defect_class", sorted(DEFECT_TAXONOMY))
+    def test_owner_is_valid_role(self, defect_class: str):
+        hint = action_hint(defect_class)
+        assert hint["owner"] in {"DevOps", "QA", "CTO", "CEO"}, (
+            f"Unexpected owner {hint['owner']!r} for {defect_class!r}"
+        )
+
+    def test_action_hint_unknown_class_returns_safe_default(self):
+        hint = action_hint("totally-unknown-class-xyz")
+        assert isinstance(hint, dict)
+        assert "owner" in hint
+        assert "action" in hint
+
+    def test_action_hint_unknown_returns_dict(self):
+        hint = action_hint("unknown")
+        assert hint == DEFECT_ACTIONS["unknown"]
+
+    def test_all_strings_are_ascii(self):
+        for cls, entry in DEFECT_ACTIONS.items():
+            for key, val in entry.items():
+                assert val.isascii(), (
+                    f"DEFECT_ACTIONS[{cls!r}][{key!r}] contains non-ASCII: {val!r}"
+                )
 
 
 # ---------------------------------------------------------------------------
