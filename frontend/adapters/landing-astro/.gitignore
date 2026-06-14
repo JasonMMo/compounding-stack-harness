@@ -4,6 +4,7 @@ dist/
 src/lib/contract.gen.ts
 src/styles/tokens.gen.css
 src/styles/tailwind-theme.gen.js
+src/env.d.ts
 *.local
 .env.local
 .env.*.local
