@@ -136,17 +136,6 @@ function flattenSemantic(obj, path, rawDoc, output, inFont = false) {
   }
 }
 
-// ── Apply theme overrides ─────────────────────────────────────────────────────
-// Theme values are real hex/CSS values (format doc §1 — no resolver).
-
-function flattenThemeSection(sectionObj, prefix, output) {
-  for (const [key, val] of Object.entries(sectionObj)) {
-    if (val == null || typeof val === 'object') continue
-    const varName = `--${prefix}-${key}`
-    output.push([varName, String(val)])
-  }
-}
-
 // ── Tailwind theme.extend builder ─────────────────────────────────────────────
 // Sections: color.* -> colors, font.family-* -> fontFamily, font.size-* -> fontSize,
 //           space.section-y etc -> spacing, radius.* -> borderRadius, shadow.* -> boxShadow
