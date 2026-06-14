@@ -338,3 +338,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **Open loops**: ~~P1 cloudflared 활성화~~ → **2026-06-15 LIVE 검증 완료** / ~~P3 L4 smoke~~ → **2026-06-14 L4 PASS** (둘 다 아래 후속). 잔여: P3 GoTrue auth·PostgREST pushdown (M5)
 - **후속 (P1 LIVE, 2026-06-15)**: cloudflared 설치+터널 `pipeline-monitor`(e572d631) 생성·DNS·config·Access(OTP, founder 단독) 구성 → `https://pipeline.n9n.co.kr` 엔드투엔드 OTP 로그인 검증. 부팅자동 = cloudflared **Windows 서비스** + 대시보드 **작업 스케줄러 `PipelineDashboard`**(AtLogOn). 기존 n8n 터널 2개와 별개. 시크릿 gitignored. 상세 메모리 [[todo-external-pipeline-monitor]]
 - **후속 (P3 Supabase L4 LIVE, 2026-06-14)**: 파운더가 Supabase Free 프로젝트 프로비저닝 → `smoke_test` 테이블 + 볼트 env(`infra/secrets/supabase.env`, gitignored) → `SupabaseEntityStore` create/find/patch/delete + slug→table fallback 실 PostgREST 왕복 **10/10 PASS** (id/created_at/updated_at Postgres populate 확인). Growth-58 L4 오픈루프 종결. README 상태 → L4 live-verified. 비용 $0(Free).
+
+### Growth-65 (2026-06-15) — marketing-site deliverable track 신설 (visual-asset 8번째 축)
+
+- **인격/Axis/Milestone**: CTO(설계·통합·contract 판정) + Engineer(구현) + CDO(테마) / **theme(8번째 축 신설)**·frontend·creater·intake / M1 GTM~M3 (웹에이전시형 신규 고객층)
+- **1줄 rollup**: `stack.deliverable_kind` 분기로 marketing-site track 신설 — site-manifest 스키마+scaffold 분기(P1)·테마 라이브러리 aurora/studio+모션8+섹션카탈로그8(P2)·landing-astro(Astro+Tailwind SSG) 어댑터(P3)·vision-QA 게이트 G-15(P4)·intake deliverable_kind 분기+answer→site 매핑(P5). 결정론 codegen 의 비주얼 약점을 **누적 테마 축**으로 전환, B급 professional 자동화. 빌드 SUCCESS·테스트 79(adapter)+76(intake)+14(vision) PASS·diagnose 15가드 0 FAIL.
+- **핵심 결정**: 별도 repo ✗(substrate 공유) / 품질 바 **B(professional SMB)**, 부티크 아트디렉션 A 비채택 / 폰트 self-host(Fontsource, CDN 금지) / 연락폼 신규 wire key ✗ → `entity.create`(entity_type=lead) 재사용(open-closed) / 테마 default→aurora flagship.
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [design ledger](docs/learn-logs/design.md) · [pm ledger](docs/learn-logs/pm.md)
+- **Open loops**: dogfood(우리 M1 GTM 랜딩) 미빌드 / vision-QA live 채점·테마 레퍼런스샷(첫 인도 시 CDO+QA) / toggle-annual pricing·carousel JS(후속 Growth) / vision-verdict.json 스키마 공식화
+- **결정 메모리**: [[marketing-site-track]]
