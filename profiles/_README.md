@@ -175,7 +175,9 @@ site:
           copy:
             brand_name: "Agency Demo"
 
-  contact:                           # 선택; 리드폼 → middle contract 1 wire key
+  contact:                           # 선택; 리드폼 → entity.create wire key (DEC-5)
+                                     # adapter POSTs entity.create { entity_type: "lead", data: {name,email,message} }
+                                     # 신규 wire key 없음 — open-closed (G-1)
     enabled: true
     fields: [name, email, message]
 
