@@ -423,3 +423,5 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
   - 배포 검증기 `/health` 권위·`--entry-path` advisory 화 → `/login` 없는 intake false-negative 제거
   - **monitor·G-14 latest-terminal-wins**: 노드 상태를 최신 terminal 이벤트로 판정 → codex Step 4b 재판정·재시도가 첫 실패에 latch 안 됨
   - **needs-fit codex 패스 정식화**: `needs_fit_audit.py record-verdict`(LLM 0 loop closer)로 codex 판정→NEEDS_FIT 재판정 이벤트·alerts 라우팅·review footer. SKILL Step 4b 세션 runbook 명문화. 핵심 통찰: 사전패스 BLOCK 은 자동 정지 신호일 뿐, codex judgment 가 false-GAP 교정
+  - **playwright+chromium 설치**: ui_check 실제 스크린샷 가동(operator-local). ui_check 도 `/login` 하드코딩 → `--entry-path` 화(deploy 와 동일 클래스 버그). 라이브 검증 intake.n9n.co.kr PASS 9/0/0
+  - **교훈 (entry-path)**: "데모 스캐폴드 = `/login`" 가정이 deploy·ui_check 두 곳에 하드코딩돼 있었음 — intake 처럼 `/` 진입 앱은 검증기 false-negative. 진입 경로는 앱별 파라미터, `/health` 만 보편 liveness probe
