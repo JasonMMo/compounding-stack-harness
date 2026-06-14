@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 import secrets
@@ -24,6 +25,19 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+# ---------------------------------------------------------------------------
+# Sibling-module imports (VPS working dir = apps/intake/; bare import first)
+# ---------------------------------------------------------------------------
+
+try:
+    from qualify import qualify as _qualify
+    from intake_to_profile import convert_to_files as _convert_to_files
+    import audit as _audit
+except ImportError:
+    from apps.intake.qualify import qualify as _qualify          # type: ignore
+    from apps.intake.intake_to_profile import convert_to_files as _convert_to_files  # type: ignore
+    import apps.intake.audit as _audit                           # type: ignore
 
 import yaml
 import jinja2
@@ -195,8 +209,8 @@ def _list_revisions(client_id: str) -> list[dict]:
     return revisions
 
 
-def _submit(answers: dict) -> tuple[str, str]:
-    """answers 저장 → (edit_token, client_id)."""
+def _submit(answers: dict) -> tuple[str, str, str]:
+    """answers 저장 → (edit_token, client_id, ts)."""
     email = answers.get("contact_email", "").strip().lower()
     client_id, is_new = _get_or_create_client(email)
     ts = _save_revision(client_id, answers)
@@ -217,7 +231,86 @@ def _submit(answers: dict) -> tuple[str, str]:
         edit_token = meta["edit_token"]
         meta["updated_at"] = ts
     _save_meta(client_id, meta)
-    return edit_token, client_id
+    return edit_token, client_id, ts
+
+
+def _post_submit_conversion(client_id: str, answers: dict, ts: str) -> None:
+    """Run qualify + convert + audit + inbox append after a successful submit.
+
+    MUST NOT raise — any exception is logged and swallowed so the customer's
+    confirm response is never broken by a conversion failure.
+    """
+    try:
+        result = _qualify(answers)
+        slug, profile_yaml, needs_note = _convert_to_files(answers)
+
+        client_path = _client_dir(client_id)
+        client_path.mkdir(parents=True, exist_ok=True)
+
+        # triage.json — PII-free scoring artefact
+        triage = {
+            "ts": ts,
+            "slug": slug,
+            "score": result.score,
+            "status": result.status,
+            "gaps": [
+                {
+                    "gap_category": g.gap_category,
+                    "todo_axis": g.todo_axis,
+                    "trigger": g.trigger,
+                    "expansion_note": g.expansion_note,
+                }
+                for g in result.gaps
+            ],
+            "reasons": result.reasons,
+        }
+        (client_path / "triage.json").write_text(
+            json.dumps(triage, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+        # draft.yaml
+        (client_path / "draft.yaml").write_text(profile_yaml, encoding="utf-8")
+
+        # needs-note.md
+        (client_path / "needs-note.md").write_text(needs_note, encoding="utf-8")
+
+        # audit event (PII-free: slug/score/status/prefer_call only)
+        _audit.append_event(
+            client_id,
+            "INTAKE_SUBMITTED",
+            data={
+                "slug": slug,
+                "score": result.score,
+                "status": result.status,
+                "prefer_call": answers.get("prefer_call"),
+            },
+            data_dir=_data_dir(),
+        )
+
+        # inbox.jsonl — one line per submission, PII-free
+        inbox_path = _data_dir() / "inbox.jsonl"
+        inbox_record = json.dumps(
+            {
+                "ts": ts,
+                "client_id": client_id,
+                "slug": slug,
+                "score": result.score,
+                "status": result.status,
+                "prefer_call": answers.get("prefer_call", ""),
+                "qualifies": result.status == "qualify",
+            },
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        with open(inbox_path, "a", encoding="utf-8") as fh:
+            fh.write(inbox_record + "\n")
+
+    except Exception:
+        logging.exception(
+            "[_post_submit_conversion] conversion failed for client_id=%s ts=%s",
+            client_id,
+            ts,
+        )
 
 # ---------------------------------------------------------------------------
 # 검증
@@ -453,7 +546,8 @@ async def submit(request: Request):
             },
         )
 
-    edit_token, client_id = _submit(answers)
+    edit_token, client_id, ts = _submit(answers)
+    _post_submit_conversion(client_id, answers, ts)
     return templates.TemplateResponse(
         request,
         "confirm.html",
@@ -554,6 +648,7 @@ async def edit_submit(request: Request, edit_token: str):
         meta["updated_at"] = ts
         _save_meta(client_id, meta)
 
+    _post_submit_conversion(client_id, answers, ts)
     return templates.TemplateResponse(
         request,
         "confirm.html",
