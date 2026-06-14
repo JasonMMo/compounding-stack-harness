@@ -27,6 +27,14 @@ SSH:
   Key   ~/.ssh/n9n_preview_ed25519
   VPS data dir  /data/intake/data/
 
+  rsync is used when available (shutil.which("rsync") is not None).
+  On Windows where rsync is typically absent, scp (OpenSSH, ships on
+  Windows 10+) is used as a fallback:
+    inbox:   scp -i <key> root@host:<VPS_DATA_DIR>/inbox.jsonl <mirror>/inbox.jsonl
+    client:  scp -r -i <key> root@host:<VPS_DATA_DIR>/clients/<id> <mirror>/clients/
+  Both paths share the same SSH options (StrictHostKeyChecking=no,
+  ConnectTimeout=15).  --no-ssh skips both rsync and scp entirely.
+
 stdlib + PyYAML.  No LLM calls.
 
 Usage:
@@ -41,6 +49,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -201,20 +210,56 @@ def _dump_yaml(data: dict, path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
+_SSH_OPTS = [
+    "-o", "StrictHostKeyChecking=no",
+    "-o", "BatchMode=yes",
+    "-o", "ConnectTimeout=15",
+]
+
+_SUBPROCESS_ENCODING_KWARGS: dict = {"encoding": "utf-8", "errors": "replace"}
+
+
 def _rsync_cmd(src: str, dst: Path) -> list[str]:
     """Build rsync argv; uses SSH key for authentication."""
     return [
         "rsync",
         "-avz",
         "--checksum",
-        "-e", f"ssh -i {SSH_KEY} -o StrictHostKeyChecking=no -o BatchMode=yes",
+        "-e", f"ssh -i {SSH_KEY} -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=15",
         src,
         str(dst),
     ]
 
 
+def _scp_inbox_cmd(local_inbox: Path) -> list[str]:
+    """Build scp argv for pulling inbox.jsonl (Windows fallback)."""
+    return [
+        "scp",
+        "-i", SSH_KEY,
+        *_SSH_OPTS,
+        f"{VPS_HOST}:{VPS_DATA_DIR}/inbox.jsonl",
+        str(local_inbox),
+    ]
+
+
+def _scp_client_cmd(client_id: str, local_clients_dir: Path) -> list[str]:
+    """Build scp argv for pulling a client artifact directory (Windows fallback)."""
+    return [
+        "scp",
+        "-r",
+        "-i", SSH_KEY,
+        *_SSH_OPTS,
+        f"{VPS_HOST}:{VPS_DATA_DIR}/clients/{client_id}",
+        str(local_clients_dir),
+    ]
+
+
 def rsync_inbox(no_ssh: bool, mirror_dir: Path) -> Path:
-    """Rsync VPS inbox.jsonl into mirror_dir/inbox.jsonl.
+    """Pull VPS inbox.jsonl into mirror_dir/inbox.jsonl.
+
+    Uses rsync when available; falls back to scp on Windows where rsync is
+    typically absent (scp ships with OpenSSH on Windows 10+).
+    --no-ssh skips the pull entirely and uses the existing mirror file.
 
     Parameters
     ----------
@@ -236,26 +281,34 @@ def rsync_inbox(no_ssh: bool, mirror_dir: Path) -> Path:
         print(f"[intake_sync] --no-ssh: using existing mirror inbox {local_inbox}")
         return local_inbox
 
-    src = f"{VPS_HOST}:{VPS_DATA_DIR}/inbox.jsonl"
-    cmd = _rsync_cmd(src, local_inbox)
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    if shutil.which("rsync") is not None:
+        src = f"{VPS_HOST}:{VPS_DATA_DIR}/inbox.jsonl"
+        cmd = _rsync_cmd(src, local_inbox)
+        tool = "rsync"
+    else:
+        cmd = _scp_inbox_cmd(local_inbox)
+        tool = "scp"
+
+    result = subprocess.run(cmd, capture_output=True, text=True, **_SUBPROCESS_ENCODING_KWARGS)
     if result.returncode != 0:
         print(
-            f"[intake_sync] WARN: rsync inbox failed rc={result.returncode}: "
+            f"[intake_sync] WARN: {tool} inbox failed rc={result.returncode}: "
             f"{result.stderr[:200]}",
             file=sys.stderr,
         )
     else:
-        print("[intake_sync] inbox.jsonl synced.")
+        print(f"[intake_sync] inbox.jsonl synced (via {tool}).")
     return local_inbox
 
 
 def rsync_client_artifacts(
     client_id: str, no_ssh: bool, mirror_dir: Path
 ) -> Path:
-    """Rsync clients/<client_id>/ artifacts into mirror_dir/clients/<client_id>/.
+    """Pull clients/<client_id>/ artifacts into mirror_dir/clients/<client_id>/.
 
-    Artifacts: draft.yaml, triage.json, needs-note.md, audit.jsonl.
+    Uses rsync when available; falls back to scp on Windows where rsync is
+    typically absent.  Artifacts: draft.yaml, triage.json, needs-note.md,
+    audit.jsonl.
 
     Returns
     -------
@@ -270,17 +323,26 @@ def rsync_client_artifacts(
         print(f"[intake_sync] --no-ssh: using existing artifacts {local_client_dir}")
         return local_client_dir
 
-    src = f"{VPS_HOST}:{VPS_DATA_DIR}/clients/{client_id}/"
-    cmd = _rsync_cmd(src, local_client_dir)
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    if shutil.which("rsync") is not None:
+        src = f"{VPS_HOST}:{VPS_DATA_DIR}/clients/{client_id}/"
+        cmd = _rsync_cmd(src, local_client_dir)
+        tool = "rsync"
+    else:
+        # scp -r copies the directory itself into the parent; target is clients/
+        local_clients_dir = mirror_dir / "clients"
+        local_clients_dir.mkdir(parents=True, exist_ok=True)
+        cmd = _scp_client_cmd(client_id, local_clients_dir)
+        tool = "scp"
+
+    result = subprocess.run(cmd, capture_output=True, text=True, **_SUBPROCESS_ENCODING_KWARGS)
     if result.returncode != 0:
         print(
-            f"[intake_sync] WARN: rsync client {client_id} failed rc={result.returncode}: "
+            f"[intake_sync] WARN: {tool} client {client_id} failed rc={result.returncode}: "
             f"{result.stderr[:200]}",
             file=sys.stderr,
         )
     else:
-        print(f"[intake_sync] client {client_id} artifacts synced.")
+        print(f"[intake_sync] client {client_id} artifacts synced (via {tool}).")
     return local_client_dir
 
 # ---------------------------------------------------------------------------
@@ -499,7 +561,7 @@ def _open_ssh_tunnel() -> bool:
         "-L", "8000:localhost:8000",
         VPS_HOST,
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=15, **_SUBPROCESS_ENCODING_KWARGS)
     return result.returncode == 0
 
 # ---------------------------------------------------------------------------
@@ -621,7 +683,7 @@ def run_auto_preview(
         stages_ok.append(node)
     else:
         _emit(case_yaml, node, "NODE_ENTER", slug=slug, score=score)
-        result = subprocess_run(scaffold_cmd, capture_output=True, text=True)
+        result = subprocess_run(scaffold_cmd, capture_output=True, text=True, **_SUBPROCESS_ENCODING_KWARGS)
         if result.returncode != 0:
             stderr_tail = (result.stderr or "")[-500:]
             ev = _capture_evidence(
@@ -689,7 +751,7 @@ def run_auto_preview(
             _emit(case_yaml, node, "NODE_ENTER", slug=slug, score=score)
 
             # preview_package.py
-            pkg_result = subprocess_run(pkg_cmd, capture_output=True, text=True)
+            pkg_result = subprocess_run(pkg_cmd, capture_output=True, text=True, **_SUBPROCESS_ENCODING_KWARGS)
             if pkg_result.returncode != 0:
                 stderr_tail = (pkg_result.stderr or "")[-500:]
                 ev = _capture_evidence(
@@ -711,7 +773,7 @@ def run_auto_preview(
                 }
 
             # deploy_to_coolify.py
-            deploy_result = subprocess_run(deploy_cmd, capture_output=True, text=True)
+            deploy_result = subprocess_run(deploy_cmd, capture_output=True, text=True, **_SUBPROCESS_ENCODING_KWARGS)
             if deploy_result.returncode != 0:
                 stderr_tail = (deploy_result.stderr or "")[-500:]
                 ev = _capture_evidence(
@@ -754,7 +816,7 @@ def run_auto_preview(
             stages_ok.append(node)
         else:
             _emit(case_yaml, node, "NODE_ENTER", slug=slug, score=score)
-            ui_result = subprocess_run(ui_cmd, capture_output=True, text=True)
+            ui_result = subprocess_run(ui_cmd, capture_output=True, text=True, **_SUBPROCESS_ENCODING_KWARGS)
             # rc=0 always from ui_check.py (soft gate); rc=2 = tool error
             if ui_result.returncode == 2:
                 ev = _capture_evidence(
@@ -826,7 +888,7 @@ def run_auto_preview(
             )
         else:
             _emit(case_yaml, node, "NODE_ENTER", slug=slug, score=score)
-            nf_result = subprocess_run(nf_cmd, capture_output=True, text=True)
+            nf_result = subprocess_run(nf_cmd, capture_output=True, text=True, **_SUBPROCESS_ENCODING_KWARGS)
             stdout_text = nf_result.stdout or ""
             # Parse verdict from stdout envelope; needs_fit_audit prints
             # "VERDICT: PASS|PASS-WITH-CAVEAT|BLOCK" in its envelope
@@ -1133,6 +1195,7 @@ def _run_monitor() -> None:
         result = subprocess.run(
             [sys.executable, monitor_script, "--alert"],
             capture_output=True, text=True,
+            **_SUBPROCESS_ENCODING_KWARGS,
         )
         if result.returncode != 0:
             print(
