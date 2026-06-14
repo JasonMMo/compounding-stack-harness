@@ -40,7 +40,7 @@
 
 schema_version: 1
 form_slug: intake-v1
-form_title: "시스템 도입 상담 신청"
+form_title: "도입 상담 신청"
 form_description: >
   아래 정보를 입력해 주시면 담당자가 검토 후 1~2 영업일 내에 연락드립니다.
   솔직하게 현재 상황을 알려주실수록 정확한 제안이 가능합니다.
@@ -119,8 +119,10 @@ questions:
     label: "이 시스템으로 관리하고 싶은 데이터 항목을 모두 선택해 주세요."
     hint: "지금 엑셀이나 수기로 관리 중인 것, 또는 관리가 안 돼서 불편한 것을 고르시면 됩니다."
     type: multiselect
-    required: true
+    required: false
     maps_to: domains[].entities
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: customer
         label: "고객 정보 (거래처, 연락처)"
@@ -151,8 +153,10 @@ questions:
     label: "현재 같은 업무에 쓰고 있는 도구나 시스템이 있나요?"
     hint: "예: 엑셀, 네이버 스프레드시트, 카카오워크, ERP 이름 등"
     type: radio
-    required: true
+    required: false
     maps_to: needs_note.current
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: excel_manual
         label: "엑셀 또는 수기로 처리 중"
@@ -184,6 +188,119 @@ questions:
         label: "IT 담당자 (설치·운영 책임자)"
       - value: other
         label: "기타 / 잘 모르겠어요"
+
+  # ── 산출물 종류 분기 (섹션 0, persona_role 다음) ───────────
+
+  - id: deliverable_kind
+    section: "기본 정보"
+    persona: all
+    label: "원하시는 것이 무엇인가요?"
+    hint: "선택에 따라 이후 질문이 달라집니다."
+    type: radio
+    required: true
+    maps_to: stack.deliverable_kind
+    options:
+      - value: business-system
+        label: "업무 시스템 — 데이터 관리·업무 자동화: 재고/주문/고객관리 등"
+      - value: marketing-site
+        label: "홈페이지·런칭 페이지 — 회사·제품 소개·마케팅"
+
+  # ── marketing-site 전용 후속질문 ───────────────────────────
+
+  - id: ms_brand_name
+    section: "홈페이지 정보"
+    persona: all
+    label: "회사 또는 브랜드 이름을 입력해 주세요."
+    hint: "홈페이지에 표시될 이름입니다."
+    type: text
+    required: true
+    maps_to: needs_note.what
+    show_if:
+      deliverable_kind: marketing-site
+
+  - id: ms_tagline
+    section: "홈페이지 정보"
+    persona: all
+    label: "한 줄 슬로건 (선택)"
+    hint: "예: '더 빠른 결제, 더 나은 경험' — 메인 화면에 들어갈 짧은 문구입니다."
+    type: text
+    required: false
+    maps_to: needs_note.what
+    show_if:
+      deliverable_kind: marketing-site
+
+  - id: ms_target_audience
+    section: "홈페이지 정보"
+    persona: all
+    label: "주요 방문자(잠재 고객층)는 누구인가요?"
+    hint: "예: 중소기업 대표, 20~30대 직장인, 인테리어에 관심 있는 주부 등 — 구체적일수록 좋습니다."
+    type: textarea
+    required: true
+    maps_to: needs_note.who
+    show_if:
+      deliverable_kind: marketing-site
+
+  - id: ms_pages
+    section: "홈페이지 정보"
+    persona: all
+    label: "홈페이지에 포함할 페이지를 모두 선택해 주세요."
+    hint: "홈(Home) 페이지는 항상 포함됩니다. 추가로 필요한 페이지를 선택하세요."
+    type: multiselect
+    required: true
+    maps_to: needs_note.what
+    show_if:
+      deliverable_kind: marketing-site
+    options:
+      - value: about
+        label: "회사 소개 (About)"
+      - value: services_features
+        label: "서비스·기능 소개"
+      - value: pricing
+        label: "가격·요금제"
+      - value: testimonials
+        label: "고객 후기·사례"
+      - value: faq
+        label: "자주 묻는 질문 (FAQ)"
+      - value: contact
+        label: "문의·연락처"
+
+  - id: ms_tone
+    section: "홈페이지 정보"
+    persona: all
+    label: "홈페이지의 분위기(톤)를 선택해 주세요."
+    hint: "선택한 톤에 맞는 디자인 테마가 자동으로 적용됩니다."
+    type: select
+    required: true
+    maps_to: needs_note.what
+    show_if:
+      deliverable_kind: marketing-site
+    options:
+      - value: bold-energetic
+        label: "강렬하고 역동적 — SaaS·테크·스타트업 느낌 (Aurora 테마)"
+      - value: minimal-editorial
+        label: "깔끔하고 세련된 편집 디자인 — 에이전시·컨설팅·전문직 느낌 (Studio 테마)"
+
+  - id: ms_reference_sites
+    section: "홈페이지 정보"
+    persona: all
+    label: "참고하고 싶은 사이트 URL이 있으신가요? (선택)"
+    hint: "마음에 드는 홈페이지 주소를 적어주시면 디자인 방향 설정에 참고합니다."
+    type: textarea
+    required: false
+    maps_to: needs_note.why
+    show_if:
+      deliverable_kind: marketing-site
+
+  - id: ms_primary_cta
+    section: "홈페이지 정보"
+    persona: all
+    label: "방문자가 홈페이지에서 하길 바라는 행동은 무엇인가요? (선택)"
+    hint: "예: 상담 신청, 무료 체험 시작, 제품 구매, 카카오톡 문의 등"
+    type: text
+    required: false
+    maps_to: needs_note.why
+    show_if:
+      deliverable_kind: marketing-site
 
 
   # ============================================================
@@ -283,8 +400,10 @@ questions:
     label: "데이터를 외부 클라우드 서버에 보관해도 괜찮으신가요, 아니면 사내 서버에만 있어야 하나요?"
     hint: "법적 규제, 보안 정책, 기밀 데이터 여부 등을 고려해 주세요."
     type: radio
-    required: true
+    required: false
     maps_to: datasource.self_host_required
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: onpremise_only
         label: "사내 서버(온프레미스)에만 보관해야 함"
@@ -423,8 +542,10 @@ questions:
     persona: it
     label: "현재 서버 환경이 어떻게 구성되어 있나요?"
     type: radio
-    required: true
+    required: false
     maps_to: datasource.host
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: onpremise_linux
         label: "사내 서버 (Linux)"
@@ -460,8 +581,10 @@ questions:
     label: "현재 사용 중인 데이터베이스(DB)가 있나요?"
     hint: "없거나 모르셔도 괜찮습니다. 신규 설치 권장 DB를 제안드립니다."
     type: select
-    required: true
+    required: false
     maps_to: ddl.dialect
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: postgres
         label: "PostgreSQL"
@@ -486,6 +609,8 @@ questions:
     type: select
     required: false
     maps_to: stack.frontend
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: react
         label: "React"
@@ -506,6 +631,8 @@ questions:
     type: select
     required: false
     maps_to: stack.backend
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: springboot
         label: "Spring Boot (Java / Kotlin)"
@@ -523,8 +650,10 @@ questions:
     persona: it
     label: "사용자 로그인 방식을 어떻게 관리하고 싶으신가요?"
     type: radio
-    required: true
+    required: false
     maps_to: overlay.sso_keycloak
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: simple_session
         label: "아이디·비밀번호 단순 로그인"
@@ -543,6 +672,8 @@ questions:
     type: radio
     required: false
     maps_to: overlay.vault_agent
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: "yes"
         label: "가능해요"
@@ -560,6 +691,8 @@ questions:
     type: radio
     required: false
     maps_to: needs_note.what
+    show_if:
+      deliverable_kind: business-system
     options:
       - value: "yes"
         label: "있어요"
@@ -587,6 +720,8 @@ questions:
     type: textarea
     required: false
     maps_to: needs_note.why
+    show_if:
+      deliverable_kind: business-system
 
 
   # ============================================================
@@ -623,6 +758,8 @@ questions:
     type: textarea
     required: false
     maps_to: needs_note.what
+    show_if:
+      deliverable_kind: business-system
 
   - id: free_notes
     section: "추가 정보"
