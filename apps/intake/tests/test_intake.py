@@ -119,6 +119,7 @@ def test_submit_creates_revision(client, tmp_data_dir):
         "contact_phone": "010-1234-5678",
         "company_name": "테스트회사",
         "industry": "manufacturing",
+        "deliverable_kind": "business-system",
         "data_domains": ["customer", "order"],
         "existing_system": "excel_manual",
         "persona_role": "ceo",
@@ -161,6 +162,7 @@ def test_edit_token_roundtrip(client, tmp_data_dir):
     form_data = {
         "contact_email": "edit_test@example.com",
         "industry": "logistics",
+        "deliverable_kind": "business-system",
         "data_domains": ["inventory"],
         "existing_system": "legacy_system",
         "persona_role": "staff",
@@ -556,6 +558,7 @@ _CEO_FORM = {
     "contact_phone": "010-9999-0001",
     "company_name": "Phase3Corp",
     "industry": "manufacturing",
+    "deliverable_kind": "business-system",
     "data_domains": ["customer", "order"],
     "existing_system": "excel_manual",
     "persona_role": "ceo",
@@ -730,3 +733,287 @@ def test_industry_defaults_loads_from_candidate_path(tmp_path, monkeypatch):
     # 캐시 정리 (다른 테스트 영향 방지)
     itp._INDUSTRY_DEFAULTS_CACHE = None
     monkeypatch.delenv("INTAKE_INDUSTRY_DEFAULTS", raising=False)
+
+
+# ---------------------------------------------------------------------------
+# 테스트 16: marketing-site — convert() site 블록 생성
+# ---------------------------------------------------------------------------
+
+_MS_ANSWERS_FULL = {
+    "contact_email": "ms-test@example.com",
+    "company_name": "테스트에이전시",
+    "industry": "service",
+    "persona_role": "ceo",
+    "deliverable_kind": "marketing-site",
+    "ms_brand_name": "TestAgency",
+    "ms_tagline": "더 빠른 런칭, 더 나은 전환",
+    "ms_target_audience": "중소기업 대표, 마케터",
+    "ms_pages": ["about", "contact", "pricing"],
+    "ms_tone": "bold-energetic",
+    "ms_primary_cta": "무료 상담 신청",
+    "ms_reference_sites": "https://example.com",
+    "ceo_budget_setup": "500_1000",
+}
+
+
+def test_convert_marketing_site_returns_site_block():
+    """deliverable_kind=marketing-site → profile 에 site: 블록, domains/ddl 없음."""
+    from intake_to_profile import convert
+
+    profile, extra_signals = convert(_MS_ANSWERS_FULL)
+
+    # deliverable_kind 분기 확인
+    assert profile["stack"]["deliverable_kind"] == "marketing-site"
+    assert profile["stack"]["frontend"] == "landing-astro"
+    assert profile["stack"]["backend"] == "none"
+
+    # site 블록 존재
+    assert "site" in profile, "site 블록 없음"
+    site = profile["site"]
+    assert "theme" in site
+    assert "pages" in site
+
+    # domains / ddl 없음 (marketing-site 는 entity 없음)
+    assert "domains" not in profile or profile.get("domains") is None
+    assert "ddl" not in profile or profile.get("ddl") is None
+
+
+def test_convert_ms_tone_maps_to_theme():
+    """ms_tone bold-energetic → aurora, minimal-editorial → studio."""
+    from intake_to_profile import convert
+
+    answers_aurora = {**_MS_ANSWERS_FULL, "ms_tone": "bold-energetic"}
+    profile_aurora, _ = convert(answers_aurora)
+    assert profile_aurora["site"]["theme"] == "aurora"
+
+    answers_studio = {**_MS_ANSWERS_FULL, "ms_tone": "minimal-editorial"}
+    profile_studio, _ = convert(answers_studio)
+    assert profile_studio["site"]["theme"] == "studio"
+
+    answers_no_tone = {**_MS_ANSWERS_FULL, "ms_tone": ""}
+    profile_default, signals = convert(answers_no_tone)
+    assert profile_default["site"]["theme"] == "aurora", "미선택 시 aurora 기본값"
+    assert any("aurora" in s for s in signals), "미선택 시 extra_signal 기록 없음"
+
+
+def test_convert_ms_pages_include_home_always():
+    """home 은 ms_pages 선택과 무관하게 항상 포함."""
+    from intake_to_profile import convert
+
+    answers = {**_MS_ANSWERS_FULL, "ms_pages": ["about", "faq"]}
+    profile, _ = convert(answers)
+    page_slugs = [p["slug"] for p in profile["site"]["pages"]]
+    assert "home" in page_slugs, "home 페이지 누락"
+    assert "about" in page_slugs
+    assert "faq" in page_slugs
+
+
+def test_convert_ms_pages_sections_have_required_copy():
+    """각 페이지 섹션의 catalog required copy_slots 이 모두 채워져 있어야 한다."""
+    from intake_to_profile import convert
+
+    answers = {**_MS_ANSWERS_FULL, "ms_pages": ["about", "services_features", "pricing", "testimonials", "faq", "contact"]}
+    profile, _ = convert(answers)
+
+    # Required copy slot 검사 (catalog 기준)
+    required_by_type = {
+        "hero": ["headline", "subhead"],
+        "features": ["headline"],
+        "pricing": ["headline"],
+        "testimonial": ["quote", "author_name"],
+        "faq": ["headline"],
+        "cta": ["headline"],
+        "footer": ["brand_name"],
+        "logos": ["eyebrow"],
+    }
+
+    for page in profile["site"]["pages"]:
+        for section in page.get("sections", []):
+            sec_type = section["type"]
+            required = required_by_type.get(sec_type, [])
+            copy = section.get("copy", {})
+            for slot in required:
+                assert slot in copy, (
+                    f"page={page['slug']} section={sec_type}: "
+                    f"required copy slot '{slot}' 누락"
+                )
+
+
+def test_convert_ms_contact_page_enables_contact_block():
+    """ms_pages 에 contact 포함 시 site.contact.enabled=True."""
+    from intake_to_profile import convert
+
+    answers_with_contact = {**_MS_ANSWERS_FULL, "ms_pages": ["contact"]}
+    profile, _ = convert(answers_with_contact)
+    assert profile["site"].get("contact", {}).get("enabled") is True
+
+    answers_no_contact = {**_MS_ANSWERS_FULL, "ms_pages": ["about"]}
+    profile2, _ = convert(answers_no_contact)
+    assert not profile2["site"].get("contact", {}).get("enabled", False)
+
+
+def test_convert_ms_site_block_passes_validate_site():
+    """convert() 로 생성된 site: 블록이 site_manifest.validate_site 위반 0."""
+    import sys
+    import os
+    sys.path.insert(0, str(INTAKE_DIR.parents[1] / "scripts" / "workflow"))
+    from site_manifest import load_section_catalog, validate_site
+
+    from intake_to_profile import convert
+
+    answers = {
+        **_MS_ANSWERS_FULL,
+        "ms_pages": ["about", "services_features", "pricing", "testimonials", "faq", "contact"],
+    }
+    profile, _ = convert(answers)
+    site = profile["site"]
+
+    catalog = load_section_catalog()
+    violations = validate_site(site, catalog)
+    assert violations == [], (
+        "convert() 생성 site 블록 validate_site 위반:\n" + "\n".join(violations)
+    )
+
+
+def test_render_profile_marketing_site_produces_valid_yaml():
+    """_render_profile() 로 직렬화된 marketing-site profile 이 YAML 파싱 가능."""
+    from intake_to_profile import convert, _render_profile
+
+    profile, _ = convert(_MS_ANSWERS_FULL)
+    yaml_str = _render_profile(profile)
+
+    parsed = yaml.safe_load(yaml_str)
+    assert parsed.get("version") == 1
+    assert parsed["stack"]["deliverable_kind"] == "marketing-site"
+    assert "site" in parsed
+    assert "domains" not in parsed
+    assert "ddl" not in parsed
+
+
+def test_business_system_path_unchanged_by_ms_changes():
+    """marketing-site 분기 추가 후 business-system convert() 경로 회귀 0."""
+    from intake_to_profile import convert, _render_profile
+
+    answers = {
+        "contact_email": "bs@example.com",
+        "company_name": "BizCorp",
+        "industry": "manufacturing",
+        "deliverable_kind": "business-system",
+        "data_domains": ["customer", "order"],
+        "it_frontend_pref": "react",
+        "it_backend_pref": "fastapi",
+        "it_db_dialect": "postgres",
+        "it_auth_method": "simple_session",
+        "it_server_env": "onpremise_linux",
+    }
+    profile, signals = convert(answers)
+    assert profile["stack"].get("frontend") == "react"
+    assert profile["stack"].get("backend") == "fastapi"
+    assert profile["ddl"].get("dialect") == "postgres"
+    assert len(profile["domains"]) > 0
+
+    yaml_str = _render_profile(profile)
+    parsed = yaml.safe_load(yaml_str)
+    assert "ddl" in parsed
+    assert "domains" in parsed
+    assert "site" not in parsed
+
+
+# ---------------------------------------------------------------------------
+# 테스트 17: marketing-site qualify 채점
+# ---------------------------------------------------------------------------
+
+def test_qualify_marketing_site_uses_ms_scoring():
+    """deliverable_kind=marketing-site 는 marketing_site_scoring 을 사용한다."""
+    from qualify import qualify
+
+    result = qualify(_MS_ANSWERS_FULL)
+    # base 50 + company(5) + target(10) + pages 3*(min(3,4)=3)(9) + cta(5) + tone(5) + budget_over500(10) + ref(3) = 50+5+10+9+5+5+10+3 = 97
+    assert result.score > 50, f"marketing-site score 너무 낮음: {result.score}"
+    assert result.status in ("qualify", "defer"), f"예상 외 status: {result.status}"
+    assert not result.disqualified
+
+
+def test_qualify_marketing_site_no_business_system_gaps():
+    """marketing-site 채점 결과에 dialect/auth/stack 갭이 없어야 한다."""
+    from qualify import qualify
+
+    result = qualify(_MS_ANSWERS_FULL)
+    gap_axes = [g.todo_axis for g in result.gaps]
+    assert "ddl" not in gap_axes, "marketing-site 에서 ddl 갭 감지됨"
+    assert "auth-sso-keycloak" not in [g.gap_category for g in result.gaps]
+
+
+def test_qualify_marketing_site_scope_ecommerce_signal():
+    """ms_reference_sites 에 이커머스 키워드 있으면 scope 갭 감지."""
+    from qualify import qualify
+
+    answers = {**_MS_ANSWERS_FULL, "ms_reference_sites": "https://shopify.com (쇼핑몰 참고)"}
+    result = qualify(answers)
+    gap_cats = [g.gap_category for g in result.gaps]
+    assert "marketing-site-scope-ecommerce" in gap_cats, (
+        f"이커머스 scope 신호 미감지. gaps={gap_cats}"
+    )
+    assert not result.disqualified, "scope 신호는 disqualify 하면 안 됨"
+
+
+# ---------------------------------------------------------------------------
+# 테스트 18: show_if 게이팅 — marketing-site 사용자에게 DDL 질문 required 아님
+# ---------------------------------------------------------------------------
+
+def test_validate_marketing_site_no_it_questions_required():
+    """deliverable_kind=marketing-site 제출 시 DDL/IT 질문 required 검증 안 됨."""
+    from app import _validate
+    import yaml as _yaml
+
+    questions_path = INTAKE_DIR / "questions.yaml"
+    with open(questions_path, encoding="utf-8") as f:
+        data = _yaml.safe_load(f)
+    questions = data["questions"]
+
+    # marketing-site 사용자 최소 answers (IT 질문 전혀 없음)
+    answers = {
+        "contact_email": "ms-val@example.com",
+        "industry": "service",
+        "persona_role": "ceo",
+        "deliverable_kind": "marketing-site",
+        "ms_brand_name": "MyBrand",
+        "ms_target_audience": "중소기업 대표",
+        "ms_pages": ["about"],
+        "ms_tone": "bold-energetic",
+        "ceo_pain_bottleneck": "홈페이지가 없어서 신뢰가 낮음",
+        "ceo_pain_frequency": "daily",
+        "ceo_success_criteria": "홈페이지 론칭 후 문의 월 10건",
+        "ceo_user_count": "1-5",
+    }
+
+    errors = _validate(answers, questions)
+
+    # DDL/dialect/stack 관련 오류 없어야 함
+    ddl_related = [e for e in errors if any(kw in e for kw in
+                   ["데이터베이스", "DB", "dialect", "서버 환경", "Docker", "프론트엔드", "백엔드"])]
+    assert not ddl_related, (
+        f"marketing-site 사용자에게 DDL/IT 질문 required 오류 발생:\n" + "\n".join(ddl_related)
+    )
+
+
+def test_validate_deliverable_kind_required():
+    """deliverable_kind 미입력 시 필수 오류 발생."""
+    from app import _validate
+    import yaml as _yaml
+
+    questions_path = INTAKE_DIR / "questions.yaml"
+    with open(questions_path, encoding="utf-8") as f:
+        data = _yaml.safe_load(f)
+    questions = data["questions"]
+
+    answers = {
+        "contact_email": "nodk@example.com",
+        "industry": "service",
+        "persona_role": "ceo",
+        # deliverable_kind 누락
+    }
+    errors = _validate(answers, questions)
+    assert any("deliverable_kind" in e or "원하시는 것" in e for e in errors), (
+        f"deliverable_kind 누락 오류 없음. errors={errors}"
+    )
