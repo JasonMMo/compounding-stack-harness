@@ -1,42 +1,51 @@
 # Session Handoff — 2026-06-14 (updated)
 
-## Session 범위
+## 이번 세션 범위 (최신)
 
-Growth-49 ~ Growth-58 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배포 + 데모 포털 구축 + 6개 데모 seed data 내장 배포 + manufacturing-demo 7번째 업종 추가 + Coolify stale 정리 + manifest 디렉터리 버그 수정 + 데모 3종 결함 일괄 수정 + **Supabase backend adapter 구현(P3)**.
+**자율 고객 intake 파이프라인 (Growth-62) → 파이프라인 장애 대응 대시보드 (Growth-63)**.
+플랜 `idempotent-nibbling-puddle.md` Phase 8(Pipeline Monitor)의 후속 — CLI 모니터 위에 **localhost 전용 웹 대시보드 + 노드별 에러/deadlock breakdown**을 얹었다. 목적: 장애 발생 시 빠른 드릴인·대처.
 
----
-
-## 완료 항목
-
-### Growth-49 — Capacitor adapter scaffold
-- `frontend/adapters/capacitor/capacitor.config.ts` — remote server mode (`server.url: https://edu-program.n9n.co.kr`)
-- `frontend/adapters/capacitor/package.json` — @capacitor/cli ^8.4.0, typescript ^6.0.3
-- `frontend/adapters/capacitor/.gitignore`
-- **로컬 작업 미완**: `npm install && npm run add:android && npm run add:ios` 는 로컬에서 직접 실행 필요
-
-### Growth-50 — 5개 업종 데모 profile 생성
-- `profiles/logistics-demo.yaml`
-- `profiles/distribution-demo.yaml`
-- `profiles/construction-demo.yaml`
-- `profiles/itservice-demo.yaml`
-- `profiles/trading-demo.yaml`
-
-### Growth-51 — 5개 데모 + 포털 Coolify 배포
-- `deploy/preview/{slug}.compose.yml` 5개 생성
-- `deploy/preview/demo-portal.compose.yml` 생성
-- `demo-portal/Dockerfile` + `demo-portal/index.html` 생성
-- `scripts/workflow/deploy_demo_portal.py` 생성
-- Windows cp949 인코딩 버그 픽스: `deploy_to_coolify.py`, `scaffold.py`에 `sys.stdout.reconfigure(encoding="utf-8")` 추가
-
-### Growth-52 — 도메인 라우팅 충돌 해결 + edu-demo 카드 추가
-- `demo.n9n.co.kr` -> edu-program 으로 포워딩되던 문제 해결
-  - edu-program(uuid: `tp0608w5b013sypb4euwplld`) 도메인을 `edu-program.n9n.co.kr` 단독으로 복구
-- `demo-portal/index.html` 6번째 카드(교육기관) 추가
-- 포털 재배포 완료
+> ⚠️ **Growth-63 은 아직 learn-log 미기록**. 커밋 `d031800..cc810a6` 은 푸시 완료됐으나 `learn-log.md` 의 Growth 카운터는 62 에서 멈춤. 다음 세션 첫 작업 후보: Growth-63 엔트리 작성 (§6 rollup + engineer ledger) — 아래 "오픈 루프 P0" 참조.
 
 ---
 
-## 라이브 상태 (모두 HTTP 200 확인)
+## 완료 항목 (이번 세션)
+
+### Growth-63 — Pipeline 장애 대응 대시보드 (2026-06-14, 미기록)
+
+목적: 파운더가 customer intake 파이프라인의 노드별 상태·결함·stall 을 **로컬 웹 화면**에서 빠르게 진단. **LLM 0 / PII-free / localhost 전용** 불변.
+
+- **신규 `scripts/workflow/pipeline_dashboard.py`** — `http.server.ThreadingHTTPServer`, stdlib only. `127.0.0.1` 바인딩(비루프백 host 경고), 15초 auto-refresh `<meta refresh>`.
+  - 핵심 순수함수 `render_dashboard_html(cases, health, now, *, evidence_dir, mirror_dir) -> str`.
+  - 렌더 구성: 헤더+mirror 신선도 → **Incidents triage**(상단, severity 정렬, `#case-<slug>` 앵커) → Health 카드 → Alerts → 케이스별 컬러 노드 칩 → 실패/stall 노드 **drill-in**.
+  - drill-in 내용: 권장 액션+owner 배지+런북 링크(`../runbooks/pipeline-monitor.md<anchor>`), SLA breakdown(dwell/sla/%초과, AUTO|HUMAN, OVER SLA 태그), 접이식 inline evidence(html.escape 처리된 stderr tail), copy-paste 다음 단계(`python scripts/workflow/pipeline_status.py --case <client_id>` + 접이식 codex 프롬프트).
+  - 재사용: `pipeline_monitor` 의 `NODES/load_cases/project_node_states/aggregate_health/action_hint/_load_processed` + `pipeline_status.analyze_node_with_llm`(프롬프트 생성만, LLM **호출 안 함**).
+  - CLI: `--host`(기본 127.0.0.1) `--port`(기본 8787) `--cases-dir` `--evidence-dir` `--once`(HTML stdout).
+  - 보안: `_pii_safe_case` 화이트리스트 `{client_id, slug, triage_status, score, pipeline_events}` — email/free_text/revision 절대 미접근.
+- **수정 `scripts/workflow/pipeline_monitor.py`**:
+  - `DEFECT_ACTIONS: dict` — 10 DEFECT_TAXONOMY 클래스 → `{owner, action, runbook_anchor}` 단일 진실 + `action_hint(defect_class)`. CLI·대시보드 공유.
+  - 버그픽스: `aggregate_health` 의 loop 후 stray `if ts == "closed"` 블록 제거(빈 cases 시 UnboundLocalError + closed 중복 계산).
+- **수정 `scripts/workflow/pipeline_status.py`**: `action_hint` import, drill-in 에 owner+권장액션 출력(CLI 패리티).
+- **테스트**: `tests/test_pipeline_dashboard.py`(신규 38) + `tests/test_pipeline_monitor.py`(DEFECT_ACTIONS 파라미터 커버리지 추가) → **111 PASS, 가드 FAIL 0**.
+- **검증**: 라이브 서버 띄워 HTTP 200 확인(포트 8787 WinError 10013 충돌 → 7654 로 우회 데모), PII grep 0건, html.escape XSS 단위테스트 통과. 데모 후 **서버 중지 + `out/demo-*` 전량 삭제** 완료(repo clean).
+
+### Growth-62 — 자율 고객 intake 파이프라인 (선행, 기록됨)
+- 파운더 수동 릴레이 제거 + 적격 정책(qualify.py/qualification_policy.yaml) + gap 성장 레지스트리 + audit hash-chain + needs-fit 게이트 + ui_check + intake_sync 브리지 + Phase8 모니터. learn-log Growth-62 + pm.md 참조.
+
+---
+
+## 핵심 불변 (다음 세션 필독)
+
+- **토폴로지**: intake 앱 = **VPS**(Coolify, 앱만). repo·toolchain·**모니터링은 전부 로컬 Windows**. VPS lean 유지 + PII 노출 회피가 토폴로지 불변.
+- **모니터링 = 로컬 전용**: CLI `pipeline_status.py`/`pipeline_monitor.py` + 웹 `pipeline_dashboard.py`(127.0.0.1). 실 운영: `python scripts/workflow/pipeline_dashboard.py` (기본 `infra/registry/cases/` + `docs/intake-inbox/evidence/`).
+- **PII 규율(HARD)**: 모니터는 커밋된 PII-free `infra/registry/cases/*.yaml` 만 읽음. data-mirror revision/email/free_text 절대 미접근·미커밋.
+- **LLM 0**: 모든 auto-path·모니터링 deterministic. 대시보드는 codex 프롬프트를 **표시**만 하고 호출 안 함.
+- **Windows 인코딩**: `diagnose.py` 등은 `PYTHONUTF8=1 PYTHONIOENCODING=utf-8` 로 실행(cp949 em-dash crash 회피).
+- **포트**: 8787 이 점유돼 있으면(WinError 10013) `--port 7654` 등으로 우회.
+
+---
+
+## 라이브 데모 상태 (이전 세션, 참조용 — 모두 HTTP 200)
 
 | URL | 용도 |
 |---|---|
@@ -46,20 +55,16 @@ Growth-49 ~ Growth-58 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 | https://construction-demo.n9n.co.kr/login | 건설·시공 |
 | https://itservice-demo.n9n.co.kr/login | IT서비스 |
 | https://trading-demo.n9n.co.kr/login | 무역·수출입 |
-| https://edu-program.n9n.co.kr/login | 교육기관 (6번째 카드) |
-| https://manufacturing-demo.n9n.co.kr/login | 제조업 (7번째 카드) |
+| https://edu-program.n9n.co.kr/login | 교육기관 |
+| https://manufacturing-demo.n9n.co.kr/login | 제조업 |
 
-로그인: `admin` / `demo1234`
+로그인: `demo` / `demo` (포털 카드 표기 기준, Growth-57)
 
----
-
-## Coolify 앱 UUID 맵
-
+### Coolify 앱 UUID 맵
 | slug | uuid |
 |---|---|
 | edu-program | `tp0608w5b013sypb4euwplld` |
 | demo-portal (active) | `s6872cr0asfp02sc0vgw8wi2` |
-| demo-portal (stale dup) | ~~`gwdizi7tws4yabv25xnbph0w`~~ (Growth-55에서 삭제) |
 | logistics-demo | `hmb6jp67w6stmhsdi6e4h73o` |
 | distribution-demo | `gufoc3trwh2umw53k93bjdyp` |
 | construction-demo | `l3dyahzqjssm4l15tjpc75cj` |
@@ -68,110 +73,56 @@ Growth-49 ~ Growth-58 완료. Capacitor axis-4 scaffold + 5개 업종 데모 배
 | manufacturing-demo | `ufbllprbzrg8pktn9yfhsybq` |
 | server | `n12vdydjpwp81hu5i15n1gsb` |
 
----
-
-## 인프라 핵심 사실 (다음 세션 필독)
-
-- **FastAPI 백엔드**: `InMemoryEntityStore` 사용 — PostgreSQL 없음. 데모 앱 시작 시 빈 화면이 정상.
-  씨드 데이터가 필요하면 `SEED_FILE` 환경변수로 JSON 경로 지정.
-- **Compose build context**: Coolify는 repo root 기준 — `COPY demo-portal/index.html` (not `COPY index.html`)
-- **Coolify race condition**: 앱 생성 후 `docker_compose_raw` 로드까지 10~15초. domain PATCH 전 polling 필요.
-- **Coolify 배포 엔드포인트**: `GET /applications/{uuid}/start` (POST /deploy 아님)
-- **domain PATCH**: `{"docker_compose_domains": [...], "force_domain_override": True}` — raw list, json.dumps 금지
-- **토큰 보안**: `TOKEN=$(tr -d ' \t\r\n' < infra/secrets/coolify_api_token)` 길이만 확인. 값 출력 절대 금지.
-- **SSH key**: `~/.ssh/n9n_preview_ed25519` (repo 외부 operator-local)
-
----
-
-## 완료 추가
-
-### Growth-54 — manufacturing-demo 7번째 업종 추가 (2026-06-13)
-- `profiles/manufacturing-demo.yaml` — production·quality·inventory·procurement·hr 5 도메인
-- `presets/ddl/catalog.yaml` — production-plan·production-result·ncr 3개 엔티티 신규 추가
-- `seed-data/manufacturing-demo.json` — 97 레코드 (work-order·BOM·defect·ncr 등)
-- `deploy/preview/manufacturing-demo.compose.yml` + Coolify 배포
-- `demo-portal/index.html` — 7번째 카드 추가, "7가지 업종" 업데이트
-- **트러블슈팅**: deploy_to_coolify.py 실행 전 파일 커밋·푸시 필수 (미커밋 시 compose_raw null)
-
-### Growth-58 — Supabase backend adapter 구현 (2026-06-13)
-- **목적**: M3 SaaS 전제 — 고객이 자체 DB 운영 없이 hosted PostgreSQL 사용
-- **설계(zero-touch)**: `main.py`에서 `sys.modules["store"]=supabase_store` 주입 → 공유 라우터(fastapi adapter)의 `from store import entity_store`가 PostgREST store로 해결. fastapi adapter·middle/contract 무수정
-- **구현**: `backend/adapters/supabase/{supabase_client,supabase_store,main}.py` + Dockerfile + requirements + tests(16 green) + `presets/ddl/supabase-rls/README.md`. slug→table은 catalog.yaml `table` 필드
-- **검증**: pytest 16 PASS, py_compile OK, 신규 가드 위반 0. **L4 live 미실행** (Supabase 프로젝트 없음)
-- 커밋 `5af6921`~`6aa0698` (8개). 상세: engineer ledger Growth-58
-- **남은 오픈루프**: L4 live(SUPABASE_URL/SERVICE_ROLE_KEY) / GoTrue auth(현재 demo/demo) / filter·sort·paging PostgREST pushdown
-
-### Growth-57 — 데모 3종 결함 일괄 수정 (2026-06-13)
-- **#1 화면 공백**: construction/itservice 컨테이너가 stale 디렉터리 inode 마운트 중 — Coolify `restart`로는 recreate 안 됨. `start?force=true`로 재clone+recreate하여 해결
-- **#2 계정 표기**: portal 카드 8곳 `admin/demo1234` → `demo/demo` (실제 백엔드와 일치)
-- **#3 테이블 가독성**: Pico 다크모드 zebra-stripe로 검정 위 검정 → `base.html data-theme="light"` + master-table zebra 명시 토큰
-- 커밋: `f0c1acb` `91f1919` `267a0b7`. saas 데모 6 + portal force redeploy, 전체 HTTP 200 + 타이틀/CSS 반영 검증
-
-### Growth-56 — manifest 디렉터리 버그 수정 + demo 화면 복구 (2026-06-13)
-- **버그**: 6개 demo app 화면 비어있음 — screen-manifest.json이 파일 아닌 **디렉터리**로 bind-mount됨
-- **근본원인**: Docker bind-mount race (컨테이너 선기동 → source 경로에 빈 dir 생성 → SCP가 그 안에 파일 저장)
-- **핫픽스**: 서버 6개 manifest 디렉터리→파일로 수정, 컨테이너 restart (HTTP 200 확인)
-- **재발방지**: `deploy_to_coolify.py::scp_manifest()` — SCP 전 `rm -rf {remote_manifest}` 가드 추가 (`3e9250a`)
-
-### Growth-55 — Coolify stale app 정리 (2026-06-13)
-- `gwdizi7tws4yabv25xnbph0w` (demo-portal 중복) DELETE — HTTP 200
-- project `xngfun8b14dchdujcwl3898c` (빈 project) DELETE — HTTP 200
-- active app `s6872cr0asfp02sc0vgw8wi2` 생존 확인
-
-### Growth-53 — 6개 데모 seed data 내장 (2026-06-13)
-- `seed-data/logistics-demo.json` + 5개 추가 — 업종별 한국 현실 데이터 (carrier/shipment/vendor/employee 등)
-- `backend/adapters/fastapi/Dockerfile` — `COPY seed-data/ /app/seed-data/` 추가
-- 6개 compose — `SEED_FILE: /app/seed-data/{slug}.json` 환경변수 추가
-- edu-program compose: 기존 bind-mount 방식 제거 → repo 내장 방식으로 전환
-- 전 슬러그 재배포 완료 — HTTP 200 확인
+### 인프라 핵심 사실
+- **FastAPI 백엔드**: `InMemoryEntityStore` — PostgreSQL 없음. `SEED_FILE` env 로 JSON 주입.
+- **Compose build context**: Coolify 는 repo root 기준 (`COPY demo-portal/index.html`).
+- **Coolify race**: 앱 생성 후 `docker_compose_raw` 로드까지 10~15초, domain PATCH 전 polling 필요.
+- **배포 엔드포인트**: `GET /applications/{uuid}/start` (POST /deploy 아님).
+- **domain PATCH**: `{"docker_compose_domains":[...], "force_domain_override":True}` — raw list, json.dumps 금지.
+- **토큰 보안**: `TOKEN=$(tr -d ' \t\r\n' < infra/secrets/coolify_api_token)` 길이만 확인, 값 출력 금지.
+- **SSH key**: `~/.ssh/n9n_preview_ed25519` (repo 외부 operator-local).
+- **배포 전 git push 필수** — 미커밋 시 compose_raw null. ([[push-before-deploy]] 메모리)
 
 ---
 
 ## 오픈 루프 (우선순위 순)
 
-### ~~P1 — demo-portal 중복 project 정리~~ ✅ Growth-55 완료
-- stale app(`gwdizi7tws4yabv25xnbph0w`) + 빈 project(`xngfun8b14dchdujcwl3898c`) API로 삭제
+### P0 — Growth-63 learn-log 환류 (미완)
+- 대시보드 커밋(`d031800..cc810a6`)은 푸시됐으나 `learn-log.md` Growth 카운터·§6 rollup·engineer ledger 미작성. 다음 세션 첫 작업으로 Growth-63 엔트리 작성 권장 (CLAUDE.md §7 #3 환류 의무).
 
-### ~~P2 — manufacturing-demo 추가~~ ✅ Growth-54 완료
+### P1 — 외부/원격 모니터링 (TODO, 당장 불필요)
+- 파운더가 외출 중에도 파이프라인 확인 희망. **"외부 모니터링 만들자" 명시 요청 시에만** 착수. 1순위 경로: Cloudflare Tunnel + Access(이메일 OTP) 로 localhost 대시보드만 노출, VPS/PII 무변경. 상세 메모리 [[todo-external-pipeline-monitor]].
 
 ### P2 — Capacitor 로컬 플랫폼 setup
-- `frontend/adapters/capacitor/` 에서 직접 실행: `npm install && npm run add:android && npm run add:ios`
+- `frontend/adapters/capacitor/` 에서 `npm install && npm run add:android && npm run add:ios` (로컬 직접 실행). 현재 `package.json` 수정 + `package-lock.json` untracked 가 그 흔적(커밋 보류).
 
-### ~~P3 — Supabase backend adapter 구현~~ ✅ Growth-58 완료 (코드+테스트)
-- 어댑터 코드·RLS 가이드·유닛테스트 16 green. **L4 live만 보류** (Supabase 프로젝트 프로비저닝 시 실행)
-- 활성화: customer profile `stack.backend: supabase` + env SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY
-
-### P3-a — Supabase L4 live (Supabase 프로젝트 필요)
-- 프로비저닝 후 `SUPABASE_URL`+`SUPABASE_SERVICE_ROLE_KEY` → `pytest` → `uvicorn main:app --port 8081` + HTTP smoke
-
-### P4 — GoTrue auth 통합(현재 demo/demo) / PostgREST filter·sort·paging pushdown(스케일)
-
-### ~~P5 — G-9 가드 위반 해소 (learn-log §6 270줄 > 200 cap)~~ ✅ Growth-59 완료
-- Growth-21~32 (12 엔트리) → `growth-archive.md` 회전 (4번째). 166행 PASS, 34행 헤드룸
+### P3 — Supabase L4 live (Growth-58 잔여)
+- 어댑터 코드·RLS·유닛 16 green 완료. Supabase 프로젝트 프로비저닝 후 `SUPABASE_URL`+`SUPABASE_SERVICE_ROLE_KEY` → pytest → uvicorn HTTP smoke. + GoTrue auth(현재 demo/demo) / PostgREST filter·sort·paging pushdown.
 
 ---
 
 ## 최신 git (master)
 
 ```
-6704030  log(growth-58): HANDOFF — Supabase adapter 완료, P3 종결(L4만 보류)
-f0613fe  log(growth-58): §6 슬림 rollup + engineer ledger pointer
-ceae041  log(growth-58): engineer ledger — Supabase adapter 상세 기록
-6aa0698  docs(supabase): README planned->implemented + seam/env/오픈루프 문서화
+cc810a6 test(pipeline-monitor): DEFECT_ACTIONS coverage of every taxonomy class
+cea6051 test(pipeline-dashboard): incidents/evidence-escape/SLA/codex coverage
+2c8cafb feat(pipeline-status): show owner + recommended action in CLI drill-in
+20bf77a feat(pipeline-dashboard): incident breakdown for fast response
+0da8b00 feat(pipeline-monitor): DEFECT_ACTIONS owner/action/runbook map + action_hint
+ddef621 test(pipeline-dashboard): render/PII-free/duration coverage
+1c6782f feat(pipeline-dashboard): localhost-only HTML monitor for intake pipeline
+d031800 fix(pipeline-monitor): remove stray post-loop closed block in aggregate_health
 ```
+`cc810a6` 가 origin/master HEAD (전부 push 완료).
 
-모든 커밋 push 완료 (`6704030`가 origin/master HEAD).
-
-### 미커밋 / untracked (의도적 미커밋 — 다음 세션 판단)
-- `M frontend/adapters/capacitor/package.json` + `?? package-lock.json` — P2 로컬 setup 산출물 (npm install 흔적)
-- `?? deploy/preview${slug}.compose.yml` — 리터럴 `${slug}` 파일명 (G-8 ASCII slug 가드가 잡는 오발생 파일, 삭제 후보)
-- `?? .serena/`, `?? session-report-20260613-0123.html` — 툴/세션 산출물, gitignore 후보
+### 미커밋 / untracked (의도적 보류)
+- `M frontend/adapters/capacitor/package.json` + `?? frontend/adapters/capacitor/package-lock.json` — P2 로컬 setup 산출물.
 
 ---
 
 ## 다음 세션 시작 체크리스트
 
-1. `https://demo.n9n.co.kr` 접속 확인 (7개 카드 표시)
-2. `https://manufacturing-demo.n9n.co.kr/login` — 데이터 표시 확인
-3. 오픈 루프 P1 (Coolify stale app 정리) 또는 P3 (Supabase adapter) 중 선택
-4. SSH 터널 확인: `ssh -L 8000:localhost:8000 n9n_preview` 후 `curl http://localhost:8000/api/v1/version`
+1. (P0) `learn-log.md` Growth-63 엔트리 작성 — 대시보드 환류
+2. 대시보드 동작 확인: `python scripts/workflow/pipeline_dashboard.py --once` (HTML stdout) 또는 서버 후 `http://127.0.0.1:8787`
+3. `cd scripts/workflow && python -m pytest tests -q` (111 PASS 기대) + `PYTHONUTF8=1 python scripts/diagnose.py`
+4. 오픈 루프 중 파운더 지시 따라 선택 (외부 모니터링은 명시 요청 시에만)
