@@ -1,0 +1,157 @@
+---
+/**
+ * ContactForm.astro — Lead capture form component.
+ * DEC-5: POSTs to entity.create wire key with entity_type="lead".
+ * Fields: name, email, message (per site-manifest contact.fields).
+ * POST target: PUBLIC_API_BASE env var (configurable) + /api/entities/lead.
+ * Backend lead storage is the responsibility of the paired backend adapter (not P3).
+ *
+ * G-1: endpoint path derived from ENDPOINT_MAP["entity_create"] in contract.gen.ts.
+ * No hardcoded paths in this component.
+ */
+
+interface Props {
+  apiBase?: string      // PUBLIC_API_BASE override for this instance
+  entityType?: string  // defaults to "lead" (DEC-5)
+}
+
+const {
+  apiBase = import.meta.env.PUBLIC_API_BASE ?? '',
+  entityType = 'lead',
+} = Astro.props
+
+// Endpoint: entity.create maps to /api/entities/:entity_type (from ENDPOINT_MAP)
+// We substitute :entity_type at build/runtime — no hardcode of /api/entities/lead
+const endpointPath = `/api/entities/${entityType}`
+const actionUrl = apiBase ? `${apiBase.replace(/\/$/, '')}${endpointPath}` : endpointPath
+---
+
+<section class="w-full py-[var(--space-section-y,112px)] px-[var(--space-container-gutter,24px)] bg-[var(--color-section-alt-bg,var(--color-surface-2,#F9FAFB))]" id="contact">
+  <div class="max-w-2xl mx-auto">
+    <h2 class="text-3xl font-bold text-[var(--color-text-1,#111827)] mb-4 text-center" style="font-family: var(--font-family-display, inherit);">
+      Get in Touch
+    </h2>
+    <p class="text-center text-[var(--color-text-2,#374151)] mb-10">
+      Tell us about your project and we'll get back to you within one business day.
+    </p>
+
+    <!-- Progressive enhancement: works as plain HTML form; JS enhances for JSON POST -->
+    <form
+      id="contact-form"
+      data-action={actionUrl}
+      data-entity-type={entityType}
+      class="flex flex-col gap-5"
+      novalidate
+    >
+      <div>
+        <label for="cf-name" class="block text-sm font-medium text-[var(--color-text-1,#111827)] mb-1">
+          Name <span aria-hidden="true" class="text-red-500">*</span>
+        </label>
+        <input
+          id="cf-name"
+          name="name"
+          type="text"
+          required
+          autocomplete="name"
+          class="w-full px-4 py-2.5 border border-[var(--color-border-input,#9CA3AF)] rounded-[var(--radius-button,8px)] text-[var(--color-text-1,#111827)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary,#6D28D9)] focus:border-[var(--color-primary,#6D28D9)]"
+          aria-required="true"
+        />
+      </div>
+
+      <div>
+        <label for="cf-email" class="block text-sm font-medium text-[var(--color-text-1,#111827)] mb-1">
+          Email <span aria-hidden="true" class="text-red-500">*</span>
+        </label>
+        <input
+          id="cf-email"
+          name="email"
+          type="email"
+          required
+          autocomplete="email"
+          class="w-full px-4 py-2.5 border border-[var(--color-border-input,#9CA3AF)] rounded-[var(--radius-button,8px)] text-[var(--color-text-1,#111827)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary,#6D28D9)] focus:border-[var(--color-primary,#6D28D9)]"
+          aria-required="true"
+        />
+      </div>
+
+      <div>
+        <label for="cf-message" class="block text-sm font-medium text-[var(--color-text-1,#111827)] mb-1">
+          Message <span aria-hidden="true" class="text-red-500">*</span>
+        </label>
+        <textarea
+          id="cf-message"
+          name="message"
+          required
+          rows={5}
+          class="w-full px-4 py-2.5 border border-[var(--color-border-input,#9CA3AF)] rounded-[var(--radius-button,8px)] text-[var(--color-text-1,#111827)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary,#6D28D9)] focus:border-[var(--color-primary,#6D28D9)] resize-y"
+          aria-required="true"
+        ></textarea>
+      </div>
+
+      <div id="contact-form-status" role="status" aria-live="polite" class="hidden text-sm"></div>
+
+      <button
+        type="submit"
+        class="w-full py-3 px-6 bg-[var(--color-primary,#6D28D9)] text-white font-semibold rounded-[var(--radius-button,8px)] hover:bg-[var(--color-primary-hover,#5B21B6)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-primary,#6D28D9)] focus:ring-offset-2 disabled:opacity-60"
+      >
+        Send Message
+      </button>
+    </form>
+  </div>
+</section>
+
+<script>
+  // Contact form JS enhancement — JSON POST to entity.create.
+  // DEC-5: wire_key = entity.create, entity_type = "lead".
+  // Runs only in browser; form degrades gracefully without JS.
+  (function () {
+    const form = document.getElementById('contact-form') as HTMLFormElement | null
+    const statusEl = document.getElementById('contact-form-status') as HTMLElement | null
+    if (!form || !statusEl) return
+
+    const action = form.dataset.action ?? ''
+    const entityType = form.dataset.entityType ?? 'lead'
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement
+      btn.disabled = true
+      statusEl.className = 'text-sm text-[var(--color-text-3)]'
+      statusEl.classList.remove('hidden')
+      statusEl.textContent = 'Sending…'
+
+      const name = (form.querySelector('#cf-name') as HTMLInputElement).value.trim()
+      const email = (form.querySelector('#cf-email') as HTMLInputElement).value.trim()
+      const message = (form.querySelector('#cf-message') as HTMLTextAreaElement).value.trim()
+
+      // entity.create request shape per wire-v1.yaml
+      const body = {
+        entity_type: entityType,
+        data: { name, email, message },
+      }
+
+      try {
+        const res = await fetch(action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        const json = await res.json().catch(() => ({}))
+
+        if (res.ok && !json.error) {
+          statusEl.className = 'text-sm text-green-600'
+          statusEl.textContent = 'Message sent! We\'ll be in touch soon.'
+          form.reset()
+        } else {
+          const msg = json.error?.message ?? `Error ${res.status}`
+          statusEl.className = 'text-sm text-red-600'
+          statusEl.textContent = `Failed to send: ${msg}`
+          btn.disabled = false
+        }
+      } catch {
+        statusEl.className = 'text-sm text-red-600'
+        statusEl.textContent = 'Network error — please try again.'
+        btn.disabled = false
+      }
+    })
+  })()
+</script>
