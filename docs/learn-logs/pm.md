@@ -4,6 +4,37 @@
 
 ## §1 — Growth 상세
 
+### Growth-62 (2026-06-14) — 자율 intake 파이프라인 설계 (Phase 7 문서화)
+
+**8-Phase 계획 요약**:
+
+- **Phase 1** — 적응형 적격 정책 + Gap 성장 레지스트리: `qualification_policy.yaml` 단일 진실 (scoring, qualify_threshold=55, gap_definitions), `qualify.py` (LLM 0, 순수 데이터). gap_category count≥3 → PROMOTE → Growth-N(해당 축) lifecycle. `docs/intake-inbox/gap-registry.jsonl` (PII-free).
+- **Phase 1b** — 고객 소통 Audit Trail: VPS `audit.jsonl` (hash-chain, tamper-evident) + repo `infra/registry/cases/<id>.yaml` (PII-free). 이벤트 9종 (SUBMITTED→CLOSED). `audit_export.py` 분쟁 대비.
+- **Phase 2** — Q&A 정교화: `show_if` 적응형 후속질문 5종, "통화 요청" 경로(prefer_call 플래그→사람 큐), industry-default 스키마(`presets/industry-defaults.yaml` — demo profile 파생, IT 지식 부족 고객 fallback).
+- **Phase 3** — 제출 시 in-process 변환 (VPS): `_post_submit_conversion()` (qualify→triage.json / convert→draft.yaml·needs-note.md / audit append / inbox.jsonl 기록). LLM 0.
+- **Phase 4** — Sync 브리지 (`intake_sync.py`, 로컬): SSH rsync → prefer_call(사람 큐) / gap_only·defer(gap-registry) / qualify(scaffold→deploy→ui_check→needs-fit→registry). 멱등(processed.jsonl). `--dry-run --no-ssh --force-slug` 플래그.
+- **Phase 5** — Needs-Fit 감사 게이트 (Step 4b): needs-note + AC + manifest → coverage matrix (COVERED/PARTIAL/GAP) → PASS/PASS-WITH-CAVEAT/BLOCK. `codex:codex-rescue` 호출. 출력: `docs/delivery/<slug>/needs-fit-review.md` (PII strip). 페르소나 아님.
+- **Phase 6** — UI 결함 자동 체크 (`ui_check.py`): HTTP 상태 + 데스크톱·모바일 스크린샷 + console error + overflow. soft gate (FAIL=live-ui-warn, hard-stop 아님). LLM 0.
+- **Phase 8** — Pipeline Monitor: 노드 그래프(9노드), SLA 감시, DEFECT_TAXONOMY 10종, CLI viewer(`pipeline_status.py`), 알림(`docs/intake-inbox/alerts.md`). G-14 가드(SPEC).
+
+**파운더 4대 결정 (CEO+CTO 합의)**:
+
+1. 적격 리드(score≥55, 고감도 플래그 없음)는 CEO 릴레이 없이 preview 빌드까지 자동 — **Step 5 외부 인도 게이트 불변(CEO 단독, charter §2)**.
+2. 미충족 gap = 영구 배제 아닌 성장 ToDo + 누적 신호 (복리 축적 원칙).
+3. audit trail(append-only hash-chain) 분쟁 대비 보존 — PIPA 보존기간은 ToDo.
+4. CEO override 유지 (`--force-slug` / `processed.jsonl` 수동 편집).
+
+**토폴로지 (불변)**:
+
+- VPS (`apps/intake/`): 제출·점수·변환·audit·inbox까지 — repo/git/toolchain 없음.
+- 로컬 (`intake_sync.py`): SSH pull → draft승급·scaffold·deploy·ui_check·needs-fit → registry 갱신·커밋.
+- PII(email·free-text) 절대 커밋 금지 — `apps/intake/data-mirror/`(gitignored) + VPS에만. 커밋물엔 slug·점수·gap 카테고리만.
+
+**auto-path 전체 LLM 0** (qualify·score·gap·convert·ui_check·pipeline_monitor 전부 deterministic). needs-fit Step 4b만 on-demand codex 호출 (인도 게이트, 자동화 아님).
+
+**관련 파일** (신규/수정 예정 — engineer 구현 대기):
+`apps/intake/{qualification_policy.yaml,qualify.py,audit.py}` · `presets/industry-defaults.yaml` · `scripts/workflow/{intake_sync.py,gap_registry_report.py,audit_export.py,ui_check.py,pipeline_emit.py,pipeline_monitor.py,pipeline_status.py}` · `docs/intake-inbox/` · `infra/registry/cases/` · `.claude/skills/pm-delivery-loop/needs-fit-prompt-template.md`
+
 ### Growth-38d (2026-06-12) — domain-expert v2 reconcile + CEO 지침 반영 + 스코프 확인 발송문
 
 - **domain-expert v2 reconcile (CTO 판정)**: enrollment 흐름을 crm/lead → contact(student overlay) → project/resource-assignment 로 14 baseline 내 매핑 채택. finance invoice 복원 (AP 방향 재확인). crm에 lead·activity 추가, project 도메인 신규 진입 → domains 7개로 확정.
