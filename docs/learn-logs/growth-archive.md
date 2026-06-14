@@ -392,3 +392,107 @@
 - **교훈 (1줄)**: 새 agent 정의는 세션 중 spawn 목록에 즉시 등록 안 됨 → 첫 dogfood 는 general-purpose 에 헌장+loop 주입으로 수행 (다음 세션부터 직접 spawn). 보안은 self-host 경계에서 "외부 호출 0" 을 grep 으로 증명하는 게 핵심 증거
 - **Revenue/cost**: M2/M3 보안 인도 자산 / 보안 리뷰 ~64k + engineer ~24k tokens
 - **Open loops**: legal 검색 엔드포인트 토큰 인증 (M2) / 시크릿 커밋 금지 정적 가드 (G-N 후보) / 의존성 CVE 자동 점검 / CISO 직접 spawn 검증 (다음 세션)
+
+## Growth-33 ~ Growth-48 (2026-06-11~13, 이동: Growth-64)
+
+### Growth-33 (2026-06-11) — Subagent Output Protocol: 결과 파일화로 반환 변동비 차단
+
+- **인격**: CEO (작업 방식 변경 결정) + CTO (규약 설계·loop 환류)
+- **Axis touched**: 조직/오케스트레이션 (CLAUDE.md §11, 7 loop SKILL `## 출력 규약`), architecture (신규 protocol 문서)
+- **Milestone**: M2/M3 — cost-aware-by-design 의 변동비 hedge (고객·인격 수 증가 시 선형 누출 차단)
+- **Why (1줄)**: Growth-32 보안 리뷰 ~64k 토큰이 main context 로 통째 유입된 게 단일 변동비 주범 → subagent→main 반환 경계에 "파일로 쓰고 경로+요약 envelope 만 반환" 규약 확립
+- **결정 (CEO→CTO)**: ① 단일 진실 `docs/architecture/subagent-output-protocol.md` (임계 ~30줄/2KB, 위치 3종, envelope 4항, CTO spawn 규율) ② 7 loop SKILL 에 `## 출력 규약` 1줄 환류 (8-인격 기본 적용) ③ CLAUDE.md §11 포인터 (ad-hoc agent 는 CTO spawn prompt 명시)
+- **교훈 (1줄)**: context-mode 는 subagent *내부* 분석 비용을, output-protocol 은 subagent→main *반환* 비용을 줄인다 — 다른 축. 단일 규약 + 7 포인터로 중복 없이 cross-agent 적용
+- **Revenue/cost**: 자체 비용 hedge 자산 (메타) / 이번 작업 토큰 소량 (문서+편집)
+- **Open loops**: 실제 효과 측정 + 임계 가드 → **Growth-34 dogfood 에서 해소** (envelope ~10줄 측정 + G-13 wiring 가드 신설)
+
+### Growth-34 (2026-06-11) — Output Protocol dogfood 측정 + G-13 가드 + 인프라 보안 회귀 점검
+
+- **인격**: CTO (dogfood orchestrate·G-13 구현·integrator) + CISO (security-agent 재가동, 인프라 보안 리뷰)
+- **Axis touched**: creater/거버넌스 (G-13 가드 = `scripts/diagnose.py`), 보안 (인프라 변경 회귀 리뷰)
+- **Milestone**: M2/M3 — Growth-33 변동비 hedge 의 효과 증명 + 회귀 차단
+- **Why (1줄)**: Growth-33 규약이 *주장*만 있고 *측정* 없었음 → 같은 실패 모드(security-agent, Growth-32 의 ~64k 유입원)로 재가동해 실제 반환 비용을 측정
+- **측정 결과**: 본문 193줄/8KB → `out/analysis/security-infra-review-2026-06-11.md` (gitignored), subagent 내부 58.6k 토큰 격리, **main 반환 = envelope ~10줄** (PASS-WITH-CAVEAT + 경로 + CAV-1/2). Growth-32 ~64k 대비 차단 증명 — 규약 작동
+- **G-13 신설 (CTO 직접)**: `g13_subagent_output_protocol_wired` — 7 loop SKILL 의 protocol 링크 정적 검사 (헤딩 무관). envelope 크기는 런타임 속성이라 정적 불가 → wiring 드리프트만 가드. `--check` 후보 G-14 로 재배치
+- **보안 발견 (CISO)**: CAV-1 `AuthController.java` demo password (M1 stub, M2 삭제) / CAV-2 `@colbymchenry/codegraph` 1인 메인테이너 (버전 핀 권장). egress 0, 시크릿 노출 0. 둘 다 informational
+- **교훈 (1줄)**: 규약은 dogfood 로 *측정*해야 자산이 된다 — 같은 실패 모드 재현이 가장 정직한 증명. 측정이 곧 hardening 가드(G-13)를 낳음
+- **Revenue/cost**: 비용 hedge 효과 증명 (메타) / dogfood subagent 58.6k 토큰 (격리됨, main 미유입) + 편집 소량
+- **Open loops**: G-14 (`--check` stale-anchor) 구현 시점 미정 / `.npmrc` codegraph 버전 핀 (engineer 후보)
+
+### Growth-35 (2026-06-11) — DevOps 인격 신설 (9번째) + 배포 토폴로지 v1 (1인 비대면 창업 인프라)
+
+- **인격/Axis/Milestone**: CTO (아키텍처·charter integrator) + DevOps (신설, founding) / 거버넌스 (9-인격 charter v1.6)·creater/인프라 (deployment-topology + CI/CD)·customer (디지털 자산 레지스트리) / M2·M3 — 비대면 고객 접점 인프라 토대
+- **Why (1줄)**: CEO 가 이 harness 로 숨고/크몽 건당 500만원 1인 비대면 창업 → 인프라·디지털 자산·CI/CD 담당 인격 공백
+- **핵심 통찰+결정 (CTO)**: **preview 티어 ≠ production 티어** (self-host=M2 가치 제안 → 최종물은 고객 인프라, n9n.co.kr/VPS 는 설득용 preview 전용). 고객-facing preview 는 노트북 터널 ✗ → **Coolify on Seoul VPS** ($6~12/월) + `*.n9n.co.kr` 와일드카드, 터널은 데모 폴백만. 메신저=숨고/크몽→카톡채널 (커스텀 ✗)
+- **신설 자산·경계**: `devops-agent.md` + `devops-loop/SKILL.md`(G-13 PASS) + `deployment-topology.md` + `infra/registry/`(볼트 gitignored) + charter v1.6/INDEX. 경계: engineer=artifact / DevOps=출하·호스팅·추적, CISO=판정 / DevOps=하드닝 실행, 인도설치 PM+CISO 게이트 후
+- **교훈 (1줄)**: 새 사업 모델(비대면 창업)이 직무 공백을 드러내면 인격 신설이 정답 — charter "직무별 인격" 철학의 6번째 적용
+- **Revenue/cost**: preview 인프라 Hostinger KVM2 $8.99/월(24mo, Singapore) 가동 / 인격 신설·provisioning 은 편집·infra 0
+- **provisioning→CI/CD→하드닝→결선 완료 (같은 세션)**: VPS live·SSH 키전용·커널패치 / `*.n9n.co.kr` grey-cloud / Coolify traefik LE 자동 TLS / **Coolify API(write+deploy) 배포 end-to-end 검증**(cicd-smoke HTTPS 200) / **8000 클라우드 방화벽 차단(allow 22/80/443) 실측 → CISO 잔여 0** / **scaffold→preview v1**(engineer: `preview_package.py`+Dockerfile×2, DB 없는 2-container, lawfirm-demo 로컬 `/login`·`/health` 200·manifest 14ent). 보안사고 2회→raw-file 규약. 레시피·상세=topology §4·devops.md
+- **Phase 2~자동화 결선 (후속 세션, 같은 Growth)**: Coolify Phase 2 완료 — git-build(`private-deploy-key`+`build_pack=dockercompose`)+manifest persistent-storage RO 마운트로 **lawfirm-demo·shop-demo `.n9n.co.kr` 2 테넌트 live**(독립 검증 HTTPS 200+LE cert). 자동화: `preview_package.py --coolify`(서버 compose 생성)+`deploy_to_coolify.py --slug`(API 4단계+scp+검증 한 줄)+레지스트리 auto-merge(secret_ref 보존). webhook auto-deploy 는 **보류 결정**(Coolify 4.1.2 per-app 필터 부재→repo-push 시 전 테넌트 동시 재배포, 영업 데모 안정성 우선 — 코드는 `--setup-webhook --confirm` 게이트로 보관). **Caddy spike**: 5/5 함정 제거·wildcard DNS-01 cert 0발급·harness 변경 0 으로 기술 우위 확인했으나 **Coolify 유지 결정**(함정이 deploy 스크립트로 이미 캡슐화→전환비용=대시보드 상실+xcaddy+15~30s 다운타임 > 현 이득). 전환 트리거: 테넌트≥5 AND rotate 월1회↑ AND Coolify 함정 미해소. 락인 얕음 입증(artifact portable). 상세=`devops.md`
+- **Open loops**: `.npmrc` codegraph 핀·G-14 stale-anchor 가드 (Growth-34 이월) / 실 고객 발굴 (M2 게이트) / 레지스트리 변경분 per-file 커밋 자동화·CISO SECRET_KEY rotate(Coolify UI 수동)
+
+### Growth-36 (2026-06-12) — preview 디자인 경쟁력 (Phase 0+1) + 504 인시던트 2건 근본 해결
+
+- **인격/Axis/Milestone**: CTO (integrator·검증) + CDO (도구 평가·토큰/CSS 적용) + DevOps (인시던트 진단·deploy 수정) / frontend (디자인 토큰 강화)·creater (compose 템플릿·deploy 견고화) / M2 — preview 데모 = 계약 전 설득 자산
+- **Why (1줄)**: CEO 지적 — preview 시점은 미계약 상태라 기능+디자인 둘 다 경쟁력 필요
+- **CDO 평가→적용 (Phase 0+1)**: 후보 12종 비교 (`out/analysis/design-tooling-eval.md`) → 기준 = node 빌드 0·CDN 1줄·토큰 추출성·MIT. 채택: **Pretendard Variable**(한국 첫인상 최대효과) + **Pico CSS v2 classless**(`--pico-*`→semantic 토큰 remap, 마크업 변경 0) + **Open Props**(motion/shadow 보충). 탈락: DaisyUI/Basecoat(Tailwind 빌드), Preline/SuperDesign(라이선스 NOASSERTION). 중기: Style Dictionary (M1~M2, react adapter 직전)
+- **시각 검증 루프**: 로컬 python 직접 기동(Docker off 폴백)+Playwright 스크린샷 → Pico `button[type=submit]{width:100%}` 회귀 1건 발견→`button.btn{width:auto}`+`.login-card` scope 전폭 보존으로 해소
+- **결함 3건 연쇄 발견·해결**: (1) tokens.css gitignored 인데 Dockerfile 토큰 빌드 스텝 부재→이미지에 CSS 누락 (COPY design/tokens+RUN build_tokens.py). (2) **504 인시던트**: 1차=Caddy spike 잔재 Caddyfile 이 Traefik file provider 오염(백업 후 삭제+proxy 재시작), 2차=compose 자체 `preview-net` 선언→이중 네트워크→Traefik 이 프록시 미도달 IP 선택하는 bistable(`preview-net` 제거, uuid 넷 단일화). (3) deploy 스크립트 이름-매칭 의존→**registry-first uuid lookup**(구/신 포맷 지원)+description em-dash 가 Coolify validation 422 (ASCII 정화)
+- **교훈 (1줄)**: spike 잔재는 spike 종료 시점에 회수해야 한다 — 평가용 파일 하나가 이틀 뒤 영업 자산 전체를 죽였다. + 외부 시스템 매칭은 이름이 아니라 레지스트리 uuid 가 단일 진실
+- **Revenue/cost**: LLM=agent 5회 spawn(~34만 tok) / infra 불변 / 영업 자산 품질 상승 (두 데모 Pretendard+Pico live: HTTPS 200+tokens.css 12.5KB+LE cert)
+- **Open loops**: Growth-35 이월 전부 / Caddy spike 파일 회수 규약(devops-loop SKILL 반영 후보) / Phase 2 디자인(Franken UI, 계약 후 quality bar)
+
+### Growth-37 (2026-06-12) — 웹 intake 인터페이스: needs 인터뷰 폼 + 의뢰인 레코드 관리 (intake.n9n.co.kr live)
+
+- **인격/Axis/Milestone**: CTO (integrator) + PM (질문 카탈로그) + Engineer (앱·변환기·deploy 견고화) + CDO (UI 감수) + CISO (BLOCK 3건→해소 PASS) / creater (deploy 일반화)·customer (intake→profile 파이프)·신규 1st-party 앱 카테고리 `apps/` / M2 — PM loop step 0~2 디지털화로 영업 루프 단축
+- **Why (1줄)**: CEO — "웹으로 사용자의 needs 를 묻고 요구사항을 도출하는 인터페이스" + "의뢰인 정보 저장·관리, 재문의·수정 가능"
+- **구현**: `apps/intake/` — questions.yaml(PM 단일 진실, 3 페르소나 분기 30문항, maps_to→profile/needs_note 매핑) + FastAPI(제출→append-only revision, edit_token 재수정, admin Basic auth+lockout, honeypot+rate limit) + `intake_to_profile.py`(schema v1 키만, 불일치는 needs note 시그널) + Pretendard/Pico/Open Props 계승. pytest 11/11
+- **게이트·함정**: CISO BLOCK 3건 (Traefik 뒤 client IP 단일 버킷 / admin path traversal / autoescape 미명시)→수정→재검증 PASS — 보안 리뷰 루프 첫 실전 완주. deploy 함정 2건: ① 도메인 서비스명 하드코딩→registry `preview.domain_service` 키 (dry-run 이 잡음) ② `docker_compose_domains` GET=string/PATCH=array 비대칭→422 (body 출력 개선으로 확정)
+- **교훈 (1줄)**: 게이트는 비용이 아니라 속도다 — dry-run·CISO 리뷰·스크린샷 검증이 라이브 전에 결함 5건을 잡아 첫 의뢰인 앞 사고를 선제 제거했다
+- **Revenue/cost**: LLM=agent 6회 spawn(~64만 tok) / infra=기존 VPS 앱 1개 추가(증분 0원) / admin env 설정 전 404 안전 기본값
+- **Open loops**: INTAKE_ADMIN_PASSWORD Coolify env 설정(CEO, F-4 수동) / intake 제출→PM triage 운영 절차 pm-delivery-loop SKILL 반영 / FIX-4 CDN SRI(adapter base.html 포함)·FIX-5 webhook argv / rtk 0.34.3→0.42.x 업그레이드(CEO cargo install)
+
+### Growth-38 (2026-06-12) — 영업 루프 풀사이클 리허설: intake 2건 → triage → 회신 반영 → edu-program preview live
+
+- **인격/Axis/Milestone**: CTO (integrator·직접 deploy) + PM (triage·needs note·draft profile) + domain-expert-generic (교육 매핑 의견서) + Engineer (YAML bool·deploy race 수정) / customer (edu-program profile)·creater (deploy 견고화)·expert-agent (교육 vertical 시그널) / M2 — 숨고/크몽 홍보 전 end-to-end 리허설
+- **Why (1줄)**: CEO — "홍보 전에 전체 프로세스를 다시 돌려보고 싶다" (지인이 intake.n9n.co.kr 에 실제 2건 제출)
+- **triage**: 건1 (대학 정부사업 — 학생리스트·사업비·학사관리) 수용+follow-up 8문항 / 건2 (B2C 열차예매 앱) 스코프 밖 거절 회신 작성. "인터뷰 없이 profile 작성 금지" 안티패턴 준수 — 학사관리·order·asset 은 미답으로 profile 제외
+- **실결함 2건 (리허설이 잡음)**: ① `questions.yaml` 무인용 `value: no` → YAML 1.1 bool 함정, 실제 제출 데이터에 `False` 저장 (quote+로더 방어+회귀 테스트+라이브 재검증) ② push 직후 배포 시 `docker_compose_domains` 422 — Coolify 가 git compose 미적재 상태 race → `_wait_for_compose_raw()` poll+retry 자동 복구
+- **회신 반영→live**: postgres 확정 → domains crm/finance/document/reporting draft profile → scaffold 9 entities → **edu-program.n9n.co.kr live** (HTTPS 200·LE cert, push→live 한 회전). idempotent 재실행이 기존 project/app uuid 이름-fallback 재사용 실증
+- **domain-expert 의견**: student 는 catalog enum 확장 ✗ → customer overlay (타 고객 의미 오염 방지) / 정부사업비 budget-line·품의·정산보고는 14 baseline 구조적 부재 → `presets/skills/education/` seed 신설 권고 (M3 첫 vertical 후보 시그널)
+- **후속 회전 (같은 Growth)**: 10문항 회신 전부 도착 → 7 domains/18 entities 확정 (enrollment=crm lead→contact→project 매핑, domain-expert 권위로 PM 오판 2건 reconcile) / **needs-반영 데모 UI** (profile display→manifest→메뉴·홈 카드·피드백 CTA, harness 레벨) / **intake `/letter/{token}` 안내문 URL 기능** (txt 복사 → URL 전달, make_letter.py) / **demo seed 데이터 기능** (`seed_demo_data.py` manifest→한국어 가상 데이터 결정적 생성 + backend `SEED_FILE` startup 적재 + compose/deploy seed-aware — edu 18 entity 193건 live) / **앱 셸 + 고객 용어 라벨** (CDO 스펙→engineer: 상단바·좌측 도메인 메뉴·active 3px 바·아바타·비인증 미니멀 분기 / entity label 3단계 해석 profile entity_labels>catalog label_ko>영문 — catalog 60 entity label_ko 누적, 사이드바·제목 전부 고객 용어) / 신규 함정 2건: push-직후 deploy 의 compose_raw 422 race (poll+retry 자동 복구) + **manifest bind-mount 디렉터리화** (scp 전 컨테이너 생성 시 docker 가 source 를 dir 로 생성 → 이후 scp 가 dir 안으로 → 복구 = rm+scp+재생성)
+- **교훈 (1줄)**: 리허설은 실데이터로만 드러나는 결함을 잡는다 — 스모크 통과한 폼의 bool 함정도, push-직후 race 도, bind-mount 디렉터리화도 실제 의뢰 흐름에서만 나타났다
+- **Revenue/cost**: LLM=agent 6회 spawn (리허설 2회전 누적 ~37만 tok) / infra=기존 VPS 앱 1 추가 (증분 0원) / M2 게이트 직전 — 인프라·프로세스 검증 끝, 남은 건 영업
+- **Open loops**: 건1 scope-confirm 발송 (CEO — letter URL, 학사관리=사업 범위·LMS=배치 가져오기 단계 동의) / 건2 거절 회신 발송 (CEO) / production self-host 합의 (Vercel 비추천 전달) / education vertical seed 신설 (M3 — budget-line·enrollment·attendance 등 9 entity 후보) / manifest scp 순서 견고화 (deploy 스크립트, devops 후보)
+
+### Growth-39 (2026-06-12 후속 세션) — 아코디언 사이드바 + Hostinger CSS + 테이블 스타일
+
+- **인격/Axis/Milestone**: CTO (integrator) + CDO (디자인 분석·spec) + Engineer (CSS·JS·토큰 구현) / frontend (vanilla-htmx adapter)·design (토큰 파이프라인) / M2 — edu-program.n9n.co.kr UI 품질 상향
+- **Why (1줄)**: CEO — "좌측 1차/2차 아코디언 메뉴, Hostinger 수준 CSS, 반응형 UI" + 수평 배열·라이트테마·테이블 스타일 3종 보정 요청
+- **구현**: `sidebar-group__header` button + SVG chevron + `sidebar-nav--accordion` (max-height 0→600px CSS transition) + `initAccordion()` JS (localStorage `sidebar-accordion-open` 상태 유지). Hostinger 라이트테마: `--sidebar-item-active-bg: #EEF2FF` / `--sidebar-item-active-text: #4F46E5` / active `::before` left-bar 제거(fill-only) / 트리 indent `border-left 2px + padding-left 20px`. 3단계 반응형: ≥1280px 240px / 769–1279px 56px CSS-only collapse / <768px drawer. 테이블: `.th` `#F8FAFC`·2px 하단선 / `.td` `#F0F0F0` 구분선 / hover `#F8FAFC`(파랑 제거) / 줄무늬 제거 / `table-wrapper` 부드러운 그림자.
+- **핵심 버그**: Pico CSS classless 가 `<nav>` 에 `flex-direction: row` 자동 적용 → `display: block` 명시로 차단 (`.app-sidebar`, `.sidebar-group`, `.sidebar-nav { flex-direction: column }`).
+- **토큰 파이프라인**: `tokens.css` gitignored → `design/tokens/semantic.json` sidebar 섹션(10 토큰) 추가 → `build_tokens.py` 재생성 → Docker build time 포함.
+- **커밋**: 161a61d→046bcbb→fa18df3→56954c2→ccac470→eaa0f5b (6건, pushed). live 검증: 10 sidebar CSS vars PASS, initAccordion PASS, table styles PASS.
+- **교훈 (1줄)**: CSS 프레임워크 암묵적 기본값(Pico nav flex-row)은 레이아웃 컴포넌트에 반드시 명시 override — `display: block` 한 줄이 수평 메뉴 버그 전체를 해결한다
+- **Revenue/cost**: LLM=CDO+Engineer agent 2회 spawn / infra 변경 없음 / M2 데모 UI 품질 충족
+- **Open loops**: 건1 scope-confirm 회신 대기 / 건2 거절 회신 대기 / education vertical seed 신설 (M3) / G-14 stale-anchor 가드 / `.npmrc` codegraph 버전 핀
+
+### Growth-47 (2026-06-13) — UX/Design wiki 환류 (KWCAG + 한국어 UX 관행)
+
+- **인격/Axis/Milestone**: CTO (integrator) + CDO (지식 정리) / design (wiki 축) / M2 — 영업 준비 지식 베이스 완성
+- **Why (1줄)**: Growth-40 deep-research 미답 항목(KWCAG·인터랙션 패턴·UX 관행) → wiki 환류 → 실 고객 발굴 전 설계 근거 확보
+- **작업**: `design/refrence` 오타 수정 → `design/reference/`. wiki 신규 2페이지: `knowledge/wiki/design/kwcag.md` (KWCAG 2.2 4원칙·명도대비 수치·ARIA 체크리스트·법적 근거) + `knowledge/wiki/design/korean-ux-conventions.md` (Pretendard 타이포·날짜/금액 표기·폼 레이아웃·버튼 텍스트·테이블 인터랙션·검색패널·모달 관행). wiki index 포인터 2개 추가.
+- **커밋**: b87d766→c2260c9→18f0d14→79e6a71 (4건, pushed)
+- **교훈 (1줄)**: Gemini CLI 미설치 환경에서 외부 리서치 불가 → 훈련 지식으로 KWCAG 2.2·한국 UX 관행 직접 작성 (안정적 표준은 실시간 fetch 없이도 충분)
+- **Revenue/cost**: LLM=없음 (직접 작성) / infra 변경 없음 / wiki 2페이지 = 실 고객 접점 전 설계 지식 완비
+- **Open loops**: 실 고객 발굴 (M2, 숨고·크몽) / education vertical seed / G-14 stale-anchor
+
+### Growth-48 (2026-06-13) — DBA 인격 신설 (10번째) + Supabase 전략 논의
+
+- **인격/Axis/Milestone**: CTO (전략) + DBA 신설 / ddl 축 강화 / M2 — 소규모 고객 셀프서비스 DB 설계 지원
+- **Why (1줄)**: 소규모 고객은 DB 설계 경험이 없어 프로젝트 시작점(ERD→DDL)에서 병목 → DBA agent 가 공백 해소
+- **작업**: `.claude/agents/dba-agent.md` 신설 (ERD·정규화·DDL 산출·마이그레이션·catalog.yaml 환류 담당). INDEX.md·CLAUDE.md §1 팀 로스터 갱신. Supabase = 추후 `backend/adapters/supabase/` adapter로 격리 예정 (vendor lock-in 방지).
+- **커밋**: 649762e→1f504f3→ca897c6 (3건)
+- **교훈 (1줄)**: domain-expert(무엇을 만들지) ↔ DBA(어떻게 저장할지) 분업이 명확해야 소규모 고객 셀프서비스가 가능
+- **Revenue/cost**: LLM=없음 / infra 변경 없음 / 소규모 고객 DB 설계 병목 해소 → M2 전환율 개선 기대
+- **Open loops**: 5개 industry demo variants / Supabase backend adapter 구현 / G-14 stale-anchor
