@@ -154,6 +154,12 @@ per-request LLM/infra 비용 측정(charter §5)은 **M1 런타임에 측정할 
 - **무료 trial 정책**: M2 까지 3개사 무료 사용 허용 (case study 권리 양도 받음). M3 부터 paid only.
 - **OSS / 상용 분리선**: middle contract + adapter compliance test = OSS (Apache 2.0). orchestrator + expert-agent definitions + customer profile tooling = commercial.
 
+## marketing-site Deliverable 위치 (Growth-65)
+
+- **고객층**: 웹에이전시형 신규 고객 — 시각·UX 가 업무시스템보다 중요한 SMB. 품질 바 B(professional SMB). 부티크 아트디렉션(A)은 비채택(사람 craft·복리 불가).
+- **M1 GTM dogfood**: 우리 자신의 랜딩을 첫 테마(`aurora`)로 빌드 → 데모 + 리드 인프라로 활용. M1 gating 조건(T-1~T-6) 과는 별개 — 7축 안의 visual-asset 축(8번째 축) 검증.
+- **M2/M3 상품화**: marketing-site SKU 추가 — 라이선스(제작 일회성) / 제작 매출 라인. self-host license 에 marketing-site 빌드 패키지가 옵션으로 포함.
+
 ## Intake 파이프라인 매출 신호 (Growth-62)
 
 자율 intake 파이프라인이 두 가지 매출 신호를 생성한다:
