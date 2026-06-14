@@ -1,0 +1,55 @@
+# deploy/preview/rehearsal-qa-co.compose.yml
+# Coolify dockercompose preview — profile: rehearsal-qa-co
+# Build context: repo root (Coolify clones whole repo, build context = clone root)
+#
+# Domain: set via Coolify API PATCH docker_compose_domains (not SERVICE_FQDN_* env)
+# Manifest: server-side persistent file mounted read-only into frontend
+#
+# Coolify deployment:
+#   build_pack: dockercompose
+#   docker_compose_location: /deploy/preview/rehearsal-qa-co.compose.yml
+#   git_repository: git@github.com:JasonMMo/compounding-stack-harness.git
+#   git_branch: master
+#   private_key_uuid: s127pafarr46wlu1r2mre2te
+
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/adapters/fastapi/Dockerfile
+    environment:
+      PORT: "8081"
+      PYTHONIOENCODING: "utf-8"
+    # No custom network — Coolify attaches containers to its uuid network only.
+    # Traefik can only reach uuid-net IPs; declaring preview-net caused bistable 504.
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/adapters/vanilla-htmx/Dockerfile
+      args:
+        UI_THEME: saas
+    environment:
+      # Domain routing: set via Coolify API PATCH docker_compose_domains
+      # [{"name":"frontend","domain":"https://rehearsal-qa-co.n9n.co.kr"}]
+      # Do NOT use SERVICE_FQDN_* env here — set via API, not compose file.
+      FRONTEND_PORT: "5000"
+      BACKEND_BASE_URL: "http://backend:8081"
+      CONTRACT_DIR: "/app/middle/contract"
+      PROFILE_MANIFEST: "/data/manifest/screen-manifest.json"
+      PYTHONIOENCODING: "utf-8"
+      # SECRET_KEY injected via Coolify environment variables (not in compose file)
+    volumes:
+      # Persistent manifest file — scp'd to server before deploy
+      # Path: /data/coolify/manifests/rehearsal-qa-co/screen-manifest.json
+      - type: bind
+        source: /data/coolify/manifests/rehearsal-qa-co/screen-manifest.json
+        target: /data/manifest/screen-manifest.json
+        read_only: true
+    ports:
+      - "5000"
+    depends_on:
+      - backend
+    restart: unless-stopped
