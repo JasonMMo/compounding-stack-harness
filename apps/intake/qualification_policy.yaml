@@ -14,7 +14,7 @@ schema_version: 1
 scoring:
   base_score: 50
   weights:
-    # --- Positive signals ---
+    # --- Positive signals (business-system) ---
     has_company_name: 5            # company_name non-empty
     domain_count_per: 3            # per selected data_domain (capped at domain_count_cap)
     domain_count_cap: 5            # max domains contributing to score (cap = 5 * 3 = 15 pts)
@@ -30,9 +30,25 @@ scoring:
     stack_known_frontend: 3        # it_frontend_pref is known (not unknown/empty)
     stack_known_backend: 3         # it_backend_pref is known (not unknown/empty)
     dialect_supported: 5           # it_db_dialect in [postgres, mysql, oracle, hsqldb]
-    # --- Negative signals ---
+    # --- Negative signals (business-system) ---
     user_count_1_5: -3             # ceo_user_count == 1-5
     budget_under_300: -5           # ceo_budget_setup == under_300
+
+# marketing-site scoring weights (used when deliverable_kind=marketing-site)
+# Replaces domain/dialect/stack signals with scope clarity, page count, CTA, budget.
+marketing_site_scoring:
+  base_score: 50
+  weights:
+    has_company_name: 5            # company_name or ms_brand_name non-empty
+    has_target_audience: 10        # ms_target_audience non-empty (scope clarity)
+    page_count_per: 3              # per selected page in ms_pages (capped at page_count_cap)
+    page_count_cap: 4              # max pages contributing (cap = 4 * 3 = 12 pts)
+    has_primary_cta: 5             # ms_primary_cta non-empty
+    has_tone_preference: 5         # ms_tone non-empty
+    budget_over_500: 10            # ceo_budget_setup in [500_1000, over_1000]
+    budget_300_500: 5              # ceo_budget_setup == 300_500
+    budget_under_300: -5           # ceo_budget_setup == under_300
+    has_reference_sites: 3         # ms_reference_sites non-empty (clear vision)
 
 qualify_threshold: 55
 defer_threshold: 40
@@ -131,6 +147,22 @@ gap_definitions:
         invoice, payment, finance_ledger). General finance companies are served.
         Regulated finance (banking, insurance, capital markets) may need domain-expert-finance
         agent (expert-agent axis ToDo). Record as signal only.
+      disqualifies: false
+
+  # ── marketing_site_scope ───────────────────────────────────────────────────
+  # Signal: marketing-site request with ecommerce/webapp complexity beyond static landing.
+  # Not a gap (marketing-site IS supported); record as scope signal for PM triage only.
+  # disqualifies: false — we CAN serve marketing-site; complex scope → PM consult.
+  marketing_site_scope:
+    ecommerce:
+      gap_category: marketing-site-scope-ecommerce
+      todo_axis: creater
+      already_served: false
+      expansion_note: >
+        Marketing-site request contains e-commerce or complex webapp signals
+        (shopping cart, user accounts, complex transactions). Current landing-astro
+        adapter is static SSG; full e-commerce requires a different scope.
+        Record as signal; PM to consult on scope before committing.
       disqualifies: false
 
 # ── scope_mismatch ────────────────────────────────────────────────────────────
