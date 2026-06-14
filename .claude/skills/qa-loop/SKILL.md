@@ -28,6 +28,19 @@ description: Run the QA audit loop — pass-criteria check, adversarial verifica
 
 감사 근거·재현 명령·반박 시도 상세는 `docs/learn-logs/qa.md` (누적) 또는 인도물 단위면 `docs/delivery/<slug>/qa-report.md` 에 쓰고, main 으로는 **판정 + 경로 + FAIL/CAVEAT 항목만** 반환한다 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
 
+## Vision-QA Gate (marketing-site 인도 전 필수)
+
+marketing-site deliverable 의 triage_status 를 delivered 로 전환하기 전에:
+
+1. `python scripts/workflow/ui_check.py --slug <slug> --base-url <url> --full-vision`
+   실행 → `docs/intake-inbox/ui-checks/<slug>-vision-request.json` 생성 (LLM 0, 결정론).
+2. CDO/QA 가 request 의 각 스크린샷을 zai-mcp `analyze_image` 로 열고
+   `design/vision-qa-rubric.yaml` 8 기준을 채점 (1~5 점).
+3. 판정 규칙 (`design/vision-qa-rubric.yaml::judgment`):
+   **PASS** = 모든 기준 ≥3 AND 평균 ≥3.5 / **BLOCK** = 어느 기준 ≤2 / **WARN** = 그 외.
+4. 결과를 `docs/intake-inbox/ui-checks/<slug>-vision-verdict.json`(`{"slug","verdict","scores",...}`)
+   에 쓴다. verdict PASS 가 아니면 인도 BLOCK (G-15).
+
 ## Anti-patterns
 
 - "직관적으로 안전해 보임" 판정 / 가드 약화 제안 수용 / CAVEAT 의 해소 조건 누락 / 산출 인격에게 판정 위임
