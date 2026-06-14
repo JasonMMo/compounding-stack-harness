@@ -1,0 +1,186 @@
+version: "1.0"
+# Motion Presets — Shared across all themes.
+# Each preset is pure declarative data. No JS here.
+# Implementors: Astro View Transitions / CSS @keyframes / minimal IntersectionObserver.
+#
+# Keys:
+#   slug         ASCII kebab identifier (referenced from theme.yaml motion.* fields)
+#   label        Human-readable name
+#   description  What it does and when to use it
+#   trigger      when | scroll | hover | focus
+#   css_vars     CSS custom property values the adapter injects on the element
+#   keyframes    Named @keyframes block the adapter must define (or reference)
+#   js_required  true only if IntersectionObserver is mandatory (else CSS-only)
+#   a11y_safe    true = safe under prefers-reduced-motion (no translate/scale > 4px)
+#   reduced_motion_override  slug to use instead when prefers-reduced-motion: reduce
+
+presets:
+
+  - slug: fade-simple
+    label: "Fade Simple"
+    description: >
+      Opacity 0 → 1 only. No spatial transform. This is the universal
+      reduced-motion fallback and must never be removed. Use for elements
+      where any motion would be distracting (legal text, error messages).
+    trigger: when
+    css_vars:
+      animation-duration: "200ms"
+      animation-easing: "cubic-bezier(0, 0, 0.2, 1)"
+    keyframes: fade-simple
+    js_required: false
+    a11y_safe: true
+    reduced_motion_override: fade-simple
+
+  - slug: fade-up
+    label: "Fade Up"
+    description: >
+      Opacity 0 → 1 combined with translateY 24px → 0. Standard entrance
+      for section headings, cards, and body copy blocks. The most common
+      landing-page entrance — use as default_preset for most themes.
+    trigger: scroll
+    css_vars:
+      animation-duration: "500ms"
+      animation-easing: "cubic-bezier(0, 0, 0.2, 1)"
+      animation-delay: "0ms"
+      translate-y-from: "24px"
+      translate-y-to: "0px"
+    keyframes: fade-up
+    js_required: true
+    a11y_safe: false
+    reduced_motion_override: fade-simple
+
+  - slug: stagger-children
+    label: "Stagger Children"
+    description: >
+      Applied to a container; each direct child animates with an 80ms
+      stagger offset. Use for feature grids, logo bars, testimonial grids.
+      Each child inherits fade-up; parent holds the stagger orchestration.
+    trigger: scroll
+    css_vars:
+      stagger-delay: "80ms"
+      child-animation-duration: "450ms"
+      child-animation-easing: "cubic-bezier(0, 0, 0.2, 1)"
+      child-translate-y-from: "20px"
+    keyframes: fade-up
+    js_required: true
+    a11y_safe: false
+    reduced_motion_override: fade-simple
+
+  - slug: hover-lift
+    label: "Hover Lift"
+    description: >
+      On hover: translateY -4px + deeper box-shadow. On leave: reverses.
+      Use on cards (feature cards, pricing cards, testimonial cards).
+      Pure CSS — no JS. Safe to layer with entrance animations.
+    trigger: hover
+    css_vars:
+      translate-y: "-4px"
+      transition-duration: "200ms"
+      transition-easing: "cubic-bezier(0.2, 0, 0, 1)"
+      shadow-hover: "0 12px 24px -4px rgba(0,0,0,0.15)"
+    keyframes: none
+    js_required: false
+    a11y_safe: true
+    reduced_motion_override: hover-lift
+
+  - slug: parallax-lite
+    label: "Parallax Lite"
+    description: >
+      Section background image moves at 0.3x scroll speed creating a
+      subtle depth effect. Implemented via CSS background-attachment: fixed
+      (desktop) — degrades gracefully to static on mobile (touch devices
+      ignore background-attachment: fixed per spec). No JS required.
+      Use on hero sections with bg_image asset, not gradient heroes.
+    trigger: scroll
+    css_vars:
+      bg-attachment: "fixed"
+      bg-size: "cover"
+      bg-position: "center center"
+      scroll-speed-factor: "0.3"
+    keyframes: none
+    js_required: false
+    a11y_safe: true
+    reduced_motion_override: parallax-lite
+
+  - slug: reveal-on-scroll
+    label: "Reveal on Scroll"
+    description: >
+      IntersectionObserver fires when element enters viewport (threshold 0.15).
+      Triggers fade-up on the target element. Use for mid-page content blocks
+      that are below the fold. Preferred over fade-up when sections are long
+      and the entrance needs to be controlled per element.
+    trigger: scroll
+    css_vars:
+      threshold: "0.15"
+      root-margin: "0px 0px -64px 0px"
+      animation-duration: "600ms"
+      animation-easing: "cubic-bezier(0, 0, 0.2, 1)"
+      translate-y-from: "32px"
+    keyframes: fade-up
+    js_required: true
+    a11y_safe: false
+    reduced_motion_override: fade-simple
+
+  - slug: slide-in-left
+    label: "Slide In Left"
+    description: >
+      translateX -40px → 0 + opacity 0 → 1. Use for media elements in
+      split-left hero variant where image enters from the left as the
+      hero loads. Pairs with fade-up on the text column.
+    trigger: when
+    css_vars:
+      animation-duration: "550ms"
+      animation-easing: "cubic-bezier(0, 0, 0.2, 1)"
+      animation-delay: "100ms"
+      translate-x-from: "-40px"
+      translate-x-to: "0px"
+    keyframes: slide-in-left
+    js_required: false
+    a11y_safe: false
+    reduced_motion_override: fade-simple
+
+  - slug: scale-in
+    label: "Scale In"
+    description: >
+      scale 0.96 → 1 + opacity 0 → 1. Use for modal/dialog entrance,
+      pricing card highlighted tier entrance, or CTA band entrance.
+      Subtle scale gives a "pop" without aggressive motion.
+    trigger: when
+    css_vars:
+      animation-duration: "300ms"
+      animation-easing: "cubic-bezier(0, 0, 0.2, 1)"
+      scale-from: "0.96"
+      scale-to: "1"
+    keyframes: scale-in
+    js_required: false
+    a11y_safe: false
+    reduced_motion_override: fade-simple
+
+# ── @keyframes definitions (reference) ────────────────────────────────────────
+# The adapter (landing-astro) must define these in a global CSS file.
+# Listed here for documentation; not evaluated by yaml parsers.
+keyframe_definitions:
+
+  fade-simple: |
+    @keyframes fade-simple {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+  fade-up: |
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(var(--translate-y-from, 24px)); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+  slide-in-left: |
+    @keyframes slide-in-left {
+      from { opacity: 0; transform: translateX(var(--translate-x-from, -40px)); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+  scale-in: |
+    @keyframes scale-in {
+      from { opacity: 0; transform: scale(var(--scale-from, 0.96)); }
+      to   { opacity: 1; transform: scale(1); }
+    }
