@@ -67,13 +67,14 @@
 | **delivery sign-off (고객 인도 승인)** | | | | | | | | CEO + PM (QA 기능 게이트 + CISO 보안 게이트 + CODEX-NEEDS-FIT 통과 보고 의무). auto-preview(내부 산출물)는 본 게이트 면제 — 외부 인도 시 적용 |
 | **첫 vertical 선택** | | | | | | | | CEO + CTO + CMO |
 | **마일스톤 진입/완료 선언** | | | | | | | | CEO + CTO (QA 통과 보고 의무) |
-| **7축 추가/변경** | | | | | | | | CEO + CTO |
+| **축 추가/변경 (현재 8축: +theme)** | | | | | | | | CEO + CTO |
 | **CLAUDE.md / AGENTS.md / 이 charter 변경** | | | | | | | | CEO + CTO |
 | 무료 trial 정책 | | | | | | | | CEO + CMO |
 | OSS / 상용 분리선 변경 | | | | | | | | CEO + CTO + CMO |
 | 브랜드 명·로고·CI | | | | | | | | CEO + CMO + CDO |
 | 새 가드 추가 (end-to-end) | | | | | | | | CTO (row) + QA (기준) + Eng (본문) |
 | 새 adapter 추가 (end-to-end) | | | | | | | | CTO (contract) + Eng (구현) + QA (compliance test) |
+| marketing-site 비주얼 게이트 (vision-QA, G-15) | | | | ✅ | | ✅ | | QA (루브릭 PASS/BLOCK 판정) + CDO (zai-mcp 미감 채점). marketing-site 인도 전 필수, verdict≠PASS 면 BLOCK |
 | preview 티어 운영·서브도메인 발급/회수 | | | | | | | | DevOps (단독, CTO 토폴로지 제약 내) |
 | 디지털 자산 레지스트리·시크릿 볼트 운영 | | | | | | | | DevOps (시크릿 자세는 CISO 와 정렬) |
 | CI/CD 파이프라인 구성 | | | | | | | | DevOps (가드화 시 CTO row + QA 기준) |
@@ -141,3 +142,4 @@ CTO 가 다음 상황 발견 시 **즉시 CEO 알림** (Auto Mode 진행 중단)
 | v1.5 | 2026-06-11 | 7-인격 → 8-인격 확장 (CISO 신설) — 인도 전 보안 리뷰 게이트·시크릿 노출 점검·취약점 점검·데이터 외부 유출 추적·self-host 보안 가이드·보안 사유 인도 BLOCK 권한. delivery sign-off 에 CISO 보안 게이트 통과 보고 의무 추가. CLAUDE.md §1 동기화 | CEO 직접 제안·위임 (Growth-32, "보안 결함 없는 인도물" 요구) |
 | v1.6 | 2026-06-11 | 8-인격 → 9-인격 확장 (DevOps 신설) — preview 티어 운영 (Coolify/VPS·`*.n9n.co.kr`)·디지털 자산 레지스트리·CI/CD·시크릿 볼트·원격/방문 설치 런북·인프라 비용 추적. §2 에 DevOps 결정 행 5개 추가. `deployment-topology.md` (2-티어 preview/production) + `infra/registry/` 신설. CLAUDE.md §1 동기화 | CEO 직접 제안·위임 (Growth-35, 1인 비대면 창업 인프라 요구) |
 | v1.7 | 2026-06-14 | 자율 intake 파이프라인: 적격 리드(score≥55, 고감도 플래그 없음)는 CEO 릴레이 없이 preview 빌드까지 자동. preview=내부 산출물 ≠ 인도; **Step 5 외부 인도 게이트 불변(CEO 단독, charter §2)**. CEO override 유지(`--force-slug`/`processed.jsonl`). gap=성장 ToDo, audit trail(분쟁 대비), needs-fit 게이트(codex). PII 미커밋, auto-path LLM 0. delivery sign-off 행에 CODEX-NEEDS-FIT 보고 의무 추가. | CEO + CTO 합의 (Growth-62, ultraplan v2 반영) |
+| v1.8 | 2026-06-15 | marketing-site deliverable track 신설 — `deliverable_kind` 분기로 웹에이전시형(홈페이지·런칭) 고객 대응. **8번째 축 theme(visual-asset)** 신설(CLAUDE.md §3). §2 에 marketing-site 비주얼 게이트(vision-QA, G-15, QA+CDO) 행 추가, "7축"→"8축" 일반화. 품질 바 = B(professional SMB), 부티크 A 비채택. 별도 repo ✗(substrate 공유). | CEO + CTO 합의 (Growth-65, /think plan 승인) |
