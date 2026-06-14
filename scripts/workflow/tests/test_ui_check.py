@@ -42,7 +42,7 @@ from ui_check import (  # noqa: E402
 
 
 class _FixtureHandler(http.server.BaseHTTPRequestHandler):
-    """Tiny HTTP handler: /ok -> 200, everything else -> 404."""
+    """Tiny HTTP handler: /ok -> 200, /boom -> 500, everything else -> 404."""
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path == "/ok":
@@ -52,6 +52,9 @@ class _FixtureHandler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+        elif self.path == "/boom":
+            self.send_response(500)
+            self.end_headers()
         else:
             self.send_response(404)
             self.end_headers()
@@ -165,18 +168,36 @@ class TestCheckHttp:
         assert r.status == "PASS"
         assert "200" in r.detail
 
-    def test_404_is_fail(self, fixture_server: str) -> None:
-        results = check_http(fixture_server, ["/not-found"])
+    def test_404_on_entry_path_is_fail(self, fixture_server: str) -> None:
+        # The entry path is strict: a 404 there is a real failure.
+        results = check_http(fixture_server, ["/not-found"], entry_path="/not-found")
         assert len(results) == 1
         r = results[0]
         assert r.status == "FAIL"
         assert "404" in r.detail
 
+    def test_404_on_entity_path_is_warn(self, fixture_server: str) -> None:
+        # Entity paths (not the entry path) are auth-gated/htmx-partial routes;
+        # a 404 there is expected for an unauthenticated check -> WARN, not FAIL.
+        results = check_http(fixture_server, ["/ok", "/missing"], entry_path="/ok")
+        by = {r.check.split(":")[1]: r for r in results}
+        assert by["/ok"].status == "PASS"
+        assert by["/missing"].status == "WARN"
+        assert "auth-gated" in by["/missing"].detail
+
+    def test_5xx_on_entity_path_is_fail(self, fixture_server: str) -> None:
+        # A server error (5xx) on an entity path is a real defect, never downgraded.
+        results = check_http(fixture_server, ["/ok", "/boom"], entry_path="/ok")
+        by = {r.check.split(":")[1]: r for r in results}
+        assert by["/boom"].status == "FAIL"
+        assert "500" in by["/boom"].detail
+
     def test_multiple_paths(self, fixture_server: str) -> None:
+        # Default entry_path=/login; /ok and /missing are both entity paths.
         results = check_http(fixture_server, ["/ok", "/missing"])
         statuses = {r.check.split(":")[1]: r.status for r in results}
         assert statuses["/ok"] == "PASS"
-        assert statuses["/missing"] == "FAIL"
+        assert statuses["/missing"] == "WARN"  # entity-path 404 -> auth-gated WARN
 
     def test_connection_error_is_fail(self) -> None:
         # Port 1 is almost certainly not listening
