@@ -1141,13 +1141,25 @@ def g14_intake_pipeline_health(
                 by_node[nid]["fails"].append(ev)
 
         for nid, evs in by_node.items():
-            if evs["fails"]:
-                ec = evs["fails"][0].get("error_class", "unknown")
-                violations.append(
-                    f"{slug}:{nid} NODE_FAIL (error_class={ec!r})"
-                )
-            elif evs["enters"] and not evs["exits"]:
-                # Check for SLA breach
+            # Latest-terminal-wins (matches pipeline_monitor.project_node_states):
+            # a NODE_EXIT_OK emitted after a NODE_FAIL supersedes it. This lets a
+            # codex Step 4b re-judgment clear a conservative deterministic
+            # NEEDS_FIT BLOCK (and lets a successful retry clear a transient fail)
+            # without the guard latching on the first failure. Full history is
+            # retained in the case YAML for audit.
+            terminals = sorted(
+                evs["exits"] + evs["fails"], key=lambda e: e.get("ts") or ""
+            )
+            latest_terminal = terminals[-1] if terminals else None
+            if latest_terminal is not None:
+                if latest_terminal.get("event") == "NODE_FAIL":
+                    ec = latest_terminal.get("error_class", "unknown")
+                    violations.append(
+                        f"{slug}:{nid} NODE_FAIL (error_class={ec!r})"
+                    )
+                # NODE_EXIT_OK latest → node resolved, no violation
+            elif evs["enters"]:
+                # Entered, never reached a terminal event — check for SLA breach
                 enter_ts = _parse_ts(evs["enters"][0].get("ts"))
                 if enter_ts:
                     sla = _SLA.get(nid, 0)
