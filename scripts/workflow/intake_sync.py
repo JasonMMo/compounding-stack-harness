@@ -727,7 +727,12 @@ def run_auto_preview(
         pkg_script = str(_WORKFLOW_DIR / "preview_package.py")
         deploy_script = str(_WORKFLOW_DIR / "deploy_to_coolify.py")
         pkg_cmd = [sys.executable, pkg_script, "--profile", slug, "--coolify"]
-        deploy_cmd = [sys.executable, deploy_script, "--slug", slug]
+        # --commit: deploy_to_coolify commits+pushes deploy/preview/<slug>.compose.yml
+        # (per-file) BEFORE deploying. Coolify clones master and reads the compose
+        # from that path, so an uncommitted compose -> docker_compose_raw never loads
+        # -> patch_domain 422. Without this flag the autonomous deploy always 422s on
+        # a brand-new slug. (Surfaced by the first full-deploy rehearsal, Growth-62.)
+        deploy_cmd = [sys.executable, deploy_script, "--slug", slug, "--commit"]
 
         if dry_run:
             print(f"  [DRY-RUN] {node}:")
