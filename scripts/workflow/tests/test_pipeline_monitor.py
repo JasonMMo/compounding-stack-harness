@@ -229,6 +229,30 @@ class TestProjectNodeStates:
         assert submitted is not None
         assert submitted.status == "complete"
 
+    def test_later_exit_supersedes_earlier_fail(self):
+        """Codex Step 4b re-judgment: a NODE_EXIT_OK after a NODE_FAIL wins."""
+        case = self._make_case(events=[
+            {"node_id": "NEEDS_FIT", "event": "NODE_ENTER", "ts": _iso(_now() - timedelta(seconds=300)), "error_class": None},
+            {"node_id": "NEEDS_FIT", "event": "NODE_FAIL", "ts": _iso(_now() - timedelta(seconds=250)), "error_class": "needs-fit-BLOCK"},
+            {"node_id": "NEEDS_FIT", "event": "NODE_EXIT_OK", "ts": _iso(_now() - timedelta(seconds=50)), "error_class": None},
+        ])
+        states = project_node_states(case, _now())
+        nf = next(s for s in states if s.node_id == "NEEDS_FIT")
+        assert nf.status == "complete"
+        assert nf.error_class is None
+
+    def test_later_fail_supersedes_earlier_exit(self):
+        """Reverse: a NODE_FAIL after a NODE_EXIT_OK wins (re-judged to BLOCK)."""
+        case = self._make_case(events=[
+            {"node_id": "NEEDS_FIT", "event": "NODE_ENTER", "ts": _iso(_now() - timedelta(seconds=300)), "error_class": None},
+            {"node_id": "NEEDS_FIT", "event": "NODE_EXIT_OK", "ts": _iso(_now() - timedelta(seconds=250)), "error_class": None},
+            {"node_id": "NEEDS_FIT", "event": "NODE_FAIL", "ts": _iso(_now() - timedelta(seconds=50)), "error_class": "needs-fit-BLOCK"},
+        ])
+        states = project_node_states(case, _now())
+        nf = next(s for s in states if s.node_id == "NEEDS_FIT")
+        assert nf.status == "failed"
+        assert nf.error_class == "needs-fit-BLOCK"
+
     def test_multiple_nodes(self):
         enter = _now() - timedelta(seconds=500)
         case = self._make_case(events=[
@@ -525,6 +549,25 @@ class TestG14Guard:
         result = g14(cases_dir=cases_dir)
         assert result.status == "FAIL", f"Expected FAIL, got {result.status}"
         assert any("DEPLOYED" in v for v in result.violations)
+
+    def test_qualify_case_rejudged_exit_after_fail_returns_pass(self, tmp_path):
+        """Codex Step 4b re-judgment: NEEDS_FIT NODE_EXIT_OK after a NODE_FAIL clears G-14."""
+        g14 = self._import_g14()
+        cases_dir = tmp_path / "cases"
+        cases_dir.mkdir()
+
+        p = cases_dir / "rejudge01.yaml"
+        emit_node_event(p, "NEEDS_FIT", "NODE_ENTER", slug="test-co",
+                        ts=_iso(_now() - timedelta(seconds=300)))
+        emit_node_event(p, "NEEDS_FIT", "NODE_FAIL", slug="test-co",
+                        error_class="needs-fit-BLOCK",
+                        ts=_iso(_now() - timedelta(seconds=250)))
+        emit_node_event(p, "NEEDS_FIT", "NODE_EXIT_OK", slug="test-co",
+                        ts=_iso(_now() - timedelta(seconds=10)))
+        set_triage_status(p, "qualify")
+
+        result = g14(cases_dir=cases_dir)
+        assert result.status == "PASS", f"Expected PASS, got {result.status}: {result.violations}"
 
     def test_qualify_case_with_sla_stall_returns_fail(self, tmp_path):
         g14 = self._import_g14()
