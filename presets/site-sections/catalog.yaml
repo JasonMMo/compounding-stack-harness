@@ -1,0 +1,74 @@
+version: "1.0"
+# Site-Sections Catalog — 8 section types for marketing-site deliverables.
+# Dialect-neutral; site_manifest.py validates profile site.pages[].sections[] against this.
+# Pattern: presets/ddl/catalog.yaml (machine truth, format: presets/site-sections/_catalog-format.md)
+#
+# copy_slots:  content slots the CMO/author must fill (headline, subhead, etc.)
+# asset_slots: image/video asset refs expected per section instance
+# variants:    visual layout variants a theme may implement
+
+sections:
+
+  hero:
+    label: "Hero Banner"
+    copy_slots:
+      required: [headline, subhead]
+      optional: [supporting_text]
+    asset_slots: [bg_image]
+    variants: [centered, split-left, split-right, fullscreen-video]
+
+  logos:
+    label: "Logo Bar / Social Proof"
+    copy_slots:
+      required: [eyebrow]
+      optional: []
+    asset_slots: [logo_1, logo_2, logo_3, logo_4, logo_5, logo_6]
+    variants: [horizontal-scroll, grid]
+
+  features:
+    label: "Feature List"
+    copy_slots:
+      required: [headline]
+      optional: [subhead]
+    asset_slots: [feature_image]
+    variants: [three-col-icon, two-col-alternating, single-col-list]
+
+  pricing:
+    label: "Pricing Table"
+    copy_slots:
+      required: [headline]
+      optional: [subhead, disclaimer]
+    asset_slots: []
+    variants: [two-tier, three-tier, toggle-annual-monthly]
+
+  testimonial:
+    label: "Testimonial / Social Proof"
+    copy_slots:
+      required: [quote, author_name]
+      optional: [author_title, company]
+    asset_slots: [author_photo]
+    variants: [single-card, carousel, grid]
+
+  faq:
+    label: "FAQ Accordion"
+    copy_slots:
+      required: [headline]
+      optional: [subhead]
+    asset_slots: []
+    variants: [single-col, two-col]
+
+  cta:
+    label: "Call-to-Action Band"
+    copy_slots:
+      required: [headline]
+      optional: [subhead]
+    asset_slots: []
+    variants: [centered, left-aligned, with-image]
+
+  footer:
+    label: "Footer"
+    copy_slots:
+      required: [brand_name]
+      optional: [tagline, legal_notice]
+    asset_slots: [logo]
+    variants: [minimal, full-links, newsletter]
