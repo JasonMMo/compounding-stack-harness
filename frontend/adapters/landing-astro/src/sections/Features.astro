@@ -1,0 +1,129 @@
+---
+/**
+ * Features.astro — Feature List section (type: features).
+ * Variants: three-col-icon | two-col-alternating | single-col-list
+ * Style hints: icon_style (filled|outline|emoji|none), card_style (flat|elevated|bordered|ghost), layout (grid-3|alternating|stack)
+ */
+interface StyleHints {
+  icon_style?: string
+  card_style?: string
+  layout?: string
+}
+
+interface FeatureItem {
+  title: string
+  description: string
+  icon?: string
+  image?: string
+}
+
+interface Props {
+  copy: Record<string, string>
+  assets?: string[]
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+  // items may be passed via copy.items_json (JSON stringified array) for SSG
+  items?: FeatureItem[]
+}
+
+const {
+  copy = {},
+  assets = [],
+  variant = 'three-col-icon',
+  styleHints = {},
+  motionPreset = 'stagger-children',
+  items = [],
+} = Astro.props
+
+const cardStyle = styleHints.card_style ?? 'flat'
+const iconStyle = styleHints.icon_style ?? 'filled'
+
+const cardClass: Record<string, string> = {
+  flat: 'p-6',
+  elevated: 'p-6 rounded-[var(--radius-card,16px)] shadow-[var(--shadow-card)] bg-white hover-lift',
+  bordered: 'p-6 rounded-[var(--radius-card,16px)] border border-[var(--color-border,#E5E7EB)]',
+  ghost: 'p-6',
+}
+
+// Default demo features if no items provided
+const displayItems = items.length > 0 ? items : [
+  { title: 'Feature One', description: 'Description of your first key feature goes here.' },
+  { title: 'Feature Two', description: 'Description of your second key feature goes here.' },
+  { title: 'Feature Three', description: 'Description of your third key feature goes here.' },
+]
+---
+
+<section
+  class="w-full py-[var(--space-section-y,112px)] px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-1,#fff)]"
+  data-motion={motionPreset}
+  data-stagger-delay="80"
+>
+  <div class="max-w-[var(--space-container-max,1200px)] mx-auto">
+    {copy.headline && (
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-[var(--color-text-1,#111827)] mb-4" style="font-family: var(--font-family-display, inherit);">
+          {copy.headline}
+        </h2>
+        {copy.subhead && (
+          <p class="text-lg text-[var(--color-text-2,#374151)] max-w-2xl mx-auto">
+            {copy.subhead}
+          </p>
+        )}
+      </div>
+    )}
+
+    {variant === 'two-col-alternating' ? (
+      <div class="flex flex-col gap-16">
+        {displayItems.map((item, i) => (
+          <div class={`flex flex-col ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 items-center`}>
+            {item.image && (
+              <div class="flex-1">
+                <img src={item.image} alt={item.title} class="w-full rounded-[var(--radius-card,16px)]" loading="lazy" />
+              </div>
+            )}
+            <div class={`flex-1 ${cardClass[cardStyle] ?? 'p-6'}`}>
+              <h3 class="text-xl font-semibold text-[var(--color-text-1,#111827)] mb-3">{item.title}</h3>
+              <p class="text-[var(--color-text-2,#374151)]">{item.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : variant === 'single-col-list' ? (
+      <div class="flex flex-col gap-6 max-w-2xl mx-auto">
+        {displayItems.map((item) => (
+          <div class={`flex gap-4 items-start ${cardClass[cardStyle] ?? 'p-6'}`}>
+            {iconStyle !== 'none' && (
+              <div class="flex-shrink-0 w-6 h-6 mt-1 text-[var(--color-primary,#6D28D9)]">
+                <svg viewBox="0 0 24 24" fill={iconStyle === 'filled' ? 'currentColor' : 'none'} stroke={iconStyle === 'outline' ? 'currentColor' : 'none'} stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            )}
+            <div>
+              <h3 class="text-lg font-semibold text-[var(--color-text-1,#111827)] mb-1">{item.title}</h3>
+              <p class="text-[var(--color-text-2,#374151)]">{item.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      /* three-col-icon (default) */
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {displayItems.map((item) => (
+          <div class={cardClass[cardStyle] ?? 'p-6'}>
+            {iconStyle !== 'none' && (
+              <div class="w-10 h-10 mb-4 text-[var(--color-primary,#6D28D9)]">
+                <svg viewBox="0 0 24 24" fill={iconStyle === 'filled' ? 'currentColor' : 'none'} stroke={iconStyle === 'outline' ? 'currentColor' : 'none'} stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+            )}
+            <h3 class="text-xl font-semibold text-[var(--color-text-1,#111827)] mb-3">{item.title}</h3>
+            <p class="text-[var(--color-text-2,#374151)]">{item.description}</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
