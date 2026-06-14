@@ -32,7 +32,10 @@ import yaml
 # 경로 상수
 # ---------------------------------------------------------------------------
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+# 컨테이너에선 파일이 /app/ 로 평탄화돼 parents[2] 가 없다 (IndexError).
+# app.py 가 이 모듈을 import 하므로(in-process 변환) module-top 에서 절대 크래시 금지.
+_resolved = Path(__file__).resolve()
+REPO_ROOT = _resolved.parents[2] if len(_resolved.parents) > 2 else _resolved.parent
 # Backward-compat reference (dev/local). Container path resolved via candidate list below.
 _INDUSTRY_DEFAULTS_PATH = REPO_ROOT / "presets" / "industry-defaults.yaml"
 
