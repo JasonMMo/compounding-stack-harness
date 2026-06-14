@@ -156,6 +156,74 @@ DEFECT_TAXONOMY: frozenset[str] = frozenset({
     "unknown",
 })
 
+#: Action hints for each DEFECT_TAXONOMY class.
+#: Single source of truth; the runbook prose at docs/runbooks/pipeline-monitor.md
+#: references this constant rather than duplicating the table.
+#: Keys: defect class -> {owner, action, runbook_anchor}
+DEFECT_ACTIONS: dict[str, dict] = {
+    "deploy-fail": {
+        "owner": "DevOps",
+        "action": "Check Coolify logs; re-run deploy_to_coolify.py",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+    "scaffold-unknown-entity": {
+        "owner": "DevOps",
+        "action": "Add entity to catalog; re-scaffold",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+    "ui-check-fail": {
+        "owner": "QA",
+        "action": "Check docs/intake-inbox/ report; fix adapter",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+    "needs-fit-BLOCK": {
+        "owner": "CTO",
+        "action": "Add entity/AC; PM: update criteria",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+    "conversion-error": {
+        "owner": "DevOps",
+        "action": "Check qualification_policy.yaml; fix answers",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+    "sync-ssh-fail": {
+        "owner": "DevOps",
+        "action": "Check VPS connectivity; retry intake_sync.py",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+    "human-gate-stall": {
+        "owner": "CEO",
+        "action": "CEO/PM action required",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+    "retry-exhausted": {
+        "owner": "CTO",
+        "action": "CTO escalation; architecture review",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+    "audit-chain-broken": {
+        "owner": "CTO",
+        "action": "CISO review; do not merge",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+    "unknown": {
+        "owner": "DevOps",
+        "action": "Inspect evidence file manually",
+        "runbook_anchor": "#defect-taxonomy",
+    },
+}
+
+_DEFECT_ACTIONS_DEFAULT: dict = {
+    "owner": "DevOps",
+    "action": "Inspect evidence file manually",
+    "runbook_anchor": "#defect-taxonomy",
+}
+
+
+def action_hint(defect_class: str) -> dict:
+    """Return DEFECT_ACTIONS entry for defect_class, or a safe default."""
+    return DEFECT_ACTIONS.get(defect_class, _DEFECT_ACTIONS_DEFAULT)
+
 #: Triage statuses that belong to the qualify path (monitored for stall/fail).
 _QUALIFY_STATUSES: frozenset[str] = frozenset({"qualify"})
 
