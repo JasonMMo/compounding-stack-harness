@@ -4,7 +4,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "allowImportingTsExtensions": true
   },
   "include": ["src/**/*", "scripts/**/*.mjs"],
   "exclude": ["node_modules", "dist"]
