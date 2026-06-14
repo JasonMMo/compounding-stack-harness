@@ -667,3 +667,66 @@ def test_submit_returns_three_tuple():
         assert isinstance(edit_token, str) and len(edit_token) > 10
         assert isinstance(client_id, str) and len(client_id) > 0
         assert isinstance(ts, str) and "T" in ts
+
+
+# ---------------------------------------------------------------------------
+# 테스트 15: _load_industry_defaults — candidate path fallback
+# ---------------------------------------------------------------------------
+
+def test_industry_defaults_loads_from_candidate_path(tmp_path, monkeypatch):
+    """REPO_ROOT candidate が 존재하지 않아도 __file__-relative candidate 에서 로드된다.
+
+    두 가지 서브케이스:
+      (a) env override INTAKE_INDUSTRY_DEFAULTS → 비어있지 않은 dict 반환
+      (b) 모든 candidate 없음 → {} 반환 (graceful degradation)
+    """
+    import intake_to_profile as itp
+
+    # --- (a) env override candidate ---
+    # presets 파일의 실제 내용으로 임시 파일 생성
+    presets_src = INTAKE_DIR.parents[1] / "presets" / "industry-defaults.yaml"
+    import yaml as _yaml
+    if presets_src.exists():
+        with open(presets_src, encoding="utf-8") as _f:
+            _content = _f.read()
+    else:
+        # 파일이 없는 CI 환경을 대비한 최소 fixture
+        _content = "manufacturing:\n  frontend: vanilla-htmx\n  backend: fastapi\n  dialect: postgres\n  domains: []\n"
+
+    fake_presets = tmp_path / "fake-industry-defaults.yaml"
+    fake_presets.write_text(_content, encoding="utf-8")
+
+    # 캐시 초기화
+    itp._INDUSTRY_DEFAULTS_CACHE = None
+
+    # INTAKE_INDUSTRY_DEFAULTS env override → repo_root candidate 보다 먼저 히트
+    monkeypatch.setenv("INTAKE_INDUSTRY_DEFAULTS", str(fake_presets))
+    # REPO_ROOT candidate 를 존재하지 않는 경로로 교체 (env override 우선순위 검증)
+    monkeypatch.setattr(itp, "_INDUSTRY_DEFAULTS_PATH", tmp_path / "nonexistent.yaml")
+
+    result = itp._load_industry_defaults()
+    assert isinstance(result, dict) and len(result) > 0, (
+        f"env override candidate 에서 로드 실패: {result!r}"
+    )
+    assert "manufacturing" in result, f"manufacturing 키 없음: {list(result.keys())}"
+
+    # --- (b) 모든 candidate 없음 → {} ---
+    itp._INDUSTRY_DEFAULTS_CACHE = None
+    monkeypatch.setenv("INTAKE_INDUSTRY_DEFAULTS", str(tmp_path / "also_missing.yaml"))
+    monkeypatch.setattr(itp, "_INDUSTRY_DEFAULTS_PATH", tmp_path / "nonexistent.yaml")
+    # __file__-relative candidate (/app/presets/...) 도 존재하지 않으므로
+    # 세 후보 모두 미존재 → {} 반환
+    # (테스트 환경에서 __file__ = apps/intake/intake_to_profile.py,
+    #  apps/intake/presets/industry-defaults.yaml 은 실제로 없음)
+    import os as _os
+    _sibling = itp._industry_defaults_candidates()[-1]  # __file__-relative candidate
+    if _sibling.exists():
+        # 만약 실제로 존재하는 환경이라면 monkeypatch 로 우회 불가 — 스킵
+        pytest.skip("__file__-relative candidate 가 실제로 존재하여 '모두 없음' 케이스 스킵")
+
+    result_empty = itp._load_industry_defaults()
+    assert result_empty == {}, f"모든 candidate 없을 때 {{}} 이어야 함: {result_empty!r}"
+
+    # 캐시 정리 (다른 테스트 영향 방지)
+    itp._INDUSTRY_DEFAULTS_CACHE = None
+    monkeypatch.delenv("INTAKE_INDUSTRY_DEFAULTS", raising=False)
