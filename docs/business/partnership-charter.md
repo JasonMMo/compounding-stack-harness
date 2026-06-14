@@ -64,7 +64,7 @@
 | 요구사항 명세 (acceptance criteria 정의) | | | | | | | ✅ | (QA 가 검증 가능성 감수) |
 | delivery plan·loop 운영 | | | | | | | ✅ | |
 | 고객 피드백 triage | | | | | | | ✅ | (가격·계약 영향 건은 CEO 이관) |
-| **delivery sign-off (고객 인도 승인)** | | | | | | | | CEO + PM (QA 기능 게이트 + CISO 보안 게이트 통과 보고 의무) |
+| **delivery sign-off (고객 인도 승인)** | | | | | | | | CEO + PM (QA 기능 게이트 + CISO 보안 게이트 + CODEX-NEEDS-FIT 통과 보고 의무). auto-preview(내부 산출물)는 본 게이트 면제 — 외부 인도 시 적용 |
 | **첫 vertical 선택** | | | | | | | | CEO + CTO + CMO |
 | **마일스톤 진입/완료 선언** | | | | | | | | CEO + CTO (QA 통과 보고 의무) |
 | **7축 추가/변경** | | | | | | | | CEO + CTO |
@@ -140,3 +140,4 @@ CTO 가 다음 상황 발견 시 **즉시 CEO 알림** (Auto Mode 진행 중단)
 | v1.4 | 2026-06-11 | 6-인격 → 7-인격 확장 (PM 신설) — 고객 needs 발굴·요구사항 명세·delivery loop·피드백 triage 권한 추가, delivery sign-off 합의 행 (CEO+PM) 신설. CLAUDE.md §1 동기화 | CEO 직접 제안 (Growth-18) |
 | v1.5 | 2026-06-11 | 7-인격 → 8-인격 확장 (CISO 신설) — 인도 전 보안 리뷰 게이트·시크릿 노출 점검·취약점 점검·데이터 외부 유출 추적·self-host 보안 가이드·보안 사유 인도 BLOCK 권한. delivery sign-off 에 CISO 보안 게이트 통과 보고 의무 추가. CLAUDE.md §1 동기화 | CEO 직접 제안·위임 (Growth-32, "보안 결함 없는 인도물" 요구) |
 | v1.6 | 2026-06-11 | 8-인격 → 9-인격 확장 (DevOps 신설) — preview 티어 운영 (Coolify/VPS·`*.n9n.co.kr`)·디지털 자산 레지스트리·CI/CD·시크릿 볼트·원격/방문 설치 런북·인프라 비용 추적. §2 에 DevOps 결정 행 5개 추가. `deployment-topology.md` (2-티어 preview/production) + `infra/registry/` 신설. CLAUDE.md §1 동기화 | CEO 직접 제안·위임 (Growth-35, 1인 비대면 창업 인프라 요구) |
+| v1.7 | 2026-06-14 | 자율 intake 파이프라인: 적격 리드(score≥55, 고감도 플래그 없음)는 CEO 릴레이 없이 preview 빌드까지 자동. preview=내부 산출물 ≠ 인도; **Step 5 외부 인도 게이트 불변(CEO 단독, charter §2)**. CEO override 유지(`--force-slug`/`processed.jsonl`). gap=성장 ToDo, audit trail(분쟁 대비), needs-fit 게이트(codex). PII 미커밋, auto-path LLM 0. delivery sign-off 행에 CODEX-NEEDS-FIT 보고 의무 추가. | CEO + CTO 합의 (Growth-62, ultraplan v2 반영) |
