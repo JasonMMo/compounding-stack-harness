@@ -33,6 +33,26 @@
   <p>아직 제출된 의뢰가 없습니다.</p>
   {% endif %}
 
+  <hr>
+  <section class="pipeline-monitor-info">
+    <h2>Pipeline Monitor (PII-free)</h2>
+    <p>
+      Live pipeline status is available via the local CLI (no VPS route needed).
+      Run from the repo root:
+    </p>
+    <pre><code>PYTHONIOENCODING=utf-8 python scripts/workflow/pipeline_status.py
+PYTHONIOENCODING=utf-8 python scripts/workflow/pipeline_status.py --graph
+PYTHONIOENCODING=utf-8 python scripts/workflow/pipeline_monitor.py --alert</code></pre>
+    <p>
+      Case files: <code>infra/registry/cases/*.yaml</code> (PII-free, committed).
+      Alerts: <code>docs/intake-inbox/alerts.md</code>.
+      Evidence: <code>docs/intake-inbox/evidence/</code>.
+      Guard: <code>python scripts/diagnose.py G-14</code>.
+      Runbook: <code>docs/runbooks/pipeline-monitor.md</code>.
+    </p>
+    <p><em>No live data is rendered here to avoid PII exposure on VPS.</em></p>
+  </section>
+
   {% if detail %}
   <hr>
   <h2>상세: {{ detail.meta.email }}</h2>
