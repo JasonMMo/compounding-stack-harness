@@ -1,0 +1,99 @@
+# vision-qa-rubric.yaml
+#
+# Professional marketing-site visual quality rubric.
+# Authority: QA (CQO) + CDO co-own — scoring is objective rubric anchors.
+# Version: 1.0 (Growth-65, 2026-06-15)
+#
+# Usage:
+#   CDO / QA agent opens each screenshot from vision-review-request.json
+#   and scores every criterion below using zai-mcp analyze_image.
+#   A verdict is written to docs/intake-inbox/ui-checks/<slug>-vision-verdict.json.
+#
+# Judgment rules:
+#   PASS  = all criteria >= 3 AND average >= 3.5
+#   BLOCK = any criterion <= 2
+#   WARN  = all criteria >= 3 but average < 3.5  (improvement recommended, not blocked)
+#
+# Scale: 1 (unacceptable) → 3 (acceptable baseline) → 5 (excellent)
+
+criteria:
+  visual_hierarchy:
+    description: >
+      Primary message / hero is immediately recognizable. Clear H1 > body weight
+      contrast. Viewer eye path is guided without effort.
+    anchors:
+      5: Clear focal point, obvious content hierarchy, strong weight contrast between headings and body
+      3: Hierarchy present but requires effort to distinguish; secondary elements compete slightly with primary
+      1: No visible hierarchy; headings and body weight are indistinguishable or randomly placed
+
+  whitespace_balance:
+    description: >
+      Breathing room between sections, cards, and text blocks is consistent and
+      intentional. Neither cramped nor empty.
+    anchors:
+      5: Generous, consistent spacing throughout; sections feel distinct without oversized gaps
+      3: Mostly adequate spacing with one or two tight or oversized areas
+      1: Cramped or chaotic spacing; elements run together or large voids dominate
+
+  typographic_consistency:
+    description: >
+      Font families, weights, sizes, and line-heights are consistent across all
+      sections. No rogue typefaces or unexpected size jumps.
+    anchors:
+      5: One or two type families used consistently; scale and weight follow a clear system
+      3: Generally consistent; minor deviations in one section that do not break the rhythm
+      1: Multiple conflicting typefaces or irregular sizes that undermine reading flow
+
+  color_harmony_contrast:
+    description: >
+      Brand palette is coherent. Text has sufficient contrast (WCAG AA).
+      Accent colors are used purposefully, not decoratively.
+    anchors:
+      5: Palette is harmonious; text contrast passes AA on all backgrounds; accents drive CTA
+      3: Mostly harmonious; one low-contrast pair (not on critical text) or one off-palette accent
+      1: Clashing colors, insufficient contrast on body text, or brand palette absent
+
+  layout_alignment:
+    description: >
+      Grid alignment is consistent. Elements share invisible column/baseline grid.
+      No orphaned elements floating outside the layout system.
+    anchors:
+      5: Clean grid alignment throughout; all elements sit on shared columns and rows
+      3: Generally aligned with one or two elements slightly off-grid
+      1: Misaligned elements in multiple sections; no visible grid discipline
+
+  responsive_mobile:
+    description: >
+      At 390 px width (iPhone viewport): no horizontal scroll, text is legible
+      (>=14 px effective), touch targets are adequately sized.
+    anchors:
+      5: Perfect single-column reflow; font sizes comfortable; no overflow; CTA visible without scroll
+      3: Usable; minor overflow in one section or slightly small secondary text
+      1: Horizontal scroll present, text too small to read, or CTA cut off
+
+  brand_coherence:
+    description: >
+      Logo, colors, imagery, and copy tone form a unified brand impression.
+      The site reads as professionally crafted for one company, not assembled
+      from unrelated templates.
+    anchors:
+      5: Unmistakably coherent brand; imagery and copy reinforce the same positioning
+      3: Brand elements present and consistent; imagery style varies slightly across sections
+      1: Inconsistent brand signals; generic stock imagery mixed with branded elements
+
+  conversion_clarity:
+    description: >
+      Primary CTA (contact / trial / consultation) is visually prominent and
+      logically placed. The desired next action is unambiguous.
+    anchors:
+      5: CTA stands out via color/size contrast; appears above fold and at bottom; copy is action-specific
+      3: CTA is present and findable; could be more prominent or copy is generic
+      1: CTA buried, invisible against background, or absent entirely
+
+judgment:
+  pass_condition: "all criteria >= 3 AND average >= 3.5"
+  block_condition: "any criterion <= 2"
+  warn_condition: "all criteria >= 3 but average < 3.5"
+  max_score: 5
+  min_acceptable: 3
+  min_average: 3.5
