@@ -13,6 +13,7 @@
 | profile 작성 도움 | 인터뷰 대화 평균 10턴 | \$0.05 ~ \$0.5 |
 | preset 추천 (RAG over INDEX.md) | embedding + LLM | \$0.01 ~ \$0.1 |
 | PR 자동 리뷰 (marketplace M4+) | 코드량 비례 | \$0.1 ~ \$1.0 |
+| vision-QA (`zai-mcp analyze_image` / `ui_diff_check`) — marketing-site 인도 전 opt-in 비전 채점 | 인도당 단발 (요청당 ✗) | CDO / QA 호출 시에만 발생. auto-path LLM 0 유지. hedge: 인도당 1회 한정·고객 청구 포함. |
 
 ### 2. Infra (compute / storage)
 
