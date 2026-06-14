@@ -322,12 +322,16 @@ class TestBuildSiteManifest:
         assert "wire_key" in manifest["contact"]
 
     def test_contact_wire_key_not_reimplemented(self, agency_profile):
-        """G-1: wire_key is a reference string, not a contract implementation."""
+        """G-1: wire_key is a reference string, not a contract implementation.
+        DEC-5: contact uses entity.create wire key with entity_type=lead.
+        """
         manifest = build_site_manifest(agency_profile)
         wire_key = manifest["contact"]["wire_key"]
         # Must be a simple reference string, not a dict/implementation
         assert isinstance(wire_key, str)
-        assert wire_key == "contact.lead_capture"
+        # DEC-5: uses entity.create (reusing existing wire key, no new key created)
+        assert wire_key == "entity.create"
+        assert manifest["contact"]["entity_type"] == "lead"
 
     def test_theme_present(self, agency_profile):
         manifest = build_site_manifest(agency_profile)
