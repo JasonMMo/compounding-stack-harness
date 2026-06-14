@@ -1,0 +1,171 @@
+# qualification_policy.yaml — single source of truth for intake qualification.
+# disqualifiers here are CAPABILITY GAPS (expansion ToDos), not permanent rejections. NO LLM.
+#
+# Architecture note:
+#   - Scoring is purely additive/subtractive over known answer fields.
+#   - gap_definitions describe UNSUPPORTED capabilities that require future axis work.
+#   - scope_mismatch entries are the ONLY path to disqualifies:true (hard rejects).
+#   - legal + finance domains are ALREADY SERVED (catalog.yaml Growth-24; domain-expert-legal
+#     exists). They MUST NOT appear as capability gaps.
+#   - onpremise is our CORE value proposition — it NEVER blocks qualification.
+
+schema_version: 1
+
+scoring:
+  base_score: 50
+  weights:
+    # --- Positive signals ---
+    has_company_name: 5            # company_name non-empty
+    domain_count_per: 3            # per selected data_domain (capped at domain_count_cap)
+    domain_count_cap: 5            # max domains contributing to score (cap = 5 * 3 = 15 pts)
+    budget_over_500: 10            # ceo_budget_setup in [500_1000, over_1000]
+    budget_300_500: 5              # ceo_budget_setup == 300_500
+    existing_system_legacy: 8      # existing_system == legacy_system
+    existing_system_excel: 5       # existing_system in [excel_manual, messenger]
+    pain_frequency_daily: 8        # ceo_pain_frequency == daily
+    pain_frequency_weekly: 4       # ceo_pain_frequency == weekly
+    user_count_6_20: 5             # ceo_user_count == 6-20
+    user_count_21_50: 8            # ceo_user_count == 21-50
+    user_count_51_plus: 10         # ceo_user_count in [51-100, 100+]
+    stack_known_frontend: 3        # it_frontend_pref is known (not unknown/empty)
+    stack_known_backend: 3         # it_backend_pref is known (not unknown/empty)
+    dialect_supported: 5           # it_db_dialect in [postgres, mysql, oracle, hsqldb]
+    # --- Negative signals ---
+    user_count_1_5: -3             # ceo_user_count == 1-5
+    budget_under_300: -5           # ceo_budget_setup == under_300
+
+qualify_threshold: 55
+defer_threshold: 40
+# Status logic:
+#   score >= qualify_threshold  -> qualify
+#   score >= defer_threshold    -> defer  (human triage)
+#   score <  defer_threshold    -> gap_only
+
+gap_definitions:
+  # ── data_residency ──────────────────────────────────────────────────────────
+  # NOTE: onpremise_only is our CORE value — disqualifies:false always.
+  data_residency:
+    onpremise_only:
+      gap_category: deploy-model-onpremise
+      todo_axis: creater
+      expansion_note: >
+        Customer requires on-premise deployment. This is our CORE value proposition
+        (self-host harness). Qualifies for standard delivery path. No expansion needed.
+      disqualifies: false
+    hybrid:
+      gap_category: deploy-model-hybrid
+      todo_axis: creater
+      expansion_note: >
+        Customer wants hybrid (some data on-prem, some cloud). Current harness supports
+        full on-prem. Hybrid mode requires creater-axis overlay config — Growth ToDo.
+      disqualifies: false
+    cloud_ok:
+      gap_category: deploy-model-saas-interest
+      todo_axis: creater
+      expansion_note: >
+        Customer is OK with cloud/external hosting. Signals SaaS interest (M5 gate).
+        Record as SaaS demand signal. No immediate action; defer to M5.
+      disqualifies: false
+
+  # ── auth_method ─────────────────────────────────────────────────────────────
+  auth_method:
+    sso_keycloak:
+      gap_category: auth-sso-keycloak
+      todo_axis: creater
+      expansion_note: >
+        SSO/Keycloak integration requested. overlay.sso_keycloak=true in M3 ops pack.
+        M3 creater-axis expansion needed. Customer can proceed with simple_session now.
+      disqualifies: false
+    ldap:
+      gap_category: auth-ldap
+      todo_axis: creater
+      expansion_note: >
+        LDAP directory integration requested. creater-axis M3 ops pack expansion ToDo.
+        Customer can proceed with simple_session now.
+      disqualifies: false
+
+  # ── db_dialect ──────────────────────────────────────────────────────────────
+  db_dialect:
+    mssql:
+      gap_category: dialect-mssql
+      todo_axis: ddl
+      expansion_note: >
+        MS SQL Server dialect requested. DDL axis currently supports postgres/mysql/oracle/hsqldb.
+        Add mssql dialect adapter to presets/ddl/dialects/. Growth ToDo (ddl axis).
+      disqualifies: false
+
+  # ── industry_vertical ───────────────────────────────────────────────────────
+  # NOTE: legal has already_served:true — domain-expert-legal exists since Growth-24.
+  # NOTE: finance has baseline entities in catalog (account/journal-entry/invoice/payment).
+  #       Regulated finance (banking, insurance) may need expert-agent — flagged separately.
+  industry_vertical:
+    medical:
+      gap_category: vertical-medical
+      todo_axis: expert-agent
+      expansion_note: >
+        Medical/hospital/pharma vertical requested. No domain-expert-medical agent yet.
+        Requires HIPAA/personal-health-data compliance awareness. expert-agent axis ToDo.
+      disqualifies: false
+    public:
+      gap_category: vertical-public
+      todo_axis: expert-agent
+      expansion_note: >
+        Public sector / non-profit vertical requested. Government procurement rules,
+        budget cycle differences. domain-expert-public agent ToDo (expert-agent axis).
+      disqualifies: false
+    legal:
+      gap_category: domain-expert-legal
+      todo_axis: expert-agent
+      already_served: true
+      expansion_note: >
+        Legal vertical: domain-expert-legal agent exists (Growth-24). catalog.yaml has
+        legal domain (legal-case, precedent, case-party, case-document). Route to
+        domain-expert-legal for intake spec. No gap — fully served.
+      disqualifies: false
+    finance:
+      gap_category: vertical-finance-regulated
+      todo_axis: expert-agent
+      already_served: true
+      expansion_note: >
+        Finance domain: baseline entities exist in catalog (account, journal-entry,
+        invoice, payment, finance_ledger). General finance companies are served.
+        Regulated finance (banking, insurance, capital markets) may need domain-expert-finance
+        agent (expert-agent axis ToDo). Record as signal only.
+      disqualifies: false
+
+# ── scope_mismatch ────────────────────────────────────────────────────────────
+# Hard rejects: ONLY for requests that are genuinely outside what we build.
+# These are NOT capability gaps — they are category mismatches.
+# Keep this list minimal. Add only when the request is clearly not an internal
+# business data system for a company's own staff.
+scope_mismatch:
+  consumer_app:
+    trigger_field: free_notes
+    trigger_keywords:
+      - "consumer app"
+      - "end-user app"
+      - "b2c platform"
+      - "marketplace for customers"
+      - "app store"
+      - "public ticketing"
+      - "passenger booking"
+    gap_category: scope-consumer-app
+    description: >
+      Requested system is a consumer-facing product or public marketplace, not an internal
+      business data system. Outside our target: internal staff ops for companies.
+    disqualifies: true
+  personal_use:
+    trigger_field: free_notes
+    trigger_keywords:
+      - "personal use"
+      - "personal project"
+      - "for myself"
+      - "hobby project"
+    gap_category: scope-personal-use
+    description: >
+      Requested for personal/hobby use, not a business organization.
+      Our harness targets companies with staff teams (min viable ~6 users).
+    disqualifies: true
+
+# ── promotion lifecycle ───────────────────────────────────────────────────────
+promotion_threshold: 3  # gap_category count >= this -> PROMOTE flag in gap-summary.md
