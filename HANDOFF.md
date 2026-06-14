@@ -5,7 +5,7 @@
 **자율 고객 intake 파이프라인 (Growth-62) → 파이프라인 장애 대응 대시보드 (Growth-63)**.
 플랜 `idempotent-nibbling-puddle.md` Phase 8(Pipeline Monitor)의 후속 — CLI 모니터 위에 **localhost 전용 웹 대시보드 + 노드별 에러/deadlock breakdown**을 얹었다. 목적: 장애 발생 시 빠른 드릴인·대처.
 
-> ⚠️ **Growth-63 은 아직 learn-log 미기록**. 커밋 `d031800..cc810a6` 은 푸시 완료됐으나 `learn-log.md` 의 Growth 카운터는 62 에서 멈춤. 다음 세션 첫 작업 후보: Growth-63 엔트리 작성 (§6 rollup + engineer ledger) — 아래 "오픈 루프 P0" 참조.
+> ✅ **Growth-63 learn-log 환류 완료** (커밋 `2c7dcfd` engineer ledger + `663f9ba` §6 rollup). G-9 PASS 유지(199/200, 1행 헤드룸 — 다음 회전은 cap 재접근 시). 전 가드 0 FAIL, workflow 테스트 223 PASS.
 
 ---
 
@@ -87,8 +87,8 @@
 
 ## 오픈 루프 (우선순위 순)
 
-### P0 — Growth-63 learn-log 환류 (미완)
-- 대시보드 커밋(`d031800..cc810a6`)은 푸시됐으나 `learn-log.md` Growth 카운터·§6 rollup·engineer ledger 미작성. 다음 세션 첫 작업으로 Growth-63 엔트리 작성 권장 (CLAUDE.md §7 #3 환류 의무).
+### ~~P0 — Growth-63 learn-log 환류~~ ✅ 완료 (2026-06-14)
+- engineer ledger(`2c7dcfd`) + §6 rollup(`663f9ba`) 작성·푸시. G-9 PASS(199/200), 223 테스트 PASS.
 
 ### P1 — 외부/원격 모니터링 (TODO, 당장 불필요)
 - 파운더가 외출 중에도 파이프라인 확인 희망. **"외부 모니터링 만들자" 명시 요청 시에만** 착수. 1순위 경로: Cloudflare Tunnel + Access(이메일 OTP) 로 localhost 대시보드만 노출, VPS/PII 무변경. 상세 메모리 [[todo-external-pipeline-monitor]].
@@ -104,16 +104,13 @@
 ## 최신 git (master)
 
 ```
+663f9ba log(growth-63): §6 rollup — pipeline 대시보드 + engineer ledger pointer
+2c7dcfd log(growth-63): engineer ledger — pipeline 장애 대응 대시보드 상세
+7e0161a log(handoff): pipeline 대시보드(Growth-63) 세션 핸드오프 + P0 learn-log 환류 플래그
 cc810a6 test(pipeline-monitor): DEFECT_ACTIONS coverage of every taxonomy class
-cea6051 test(pipeline-dashboard): incidents/evidence-escape/SLA/codex coverage
-2c8cafb feat(pipeline-status): show owner + recommended action in CLI drill-in
-20bf77a feat(pipeline-dashboard): incident breakdown for fast response
-0da8b00 feat(pipeline-monitor): DEFECT_ACTIONS owner/action/runbook map + action_hint
-ddef621 test(pipeline-dashboard): render/PII-free/duration coverage
-1c6782f feat(pipeline-dashboard): localhost-only HTML monitor for intake pipeline
-d031800 fix(pipeline-monitor): remove stray post-loop closed block in aggregate_health
+... (d031800..cc810a6 = 대시보드 구현/테스트 8개)
 ```
-`cc810a6` 가 origin/master HEAD (전부 push 완료).
+`663f9ba` 가 origin/master HEAD (전부 push 완료).
 
 ### 미커밋 / untracked (의도적 보류)
 - `M frontend/adapters/capacitor/package.json` + `?? frontend/adapters/capacitor/package-lock.json` — P2 로컬 setup 산출물.
@@ -122,7 +119,6 @@ d031800 fix(pipeline-monitor): remove stray post-loop closed block in aggregate_
 
 ## 다음 세션 시작 체크리스트
 
-1. (P0) `learn-log.md` Growth-63 엔트리 작성 — 대시보드 환류
-2. 대시보드 동작 확인: `python scripts/workflow/pipeline_dashboard.py --once` (HTML stdout) 또는 서버 후 `http://127.0.0.1:8787`
-3. `cd scripts/workflow && python -m pytest tests -q` (111 PASS 기대) + `PYTHONUTF8=1 python scripts/diagnose.py`
-4. 오픈 루프 중 파운더 지시 따라 선택 (외부 모니터링은 명시 요청 시에만)
+1. 대시보드 동작 확인: `python scripts/workflow/pipeline_dashboard.py --once` (HTML stdout) 또는 서버 후 `http://127.0.0.1:8787`(점유 시 `--port` 우회)
+2. `PYTHONUTF8=1 python -m pytest scripts/workflow/tests -q` (223 PASS 기대) + `PYTHONUTF8=1 python scripts/diagnose.py` (0 FAIL)
+3. 오픈 루프 중 파운더 지시 따라 선택 (외부 모니터링 P1 은 명시 요청 시에만)
