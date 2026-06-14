@@ -264,14 +264,18 @@ def build_site_manifest(profile: dict[str, Any]) -> dict[str, Any]:
         "pages": pages_out,
     }
 
-    # contact block — G-1: wire key reference only, no contract reimplementation
+    # contact block — G-1: wire key reference only, no contract reimplementation.
+    # DEC-5: reuse existing entity.create wire key with entity_type "lead".
+    # "contact.lead_capture" was a placeholder; entity.create is the correct key.
     contact_raw: dict[str, Any] = site.get("contact") or {}
     if contact_raw.get("enabled"):
         manifest["contact"] = {
             "enabled": True,
             "fields": list(contact_raw.get("fields", [])),
-            # wire key reference (middle contract single source — not reimplemented here)
-            "wire_key": "contact.lead_capture",
+            # wire key: entity.create (wire-v1.yaml, middle contract single source).
+            # adapter POSTs to entity.create with entity_type="lead".
+            "wire_key": "entity.create",
+            "entity_type": "lead",
         }
 
     return manifest
