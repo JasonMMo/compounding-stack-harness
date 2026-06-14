@@ -403,6 +403,7 @@ def test_route_qualify_scaffold_fail_records_failed(tmp_path, monkeypatch):
         processed_path=tmp_path / "proc.jsonl",
         profiles_dir=tmp_path / "profiles",
         cases_dir=tmp_path / "cases",
+        evidence_dir=tmp_path / "evidence",  # keep node-fail evidence out of the repo dir
         pm_inbox_path=tmp_path / "pm.md",
         gap_registry_path=tmp_path / "gap.jsonl",
         subprocess_run=_fake_fail,
