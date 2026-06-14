@@ -1,0 +1,141 @@
+---
+/**
+ * Footer.astro — Footer section (type: footer).
+ * Variants: minimal | full-links | newsletter
+ * Style hints: cols (1|4|2), show_social (bool), show_newsletter_form (bool), divider
+ */
+interface StyleHints {
+  cols?: number
+  show_social?: boolean
+  show_newsletter_form?: boolean
+  divider?: string
+}
+
+interface Props {
+  copy: Record<string, string>
+  assets?: string[]
+  variant?: string
+  styleHints?: StyleHints
+  // contact: used to render contact link if enabled
+  contactHref?: string
+}
+
+const {
+  copy = {},
+  assets = [],
+  variant = 'minimal',
+  styleHints = {},
+  contactHref,
+} = Astro.props
+
+const showSocial = styleHints.show_social ?? false
+const showNewsletter = styleHints.show_newsletter_form ?? false
+const divider = styleHints.divider ?? 'top'
+
+const dividerClass: Record<string, string> = {
+  top: 'border-t border-[var(--color-border,#E5E7EB)]',
+  bottom: 'border-b border-[var(--color-border,#E5E7EB)]',
+  both: 'border-y border-[var(--color-border,#E5E7EB)]',
+  none: '',
+}
+---
+
+<footer class={`w-full py-12 px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-1,#fff)] ${dividerClass[divider] ?? ''}`}>
+  <div class="max-w-[var(--space-container-max,1200px)] mx-auto">
+
+    {variant === 'minimal' ? (
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          {assets.length > 0 && (
+            <img src={assets[0]} alt={copy.brand_name ?? ''} class="h-7 object-contain" />
+          )}
+          {copy.brand_name && (
+            <span class="font-bold text-[var(--color-text-1,#111827)]">{copy.brand_name}</span>
+          )}
+        </div>
+        <div class="flex items-center gap-6 text-sm text-[var(--color-text-3,#6B7280)]">
+          {contactHref && <a href={contactHref} class="hover:text-[var(--color-primary,#6D28D9)] transition-colors">Contact</a>}
+          {copy.tagline && <span>{copy.tagline}</span>}
+        </div>
+        {copy.legal_notice && (
+          <p class="text-xs text-[var(--color-text-3,#6B7280)]">{copy.legal_notice}</p>
+        )}
+      </div>
+    ) : variant === 'full-links' ? (
+      <div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              {assets.length > 0 && (
+                <img src={assets[0]} alt={copy.brand_name ?? ''} class="h-6 object-contain" />
+              )}
+              {copy.brand_name && (
+                <span class="font-bold text-[var(--color-text-1,#111827)]">{copy.brand_name}</span>
+              )}
+            </div>
+            {copy.tagline && (
+              <p class="text-sm text-[var(--color-text-3,#6B7280)]">{copy.tagline}</p>
+            )}
+          </div>
+          <div>
+            <h4 class="font-semibold text-[var(--color-text-1,#111827)] mb-3 text-sm uppercase tracking-wide">Product</h4>
+            <ul class="space-y-2 text-sm text-[var(--color-text-3,#6B7280)]">
+              <li><a href="/" class="hover:text-[var(--color-primary,#6D28D9)] transition-colors">Home</a></li>
+              <li><a href="/about" class="hover:text-[var(--color-primary,#6D28D9)] transition-colors">About</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-[var(--color-text-1,#111827)] mb-3 text-sm uppercase tracking-wide">Support</h4>
+            <ul class="space-y-2 text-sm text-[var(--color-text-3,#6B7280)]">
+              {contactHref && <li><a href={contactHref} class="hover:text-[var(--color-primary,#6D28D9)] transition-colors">Contact</a></li>}
+            </ul>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-[var(--color-border,#E5E7EB)]">
+          {copy.legal_notice && (
+            <p class="text-xs text-[var(--color-text-3,#6B7280)]">{copy.legal_notice}</p>
+          )}
+        </div>
+      </div>
+    ) : (
+      /* newsletter */
+      <div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-8">
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              {assets.length > 0 && (
+                <img src={assets[0]} alt={copy.brand_name ?? ''} class="h-6 object-contain" />
+              )}
+              {copy.brand_name && (
+                <span class="font-bold text-[var(--color-text-1,#111827)]">{copy.brand_name}</span>
+              )}
+            </div>
+            {copy.tagline && <p class="text-sm text-[var(--color-text-3,#6B7280)]">{copy.tagline}</p>}
+          </div>
+          {showNewsletter && (
+            <div>
+              <h4 class="font-semibold text-[var(--color-text-1,#111827)] mb-3">Stay in the loop</h4>
+              <form class="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  class="flex-1 px-4 py-2 border border-[var(--color-border-input,#9CA3AF)] rounded-[var(--radius-button,8px)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary,#6D28D9)]"
+                  aria-label="Email address for newsletter"
+                />
+                <button
+                  type="submit"
+                  class="px-4 py-2 bg-[var(--color-primary,#6D28D9)] text-white rounded-[var(--radius-button,8px)] text-sm font-semibold hover:bg-[var(--color-primary-hover,#5B21B6)] transition-colors"
+                >
+                  Subscribe
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+        {copy.legal_notice && (
+          <p class="text-xs text-[var(--color-text-3,#6B7280)] border-t border-[var(--color-border,#E5E7EB)] pt-6">{copy.legal_notice}</p>
+        )}
+      </div>
+    )}
+  </div>
+</footer>
