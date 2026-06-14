@@ -1,0 +1,113 @@
+---
+/**
+ * Testimonial.astro — Testimonial / Social Proof section (type: testimonial).
+ * Variants: single-card | carousel | grid
+ * Style hints: layout, quote_style (large|normal), avatar (circle|square|none)
+ * No autoplay (WCAG 2.2.2 — a11y invariant).
+ */
+interface StyleHints {
+  layout?: string
+  quote_style?: string
+  avatar?: string
+  autoplay?: boolean
+}
+
+interface Props {
+  copy: Record<string, string>
+  assets?: string[]
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+}
+
+const {
+  copy = {},
+  assets = [],
+  variant = 'single-card',
+  styleHints = {},
+  motionPreset = 'stagger-children',
+} = Astro.props
+
+const quoteStyle = styleHints.quote_style ?? 'normal'
+const avatarShape = styleHints.avatar ?? 'circle'
+// autoplay: never (WCAG 2.2.2 invariant — even if theme sets it true, we ignore)
+const avatarClass: Record<string, string> = {
+  circle: 'w-12 h-12 rounded-full object-cover',
+  square: 'w-12 h-12 rounded-[var(--radius-card,4px)] object-cover',
+  none: 'hidden',
+}
+
+const quoteClass = quoteStyle === 'large'
+  ? 'text-2xl md:text-3xl font-medium text-[var(--color-text-1,#111827)] italic leading-snug mb-6'
+  : 'text-lg text-[var(--color-text-2,#374151)] italic mb-6'
+---
+
+<section
+  class="w-full py-[var(--space-section-y,112px)] px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-1,#fff)]"
+  data-motion={motionPreset}
+  data-stagger-delay="80"
+>
+  <div class="max-w-[var(--space-container-max,1200px)] mx-auto">
+    {(variant === 'single-card' || variant === 'carousel') && copy.quote && (
+      <div class="max-w-3xl mx-auto text-center">
+        <svg class="w-8 h-8 text-[var(--color-primary,#6D28D9)] mx-auto mb-6 opacity-40" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+        </svg>
+        <blockquote class={quoteClass}>
+          {copy.quote}
+        </blockquote>
+        <div class="flex items-center justify-center gap-3">
+          {assets.length > 0 && avatarShape !== 'none' && (
+            <img
+              src={assets[0]}
+              alt={copy.author_name ?? 'Author'}
+              class={avatarClass[avatarShape] ?? avatarClass.circle}
+              loading="lazy"
+            />
+          )}
+          <div class="text-left">
+            {copy.author_name && (
+              <p class="font-semibold text-[var(--color-text-1,#111827)]">{copy.author_name}</p>
+            )}
+            {(copy.author_title || copy.company) && (
+              <p class="text-sm text-[var(--color-text-3,#6B7280)]">
+                {[copy.author_title, copy.company].filter(Boolean).join(', ')}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
+    {variant === 'grid' && (
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Grid renders single testimonial from copy — in production, items array would be used */}
+        {copy.quote && (
+          <div class="p-6 rounded-[var(--radius-card,16px)] border border-[var(--color-border,#E5E7EB)] bg-white">
+            <blockquote class="text-[var(--color-text-2,#374151)] italic mb-4">
+              {copy.quote}
+            </blockquote>
+            <div class="flex items-center gap-3">
+              {assets.length > 0 && avatarShape !== 'none' && (
+                <img
+                  src={assets[0]}
+                  alt={copy.author_name ?? 'Author'}
+                  class={avatarClass[avatarShape] ?? avatarClass.circle}
+                  loading="lazy"
+                />
+              )}
+              <div>
+                {copy.author_name && (
+                  <p class="text-sm font-semibold text-[var(--color-text-1,#111827)]">{copy.author_name}</p>
+                )}
+                {copy.company && (
+                  <p class="text-xs text-[var(--color-text-3,#6B7280)]">{copy.company}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+</section>
