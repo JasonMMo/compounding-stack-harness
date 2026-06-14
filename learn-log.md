@@ -420,3 +420,10 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **결정**: CEO+CTO 합의 (v2 ultraplan 반영). Step 5 외부 인도 게이트 불변(CEO 단독, charter §2)
 - **Open loops**: P1~P6·P8 코드 구현 (engineer) / G-14 SPEC→PASS (cases/ 첫 엔트리 후)
 - **후속 (동일 스레드, 상세 [pm.md](docs/learn-logs/pm.md))**: deploy·ui_check `--entry-path`(`/health` 권위화), monitor·G-14 latest-terminal-wins, needs-fit codex 패스 정식화(`record-verdict` loop closer), playwright 설치, 첫 풀-배포 리허설 — autonomous 배포 3 버그(cp949 child stdout·미커밋 compose·entry-path) 발견·수정, 라이브 200 검증 후 회수
+
+### Growth-63 (2026-06-14) — Pipeline 장애 대응 웹 대시보드 (localhost·LLM 0·PII-free)
+
+- **인격/Axis/Milestone**: Engineer (구현) + CTO (설계·integrator) / creater (Phase 8 모니터) / M2 — 장애 대응 속도
+- **1줄 rollup**: CLI 모니터 위 `pipeline_dashboard.py`(127.0.0.1·stdlib·LLM 0) — Incidents triage·노드 칩·실패 drill-in(권장액션+owner+SLA+inline evidence+codex 프롬프트). monitor 투영 재사용(병렬 스토어 ✗), `DEFECT_ACTIONS` 단일 진실 + `aggregate_health` 빈-cases 버그픽스. 111 PASS·가드 0 FAIL. 커밋 `d031800`~`cc810a6`.
+- **상세**: [engineer ledger Growth-63](docs/learn-logs/engineer.md)
+- **Open loops**: 외부/원격 접속 미결([[todo-external-pipeline-monitor]], 명시 요청 시에만) / 기본 포트 8787 은 HEADROOM 점유 → `--port` 우회
