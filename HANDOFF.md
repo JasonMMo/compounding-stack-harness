@@ -5,7 +5,8 @@
 **자율 고객 intake 파이프라인 (Growth-62) → 파이프라인 장애 대응 대시보드 (Growth-63)**.
 플랜 `idempotent-nibbling-puddle.md` Phase 8(Pipeline Monitor)의 후속 — CLI 모니터 위에 **localhost 전용 웹 대시보드 + 노드별 에러/deadlock breakdown**을 얹었다. 목적: 장애 발생 시 빠른 드릴인·대처.
 
-> ✅ **Growth-63 learn-log 환류 완료** (커밋 `2c7dcfd` engineer ledger + `663f9ba` §6 rollup). G-9 PASS 유지(199/200, 1행 헤드룸 — 다음 회전은 cap 재접근 시). 전 가드 0 FAIL, workflow 테스트 223 PASS.
+> ✅ **Growth-63 learn-log 환류 완료** (커밋 `2c7dcfd`+`663f9ba`).
+> ✅ **Growth-64 — HANDOFF 오픈루프 3건 완료**: P2(Capacitor 8 정렬·완전완료)·P1(외부모니터 Cloudflare Tunnel 스캐폴드, 활성화는 파운더)·P3(Supabase L4 턴키 준비, live 는 파운더). §6 5차 회전(Growth-33~48 아카이브)으로 G-9 PASS(122/200, 헤드룸 78행). 상세는 아래 오픈루프 섹션.
 
 ---
 
@@ -90,27 +91,35 @@
 ### ~~P0 — Growth-63 learn-log 환류~~ ✅ 완료 (2026-06-14)
 - engineer ledger(`2c7dcfd`) + §6 rollup(`663f9ba`) 작성·푸시. G-9 PASS(199/200), 223 테스트 PASS.
 
-### P1 — 외부/원격 모니터링 (TODO, 당장 불필요)
-- 파운더가 외출 중에도 파이프라인 확인 희망. **"외부 모니터링 만들자" 명시 요청 시에만** 착수. 1순위 경로: Cloudflare Tunnel + Access(이메일 OTP) 로 localhost 대시보드만 노출, VPS/PII 무변경. 상세 메모리 [[todo-external-pipeline-monitor]].
+### ~~P2 — Capacitor 로컬 플랫폼 setup~~ ✅ 완료 (Growth-64)
+- CLI 8 ↔ core 6 major 불일치 해소: 전 의존성 `^8.0.0` 정렬, v8 재설치·android 재생성·`cap sync` 검증("Android looking great", assets dir 복구). iOS native 는 Windows 빌드 불가 → macOS 에서 `npm run add:ios`. 커밋 `672c110`(package.json)·`a609aef`(lockfile).
 
-### P2 — Capacitor 로컬 플랫폼 setup
-- `frontend/adapters/capacitor/` 에서 `npm install && npm run add:android && npm run add:ios` (로컬 직접 실행). 현재 `package.json` 수정 + `package-lock.json` untracked 가 그 흔적(커밋 보류).
+### ~~P1 — 외부/원격 모니터링 스캐폴드~~ ✅ 완료 (Growth-64) — 활성화는 파운더
+- Cloudflare Tunnel+Access 경로 스캐폴드: 런북 `docs/runbooks/external-pipeline-monitor.md` + `infra/cloudflared/config.example.yml` + `scripts/workflow/serve_dashboard.ps1`. 로컬 Windows 대시보드(127.0.0.1:**8790**) 아웃바운드 노출, 이메일 OTP(파운더 단독), VPS 무관여·PII-free·월 $0.
+- **파운더 인터랙티브 단계 (런북 Phase 1~3)**: `winget install cloudflare.cloudflared` → `! cloudflared tunnel login` → `cloudflared tunnel create pipeline-monitor` → config.yml 작성 → Zero Trust 대시보드에서 Access 앱(`pipeline.n9n.co.kr`, allow `aijasonmore@gmail.com`) 생성. 그 후 `.\scripts\workflow\serve_dashboard.ps1` 로 기동.
 
-### P3 — Supabase L4 live (Growth-58 잔여)
-- 어댑터 코드·RLS·유닛 16 green 완료. Supabase 프로젝트 프로비저닝 후 `SUPABASE_URL`+`SUPABASE_SERVICE_ROLE_KEY` → pytest → uvicorn HTTP smoke. + GoTrue auth(현재 demo/demo) / PostgREST filter·sort·paging pushdown.
+### ~~P3 — Supabase L4 준비~~ ✅ 코드 검증·턴키 완료 (Growth-64) — live 실행은 파운더
+- 어댑터 unit 16 PASS 재확인(MockTransport). env 템플릿 `infra/secrets/supabase.env.example` + README "L4 Live Activation" 5단계 턴키화.
+- **파운더 인터랙티브 단계**: supabase.com 프로젝트 프로비저닝 → `supabase.env` 채우기 → SQL Editor 에 RLS 스키마 적용 → `uvicorn main:app --port 8081` + create/get/patch/delete HTTP smoke. (GoTrue auth·PostgREST pushdown 은 M5 범위, 별도 open loop.)
 
 ---
 
 ## 최신 git (master)
 
 ```
-663f9ba log(growth-63): §6 rollup — pipeline 대시보드 + engineer ledger pointer
-2c7dcfd log(growth-63): engineer ledger — pipeline 장애 대응 대시보드 상세
-7e0161a log(handoff): pipeline 대시보드(Growth-63) 세션 핸드오프 + P0 learn-log 환류 플래그
-cc810a6 test(pipeline-monitor): DEFECT_ACTIONS coverage of every taxonomy class
-... (d031800..cc810a6 = 대시보드 구현/테스트 8개)
+log(growth-64): learn-log §6 5차 회전 + Growth-64 rollup (P2/P1/P3 완료)
+log(growth-64): archive Growth-33~48
+a5012f9 docs(supabase): L4 Live Activation 턴키 순서 추가          # P3
+044445a chore(secrets): supabase.env.example                       # P3
+15e72b1 chore(gitignore): ignore live cloudflared config.yml       # P1
+2889e68 feat(workflow): serve_dashboard.ps1 launcher               # P1
+3f026c4 chore(cloudflared): ingress config template                # P1
+e07fda8 docs(runbook): external pipeline monitor via Cloudflare Tunnel + Access  # P1
+a609aef build(capacitor): commit package-lock (Capacitor 8)        # P2
+672c110 build(capacitor): align deps to Capacitor 8                # P2
+663f9ba log(growth-63): §6 rollup — pipeline 대시보드
 ```
-`663f9ba` 가 origin/master HEAD (전부 push 완료).
+모든 커밋 push 완료 (HANDOFF 커밋이 origin/master HEAD).
 
 ### 미커밋 / untracked (의도적 보류)
 - `M frontend/adapters/capacitor/package.json` + `?? frontend/adapters/capacitor/package-lock.json` — P2 로컬 setup 산출물.
