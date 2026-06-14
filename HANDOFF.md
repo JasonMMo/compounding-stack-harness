@@ -6,7 +6,7 @@
 플랜 `idempotent-nibbling-puddle.md` Phase 8(Pipeline Monitor)의 후속 — CLI 모니터 위에 **localhost 전용 웹 대시보드 + 노드별 에러/deadlock breakdown**을 얹었다. 목적: 장애 발생 시 빠른 드릴인·대처.
 
 > ✅ **Growth-63 learn-log 환류 완료** (커밋 `2c7dcfd`+`663f9ba`).
-> ✅ **Growth-64 — HANDOFF 오픈루프 3건 완료**: P2(Capacitor 8 정렬·완전완료)·**P1(외부모니터 LIVE — `pipeline.n9n.co.kr`, 부팅자동, 2026-06-15 검증)**·P3(Supabase L4 턴키 준비, live 는 파운더). §6 5차 회전(Growth-33~48 아카이브)으로 G-9 PASS(122/200, 헤드룸 78행). 상세는 아래 오픈루프 섹션.
+> ✅ **Growth-64 — HANDOFF 오픈루프 3건 완료**: P2(Capacitor 8 정렬·완전완료)·**P1(외부모니터 LIVE — `pipeline.n9n.co.kr`, 부팅자동)**·**P3(Supabase L4 LIVE 검증 10/10 PASS)**. 셋 다 라이브. §6 5차 회전(Growth-33~48 아카이브)으로 G-9 PASS(122/200, 헤드룸 78행). 상세는 아래 오픈루프 섹션.
 
 ---
 
@@ -100,9 +100,10 @@
 - 시크릿: `infra/secrets/e572d631-….json` + `infra/cloudflared/config.yml`(둘 다 gitignored). 상세: 메모리 [[todo-external-pipeline-monitor]], 런북 `docs/runbooks/external-pipeline-monitor.md`.
 - 관리: `net start/stop cloudflared` · `Start/Stop-ScheduledTask -TaskName PipelineDashboard`.
 
-### ~~P3 — Supabase L4 준비~~ ✅ 코드 검증·턴키 완료 (Growth-64) — live 실행은 파운더
-- 어댑터 unit 16 PASS 재확인(MockTransport). env 템플릿 `infra/secrets/supabase.env.example` + README "L4 Live Activation" 5단계 턴키화.
-- **파운더 인터랙티브 단계**: supabase.com 프로젝트 프로비저닝 → `supabase.env` 채우기 → SQL Editor 에 RLS 스키마 적용 → `uvicorn main:app --port 8081` + create/get/patch/delete HTTP smoke. (GoTrue auth·PostgREST pushdown 은 M5 범위, 별도 open loop.)
+### ~~P3 — Supabase L4~~ ✅✅ LIVE 검증 완료 (2026-06-14)
+- Supabase Free 프로젝트(`aieaiaormjnuqkxsfrhj`) 대상 `SupabaseEntityStore` create/find/patch/delete + slug→table fallback 실 PostgREST 왕복 **10/10 PASS**. id/created_at/updated_at Postgres populate 확인. Growth-58 L4 오픈루프 종결.
+- 볼트: `infra/secrets/supabase.env`(URL+service_role, gitignored). 재실행 스모크: `python out/supabase_smoke.py`. smoke 테이블 정리: Supabase SQL Editor 에서 `drop table smoke_test;`.
+- **잔여 open loop (M5)**: GoTrue auth(현재 demo/demo) / PostgREST filter·sort·paging pushdown / 실고객은 self-host Supabase(Coolify, $0 증분) 또는 Pro($25/mo) 선택.
 
 ---
 
