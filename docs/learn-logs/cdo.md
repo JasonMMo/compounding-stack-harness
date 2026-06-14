@@ -26,6 +26,25 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - Cross-agent dependency: CMO — brand accent 색 결정 (M1 gate, raw.blue 교체 시 semantic layer 무변경 전략 적용). CTO — dark mode 정책 / i18n label 소유권 / token versioning adapter compliance test 포함 여부 (§9 open questions 4개 escalate). CTO 답변 (Growth-5c, 2026-05-29): Q1 보류·Q2 adapter·Q3 YES·Q4 breakpoint.tablet 추가 — tokens.md §11 박힘.
 - Cost: 1 turn (no subagent invocations, no WebFetch). 추정 $0.05~$0.10 (Sonnet 4.6, input heavy)
 
+### Growth-65 (2026-06-15) — visual-asset 축(P2) + vision-QA 루브릭(P4)
+
+- Deliverable:
+  - `presets/themes/_theme-format.md` (신규 — 테마 스펙 포맷 규약)
+  - `presets/themes/_INDEX.md` (신규 — 테마 인덱스)
+  - `presets/themes/_motion/presets.yaml` (신규 — 모션 프리셋 8종: fade-simple / fade-up / stagger-children / hover-lift / parallax-lite / reveal-on-scroll / slide-in-left / scale-in; reduced-motion fallback = fade-simple 불변; autoplay 금지)
+  - 프로덕션 테마 2종:
+    - `aurora` — 대담 그라데이션, SaaS / 핀테크 / B2B 타겟. design/tokens semantic.json 상속(override-only).
+    - `studio` — 미니멀 에디토리얼, 에이전시·컨설팅 타겟. 동일 상속 패턴.
+  - 섹션 variant 23종 × 2테마 = 46 매핑 누락 0.
+  - `design/vision-qa-rubric.yaml` (신규 — 8기준: visual_hierarchy / whitespace / typography / color / layout / responsive / brand / conversion)
+- Persona served: 업무담당자 (홈페이지 의뢰 고객) + CEO (인도 전 게이트)
+- Accessibility checks: a11y AA 자가검증 (실측 대비비). 섹션 variant 전원 AA 통과 기준 포함.
+- Cross-agent dependency:
+  - Engineer: theme.yaml → `build-tokens.mjs` 소비 (override-only 패턴 필수 준수).
+  - QA: `vision-qa-rubric.yaml` 공동 권위 — 판정 기준 PASS = 모든 기준 ≥3 & 평균 ≥3.5 / BLOCK = 어느 하나 ≤2. CDO+QA 공동 게이트.
+  - PM: ms_tone → theme 매핑 (aurora/studio) — intake answer 가 CDO 테마 결정에 1:1 연결.
+- Cost: engineer subagent 위임 (이 인격 design spec 산출 + 검증).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
