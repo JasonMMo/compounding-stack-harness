@@ -48,7 +48,22 @@
           <legend>{{ q.section }}</legend>
       {% endif %}
 
-      <div class="field-group">
+      {# show_if 속성 계산 #}
+      {% if q.show_if is defined and q.show_if %}
+        {% set show_if_q = q.show_if.keys() | list | first %}
+        {% set show_if_v = q.show_if[show_if_q] %}
+        {% if show_if_v is string %}
+          {% set show_if_vs = show_if_v %}
+        {% else %}
+          {% set show_if_vs = show_if_v | join(',') %}
+        {% endif %}
+        <div class="field-group"
+          data-show-if-q="{{ show_if_q }}"
+          data-show-if-v="{{ show_if_vs }}"
+          style="display:none">
+      {% else %}
+        <div class="field-group">
+      {% endif %}
         <label for="q_{{ q.id }}">
           {{ q.label }}
           {% if q.required %}<span aria-hidden="true" class="required-mark">*</span>{% endif %}
@@ -148,19 +163,85 @@ function switchPersona(role) {
       sec.style.display = 'none';
     }
   });
+  // persona 전환 후 show_if 재평가 (드러난 섹션의 필드 포함)
+  initShowIf();
 }
 
-// 페이지 로드 시 prefill된 persona_role 적용
+// show_if: trigger qid의 현재 값을 읽는다
+function _getFieldValue(qid) {
+  // radio
+  var radio = document.querySelector('input[type="radio"][name="' + qid + '"]:checked');
+  if (radio) return radio.value;
+  // select
+  var sel = document.querySelector('select[name="' + qid + '"]');
+  if (sel) return sel.value;
+  // checkbox group (multiselect) — 선택된 값 배열 반환
+  var checks = document.querySelectorAll('input[type="checkbox"][name="' + qid + '"]:checked');
+  if (checks.length > 0) {
+    var vals = [];
+    checks.forEach(function(c) { vals.push(c.value); });
+    return vals;
+  }
+  // text/textarea
+  var inp = document.querySelector('input[type="text"][name="' + qid + '"], textarea[name="' + qid + '"]');
+  if (inp) return inp.value;
+  return '';
+}
+
+// show_if 조건을 평가하여 div 표시/숨김
+function updateShowIf(triggerQid) {
+  var divs = document.querySelectorAll('[data-show-if-q="' + triggerQid + '"]');
+  if (!divs.length) return;
+  var currentVal = _getFieldValue(triggerQid);
+  divs.forEach(function(div) {
+    var allowedRaw = div.getAttribute('data-show-if-v') || '';
+    var allowed = allowedRaw.split(',').map(function(s) { return s.trim(); });
+    var show = false;
+    if (Array.isArray(currentVal)) {
+      // multiselect: 교집합 있으면 표시
+      show = currentVal.some(function(v) { return allowed.indexOf(v) !== -1; });
+    } else {
+      show = allowed.indexOf(currentVal) !== -1;
+    }
+    div.style.display = show ? '' : 'none';
+  });
+}
+
+// 모든 show_if trigger에 이벤트 리스너 등록 + 초기 평가
+function initShowIf() {
+  // data-show-if-q 속성이 있는 div에서 trigger 목록 수집
+  var triggers = new Set();
+  document.querySelectorAll('[data-show-if-q]').forEach(function(div) {
+    triggers.add(div.getAttribute('data-show-if-q'));
+  });
+  triggers.forEach(function(qid) {
+    // 초기 평가
+    updateShowIf(qid);
+    // change 리스너 등록 (중복 등록 방지: 이미 등록된 경우 재등록해도 결과 동일)
+    document.querySelectorAll(
+      'input[name="' + qid + '"], select[name="' + qid + '"], textarea[name="' + qid + '"]'
+    ).forEach(function(el) {
+      el.addEventListener('change', function() { updateShowIf(qid); });
+    });
+  });
+}
+
+// 페이지 로드 시 prefill된 persona_role 적용 + show_if 초기화
 (function() {
   var roleSelect = document.querySelector('select[name="persona_role"]');
   if (roleSelect && roleSelect.value) {
     switchPersona(roleSelect.value);
+    // switchPersona 내부에서 initShowIf 호출됨
     return;
   }
   var roleRadio = document.querySelector('input[name="persona_role"]:checked');
   if (roleRadio) {
     switchPersona(roleRadio.value);
+    // switchPersona 내부에서 initShowIf 호출됨
+    return;
   }
+  // persona 미선택 상태에도 show_if 초기화
+  initShowIf();
 })();
 </script>
 {% endblock %}
