@@ -1,0 +1,89 @@
+---
+/**
+ * Logos.astro — Logo Bar / Social Proof section (type: logos).
+ * Variants: horizontal-scroll | grid
+ * Style hints: filter (grayscale | grayscale-hover | none), divider (none | top | bottom | both)
+ */
+interface StyleHints {
+  filter?: string
+  divider?: string
+}
+
+interface Props {
+  copy: Record<string, string>
+  assets?: string[]
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+}
+
+const {
+  copy = {},
+  assets = [],
+  variant = 'horizontal-scroll',
+  styleHints = {},
+  motionPreset = 'stagger-children',
+} = Astro.props
+
+const filter = styleHints.filter ?? 'grayscale'
+const divider = styleHints.divider ?? 'none'
+
+const filterClass: Record<string, string> = {
+  grayscale: 'grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all',
+  'grayscale-hover': 'opacity-100 hover:grayscale hover:opacity-60 transition-all',
+  none: '',
+}
+
+const dividerClass: Record<string, string> = {
+  top: 'border-t border-[var(--color-border,#E5E7EB)]',
+  bottom: 'border-b border-[var(--color-border,#E5E7EB)]',
+  both: 'border-y border-[var(--color-border,#E5E7EB)]',
+  none: '',
+  line: 'border-t border-[var(--color-border,#E5E7EB)]',
+  space: 'mt-4',
+}
+---
+
+<section
+  class={`w-full py-12 px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-1,#fff)] ${dividerClass[divider] ?? ''}`}
+  data-motion={motionPreset}
+  data-stagger-delay="80"
+>
+  <div class="max-w-[var(--space-container-max,1200px)] mx-auto">
+    {copy.eyebrow && (
+      <p class="text-center text-sm font-semibold uppercase tracking-widest text-[var(--color-text-3,#6B7280)] mb-8">
+        {copy.eyebrow}
+      </p>
+    )}
+
+    {variant === 'horizontal-scroll' ? (
+      <div class="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+        {assets.map((src) => (
+          <img
+            src={src}
+            alt="Partner logo"
+            class={`h-8 object-contain ${filterClass[filter] ?? ''}`}
+            loading="lazy"
+          />
+        ))}
+        {assets.length === 0 && (
+          <p class="text-[var(--color-text-3,#6B7280)] italic text-sm">Logo assets not yet added.</p>
+        )}
+      </div>
+    ) : (
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
+        {assets.map((src) => (
+          <img
+            src={src}
+            alt="Partner logo"
+            class={`h-8 object-contain ${filterClass[filter] ?? ''}`}
+            loading="lazy"
+          />
+        ))}
+        {assets.length === 0 && (
+          <p class="col-span-full text-[var(--color-text-3,#6B7280)] italic text-sm text-center">Logo assets not yet added.</p>
+        )}
+      </div>
+    )}
+  </div>
+</section>
