@@ -21,8 +21,12 @@ customer:
 
 # ── Pluggable Frontend/Backend (이 repo 의 차별화) ─────────
 stack:
-  frontend: react                   # nexacro | react | vue | vanilla-htmx
-  backend:  springboot              # springboot | fastapi | node-express | go-chi
+  deliverable_kind: business-system # business-system (default, 생략 시) | marketing-site
+                                    # marketing-site 이면 scaffold.py 가 entity/DDL/screen-manifest
+                                    # 파이프라인을 건너뛰고 site-manifest 를 대신 방출한다.
+                                    # 하위호환: 기존 profile 에 키 없음 = business-system.
+  frontend: react                   # nexacro | react | vue | vanilla-htmx | landing-astro (marketing-site)
+  backend:  springboot              # springboot | fastapi | node-express | go-chi | none
   ui_theme: saas                    # saas (default: Pico+tokens) | public-sector (KRDS CDN)
   frontend_options:
     react_version: 18
@@ -90,7 +94,9 @@ billing:
   prepaid_credits_usd: 0
 ```
 
-## Required Fields
+## Required Fields (business-system)
+
+> marketing-site 의 required fields 는 아래 [marketing-site Required Fields](#marketing-site-required-fields) 참조.
 
 - `version` (must be `1`)
 - `customer.slug` (ASCII slug)
@@ -124,6 +130,88 @@ save_profile("profiles/acme.yaml", profile)
 ```
 
 agent 가 5~10 질문으로 빈칸 채움.
+
+## marketing-site Profile (deliverable_kind: marketing-site)
+
+marketing-site profile 은 `domains`/`ddl` 블록 대신 `site:` 블록을 사용한다.
+`stack.deliverable_kind: marketing-site` 가 scaffold.py 의 분기 키.
+
+```yaml
+version: 1
+
+customer:
+  slug: agency-demo
+  display: "Agency Demo"
+  status: active
+  industry: generic
+
+stack:
+  deliverable_kind: marketing-site   # 분기 키 (필수)
+  frontend: landing-astro            # P3 어댑터
+  backend: none
+
+site:
+  theme: default                     # presets/themes/<slug>/ 참조 (P2 에서 생성; P1 에선 soft 경고만)
+
+  pages:
+    - slug: home                     # ASCII slug (G-8)
+      title: "Home"
+      seo:
+        title: "..."                 # 필수
+        description: "..."           # 필수
+        og_image: "..."              # 선택
+      sections:
+        - type: hero                 # presets/site-sections/catalog.yaml 에 존재해야 함
+          variant: centered          # 선택; catalog variants 중
+          copy:
+            headline: "..."          # copy_slots.required 키는 반드시 present
+            subhead: "..."
+          assets: ["hero-bg.jpg"]   # 선택
+          cta:
+            label: "Get Started"
+            href: "/contact"
+
+        - type: footer
+          copy:
+            brand_name: "Agency Demo"
+
+  contact:                           # 선택; 리드폼 → middle contract 1 wire key
+    enabled: true
+    fields: [name, email, message]
+
+defaults:
+  locale: en-US
+  timezone: UTC
+
+billing:
+  llm_budget_usd_per_month: 50
+  prepaid_credits_usd: 0
+```
+
+### marketing-site Required Fields
+
+- `version` (must be `1`)
+- `customer.slug` (ASCII slug, G-8)
+- `customer.display`
+- `stack.deliverable_kind: marketing-site`
+- `site.pages` (적어도 1개)
+- 각 page: `slug` (ASCII), `title`, `sections` (적어도 1개)
+- 각 section: `type` (catalog 에 존재), `copy` (required copy_slots 충족)
+
+### marketing-site 에서 생략되는 필드
+
+`domains`, `ddl`, `datasource`, `overlay` — marketing-site 산출물은 DDL/entity 가 없으므로 불필요.
+`stack.frontend_options`, `stack.backend_options` — landing-astro 어댑터는 P3 에서 별도 옵션 정의.
+
+### 섹션 카탈로그
+
+유효한 section type 목록: `presets/site-sections/catalog.yaml`.
+포맷 단일 진실: `presets/site-sections/_catalog-format.md`.
+현재 지원 type (8종): `hero`, `logos`, `features`, `pricing`, `testimonial`, `faq`, `cta`, `footer`.
+
+### 샘플
+
+`profiles/agency-demo.yaml` — 2페이지, 5개 섹션, contact 활성화.
 
 ## Out of Scope (v1)
 
