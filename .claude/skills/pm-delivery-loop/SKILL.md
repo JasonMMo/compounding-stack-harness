@@ -31,6 +31,10 @@ description: Run the PM delivery loop for a customer engagement — needs discov
 - 환류 자산: `presets/`, `knowledge/generic/verified-profiles/`
 - **반환 규약**: 위 산출물은 파일에 쓰고 main 으로는 **요약 + 경로 + 결정/BLOCK 항목만** 반환 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md)
 
+## deliverable_kind 분기
+
+intake `deliverable_kind` 값이 `marketing-site` 이면 Step 3 Build 에서 `scaffold.py` 가 entity/DDL/screen-manifest 파이프라인 대신 `site-manifest.json` 을 방출한다. Step 4 Verify 의 4계층 풀테스트 subset 은 `landing-astro` adapter (L3 `npm run build`) + vision-QA (G-15, opt-in) 로 대체된다. business-system 경로는 무변경.
+
 ## Auto-Pass Rule for Qualifying Intake Leads
 
 intake_sync.py 가 `qualify` 상태 리드를 처리할 때 Steps 2~4 를 자동으로 실행한다 (draft 승급·scaffold·deploy·ui_check·needs-fit). 이 자동 경로의 산출물은 **내부 preview** 로 간주하며 Step 5 (Deliver, CEO 외부 전달 게이트) 대상이 아니다.
