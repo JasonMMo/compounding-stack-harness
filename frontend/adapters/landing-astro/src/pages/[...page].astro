@@ -1,0 +1,183 @@
+---
+/**
+ * [...page].astro — Dynamic page router driven by site-manifest.json.
+ * Generates one static page per site.pages[] entry at build time (Astro SSG).
+ *
+ * Routing:
+ *   home  → /index.html  (slug "home" maps to site root via params.page = undefined)
+ *   about → /about/index.html
+ *   *     → /<slug>/index.html
+ *
+ * DEC-1: theme "default" or unknown -> aurora (resolveThemeSlug in src/lib/theme.ts).
+ * DEC-5: ContactForm uses entity.create wire key with entity_type=lead.
+ */
+
+import type { GetStaticPaths } from 'astro'
+
+import BaseLayout from '../layouts/BaseLayout.astro'
+import Hero from '../sections/Hero.astro'
+import Logos from '../sections/Logos.astro'
+import Features from '../sections/Features.astro'
+import Pricing from '../sections/Pricing.astro'
+import Testimonial from '../sections/Testimonial.astro'
+import Faq from '../sections/Faq.astro'
+import Cta from '../sections/Cta.astro'
+import Footer from '../sections/Footer.astro'
+import ContactForm from '../components/ContactForm.astro'
+
+import { loadManifest } from '../lib/manifest'
+import { resolveThemeSlug, loadTheme, getStyleHints, getMotionPreset } from '../lib/theme'
+import type { Section, Page, SiteManifest } from '../lib/manifest'
+
+// ── getStaticPaths ─────────────────────────────────────────────────────────
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const manifest: SiteManifest = loadManifest()
+  const themeSlug = resolveThemeSlug(manifest.theme)
+  const theme = loadTheme(themeSlug)
+
+  return manifest.pages.map((page: Page) => {
+    // "home" slug maps to site root (params.page = undefined -> /index.html)
+    const pathParam = page.slug === 'home' ? undefined : page.slug
+
+    return {
+      params: { page: pathParam },
+      props: { page, manifest, theme, themeSlug },
+    }
+  })
+}
+
+// ── Page props ────────────────────────────────────────────────────────────
+
+interface Props {
+  page: Page
+  manifest: SiteManifest
+  theme: Record<string, unknown>
+  themeSlug: string
+}
+
+const { page, manifest, theme } = Astro.props as Props
+
+// Show contact form if enabled + no dedicated /contact page exists (render on home).
+const hasContactSection = manifest.contact?.enabled &&
+  (page.slug === 'contact' ||
+    (manifest.pages.every((p: Page) => p.slug !== 'contact') && page.slug === 'home'))
+
+const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
+---
+
+<BaseLayout
+  title={page.seo?.title ?? page.title}
+  description={page.seo?.description}
+  ogImage={page.seo?.og_image}
+  siteSlug={manifest.slug}
+>
+  {page.sections.map((section: Section) => {
+    const styleHints = getStyleHints(theme, section.type, section.variant)
+    const motionPreset = getMotionPreset(theme, section.type)
+
+    if (section.type === 'hero') {
+      return (
+        <Hero
+          copy={section.copy ?? {}}
+          assets={section.assets ?? []}
+          cta={section.cta}
+          variant={section.variant}
+          styleHints={styleHints}
+          motionPreset={motionPreset}
+        />
+      )
+    }
+
+    if (section.type === 'logos') {
+      return (
+        <Logos
+          copy={section.copy ?? {}}
+          assets={section.assets ?? []}
+          variant={section.variant}
+          styleHints={styleHints}
+          motionPreset={motionPreset}
+        />
+      )
+    }
+
+    if (section.type === 'features') {
+      return (
+        <Features
+          copy={section.copy ?? {}}
+          assets={section.assets ?? []}
+          variant={section.variant}
+          styleHints={styleHints}
+          motionPreset={motionPreset}
+        />
+      )
+    }
+
+    if (section.type === 'pricing') {
+      return (
+        <Pricing
+          copy={section.copy ?? {}}
+          variant={section.variant}
+          styleHints={styleHints}
+          motionPreset={motionPreset}
+        />
+      )
+    }
+
+    if (section.type === 'testimonial') {
+      return (
+        <Testimonial
+          copy={section.copy ?? {}}
+          assets={section.assets ?? []}
+          variant={section.variant}
+          styleHints={styleHints}
+          motionPreset={motionPreset}
+        />
+      )
+    }
+
+    if (section.type === 'faq') {
+      return (
+        <Faq
+          copy={section.copy ?? {}}
+          variant={section.variant}
+          styleHints={styleHints}
+          motionPreset={motionPreset}
+        />
+      )
+    }
+
+    if (section.type === 'cta') {
+      return (
+        <Cta
+          copy={section.copy ?? {}}
+          assets={section.assets ?? []}
+          cta={section.cta}
+          variant={section.variant}
+          styleHints={styleHints}
+          motionPreset={motionPreset}
+        />
+      )
+    }
+
+    if (section.type === 'footer') {
+      return (
+        <Footer
+          copy={section.copy ?? {}}
+          assets={section.assets ?? []}
+          variant={section.variant}
+          styleHints={styleHints}
+          contactHref={manifest.contact?.enabled ? '/contact' : undefined}
+        />
+      )
+    }
+
+    // Unknown section type: graceful degradation (log warning in build output)
+    console.warn(`[page] Unknown section type "${section.type}" on page "${page.slug}" — skipped`)
+    return null
+  })}
+
+  {hasContactSection && (
+    <ContactForm apiBase={apiBase} entityType="lead" />
+  )}
+</BaseLayout>
