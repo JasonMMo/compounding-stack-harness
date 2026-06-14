@@ -1,0 +1,14 @@
+# requirements-dev.txt -- local dev toolchain only (NOT included in Docker builds)
+#
+# After installing playwright, run once:
+#   playwright install chromium
+#
+# Usage:
+#   pip install -r requirements-dev.txt
+#   playwright install chromium
+
+# Tier-1 UI defect checker browser engine (scripts/workflow/ui_check.py)
+playwright>=1.40
+
+# Test runner
+pytest>=7.0
