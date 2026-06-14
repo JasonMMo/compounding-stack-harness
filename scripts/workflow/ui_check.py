@@ -93,11 +93,13 @@ class CheckResult:
 # ---------------------------------------------------------------------------
 
 
-def derive_check_paths(manifest: dict) -> list[str]:
+def derive_check_paths(manifest: dict, entry_path: str = "/login") -> list[str]:
     """Return de-duped list of URL paths to check.
 
-    Always includes /login.  Adds one path per entity key (ASCII slug,
-    PII-free) derived from the manifest's ``entities`` map.
+    Always includes ``entry_path`` (the app's UI landing page; default /login
+    for the fullstack demo scaffold, '/' for apps with no login such as intake).
+    Adds one path per entity key (ASCII slug, PII-free) from the manifest's
+    ``entities`` map.
 
     Shape assumed:
       manifest["entities"] = {"<entity-key>": {...}, ...}
@@ -105,7 +107,9 @@ def derive_check_paths(manifest: dict) -> list[str]:
     Entity paths use the key directly as a slug segment, e.g.
     entity key "sales-order" -> path "/sales-order".
     """
-    paths: list[str] = ["/login"]
+    if not entry_path.startswith("/"):
+        entry_path = "/" + entry_path
+    paths: list[str] = [entry_path]
     entities: dict = manifest.get("entities", {})
     for key in entities:
         # Guard: entity keys must be ASCII (G-8)
@@ -435,6 +439,15 @@ def main(argv: list[str] | None = None) -> int:
         help="Path to screen-manifest.json (optional; enables entity path derivation)",
     )
     parser.add_argument(
+        "--entry-path",
+        default="/login",
+        help=(
+            "App UI entry path (default /login for the fullstack demo scaffold). "
+            "Apps with no login page (e.g. the intake app) serve their entry at '/' "
+            "— pass --entry-path / to avoid a false-negative 404."
+        ),
+    )
+    parser.add_argument(
         "--out",
         default=str(_REPO_ROOT / "docs" / "intake-inbox" / "ui-checks"),
         help="Output directory for JSON report (default: docs/intake-inbox/ui-checks/)",
@@ -461,7 +474,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
 
     # --- Derive paths ---
-    paths = derive_check_paths(manifest)
+    paths = derive_check_paths(manifest, entry_path=args.entry_path)
 
     # --- Screenshot output dir (gitignored) ---
     shot_dir = _REPO_ROOT / "apps" / "intake" / "data-mirror" / "ui-shots" / args.slug
@@ -473,7 +486,7 @@ def main(argv: list[str] | None = None) -> int:
     all_results.extend(check_http(args.base_url, paths))
 
     # 2. Asset integrity check
-    all_results.extend(check_assets(args.base_url, "/login"))
+    all_results.extend(check_assets(args.base_url, paths[0]))
 
     # 3. Browser checks (Playwright; graceful degradation if unavailable)
     all_results.extend(
