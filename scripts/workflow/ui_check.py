@@ -444,6 +444,97 @@ def write_report(results: list[CheckResult], slug: str, out_path: Path) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Vision-review request emitter (--full-vision, LLM 0)
+# ---------------------------------------------------------------------------
+
+_RUBRIC_REPO_PATH = "design/vision-qa-rubric.yaml"
+_VISION_REQUEST_SUFFIX = "-vision-request.json"
+
+
+def _emit_vision_review_request(
+    slug: str,
+    shot_dir: Path,
+    out_dir: Path,
+) -> Path:
+    """Collect captured screenshots and emit a vision-review-request.json.
+
+    No LLM calls are made here.  The file is a handoff artefact for CDO/QA
+    who will open each screenshot in zai-mcp analyze_image and score against
+    the rubric.
+
+    Output: docs/intake-inbox/ui-checks/<slug>-vision-request.json
+    Schema (PII-free):
+      {
+        "slug": "<slug>",
+        "generated_by": "ui_check --full-vision",
+        "generated_at": "<ISO-8601 UTC>",
+        "screenshots": [
+          {"page": "<path>", "viewport": "<desktop|mobile>", "path": "<abs-path>"}
+        ],
+        "rubric": "design/vision-qa-rubric.yaml",
+        "reference_shots_dir": "design/references/<slug>/"  (omitted when absent),
+        "instructions": "CDO/QA: open each screenshot with zai-mcp analyze_image, score rubric criteria, write verdict to docs/intake-inbox/ui-checks/<slug>-vision-verdict.json"
+      }
+
+    When no screenshots exist the list is empty and a WARNING is printed.
+    """
+    screenshots: list[dict] = []
+
+    if shot_dir.exists():
+        # Collect PNG files grouped by viewport inferred from filename prefix.
+        for png in sorted(shot_dir.glob("*.png")):
+            name = png.name  # e.g. desktop_login.png, mobile_root.png
+            if name.startswith("desktop_"):
+                viewport = "desktop"
+                page_slug = name[len("desktop_"):][:-4].replace("_", "/")
+                page_path = f"/{page_slug}" if page_slug else "/"
+            elif name.startswith("mobile_"):
+                viewport = "mobile"
+                page_slug = name[len("mobile_"):][:-4].replace("_", "/")
+                page_path = f"/{page_slug}" if page_slug else "/"
+            else:
+                viewport = "unknown"
+                page_path = f"/{name[:-4]}"
+            screenshots.append({
+                "page": page_path,
+                "viewport": viewport,
+                "path": str(png),
+            })
+
+    if not screenshots:
+        print(
+            f"WARNING: --full-vision: no screenshots found in {shot_dir}. "
+            "Run ui_check.py without --full-vision first (requires Playwright) "
+            "to capture screenshots, then re-run with --full-vision.",
+            file=sys.stderr,
+        )
+
+    # Optional: reference shots directory for theme diff
+    rubric_ref = _REPO_ROOT / "design" / "references" / slug
+    request: dict = {
+        "slug": slug,
+        "generated_by": "ui_check --full-vision",
+        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "screenshots": screenshots,
+        "rubric": _RUBRIC_REPO_PATH,
+        "instructions": (
+            f"CDO/QA: open each screenshot with zai-mcp analyze_image, "
+            f"score rubric criteria from {_RUBRIC_REPO_PATH}, "
+            f"write verdict to docs/intake-inbox/ui-checks/{slug}-vision-verdict.json"
+        ),
+    }
+    if rubric_ref.exists():
+        request["reference_shots_dir"] = str(rubric_ref)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    request_path = out_dir / f"{slug}{_VISION_REQUEST_SUFFIX}"
+    request_path.write_text(
+        json.dumps(request, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    return request_path
+
+
+# ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
 
@@ -484,7 +575,11 @@ def main(argv: list[str] | None = None) -> int:
         "--full-vision",
         action="store_true",
         default=False,
-        help="[Reserved / no-op for MVP] Future: zai-mcp-server pixel-diff gate",
+        help=(
+            "Generate a vision-review-request.json alongside the normal report. "
+            "Collects captured screenshots and the rubric path; LLM calls = 0. "
+            "CDO/QA reads the request and runs zai-mcp analyze_image to score."
+        ),
     )
     args = parser.parse_args(argv)
 
@@ -548,7 +643,12 @@ def main(argv: list[str] | None = None) -> int:
             "pip install playwright && playwright install chromium"
         )
     if args.full_vision:
-        print("NOTE: --full-vision flag recognised but no-op in MVP tier.")
+        vision_request_path = _emit_vision_review_request(
+            slug=args.slug,
+            shot_dir=shot_dir,
+            out_dir=out_dir,
+        )
+        print(f"Vision-review request: {vision_request_path}")
 
     return 0
 
