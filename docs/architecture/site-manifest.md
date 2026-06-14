@@ -95,10 +95,13 @@ The business-system path is **not modified**. Zero regression risk for existing 
 | `assets` | array | optional; asset path refs |
 | `cta` | object | optional; `label` + `href` |
 
-### contact block (G-1 invariant)
+### contact block (G-1 invariant, DEC-5)
 
-`contact.wire_key = "contact.lead_capture"` is a **reference** to the middle contract wire key.
-`site_manifest.py` does not reimplement the contract — the landing-astro adapter resolves the wire key against `middle/contract/` at build time.
+`contact.wire_key = "entity.create"` reuses the existing middle contract wire key.
+`contact.entity_type = "lead"` is passed as the `entity_type` parameter.
+`site_manifest.py` does not reimplement the contract — the landing-astro adapter
+POSTs to `entity.create` with `{ entity_type: "lead", data: { name, email, message } }`.
+No new wire key is created (open-closed, G-1).
 
 ## 3. Section Catalog Relationship
 
