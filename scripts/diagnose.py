@@ -1199,6 +1199,155 @@ def g14_intake_pipeline_health(
     )
 
 
+def g15_marketing_site_visual_gate(
+    cases_dir: Path | None = None,
+    ui_checks_dir: Path | None = None,
+) -> GuardResult:
+    """G-15 / Growth-65 — marketing-site deliverable must pass vision-QA before DELIVERED.
+
+    Reads infra/registry/cases/*.yaml.  For each case whose deliverable_kind is
+    'marketing-site', checks that a vision-QA verdict file exists at
+    docs/intake-inbox/ui-checks/<slug>-vision-verdict.json AND contains
+    verdict=="PASS".
+
+    Returns SPEC when:
+      - infra/registry/cases/ does not exist, OR
+      - no case files are present, OR
+      - no case with deliverable_kind==marketing-site exists.
+
+    Returns FAIL when a marketing-site case has triage_status=="delivered" (or
+    "DELIVERED") but no verdict file or a non-PASS verdict.
+
+    Note: the agency-demo profile is a fixture/fixture, not a case file —
+    it is excluded by this guard's scope (cases only, not profiles/).
+
+    The optional `cases_dir` / `ui_checks_dir` parameters allow tests to inject
+    temporary directories instead of the repo defaults (same pattern as G-14).
+    """
+    _cases_dir: Path = cases_dir if cases_dir is not None else REPO_ROOT / "infra" / "registry" / "cases"
+    _ui_checks_dir: Path = ui_checks_dir if ui_checks_dir is not None else REPO_ROOT / "docs" / "intake-inbox" / "ui-checks"
+
+    if not _cases_dir.exists():
+        return GuardResult(
+            "G-15", "marketing-site visual gate", "Growth-65",
+            status="SPEC",
+            notes=(
+                "infra/registry/cases/ not found — "
+                "guard activates once a marketing-site case is registered."
+            ),
+        )
+
+    try:
+        import yaml as _yaml  # type: ignore[import]
+        _has_yaml = True
+    except ImportError:
+        _has_yaml = False
+
+    def _load_case(path: Path) -> dict:
+        if not path.exists():
+            return {}
+        try:
+            text = path.read_text(encoding="utf-8")
+            if _has_yaml:
+                data = _yaml.safe_load(text)
+                return data if isinstance(data, dict) else {}
+            return {}
+        except Exception:
+            return {}
+
+    case_files = [
+        p for p in sorted(_cases_dir.iterdir())
+        if p.is_file()
+        and p.suffix.lower() in {".yaml", ".yml"}
+        and not p.name.startswith(".")
+        and not p.name.startswith("_")
+        and p.name.lower() not in {"readme.yaml", "readme.yml"}
+    ]
+
+    if not case_files:
+        return GuardResult(
+            "G-15", "marketing-site visual gate", "Growth-65",
+            status="SPEC",
+            notes=(
+                "No case files in infra/registry/cases/ yet — "
+                "guard activates once a marketing-site case is registered."
+            ),
+        )
+
+    marketing_cases: list[dict] = []
+    for cf in case_files:
+        case = _load_case(cf)
+        if not case:
+            continue
+        kind = case.get("deliverable_kind") or (
+            case.get("stack", {}).get("deliverable_kind") if isinstance(case.get("stack"), dict) else None
+        )
+        if kind == "marketing-site":
+            marketing_cases.append({"slug": case.get("slug") or cf.stem, "case": case})
+
+    if not marketing_cases:
+        return GuardResult(
+            "G-15", "marketing-site visual gate", "Growth-65",
+            status="SPEC",
+            notes=(
+                f"Scanned {len(case_files)} case file(s); no marketing-site deliverable found — "
+                "guard activates once a marketing-site case is registered."
+            ),
+        )
+
+    violations: list[str] = []
+    for entry in marketing_cases:
+        slug = entry["slug"]
+        case = entry["case"]
+        triage_status = (case.get("triage_status") or "").lower()
+
+        # Only check cases that are in the DELIVERED pipeline state.
+        if triage_status != "delivered":
+            continue
+
+        # Check for a vision-verdict file.
+        verdict_path = _ui_checks_dir / f"{slug}-vision-verdict.json"
+        if not verdict_path.exists():
+            try:
+                _verdict_label = str(verdict_path.relative_to(REPO_ROOT))
+            except ValueError:
+                _verdict_label = str(verdict_path)
+            violations.append(
+                f"{slug}: triage_status=delivered but no vision-verdict file "
+                f"({_verdict_label}) — "
+                "run ui_check --full-vision and complete CDO/QA scoring."
+            )
+            continue
+
+        try:
+            import json as _json
+            verdict_data = _json.loads(verdict_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            violations.append(f"{slug}: vision-verdict file unreadable: {exc}")
+            continue
+
+        verdict = verdict_data.get("verdict", "")
+        if verdict.upper() != "PASS":
+            violations.append(
+                f"{slug}: vision-verdict is {verdict!r} (need PASS) — "
+                "complete CDO/QA rubric scoring before delivery."
+            )
+
+    marketing_count = len(marketing_cases)
+    notes = (
+        f"Scanned {len(case_files)} case file(s); "
+        f"{marketing_count} marketing-site case(s). "
+        "Vision-verdict PASS required before triage_status=delivered."
+    )
+
+    return GuardResult(
+        "G-15", "marketing-site visual gate", "Growth-65",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=notes,
+    )
+
+
 def g13_subagent_output_protocol_wired() -> GuardResult:
     """G-13 / Growth-34 — every persona loop SKILL wires the subagent output protocol.
 
@@ -1253,6 +1402,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-12": g12_catalog_fk_hygiene,
     "G-13": g13_subagent_output_protocol_wired,
     "G-14": g14_intake_pipeline_health,
+    "G-15": g15_marketing_site_visual_gate,
 }
 
 
