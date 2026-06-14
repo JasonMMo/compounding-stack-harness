@@ -35,6 +35,15 @@
 **관련 파일** (신규/수정 예정 — engineer 구현 대기):
 `apps/intake/{qualification_policy.yaml,qualify.py,audit.py}` · `presets/industry-defaults.yaml` · `scripts/workflow/{intake_sync.py,gap_registry_report.py,audit_export.py,ui_check.py,pipeline_emit.py,pipeline_monitor.py,pipeline_status.py}` · `docs/intake-inbox/` · `infra/registry/cases/` · `.claude/skills/pm-delivery-loop/needs-fit-prompt-template.md`
 
+**후속 운영 4건 (2026-06-14, 동일 스레드, CTO 진행 3→2→4→1)**:
+
+1. **deploy·ui_check `--entry-path`** — 검증기가 `/login` 을 하드코딩해 `/login` 없는 intake 앱(/ 진입)에서 false-negative. `/health` 를 권위적 liveness probe 로, UI 진입 경로는 `--entry-path`(기본 `/login`) advisory 로 분리. 교훈: "데모 스캐폴드 = `/login`" 가정이 두 곳에 하드코딩돼 있었음 — 진입 경로는 앱별 파라미터.
+2. **monitor·G-14 latest-terminal-wins** — 노드 상태를 "any NODE_FAIL→failed" 가 아니라 시간순 최신 terminal 이벤트로 판정. codex Step 4b 재판정·성공 재시도가 첫 실패에 latch 안 됨. 전체 이벤트 이력은 case YAML 에 보존(audit).
+3. **needs-fit codex 패스 정식화** — 사전패스(`needs_fit_audit.py`, LLM 0)는 보수적이라 `built-needs-fit-block` 은 **자동 정지 신호**일 뿐. SKILL Step 4b 에 세션 runbook 명문화: 사전패스(프롬프트 생성)→codex spawn→`record-verdict`(LLM 0 loop closer: NEEDS_FIT 재판정 이벤트·review footer·alerts 라우팅)→CEO 게이트. 핵심 통찰: codex judgment 가 키워드-휴리스틱의 false-GAP 을 교정.
+4. **첫 풀-배포 리허설 (#1)** — 합성 적격 리드(score 96)로 VPS 제출→브리지→promote→scaffold→**실 Coolify 배포**→ui_check→needs-fit 전 경로 자동 검증. 라이브 `rehearsal-qa-co.n9n.co.kr` /health·/login HTTP 200 확인 후 전량 회수(Coolify app/project/manifest·compose 커밋·VPS 리드). **실 배포에서만 드러난 autonomous 3 버그 발견·수정**: (a) cp949 — 자식 Python stdout 이 em-dash 출력 시 크래시 → 브리지 subprocess 에 `PYTHONUTF8=1`; (b) 미커밋 compose — Coolify(master clone)가 못 읽어 `docker_compose_raw` 미로드 → 422 → 브리지 deploy 에 `--commit`; (c) ui_check entry-path(위 #1과 동일 클래스).
+
+**남은 follow-up (미해결, scope 보류)**: route_entry 가 case YAML 에 `triage_status: qualify` 미설정 → G-14 가 qualify 케이스를 skip(모니터링 사각). ui_check 엔티티 경로(`/contact` 등)는 vanilla-htmx 가 로그인 후 htmx partial 로 서빙 → 톱레벨 404 false-FAIL (auth-gated 경로는 WARN 으로 강등 필요).
+
 ### Growth-38d (2026-06-12) — domain-expert v2 reconcile + CEO 지침 반영 + 스코프 확인 발송문
 
 - **domain-expert v2 reconcile (CTO 판정)**: enrollment 흐름을 crm/lead → contact(student overlay) → project/resource-assignment 로 14 baseline 내 매핑 채택. finance invoice 복원 (AP 방향 재확인). crm에 lead·activity 추가, project 도메인 신규 진입 → domains 7개로 확정.

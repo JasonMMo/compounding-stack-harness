@@ -419,9 +419,4 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **상세**: [pm.md](docs/learn-logs/pm.md)
 - **결정**: CEO+CTO 합의 (v2 ultraplan 반영). Step 5 외부 인도 게이트 불변(CEO 단독, charter §2)
 - **Open loops**: P1~P6·P8 코드 구현 (engineer) / G-14 SPEC→PASS (cases/ 첫 엔트리 후)
-- **후속 (2026-06-14, 동일 스레드)**:
-  - 배포 검증기 `/health` 권위·`--entry-path` advisory 화 → `/login` 없는 intake false-negative 제거
-  - **monitor·G-14 latest-terminal-wins**: 노드 상태를 최신 terminal 이벤트로 판정 → codex Step 4b 재판정·재시도가 첫 실패에 latch 안 됨
-  - **needs-fit codex 패스 정식화**: `needs_fit_audit.py record-verdict`(LLM 0 loop closer)로 codex 판정→NEEDS_FIT 재판정 이벤트·alerts 라우팅·review footer. SKILL Step 4b 세션 runbook 명문화. 핵심 통찰: 사전패스 BLOCK 은 자동 정지 신호일 뿐, codex judgment 가 false-GAP 교정
-  - **playwright+chromium 설치**: ui_check 실제 스크린샷 가동(operator-local). ui_check 도 `/login` 하드코딩 → `--entry-path` 화(deploy 와 동일 클래스 버그). 라이브 검증 intake.n9n.co.kr PASS 9/0/0
-  - **교훈 (entry-path)**: "데모 스캐폴드 = `/login`" 가정이 deploy·ui_check 두 곳에 하드코딩돼 있었음 — intake 처럼 `/` 진입 앱은 검증기 false-negative. 진입 경로는 앱별 파라미터, `/health` 만 보편 liveness probe
+- **후속 (동일 스레드, 상세 [pm.md](docs/learn-logs/pm.md))**: deploy·ui_check `--entry-path`(`/health` 권위화), monitor·G-14 latest-terminal-wins, needs-fit codex 패스 정식화(`record-verdict` loop closer), playwright 설치, 첫 풀-배포 리허설 — autonomous 배포 3 버그(cp949 child stdout·미커밋 compose·entry-path) 발견·수정, 라이브 200 검증 후 회수
