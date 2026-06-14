@@ -401,6 +401,52 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - Catches/Open loops: 8787 은 HEADROOM 모니터링 서비스 점유 → 대시보드 기본 포트 충돌 시 `--port` 우회. 외부/원격 접속은 미결(메모리 [[todo-external-pipeline-monitor]], Cloudflare Tunnel+Access 후보) — 명시 요청 시에만.
 - Cost: 문서화 세션(이 환류) 소량 / 구현은 engineer subagent 2회 (이전 세션, envelope 반환).
 
+### Growth-65 (2026-06-15) — marketing-site track P1~P5 구현
+
+- Files touched:
+  - `scripts/workflow/site_manifest.py` (신규 — `build_site_manifest()` / `validate_site()`)
+  - `scripts/workflow/scaffold.py` (수정 — marketing-site early-branch)
+  - `presets/site-sections/catalog.yaml` (신규 — 8 section type)
+  - `frontend/adapters/landing-astro/` (신규 — Astro + Tailwind SSG adapter)
+    - `scripts/build-tokens.mjs` (semantic.json + theme.yaml → Tailwind / CSS vars)
+    - `scripts/codegen.mjs` (wire-v1.yaml → contract.gen, G-1 준수)
+    - `src/pages/[...page].astro` (라우터)
+    - 8 섹션 컴포넌트 (hero / feature / cta / testimonial / pricing / faq / contact / footer)
+    - 모션 IntersectionObserver island
+    - `ContactForm` (entity.create 재사용, 신규 wire key ✗)
+  - `scripts/workflow/ui_check.py` (수정 — `--full-vision` 플래그, vision-review-request 생성)
+  - `scripts/diagnose.py` (수정 — G-15 추가)
+  - `apps/intake/intake_to_profile.py` (수정 — `convert()` marketing-site 분기 + `_build_site_block()`)
+  - `apps/intake/qualify.py` (수정 — `_score_marketing_site()`)
+  - `apps/intake/questions.yaml` (수정 — marketing-site / business-system 분기 추가)
+  - `docs/learn-logs/engineer.md` (this ledger)
+
+- Implementation choices:
+  - **landing-astro stack**: Astro + Tailwind SSG — 정적 빌드 = LLM 0, CDN 서빙 가능. react adapter 와 달리 SSR 불필요 (인도물은 완성 HTML).
+  - **build-tokens.mjs**: semantic.json + theme.yaml 두 소스를 읽어 Tailwind config + CSS vars 동시 산출. override-only 패턴 (raw layer 재선언 0).
+  - **codegen.mjs**: wire-v1.yaml → `src/contract/contract.gen.ts` — G-1 준수 (code+status 하드코딩 0). GENERATED 헤더 + .gitignore.
+  - **ContactForm entity.create 재사용 (DEC-5)**: 신규 wire key 없이 `entity.create` 재사용 → contract 안정성 유지.
+  - **G-15**: diagnose.py 에 site-manifest single-source 가드 추가. `scripts/workflow/site_manifest.py` 외 로컬 section type 재선언 검출. fails-closed 증명.
+  - **ui_check.py `--full-vision`**: vision-review-request JSON 생성만 (LLM 호출 0) → CDO/QA 가 `zai-mcp analyze_image` 로 비동기 채점. auto-path LLM 0 불변.
+  - **intake marketing-site 분기**: `deliverable_kind` radio 분기. business-system 질문은 `show_if: deliverable_kind == business_system` 게이팅. marketing-site score는 별도 `_score_marketing_site()` 함수.
+
+- Implementation choices — Decisions (CTO 결정):
+  - **DEC-1**: theme default → `aurora` (대담 그라데이션, SaaS/핀테크/B2B).
+  - **DEC-2**: 폰트 self-host — Fontsource npm 패키지 사용 (CDN 의존 0, G-6 정신).
+  - **DEC-3**: highlight_tier 카드 순서 — CDO 섹션 variant 결정에 따름.
+  - **DEC-5**: 연락폼 wire key `entity.create` 재사용, 신규 key 미추가.
+
+- Tests added:
+  - **L1**: 79 tests PASS (adapter: tokens 6 / wire 9 / sections 28 / smoke 4 + site_manifest 32)
+  - **L1**: 76 tests PASS (intake)
+  - **L1**: 14 tests PASS (vision)
+  - **L3**: Astro build SUCCESS
+  - **diagnose**: 15 가드 0 real FAIL
+
+- Catches surfaced: 없음. escalation 없음.
+
+- Cost: engineer subagent 다회 / envelope 반환 (main context 격리).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
