@@ -474,6 +474,152 @@ def build_codex_prompt(slug: str, paths: dict[str, str]) -> str:
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Codex verdict recorder (session-driven Step 4b loop closer, LLM 0)
+# ---------------------------------------------------------------------------
+
+_VERDICT_TO_EVENT = {
+    "PASS": "NODE_EXIT_OK",
+    "PASS-WITH-CAVEAT": "NODE_EXIT_OK",
+    "BLOCK": "NODE_FAIL",
+}
+
+
+def _import_pipeline_emit():
+    """Import emit_node_event from the sibling pipeline_emit module."""
+    try:
+        from pipeline_emit import emit_node_event  # type: ignore
+    except ImportError:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from pipeline_emit import emit_node_event  # type: ignore
+    return emit_node_event
+
+
+def record_verdict(
+    *,
+    slug: str,
+    client_id: str,
+    verdict: str,
+    score: int | None = None,
+    gaps: Optional[list[str]] = None,
+    cases_dir: Optional[Path] = None,
+    delivery_dir: Optional[Path] = None,
+    alerts_path: Optional[Path] = None,
+) -> dict:
+    """Record a codex Step 4b verdict as a NEEDS_FIT re-judgment (deterministic, LLM 0).
+
+    After a Claude session spawns codex (Agent subagent_type='codex:codex-rescue')
+    and codex writes docs/delivery/<slug>/needs-fit-review.md + returns an envelope,
+    the session calls this to make the verdict's pipeline consequences durable:
+
+      1. Emit a NEEDS_FIT node event into infra/registry/cases/<client_id>.yaml
+         with a fresh timestamp. PASS / PASS-WITH-CAVEAT -> NODE_EXIT_OK;
+         BLOCK -> NODE_FAIL(error_class=needs-fit-BLOCK). Latest-terminal-wins
+         projection (pipeline_monitor / G-14) means this supersedes the earlier
+         conservative deterministic pre-pass event.
+      2. Stamp the review file footer with the codex verdict + timestamp.
+      3. On BLOCK, append a routing block to docs/intake-inbox/alerts.md.
+
+    Returns a summary dict. PII-free throughout (no email/free-text).
+    """
+    verdict = verdict.strip().upper()
+    if verdict not in _VERDICT_TO_EVENT:
+        raise ValueError(
+            f"Unknown verdict {verdict!r}. Must be one of: {sorted(_VERDICT_TO_EVENT)}"
+        )
+
+    cases_dir = cases_dir or (REPO_ROOT / "infra" / "registry" / "cases")
+    delivery_dir = delivery_dir or (REPO_ROOT / "docs" / "delivery" / slug)
+    alerts_path = alerts_path or (REPO_ROOT / "docs" / "intake-inbox" / "alerts.md")
+
+    event = _VERDICT_TO_EVENT[verdict]
+    error_class = "needs-fit-BLOCK" if verdict == "BLOCK" else None
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # 1. Emit the re-judgment node event
+    emit_node_event = _import_pipeline_emit()
+    case_yaml = cases_dir / f"{client_id}.yaml"
+    record = emit_node_event(
+        case_yaml, "NEEDS_FIT", event,
+        slug=slug, score=score, error_class=error_class, ts=ts,
+    )
+
+    # 2. Stamp the review footer (only if the codex report exists)
+    review_path = delivery_dir / "needs-fit-review.md"
+    if review_path.exists():
+        with review_path.open("a", encoding="utf-8") as fh:
+            fh.write(
+                f"\n> Codex refinement verdict: **{verdict}** "
+                f"(session-driven, codex-rescue) — recorded {ts}.\n"
+            )
+
+    # 3. On BLOCK, append an alerts routing block
+    if verdict == "BLOCK":
+        alerts_path.parent.mkdir(parents=True, exist_ok=True)
+        gap_lines = "\n".join(f"  - {g}" for g in (gaps or [])) or "  - (see review)"
+        block = (
+            f"\n## NEEDS_FIT BLOCK — {slug} ({ts})\n"
+            f"- client_id: {client_id}\n"
+            f"- verdict: BLOCK (codex Step 4b)\n"
+            f"- review: docs/delivery/{slug}/needs-fit-review.md\n"
+            f"- GAP routing:\n{gap_lines}\n"
+            f"- action: entity-GAP -> CTO backlog (growth ToDo); "
+            f"AC-GAP -> PM authors acceptance-criteria.md then re-run.\n"
+        )
+        with alerts_path.open("a", encoding="utf-8") as fh:
+            fh.write(block)
+
+    return {
+        "slug": slug,
+        "client_id": client_id,
+        "verdict": verdict,
+        "event": event,
+        "ts": ts,
+        "record": record,
+    }
+
+
+def record_verdict_cli(argv=None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="needs_fit_audit.py record-verdict",
+        description=(
+            "Record a codex Step 4b verdict as a NEEDS_FIT re-judgment node event "
+            "(deterministic loop closer, LLM 0). Run AFTER the codex agent writes "
+            "the refined review and returns its verdict envelope."
+        ),
+    )
+    parser.add_argument("--slug", required=True, help="Customer slug (ASCII, G-8)")
+    parser.add_argument("--client-id", required=True, help="Client id (case YAML stem)")
+    parser.add_argument(
+        "--verdict", required=True,
+        choices=["PASS", "PASS-WITH-CAVEAT", "BLOCK"],
+        help="Codex verdict from the returned envelope.",
+    )
+    parser.add_argument("--score", type=int, default=None, help="Qualification score (optional).")
+    parser.add_argument(
+        "--gap", action="append", default=None, dest="gaps",
+        help="A BLOCK GAP routing line (repeatable). PII-free text only.",
+    )
+    parser.add_argument("--cases-dir", default=None, help="Override cases dir (tests).")
+    args = parser.parse_args(argv)
+
+    result = record_verdict(
+        slug=args.slug,
+        client_id=args.client_id,
+        verdict=args.verdict,
+        score=args.score,
+        gaps=args.gaps,
+        cases_dir=Path(args.cases_dir) if args.cases_dir else None,
+    )
+    print("=== NEEDS-FIT VERDICT RECORDED ===")
+    print(f"SLUG:     {result['slug']}")
+    print(f"CLIENT:   {result['client_id']}")
+    print(f"VERDICT:  {result['verdict']} -> {result['event']}")
+    print(f"TS:       {result['ts']}")
+    print("==================================")
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         description="Needs-Fit Audit Gate — deterministic pre-pass + codex prompt builder",
@@ -589,4 +735,8 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
+    # Subcommand dispatch: `record-verdict` closes the codex Step 4b loop;
+    # the default (no subcommand) runs the deterministic pre-pass + prompt build.
+    if len(sys.argv) > 1 and sys.argv[1] == "record-verdict":
+        sys.exit(record_verdict_cli(sys.argv[2:]))
     sys.exit(main())
