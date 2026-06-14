@@ -526,6 +526,12 @@ _ASCII_SAFE = re.compile(r"^[A-Za-z0-9._\-/]+$")
 # so G-8 skips the same build/artefact directories as G-1 and G-6.
 _PATH_IGNORE_PREFIX = ("docs/scaffolds",)
 
+# Astro dynamic route naming: [...slug].astro, [page].astro, [...page].astro.
+# Brackets are Astro's mandatory file-based routing convention (not non-ASCII).
+# Exemption applies only inside frontend/adapters/landing-astro/src/pages/.
+_ASTRO_ROUTE_NAME = re.compile(r"^\[[\w.]+\]\.astro$|^\[\.\.\.[\w.]+\]\.astro$")
+_ASTRO_PAGES_PATH = "frontend/adapters/landing-astro/src/pages"
+
 # Apple asset-catalog retina-scale naming, e.g. AppIcon-512@2x.png, icon@3x~ipad.png.
 # The '@Nx' scale suffix is a REQUIRED Apple convention inside *.xcassets bundles
 # (Capacitor iOS adapter generates these). Renaming would break the iOS build, so
@@ -559,6 +565,10 @@ def g8_ascii_slug() -> GuardResult:
             if _APPLE_ASSET_NAME.match(name) and any(
                 part.endswith(".xcassets") for part in rel_parts
             ):
+                continue
+            # Astro dynamic route exemption: [...slug].astro inside Astro pages dir.
+            # Brackets are mandatory Astro file-based routing convention (ASCII chars).
+            if _ASTRO_ROUTE_NAME.match(name) and rel_str.startswith(_ASTRO_PAGES_PATH):
                 continue
             violations.append(f"non-ASCII or unsafe path component: {rel_str}")
     return GuardResult(
