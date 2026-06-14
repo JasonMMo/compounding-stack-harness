@@ -153,3 +153,10 @@ per-request LLM/infra 비용 측정(charter §5)은 **M1 런타임에 측정할 
 - **첫 vertical 결정 방식**: M2 첫 고객의 산업으로 자동 결정. **사전 vertical 선택 금지** — 도메인 전문가 없는 추측은 비싸다.
 - **무료 trial 정책**: M2 까지 3개사 무료 사용 허용 (case study 권리 양도 받음). M3 부터 paid only.
 - **OSS / 상용 분리선**: middle contract + adapter compliance test = OSS (Apache 2.0). orchestrator + expert-agent definitions + customer profile tooling = commercial.
+
+## Intake 파이프라인 매출 신호 (Growth-62)
+
+자율 intake 파이프라인이 두 가지 매출 신호를 생성한다:
+
+- **gap-registry → Growth**: `docs/intake-inbox/gap-registry.jsonl` 에 누적되는 미충족 gap_category 가 count≥3 에 도달하면 PROMOTE 플래그 → CTO 주간 스캔 → 해당 축(7축 중) Growth-N 생성 → engineer 구현 → 향후 리드 가점. 미충족 리드가 **제품 확장 백로그의 우선순위 입력**이 된다 (복리 축적).
+- **stalled-lead → cost-report**: `pipeline_monitor.py` 가 SLA 초과 stall 케이스를 감지하면 `docs/intake-inbox/alerts.md` 에 기록. stall된 qualify 리드는 **예상 매출 손실 신호** — 매월 cost-report (`cost-reports/<YYYY-MM>.md`) 에 환류하여 DevOps/PM 이 병목 개선 우선순위를 잡는다.
