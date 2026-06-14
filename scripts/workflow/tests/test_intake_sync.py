@@ -17,6 +17,7 @@ Covered:
      SCAFFOLDED node events into a tmp cases yaml.
      Scaffold subprocess is monkeypatched to return rc=0.
   5. promote_draft null-stack default injection unit test.
+  6. rsync_inbox rsync/scp fallback -- shutil.which determines which tool is used.
 """
 from __future__ import annotations
 
@@ -37,12 +38,14 @@ WORKFLOW_DIR = REPO_ROOT / "scripts" / "workflow"
 if str(WORKFLOW_DIR) not in sys.path:
     sys.path.insert(0, str(WORKFLOW_DIR))
 
+import intake_sync as _intake_sync_mod
 from intake_sync import (  # noqa: E402
     is_processed,
     load_inbox,
     promote_draft,
     record_processed,
     route_entry,
+    rsync_client_artifacts,
     rsync_inbox,
 )
 
@@ -110,7 +113,8 @@ def _make_draft_yaml(tmp_path: Path, slug: str = _FAKE_SLUG, null_stack: bool = 
 
 
 def _fake_subprocess_ok(*args, **kwargs):
-    """Monkeypatch target: returns rc=0 with empty output."""
+    """Monkeypatch target: returns rc=0 with empty output.  Accepts **kwargs
+    so the encoding kwargs added by BUG-1 fix do not cause TypeError."""
     result = types.SimpleNamespace(
         returncode=0, stdout="VERDICT: PASS\n", stderr=""
     )
@@ -387,7 +391,7 @@ def test_route_qualify_scaffold_fail_records_failed(tmp_path, monkeypatch):
     _make_draft_yaml(mirror_dir, null_stack=False)
     entry = _make_entry(status="qualify")
 
-    def _fake_fail(*a, **kw):
+    def _fake_fail(*a, **kw):  # **kw absorbs encoding kwargs
         return types.SimpleNamespace(returncode=1, stdout="", stderr="entity not found")
 
     result = route_entry(
@@ -688,4 +692,104 @@ def test_route_qualify_dry_run_no_mutation(tmp_path, monkeypatch):
     assert not processed.exists(), "processed.jsonl should not be written in dry-run"
     assert not (profiles_dir / f"{_FAKE_SLUG}.yaml").exists(), (
         "profiles file should not be written in dry-run"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 8. rsync / scp fallback (BUG-2 fix)
+# ---------------------------------------------------------------------------
+
+
+def test_rsync_inbox_uses_rsync_when_available(tmp_path, monkeypatch):
+    """When shutil.which('rsync') returns a path, subprocess is called with rsync."""
+    mirror = tmp_path / "mirror"
+    mirror.mkdir()
+
+    captured: list[list[str]] = []
+
+    def _fake_run(argv, *args, **kwargs):
+        captured.append(list(argv))
+        return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr("intake_sync.shutil.which", lambda name: "/usr/bin/rsync" if name == "rsync" else None)
+    monkeypatch.setattr("intake_sync.subprocess.run", _fake_run)
+
+    rsync_inbox(no_ssh=False, mirror_dir=mirror)
+
+    assert len(captured) == 1, f"Expected 1 subprocess call, got {len(captured)}"
+    assert captured[0][0] == "rsync", f"Expected rsync command, got {captured[0][0]!r}"
+
+
+def test_rsync_inbox_falls_back_to_scp_when_rsync_absent(tmp_path, monkeypatch):
+    """When shutil.which('rsync') returns None, subprocess is called with scp."""
+    mirror = tmp_path / "mirror"
+    mirror.mkdir()
+
+    captured: list[list[str]] = []
+
+    def _fake_run(argv, *args, **kwargs):
+        captured.append(list(argv))
+        return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr("intake_sync.shutil.which", lambda name: None)
+    monkeypatch.setattr("intake_sync.subprocess.run", _fake_run)
+
+    rsync_inbox(no_ssh=False, mirror_dir=mirror)
+
+    assert len(captured) == 1, f"Expected 1 subprocess call, got {len(captured)}"
+    argv = captured[0]
+    assert argv[0] == "scp", f"Expected scp command, got {argv[0]!r}"
+    # Must include the inbox.jsonl remote path
+    assert any("inbox.jsonl" in arg for arg in argv), (
+        f"inbox.jsonl not found in scp argv: {argv}"
+    )
+    # Must include the local mirror path
+    local_inbox = str(mirror / "inbox.jsonl")
+    assert local_inbox in argv, f"local inbox path {local_inbox!r} not in argv: {argv}"
+
+
+def test_rsync_client_artifacts_uses_rsync_when_available(tmp_path, monkeypatch):
+    """When shutil.which('rsync') returns a path, rsync is used for client pull."""
+    mirror = tmp_path / "mirror"
+    mirror.mkdir()
+
+    captured: list[list[str]] = []
+
+    def _fake_run(argv, *args, **kwargs):
+        captured.append(list(argv))
+        return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr("intake_sync.shutil.which", lambda name: "/usr/bin/rsync" if name == "rsync" else None)
+    monkeypatch.setattr("intake_sync.subprocess.run", _fake_run)
+
+    rsync_client_artifacts(_FAKE_CLIENT, no_ssh=False, mirror_dir=mirror)
+
+    assert len(captured) == 1
+    assert captured[0][0] == "rsync"
+
+
+def test_rsync_client_artifacts_falls_back_to_scp_when_rsync_absent(tmp_path, monkeypatch):
+    """When shutil.which('rsync') returns None, scp -r is used for client pull."""
+    mirror = tmp_path / "mirror"
+    mirror.mkdir()
+
+    captured: list[list[str]] = []
+
+    def _fake_run(argv, *args, **kwargs):
+        captured.append(list(argv))
+        return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr("intake_sync.shutil.which", lambda name: None)
+    monkeypatch.setattr("intake_sync.subprocess.run", _fake_run)
+
+    rsync_client_artifacts(_FAKE_CLIENT, no_ssh=False, mirror_dir=mirror)
+
+    assert len(captured) == 1
+    argv = captured[0]
+    assert argv[0] == "scp", f"Expected scp, got {argv[0]!r}"
+    # Must be a recursive copy (-r flag)
+    assert "-r" in argv, f"-r flag not in scp argv: {argv}"
+    # Must reference the client_id in the remote path
+    assert any(_FAKE_CLIENT in arg for arg in argv), (
+        f"client_id {_FAKE_CLIENT!r} not in scp argv: {argv}"
     )
