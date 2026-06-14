@@ -97,6 +97,19 @@
 - **설계 결정 (CTO)**: ① domain-expert 와의 경계 — PM 은 *무엇이 필요한가* (needs·우선순위·인수), expert 는 *그것이 도메인적으로 무엇인가* (catalog 매핑·도메인 언어). ② loop 종료 게이트 = contribute-back (CLAUDE.md §7 과 1:1). ③ acceptance criteria 는 QA 감수 필수 — "측정 가능성 우선" 원칙을 고객 인수에도 적용. ④ honest-promise — Growth-17 Scene 5 vaporware 교훈을 고객 약속 규칙으로 승격.
 - **첫 실전**: M2 첫 고객 후보 발생 시 loop #1 회전. 그 전 준비물: 3-페르소나 인터뷰 질문 시트 초안 (Initial Task 5).
 
+### Growth-65 (2026-06-15) — intake marketing-site 분기 (P5)
+
+- `apps/intake/questions.yaml` 수정:
+  - `deliverable_kind` radio 추가 (업무시스템 / 홈페이지) — 공통 최상단 질문.
+  - marketing-site 후속질문 7종: brand(브랜드명) / tagline(핵심 슬로건) / target(타겟 고객) / pages(원하는 페이지) / tone(분위기·톤) / reference(참고 사이트) / cta(전환 버튼 목적).
+  - business-system 전용 질문 전원 `show_if: deliverable_kind == business_system` 게이팅 — 홈페이지 의뢰 고객에게 stack/dialect 질문 노출 0.
+- answer → site 매핑:
+  - `ms_tone` → theme (aurora / studio).
+  - `ms_pages` → 페이지별 기본 섹션 템플릿.
+  - copy placeholder 생성 (CMO / 고객 정제용 draft, 인도 전 교체 대상).
+- `qualify._score_marketing_site()` 채점 신호 8종: target / pages / cta / tone / budget / reference 등. 이커머스 scope 신호 = disqualify 아님 (gap-registry 누적 대상).
+- pm-delivery-loop SKILL 에 `deliverable_kind` 분기 명시 — business-system과 marketing-site 경로 분리.
+
 ## §2 — Loop 회전 기록
 
 | # | 고객 | 시작 | 단계 | 상태 |
