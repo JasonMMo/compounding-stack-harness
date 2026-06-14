@@ -23,3 +23,5 @@
 | [devops-agent.md](devops-agent.md) | DevOps | preview 티어 운영·디지털 자산 레지스트리·CI/CD·시크릿 볼트·설치 런북·인프라 비용 추적 |
 
 상세 역할 정의: [`docs/business/partnership-charter.md`](../../docs/business/partnership-charter.md), agent frontmatter 규약: `.claude/rules/agent-definition.md` (user-global).
+
+> **[주석]** Needs-Fit gate (Step 4b)는 `codex:codex-rescue` 호출 — 상시 페르소나 아님 (pm-delivery-loop SKILL §Needs-Fit Audit Gate 참조).
