@@ -1,7 +1,9 @@
 # backend/adapters/supabase — Supabase Backend Adapter
 
-> **상태**: implemented (M1). Supabase managed PostgreSQL + PostgREST 를
-> middle wire-protocol contract 와 연결하는 swap-compatible backend adapter.
+> **상태**: implemented + **L4 live-verified (2026-06-14)**. Supabase managed
+> PostgreSQL + PostgREST 를 middle wire-protocol contract 와 연결하는
+> swap-compatible backend adapter. 실 프로젝트 대상 create/find/patch/delete
+> + slug→table 왕복 검증 완료 (PostgREST 가 id/created_at/updated_at populate).
 
 ## 목적
 
@@ -115,8 +117,9 @@ unit 16 PASS 는 `httpx.MockTransport` 기반(네트워크 0)이라 L4 live 와 
 
 ## Open Loops (구현 보류 항목)
 
-1. **L4 live 테스트**: Supabase 프로젝트 미존재 → live 미실행. 위 "L4 Live Activation"
-   순서대로 프로비저닝 후 실행 (env 템플릿 `infra/secrets/supabase.env.example`).
+1. ~~**L4 live 테스트**~~ ✅ **완료 (2026-06-14)**: 실 프로젝트(Free)에 `smoke_test`
+   테이블로 create/find/patch/delete + slug fallback 왕복 PASS (10/10 체크).
+   재실행 스모크: env 채운 뒤 `python out/supabase_smoke.py` (out/ gitignored 스크립트).
 
 2. **Supabase Auth (GoTrue) 통합 보류**: 현재 shared `routers/auth.py` 의
    in-memory demo/demo 인증 재사용. 실제 multi-user 인증은 GoTrue JWT +
