@@ -36,6 +36,7 @@ from needs_fit_audit import (  # noqa: E402
     load_manifest_entities,
     parse_acceptance_criteria,
     parse_needs,
+    record_verdict,
     render_review,
     strip_pii,
 )
@@ -449,3 +450,79 @@ class TestEndToEnd:
         content = out_path.read_text(encoding="utf-8")
         assert "pii@example.com" not in content
         assert "02-9999-0000" not in content
+
+
+class TestRecordVerdict:
+    """Step 4b codex verdict recorder (deterministic loop closer, LLM 0)."""
+
+    def _read_case(self, cases_dir: Path, client_id: str) -> dict:
+        import yaml
+        return yaml.safe_load((cases_dir / f"{client_id}.yaml").read_text(encoding="utf-8"))
+
+    def test_pass_emits_node_exit_ok(self, tmp_path):
+        cases = tmp_path / "cases"
+        res = record_verdict(
+            slug="acme", client_id="c1", verdict="PASS", score=80,
+            cases_dir=cases, delivery_dir=tmp_path / "d", alerts_path=tmp_path / "alerts.md",
+        )
+        assert res["event"] == "NODE_EXIT_OK"
+        case = self._read_case(cases, "c1")
+        ev = case["pipeline_events"][-1]
+        assert ev["node_id"] == "NEEDS_FIT" and ev["event"] == "NODE_EXIT_OK"
+        assert ev["error_class"] is None
+
+    def test_block_emits_node_fail_and_alert(self, tmp_path):
+        cases = tmp_path / "cases"
+        alerts = tmp_path / "alerts.md"
+        res = record_verdict(
+            slug="acme", client_id="c2", verdict="BLOCK", score=60,
+            gaps=["N-1: payroll entity missing -> CTO backlog"],
+            cases_dir=cases, delivery_dir=tmp_path / "d", alerts_path=alerts,
+        )
+        assert res["event"] == "NODE_FAIL"
+        case = self._read_case(cases, "c2")
+        ev = case["pipeline_events"][-1]
+        assert ev["event"] == "NODE_FAIL" and ev["error_class"] == "needs-fit-BLOCK"
+        text = alerts.read_text(encoding="utf-8")
+        assert "NEEDS_FIT BLOCK — acme" in text
+        assert "payroll entity missing" in text
+
+    def test_caveat_treated_as_exit_ok(self, tmp_path):
+        res = record_verdict(
+            slug="acme", client_id="c3", verdict="PASS-WITH-CAVEAT",
+            cases_dir=tmp_path / "cases", delivery_dir=tmp_path / "d",
+            alerts_path=tmp_path / "alerts.md",
+        )
+        assert res["event"] == "NODE_EXIT_OK"
+
+    def test_unknown_verdict_raises(self, tmp_path):
+        with pytest.raises(ValueError):
+            record_verdict(
+                slug="acme", client_id="c4", verdict="MAYBE",
+                cases_dir=tmp_path / "cases", delivery_dir=tmp_path / "d",
+                alerts_path=tmp_path / "alerts.md",
+            )
+
+    def test_footer_stamped_when_review_exists(self, tmp_path):
+        delivery = tmp_path / "d"
+        delivery.mkdir(parents=True)
+        review = delivery / "needs-fit-review.md"
+        review.write_text("# Needs-Fit Review — acme\n", encoding="utf-8")
+        record_verdict(
+            slug="acme", client_id="c5", verdict="PASS",
+            cases_dir=tmp_path / "cases", delivery_dir=delivery,
+            alerts_path=tmp_path / "alerts.md",
+        )
+        assert "Codex refinement verdict: **PASS**" in review.read_text(encoding="utf-8")
+
+    def test_no_pii_in_alert(self, tmp_path):
+        alerts = tmp_path / "alerts.md"
+        record_verdict(
+            slug="acme", client_id="c6", verdict="BLOCK",
+            gaps=["N-1: order flow gap -> PM adds criteria"],
+            cases_dir=tmp_path / "cases", delivery_dir=tmp_path / "d", alerts_path=alerts,
+        )
+        text = alerts.read_text(encoding="utf-8")
+        assert "@" not in text  # no email
+        # only the PII-free client_id + slug + routing present
+        assert "c6" in text and "acme" in text
