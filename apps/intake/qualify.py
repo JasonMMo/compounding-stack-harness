@@ -68,8 +68,64 @@ def load_policy(path: Path | None = None) -> dict:
 # Scoring
 # ---------------------------------------------------------------------------
 
+def _score_marketing_site(answers: dict, policy: dict) -> int:
+    """marketing-site specific scoring. Uses marketing_site_scoring block.
+
+    Signals: brand clarity, target audience, page count, CTA, tone, budget, reference sites.
+    LLM 0 — deterministic lookup only.
+    """
+    ms_policy = policy.get("marketing_site_scoring", {})
+    w = ms_policy.get("weights", {})
+    score = int(ms_policy.get("base_score", 50))
+
+    # has_company_name or ms_brand_name
+    brand = answers.get("ms_brand_name", "").strip() or answers.get("company_name", "").strip()
+    if brand:
+        score += int(w.get("has_company_name", 5))
+
+    # has_target_audience (scope clarity)
+    if answers.get("ms_target_audience", "").strip():
+        score += int(w.get("has_target_audience", 10))
+
+    # page_count_per (capped)
+    pages = _as_list(answers.get("ms_pages", []))
+    cap = int(w.get("page_count_cap", 4))
+    effective = min(len(pages), cap)
+    score += effective * int(w.get("page_count_per", 3))
+
+    # has_primary_cta
+    if answers.get("ms_primary_cta", "").strip():
+        score += int(w.get("has_primary_cta", 5))
+
+    # has_tone_preference
+    if answers.get("ms_tone", "").strip():
+        score += int(w.get("has_tone_preference", 5))
+
+    # budget
+    budget = answers.get("ceo_budget_setup", "")
+    if budget in ("500_1000", "over_1000"):
+        score += int(w.get("budget_over_500", 10))
+    elif budget == "300_500":
+        score += int(w.get("budget_300_500", 5))
+    elif budget == "under_300":
+        score += int(w.get("budget_under_300", -5))
+
+    # has_reference_sites
+    if answers.get("ms_reference_sites", "").strip():
+        score += int(w.get("has_reference_sites", 3))
+
+    return max(0, min(100, score))
+
+
 def score_answers(answers: dict, policy: dict) -> int:
-    """Apply scoring weights deterministically. Returns int clamped 0..100."""
+    """Apply scoring weights deterministically. Returns int clamped 0..100.
+
+    Routes to _score_marketing_site() when deliverable_kind=marketing-site.
+    """
+    deliverable_kind = answers.get("deliverable_kind", "business-system")
+    if deliverable_kind == "marketing-site":
+        return _score_marketing_site(answers, policy)
+
     w = policy["scoring"]["weights"]
     score = policy["scoring"]["base_score"]
 
@@ -143,10 +199,44 @@ def detect_gaps(answers: dict, policy: dict) -> list[GapRecord]:
     """
     Inspect answer fields and emit a GapRecord per matched gap_definition.
     Skips entries with already_served:true (they are served, not gaps).
+
+    For marketing-site: checks scope signals (ecommerce complexity) in ms_reference_sites
+    and free_notes. business-system gaps (dialect/auth/etc.) are skipped for marketing-site.
     """
     gap_defs = policy.get("gap_definitions", {})
     records: list[GapRecord] = []
 
+    deliverable_kind = answers.get("deliverable_kind", "business-system")
+
+    # ── marketing-site scope signals ──────────────────────────
+    if deliverable_kind == "marketing-site":
+        ms_scope_defs = gap_defs.get("marketing_site_scope", {})
+        _ecommerce_keywords = ["쇼핑몰", "이커머스", "장바구니", "결제", "shopping cart",
+                               "ecommerce", "e-commerce", "online store", "회원가입", "로그인 기능"]
+        _scope_fields = ["ms_reference_sites", "free_notes", "ms_primary_cta"]
+        ecommerce_triggered = False
+        trigger_detail = ""
+        for field in _scope_fields:
+            val = str(answers.get(field, "") or "").lower()
+            for kw in _ecommerce_keywords:
+                if kw.lower() in val:
+                    ecommerce_triggered = True
+                    trigger_detail = f"{field} contains '{kw}'"
+                    break
+            if ecommerce_triggered:
+                break
+        if ecommerce_triggered:
+            ec_def = ms_scope_defs.get("ecommerce", {})
+            if ec_def and not ec_def.get("already_served", False):
+                records.append(GapRecord(
+                    gap_category=ec_def.get("gap_category", "marketing-site-scope-ecommerce"),
+                    todo_axis=ec_def.get("todo_axis", "creater"),
+                    trigger=trigger_detail,
+                    expansion_note=ec_def.get("expansion_note", "").strip(),
+                ))
+        return records
+
+    # ── business-system gaps below ─────────────────────────────
     # ── data_residency (ceo_data_security) ──
     data_security = answers.get("ceo_data_security", "")
     residency_defs = gap_defs.get("data_residency", {})
