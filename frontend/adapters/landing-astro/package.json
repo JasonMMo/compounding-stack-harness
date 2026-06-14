@@ -1,0 +1,31 @@
+{
+  "name": "compounding-stack-landing-astro",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Astro + Tailwind SSG marketing-site adapter — compounding-stack-harness",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "node scripts/codegen.mjs && node scripts/build-tokens.mjs aurora && astro build",
+    "preview": "astro preview",
+    "codegen": "node scripts/codegen.mjs",
+    "build:tokens": "node scripts/build-tokens.mjs",
+    "test": "node --test tests/smoke.test.mjs",
+    "test:tokens": "node --test tests/tokens.test.mjs",
+    "test:sections": "node --test tests/sections.test.mjs",
+    "test:wire": "node --test tests/wire.test.mjs"
+  },
+  "dependencies": {
+    "astro": "^4.16.18",
+    "@astrojs/tailwind": "^5.1.4",
+    "tailwindcss": "^3.4.17",
+    "@fontsource/plus-jakarta-sans": "^5.1.1",
+    "@fontsource/inter": "^5.1.1",
+    "@fontsource/dm-serif-display": "^5.1.1",
+    "@fontsource/dm-sans": "^5.1.1"
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.0",
+    "typescript": "^5.6.3"
+  }
+}
