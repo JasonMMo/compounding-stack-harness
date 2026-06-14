@@ -10,7 +10,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, unlinkSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -57,7 +57,7 @@ test('build-tokens studio: exits 0 and emits CSS', () => {
 })
 
 test('build-tokens unknown slug: falls back to aurora (DEC-1)', () => {
-  const out = runBuildTokens('__nonexistent_theme__')
+  runBuildTokens('__nonexistent_theme__')
   // Script should warn to stderr and fall back
   assert.ok(existsSync(CSS_OUT), 'tokens.gen.css must exist even with unknown theme (fallback)')
   // The CSS output should be aurora content (not empty)
@@ -66,7 +66,7 @@ test('build-tokens unknown slug: falls back to aurora (DEC-1)', () => {
 })
 
 test('build-tokens "default" slug: falls back to aurora (DEC-1)', () => {
-  const out = runBuildTokens('default')
+  runBuildTokens('default')
   assert.ok(existsSync(CSS_OUT), 'tokens.gen.css must exist after "default" -> aurora fallback')
   const css = readFileSync(CSS_OUT, 'utf8')
   assert.ok(css.includes(':root {'), 'CSS must be valid after default fallback')
