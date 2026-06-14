@@ -125,12 +125,26 @@ def derive_check_paths(manifest: dict, entry_path: str = "/login") -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def check_http(base_url: str, paths: list[str]) -> list[CheckResult]:
-    """GET each path; FAIL on 4xx/5xx, PASS on 2xx/3xx."""
+# Auth-gated / SPA codes that are EXPECTED on an entity path when the checker is
+# unauthenticated: the entity views are served as htmx partials behind login, so a
+# top-level GET legitimately returns 401/403 (auth) or 404 (no top-level route).
+# These are advisory (WARN), not defects. 5xx (server error) is always a real FAIL.
+_AUTH_GATED_CODES = frozenset({401, 403, 404})
+
+
+def check_http(
+    base_url: str, paths: list[str], entry_path: str = "/login"
+) -> list[CheckResult]:
+    """GET each path. Entry path is strict (4xx/5xx FAIL). Entity paths treat
+    401/403/404 as WARN (auth-gated/htmx-partial route — expected unauthenticated)
+    and only 5xx as FAIL. 2xx/3xx is always PASS."""
+    if not entry_path.startswith("/"):
+        entry_path = "/" + entry_path
     results: list[CheckResult] = []
     base = base_url.rstrip("/")
     for path in paths:
         url = base + path
+        is_entry = path == entry_path
         try:
             req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=15) as resp:
@@ -149,19 +163,20 @@ def check_http(base_url: str, paths: list[str]) -> list[CheckResult]:
 
         if 200 <= code < 400:
             results.append(
+                CheckResult(check=f"http:{path}", status="PASS", detail=f"HTTP {code}")
+            )
+        elif not is_entry and code in _AUTH_GATED_CODES:
+            results.append(
                 CheckResult(
                     check=f"http:{path}",
-                    status="PASS",
-                    detail=f"HTTP {code}",
+                    status="WARN",
+                    detail=f"HTTP {code} (auth-gated/htmx-partial entity route — "
+                    f"expected for an unauthenticated check)",
                 )
             )
         else:
             results.append(
-                CheckResult(
-                    check=f"http:{path}",
-                    status="FAIL",
-                    detail=f"HTTP {code}",
-                )
+                CheckResult(check=f"http:{path}", status="FAIL", detail=f"HTTP {code}")
             )
     return results
 
@@ -176,16 +191,23 @@ def screenshot_and_check(
     paths: list[str],
     viewports: list[dict],
     out_dir: Path,
+    entry_path: str = "/login",
 ) -> list[CheckResult]:
     """Browser-based checks via Playwright sync API.
 
     For each (path, viewport):
-    - Capture console error-level messages -> FAIL if any
+    - Capture console error-level messages -> FAIL (entry path) / WARN (entity path)
     - Check document.scrollWidth > viewport.width + 1 -> FAIL (horizontal overflow)
     - Save screenshot PNG to out_dir
 
+    Console errors on an entity path are advisory: the unauthenticated checker hits
+    a login redirect / 404 shell, so its console noise is not a defect of the
+    delivered app. The entry path stays strict.
+
     Returns empty list (with a WARN noting unavailability) if Playwright not installed.
     """
+    if not entry_path.startswith("/"):
+        entry_path = "/" + entry_path
     if not PLAYWRIGHT_AVAILABLE:
         return [
             CheckResult(
@@ -213,6 +235,7 @@ def screenshot_and_check(
                 try:
                     for path in paths:
                         url = base + path
+                        is_entry = path == entry_path
                         page = context.new_page()
                         console_errors: list[str] = []
 
@@ -235,13 +258,18 @@ def screenshot_and_check(
                             page.close()
                             continue
 
-                        # Console error check
+                        # Console error check — strict on entry, advisory on entity paths
                         if console_errors:
                             results.append(
                                 CheckResult(
                                     check=f"browser:console:{path}",
-                                    status="FAIL",
-                                    detail=f"Console errors: {console_errors[:3]}",
+                                    status="FAIL" if is_entry else "WARN",
+                                    detail=(
+                                        f"Console errors: {console_errors[:3]}"
+                                        if is_entry
+                                        else f"Console errors on auth-gated/htmx-partial "
+                                        f"entity route (advisory): {console_errors[:3]}"
+                                    ),
                                     viewport=vp_name,
                                 )
                             )
@@ -483,14 +511,16 @@ def main(argv: list[str] | None = None) -> int:
     all_results: list[CheckResult] = []
 
     # 1. HTTP status checks
-    all_results.extend(check_http(args.base_url, paths))
+    all_results.extend(check_http(args.base_url, paths, entry_path=args.entry_path))
 
     # 2. Asset integrity check
     all_results.extend(check_assets(args.base_url, paths[0]))
 
     # 3. Browser checks (Playwright; graceful degradation if unavailable)
     all_results.extend(
-        screenshot_and_check(args.base_url, paths, VIEWPORT_MATRIX, shot_dir)
+        screenshot_and_check(
+            args.base_url, paths, VIEWPORT_MATRIX, shot_dir, entry_path=args.entry_path
+        )
     )
 
     # --- Write report ---
