@@ -84,6 +84,84 @@ INDUSTRY_MAP = {
     "generic": "generic",
 }
 
+# ms_tone value → site theme slug
+MS_TONE_THEME_MAP = {
+    "bold-energetic": "aurora",
+    "minimal-editorial": "studio",
+}
+
+# marketing-site page slug → default sections
+# Each entry: (type, variant, copy_placeholder_keys, include_if_pages_contains)
+# include_if_pages_contains=None means always include on this page
+_MS_PAGE_SECTIONS: dict[str, list[dict]] = {
+    "home": [
+        {"type": "hero", "variant": "centered",
+         "copy_keys": ["headline", "subhead"], "condition": None},
+        {"type": "features", "variant": "three-col-icon",
+         "copy_keys": ["headline", "subhead"], "condition": None},
+        {"type": "pricing", "variant": "three-tier",
+         "copy_keys": ["headline", "subhead"], "condition": "pricing"},
+        {"type": "testimonial", "variant": "single-card",
+         "copy_keys": ["quote", "author_name"], "condition": "testimonials"},
+        {"type": "cta", "variant": "centered",
+         "copy_keys": ["headline"], "condition": None},
+        {"type": "footer", "variant": "minimal",
+         "copy_keys": ["brand_name"], "condition": None},
+    ],
+    "about": [
+        {"type": "hero", "variant": "centered",
+         "copy_keys": ["headline", "subhead"], "condition": None},
+        {"type": "testimonial", "variant": "single-card",
+         "copy_keys": ["quote", "author_name"], "condition": None},
+        {"type": "footer", "variant": "minimal",
+         "copy_keys": ["brand_name"], "condition": None},
+    ],
+    "services_features": [
+        {"type": "hero", "variant": "centered",
+         "copy_keys": ["headline", "subhead"], "condition": None},
+        {"type": "features", "variant": "two-col-alternating",
+         "copy_keys": ["headline"], "condition": None},
+        {"type": "cta", "variant": "centered",
+         "copy_keys": ["headline"], "condition": None},
+        {"type": "footer", "variant": "minimal",
+         "copy_keys": ["brand_name"], "condition": None},
+    ],
+    "pricing": [
+        {"type": "hero", "variant": "centered",
+         "copy_keys": ["headline", "subhead"], "condition": None},
+        {"type": "pricing", "variant": "three-tier",
+         "copy_keys": ["headline"], "condition": None},
+        {"type": "faq", "variant": "single-col",
+         "copy_keys": ["headline"], "condition": None},
+        {"type": "footer", "variant": "minimal",
+         "copy_keys": ["brand_name"], "condition": None},
+    ],
+    "testimonials": [
+        {"type": "hero", "variant": "centered",
+         "copy_keys": ["headline", "subhead"], "condition": None},
+        {"type": "testimonial", "variant": "grid",
+         "copy_keys": ["quote", "author_name"], "condition": None},
+        {"type": "cta", "variant": "centered",
+         "copy_keys": ["headline"], "condition": None},
+        {"type": "footer", "variant": "minimal",
+         "copy_keys": ["brand_name"], "condition": None},
+    ],
+    "faq": [
+        {"type": "hero", "variant": "centered",
+         "copy_keys": ["headline", "subhead"], "condition": None},
+        {"type": "faq", "variant": "single-col",
+         "copy_keys": ["headline"], "condition": None},
+        {"type": "footer", "variant": "minimal",
+         "copy_keys": ["brand_name"], "condition": None},
+    ],
+    "contact": [
+        {"type": "hero", "variant": "centered",
+         "copy_keys": ["headline", "subhead"], "condition": None},
+        {"type": "footer", "variant": "minimal",
+         "copy_keys": ["brand_name"], "condition": None},
+    ],
+}
+
 # domains[].entities 매핑 (multiselect value → domain slug + entity names)
 # 엔티티 키는 presets/ddl/catalog.yaml 의 최상위 entities: 키와 정확히 일치해야 한다 (하이픈 포함).
 DOMAIN_ENTITY_MAP = {
@@ -176,6 +254,64 @@ def _yaml_str(val) -> str:
     return str(val)
 
 
+def _render_site_block_yaml(site: dict, indent: int = 2) -> list[str]:
+    """site: block dict → YAML lines (minimal serializer for marketing-site profiles)."""
+    pad = " " * indent
+    lines: list[str] = []
+
+    theme = site.get("theme", "aurora")
+    lines.append(f"{pad}theme: {theme}")
+    lines.append("")
+
+    pages = site.get("pages", [])
+    if pages:
+        lines.append(f"{pad}pages:")
+        for page in pages:
+            lines.append(f"{pad}  - slug: {page.get('slug', '')}")
+            lines.append(f"{pad}    title: {_yaml_str(page.get('title', ''))}")
+            seo = page.get("seo", {})
+            if seo:
+                lines.append(f"{pad}    seo:")
+                if seo.get("title"):
+                    lines.append(f"{pad}      title: {_yaml_str(seo['title'])}")
+                if seo.get("description"):
+                    lines.append(f"{pad}      description: {_yaml_str(seo['description'])}")
+                if seo.get("og_image"):
+                    lines.append(f"{pad}      og_image: {_yaml_str(seo['og_image'])}")
+            sections = page.get("sections", [])
+            if sections:
+                lines.append(f"{pad}    sections:")
+                for sec in sections:
+                    lines.append(f"{pad}      - type: {sec.get('type', '')}")
+                    if sec.get("variant"):
+                        lines.append(f"{pad}        variant: {sec['variant']}")
+                    copy = sec.get("copy", {})
+                    if copy:
+                        lines.append(f"{pad}        copy:")
+                        for k, v in copy.items():
+                            lines.append(f"{pad}          {k}: {_yaml_str(v)}")
+                    if sec.get("assets"):
+                        assets_str = ", ".join(f'"{a}"' for a in sec["assets"])
+                        lines.append(f"{pad}        assets: [{assets_str}]")
+                    if sec.get("cta"):
+                        cta = sec["cta"]
+                        lines.append(f"{pad}        cta:")
+                        for k, v in cta.items():
+                            lines.append(f"{pad}          {k}: {_yaml_str(v)}")
+        lines.append("")
+
+    contact = site.get("contact", {})
+    if contact and contact.get("enabled"):
+        lines.append(f"{pad}contact:")
+        lines.append(f"{pad}  enabled: true")
+        fields = contact.get("fields", [])
+        if fields:
+            lines.append(f"{pad}  fields: [{', '.join(fields)}]")
+        lines.append("")
+
+    return lines
+
+
 def _render_profile(data: dict) -> str:
     """profile dict → YAML 문자열 (최소 직렬화)."""
     lines = [
@@ -196,6 +332,28 @@ def _render_profile(data: dict) -> str:
 
     # stack
     lines.append("stack:")
+    deliverable_kind = data.get("stack", {}).get("deliverable_kind", "business-system")
+    if deliverable_kind == "marketing-site":
+        lines.append(f"  deliverable_kind: marketing-site")
+        lines.append(f"  frontend: landing-astro")
+        lines.append(f"  backend: none")
+        lines.append("")
+        # site block
+        lines.append("site:")
+        lines.extend(_render_site_block_yaml(data.get("site", {}), indent=2))
+        # defaults
+        lines.append("defaults:")
+        lines.append("  locale: ko-KR")
+        lines.append("  timezone: Asia/Seoul")
+        lines.append("")
+        # billing
+        lines.append("billing:")
+        lines.append("  llm_budget_usd_per_month: 50")
+        lines.append("  prepaid_credits_usd: 0")
+        lines.append("")
+        return "\n".join(lines)
+
+    # business-system 경로 (기존 무변경)
     if data.get("stack", {}).get("frontend"):
         lines.append(f"  frontend: {data['stack']['frontend']}")
     else:
@@ -263,6 +421,7 @@ def _render_profile(data: dict) -> str:
 
 def _render_needs_note(slug: str, answers: dict, extra_signals: list[str]) -> str:
     """needs note markdown 생성."""
+    deliverable_kind = answers.get("deliverable_kind", "business-system")
     lines = [
         f"# Needs Note — {slug}",
         f"",
@@ -275,6 +434,7 @@ def _render_needs_note(slug: str, answers: dict, extra_signals: list[str]) -> st
         f"- **회사**: {answers.get('company_name', '—')}",
         f"- **업종**: {answers.get('industry', '—')}",
         f"- **역할**: {answers.get('persona_role', '—')}",
+        f"- **산출물 종류**: {deliverable_kind}",
         f"",
         f"## 누가 (Who)",
         f"",
@@ -341,15 +501,29 @@ def _render_needs_note(slug: str, answers: dict, extra_signals: list[str]) -> st
             lines.append(f"- {sig}")
         lines.append("")
 
-    lines += [
-        f"## IT 기술 메모",
-        f"",
-        f"- 서버 환경: {answers.get('it_server_env', '—') or '—'}",
-        f"- Docker 가능 여부: {answers.get('it_docker_available', '—') or '—'}",
-        f"- 외부 연동: {answers.get('it_external_integration', '—') or '—'}",
-        f"- 추가 기술 메모: {answers.get('it_additional_notes', '—') or '—'}",
-        f"",
-    ]
+    if deliverable_kind == "marketing-site":
+        lines += [
+            f"## 마케팅 사이트 정보",
+            f"",
+            f"- **브랜드명**: {answers.get('ms_brand_name', '—') or '—'}",
+            f"- **슬로건**: {answers.get('ms_tagline', '—') or '—'}",
+            f"- **주요 방문자**: {answers.get('ms_target_audience', '—') or '—'}",
+            f"- **요청 페이지**: home + {', '.join(answers.get('ms_pages') or [])}",
+            f"- **톤**: {answers.get('ms_tone', '—') or '—'}",
+            f"- **Primary CTA**: {answers.get('ms_primary_cta', '—') or '—'}",
+            f"- **참고 사이트**: {answers.get('ms_reference_sites', '—') or '—'}",
+            f"",
+        ]
+    else:
+        lines += [
+            f"## IT 기술 메모",
+            f"",
+            f"- 서버 환경: {answers.get('it_server_env', '—') or '—'}",
+            f"- Docker 가능 여부: {answers.get('it_docker_available', '—') or '—'}",
+            f"- 외부 연동: {answers.get('it_external_integration', '—') or '—'}",
+            f"- 추가 기술 메모: {answers.get('it_additional_notes', '—') or '—'}",
+            f"",
+        ]
 
     return "\n".join(lines)
 
@@ -386,6 +560,111 @@ def _normalize_answers(answers: dict) -> dict:
 # 변환 메인 로직
 # ---------------------------------------------------------------------------
 
+def _build_site_block(answers: dict, extra_signals: list[str]) -> dict:
+    """answers → site: block dict for marketing-site profile.
+
+    Deterministic: tone→theme, ms_pages→page slugs, each page→default sections,
+    copy slots filled with brand/tagline/target/cta placeholders.
+    LLM 0 — pure lookup/mapping.
+    """
+    brand_name = answers.get("ms_brand_name", "").strip() or answers.get("company_name", "").strip() or "[브랜드명]"
+    tagline = answers.get("ms_tagline", "").strip() or "[슬로건]"
+    target = answers.get("ms_target_audience", "").strip() or "[주요 방문자]"
+    primary_cta = answers.get("ms_primary_cta", "").strip() or "문의하기"
+
+    # theme from tone
+    tone = answers.get("ms_tone", "")
+    theme = MS_TONE_THEME_MAP.get(tone, "aurora")
+    if not tone:
+        extra_signals.append("ms_tone 미선택 — 기본 테마 aurora 적용")
+
+    # pages: home always + ms_pages selection
+    selected_pages: list[str] = answers.get("ms_pages") or []
+    if isinstance(selected_pages, str):
+        selected_pages = [selected_pages] if selected_pages else []
+    all_page_slugs = ["home"] + [p for p in selected_pages if p != "home"]
+
+    def _copy_placeholder(key: str, brand: str, tagline_val: str,
+                          target_val: str, cta_val: str) -> str:
+        placeholders = {
+            "headline": f"{brand} — [메인 헤드라인]",
+            "subhead": tagline_val,
+            "supporting_text": f"{target_val}를 위한 솔루션",
+            "eyebrow": "[소셜 프루프 문구]",
+            "quote": "[고객 후기 문구]",
+            "author_name": "[고객 이름]",
+            "author_title": "[직함]",
+            "company": "[회사명]",
+            "brand_name": brand,
+            "tagline": tagline_val,
+            "legal_notice": f"© {date.today().year} {brand}. All rights reserved.",
+            "disclaimer": "[주의사항]",
+        }
+        return placeholders.get(key, f"[{key}]")
+
+    pages_out = []
+    for page_slug in all_page_slugs:
+        section_defs = _MS_PAGE_SECTIONS.get(page_slug, [
+            {"type": "hero", "variant": "centered", "copy_keys": ["headline", "subhead"], "condition": None},
+            {"type": "footer", "variant": "minimal", "copy_keys": ["brand_name"], "condition": None},
+        ])
+
+        sections_out = []
+        for sdef in section_defs:
+            # conditional sections: only include if page is selected
+            cond = sdef.get("condition")
+            if cond is not None and cond not in selected_pages:
+                continue
+            copy = {k: _copy_placeholder(k, brand_name, tagline, target, primary_cta)
+                    for k in sdef["copy_keys"]}
+            sec = {
+                "type": sdef["type"],
+                "variant": sdef["variant"],
+                "copy": copy,
+            }
+            sections_out.append(sec)
+
+        page_title_map = {
+            "home": "Home",
+            "about": "About",
+            "services_features": "Services",
+            "pricing": "Pricing",
+            "testimonials": "Testimonials",
+            "faq": "FAQ",
+            "contact": "Contact",
+        }
+        page_title = page_title_map.get(page_slug, page_slug.replace("_", " ").title())
+
+        page_out = {
+            "slug": page_slug,
+            "title": page_title,
+            "seo": {
+                "title": f"{brand_name} — {page_title}",
+                "description": f"[{page_title} 페이지 설명 — {brand_name}]",
+            },
+            "sections": sections_out,
+        }
+        pages_out.append(page_out)
+
+    site: dict = {
+        "theme": theme,
+        "pages": pages_out,
+    }
+
+    # contact block
+    if "contact" in selected_pages:
+        site["contact"] = {
+            "enabled": True,
+            "fields": ["name", "email", "message"],
+        }
+
+    # CTA hint into extra_signals
+    if primary_cta and primary_cta != "문의하기":
+        extra_signals.append(f"ms_primary_cta: '{primary_cta}' — CTA 버튼 텍스트로 활용 예정")
+
+    return site
+
+
 def convert(answers: dict) -> tuple[dict, list[str]]:
     """answers dict → (profile_data, extra_signals_for_needs_note)."""
     # 기존 저장분 bool 파싱 결함 정규화
@@ -400,6 +679,31 @@ def convert(answers: dict) -> tuple[dict, list[str]]:
     email = answers.get("contact_email", "").strip()
 
     slug = _make_slug(company, industry_raw)
+
+    # ── deliverable_kind 분기 ────────────────────────────────
+    deliverable_kind = answers.get("deliverable_kind", "business-system")
+    if deliverable_kind == "marketing-site":
+        site_block = _build_site_block(answers, extra_signals)
+        profile: dict = {
+            "customer": {
+                "slug": slug,
+                "display": company or slug,
+                "contact": email,
+                "industry": industry,
+            },
+            "stack": {
+                "deliverable_kind": "marketing-site",
+                "frontend": "landing-astro",
+                "backend": "none",
+            },
+            "site": site_block,
+        }
+        # budget signal (if provided)
+        budget = answers.get("ceo_budget_setup", "")
+        if budget and budget != "unknown":
+            extra_signals.append(f"예산 범위: `{budget}` (billing 참고용)")
+        return profile, extra_signals
+    # ── business-system 경로 (기존, 무변경) ─────────────────
 
     profile: dict = {
         "customer": {
