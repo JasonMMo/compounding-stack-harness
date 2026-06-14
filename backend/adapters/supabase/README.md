@@ -89,10 +89,34 @@ python -m pytest tests/ -q
 | `department` | `hr_department` (catalog hit) |
 | `stock-level` | `stock_level` (catalog miss → hyphen→underscore fallback) |
 
+## L4 Live Activation (Supabase 프로젝트 생성 후 — 턴키 순서)
+
+unit 16 PASS 는 `httpx.MockTransport` 기반(네트워크 0)이라 L4 live 와 별개다.
+아래는 파운더가 Supabase 프로젝트를 프로비저닝한 뒤 실행하는 순서다.
+
+1. **프로젝트 프로비저닝 (인터랙티브, 파운더 전용)** — `https://supabase.com/dashboard`
+   로그인 → New project → region/비밀번호 설정. (계정·프로젝트 생성은 자동화 불가.)
+2. **env 채우기** — `infra/secrets/supabase.env.example` 를 `infra/secrets/supabase.env`
+   로 복사 후 두 값 입력 (Project Settings > API: Project URL + service_role secret).
+   `supabase.env` 는 gitignored 볼트 — 절대 커밋 금지.
+3. **스키마 적용** — Supabase SQL Editor 에서 `presets/ddl/supabase-rls/README.md`
+   의 컬럼 기본값(`id`/`created_at`/`updated_at`) + `set_updated_at` 트리거 + 엔티티
+   테이블 DDL(`python scripts/workflow/render.py` 산출물) 실행. catalog `table:` 명과
+   일치해야 slug→table 해석이 맞는다.
+4. **L4 smoke** — env 로드 후:
+   ```powershell
+   # infra/secrets/supabase.env 의 두 값을 환경변수로 로드한 뒤
+   uvicorn main:app --port 8081   # backend/adapters/supabase 에서
+   # 다른 터미널: 한 엔티티에 대해 create→get→patch→delete HTTP 라운드트립 확인
+   #   POST /api/v1/entity/<slug> ; GET .../{id} ; PATCH .../{id} ; DELETE .../{id}
+   ```
+   기대: 4-메서드 round-trip rc=0, PostgREST 가 id/created_at/updated_at 채움.
+5. **결과 환류** — 통과 시 본 README 상태 → `live-verified`, learn-log Growth 엔트리.
+
 ## Open Loops (구현 보류 항목)
 
-1. **L4 live 테스트**: Supabase 프로젝트 미존재 → live 테스트 미실행. 수동으로
-   `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` 설정 후 HTTP smoke test 가능.
+1. **L4 live 테스트**: Supabase 프로젝트 미존재 → live 미실행. 위 "L4 Live Activation"
+   순서대로 프로비저닝 후 실행 (env 템플릿 `infra/secrets/supabase.env.example`).
 
 2. **Supabase Auth (GoTrue) 통합 보류**: 현재 shared `routers/auth.py` 의
    in-memory demo/demo 인증 재사용. 실제 multi-user 인증은 GoTrue JWT +
