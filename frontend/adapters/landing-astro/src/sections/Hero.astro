@@ -1,0 +1,121 @@
+---
+/**
+ * Hero.astro — Hero Banner section (type: hero).
+ * Variants: centered | split-left | split-right | fullscreen-video
+ * Style hints from theme.sections.hero.<variant> applied via Tailwind utility classes.
+ * Motion preset applied via data-motion attribute (IntersectionObserver island).
+ */
+interface StyleHints {
+  bg?: string
+  text_align?: string
+  cta_style?: string
+  media_position?: string
+}
+
+interface Props {
+  copy: Record<string, string>
+  assets?: string[]
+  cta?: { label: string; href: string }
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+}
+
+const {
+  copy = {},
+  assets = [],
+  cta,
+  variant = 'centered',
+  styleHints = {},
+  motionPreset = 'fade-up',
+} = Astro.props
+
+const bg = styleHints.bg ?? 'gradient'
+const textAlign = styleHints.text_align ?? 'center'
+const ctaStyle = styleHints.cta_style ?? 'primary-lg'
+const mediaPosition = styleHints.media_position ?? 'below'
+
+// BG class mapping
+const bgClass: Record<string, string> = {
+  gradient: 'bg-gradient-to-br from-[var(--color-hero-bg-from,#1E1B4B)] to-[var(--color-hero-bg-to,#4C1D95)]',
+  solid: 'bg-[var(--color-hero-bg-from,#FAFAF9)]',
+  image: 'bg-cover bg-center',
+  none: '',
+  primary: 'bg-[var(--color-primary,#6D28D9)]',
+  dark: 'bg-[var(--color-text-1,#111827)]',
+  light: 'bg-[var(--color-surface-2,#F9FAFB)]',
+}
+
+const textClass: Record<string, string> = {
+  center: 'text-center mx-auto',
+  left: 'text-left',
+  right: 'text-right',
+}
+
+const ctaClass: Record<string, string> = {
+  'primary-lg': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] bg-[var(--color-primary,#6D28D9)] text-white font-semibold text-lg hover:bg-[var(--color-primary-hover,#5B21B6)] transition-colors',
+  'primary-outline': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] border-2 border-[var(--color-primary,#6D28D9)] text-[var(--color-primary,#6D28D9)] font-semibold text-lg hover:bg-[var(--color-primary-subtle,#F5F3FF)] transition-colors',
+  'ghost': 'inline-block px-8 py-3 text-[var(--color-primary,#6D28D9)] font-semibold text-lg hover:underline',
+  'inverse-lg': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] bg-white text-[var(--color-primary,#6D28D9)] font-semibold text-lg hover:bg-[var(--color-primary-subtle,#F5F3FF)] transition-colors',
+}
+
+const isSplit = variant === 'split-left' || variant === 'split-right'
+const textColor = (bg === 'gradient' || bg === 'dark' || bg === 'primary') ? 'text-white' : 'text-[var(--color-text-1,#111827)]'
+
+const bgImage = assets.length > 0 && (bg === 'image' || bg === 'video') ? assets[0] : undefined
+---
+
+<section
+  class={`relative w-full py-[var(--space-section-y,112px)] px-[var(--space-container-gutter,24px)] ${bgClass[bg] ?? ''} ${textColor}`}
+  style={bgImage ? `background-image: url(${bgImage});` : ''}
+  data-motion={motionPreset}
+>
+  <div class={`max-w-[var(--space-container-max,1200px)] mx-auto ${isSplit ? 'grid grid-cols-1 md:grid-cols-2 gap-12 items-center' : ''}`}>
+    <!-- Text column -->
+    <div class={textClass[textAlign] ?? 'text-center'}>
+      {copy.headline && (
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-[var(--font-weight-display,800)] leading-tight tracking-[var(--font-letter-spacing-display,-0.03em)] mb-6" style="font-family: var(--font-family-display, inherit);">
+          {copy.headline}
+        </h1>
+      )}
+      {copy.subhead && (
+        <p class="text-xl md:text-2xl opacity-80 mb-8 max-w-2xl mx-auto">
+          {copy.subhead}
+        </p>
+      )}
+      {copy.supporting_text && (
+        <p class="text-base opacity-70 mb-6">
+          {copy.supporting_text}
+        </p>
+      )}
+      {cta && (
+        <a href={cta.href} class={ctaClass[ctaStyle] ?? ctaClass['primary-lg']}>
+          {cta.label}
+        </a>
+      )}
+    </div>
+
+    <!-- Media column (split variants or below/above) -->
+    {isSplit && assets.length > 0 && bg !== 'video' && (
+      <div class={`${mediaPosition === 'left' ? 'order-first' : ''}`}>
+        <img
+          src={assets[0]}
+          alt={copy.headline ?? ''}
+          class="w-full rounded-[var(--radius-hero-media,20px)] shadow-[var(--shadow-hero-media)]"
+          loading="lazy"
+        />
+      </div>
+    )}
+
+    {!isSplit && mediaPosition === 'below' && assets.length > 0 && bg !== 'video' && (
+      <div class="mt-12">
+        <img
+          src={assets[0]}
+          alt={copy.headline ?? ''}
+          class="w-full max-w-4xl mx-auto rounded-[var(--radius-hero-media,20px)] shadow-[var(--shadow-hero-media)]"
+          loading="lazy"
+        />
+      </div>
+    )}
+  </div>
+</section>
