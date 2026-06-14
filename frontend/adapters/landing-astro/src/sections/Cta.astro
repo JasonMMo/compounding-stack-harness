@@ -1,0 +1,89 @@
+---
+/**
+ * Cta.astro — Call-to-Action Band section (type: cta).
+ * Variants: centered | left-aligned | with-image
+ * Style hints: bg (primary|dark|light|gradient), text_align, cta_style, media_position
+ */
+interface StyleHints {
+  bg?: string
+  text_align?: string
+  cta_style?: string
+  media_position?: string
+}
+
+interface Props {
+  copy: Record<string, string>
+  assets?: string[]
+  cta?: { label: string; href: string }
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+}
+
+const {
+  copy = {},
+  assets = [],
+  cta,
+  variant = 'centered',
+  styleHints = {},
+  motionPreset = 'scale-in',
+} = Astro.props
+
+const bg = styleHints.bg ?? 'primary'
+const textAlign = styleHints.text_align ?? 'center'
+const ctaStyle = styleHints.cta_style ?? 'inverse-lg'
+
+const bgClass: Record<string, string> = {
+  primary: 'bg-[var(--color-primary,#6D28D9)]',
+  gradient: 'bg-gradient-to-r from-[var(--color-hero-bg-from,#1E1B4B)] to-[var(--color-hero-bg-to,#4C1D95)]',
+  dark: 'bg-[var(--color-text-1,#111827)]',
+  light: 'bg-[var(--color-surface-2,#F9FAFB)]',
+}
+
+const textColor = (bg === 'primary' || bg === 'gradient' || bg === 'dark') ? 'text-white' : 'text-[var(--color-text-1,#111827)]'
+
+const ctaClass: Record<string, string> = {
+  'inverse-lg': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] bg-white text-[var(--color-primary,#6D28D9)] font-bold text-lg hover:bg-[var(--color-primary-subtle,#F5F3FF)] transition-colors',
+  'primary-lg': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] bg-[var(--color-primary,#6D28D9)] text-white font-bold text-lg hover:bg-[var(--color-primary-hover,#5B21B6)] transition-colors',
+  'primary-outline': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] border-2 border-white text-white font-bold text-lg hover:bg-white/10 transition-colors',
+  'ghost': 'inline-block px-8 py-3 text-white font-bold text-lg underline hover:no-underline',
+}
+
+const isSplit = variant === 'with-image'
+---
+
+<section
+  class={`w-full py-[var(--space-section-y,112px)] px-[var(--space-container-gutter,24px)] ${bgClass[bg] ?? bgClass.primary} ${textColor}`}
+  data-motion={motionPreset}
+>
+  <div class={`max-w-[var(--space-container-max,1200px)] mx-auto ${isSplit ? 'grid grid-cols-1 md:grid-cols-2 gap-12 items-center' : 'text-center'}`}>
+    <div class={textAlign === 'left' ? 'text-left' : 'text-center'}>
+      {copy.headline && (
+        <h2 class="text-3xl md:text-4xl font-bold mb-4" style="font-family: var(--font-family-display, inherit);">
+          {copy.headline}
+        </h2>
+      )}
+      {copy.subhead && (
+        <p class="text-lg opacity-80 mb-8 max-w-xl">
+          {copy.subhead}
+        </p>
+      )}
+      {cta && (
+        <a href={cta.href} class={ctaClass[ctaStyle] ?? ctaClass['inverse-lg']}>
+          {cta.label}
+        </a>
+      )}
+    </div>
+
+    {isSplit && assets.length > 0 && (
+      <div>
+        <img
+          src={assets[0]}
+          alt=""
+          class="w-full rounded-[var(--radius-card,16px)]"
+          loading="lazy"
+        />
+      </div>
+    )}
+  </div>
+</section>
