@@ -380,3 +380,168 @@ def test_letter_token_traversal_rejected(client):
     # 너무 짧은 토큰 (9자 미만)
     resp3 = client.get("/letter/abc")
     assert resp3.status_code in (404, 422), f"짧은 토큰이 허용됨: {resp3.status_code}"
+
+
+# ---------------------------------------------------------------------------
+# 테스트 11: _show_if_met — 조건 충족/미충족/multiselect 교집합
+# ---------------------------------------------------------------------------
+
+def test_show_if_met_no_condition():
+    """show_if 없는 질문은 항상 True."""
+    from app import _show_if_met
+    q = {"id": "foo", "type": "text"}
+    assert _show_if_met(q, {}) is True
+    assert _show_if_met(q, {"foo": "bar"}) is True
+
+
+def test_show_if_met_str_trigger_met():
+    """단일 str trigger — 값 일치 시 True."""
+    from app import _show_if_met
+    q = {"id": "x", "type": "textarea", "show_if": {"it_has_external_integration": "yes"}}
+    assert _show_if_met(q, {"it_has_external_integration": "yes"}) is True
+
+
+def test_show_if_met_str_trigger_not_met():
+    """단일 str trigger — 값 불일치 시 False."""
+    from app import _show_if_met
+    q = {"id": "x", "type": "textarea", "show_if": {"it_has_external_integration": "yes"}}
+    assert _show_if_met(q, {"it_has_external_integration": "no"}) is False
+    assert _show_if_met(q, {}) is False
+
+
+def test_show_if_met_list_trigger_met():
+    """list trigger — 값이 목록에 포함되면 True."""
+    from app import _show_if_met
+    q = {"id": "x", "type": "textarea",
+         "show_if": {"staff_approval_needed": ["yes_frequent", "yes_occasional"]}}
+    assert _show_if_met(q, {"staff_approval_needed": "yes_frequent"}) is True
+    assert _show_if_met(q, {"staff_approval_needed": "yes_occasional"}) is True
+
+
+def test_show_if_met_list_trigger_not_met():
+    """list trigger — 값이 목록에 없으면 False."""
+    from app import _show_if_met
+    q = {"id": "x", "type": "textarea",
+         "show_if": {"staff_approval_needed": ["yes_frequent", "yes_occasional"]}}
+    assert _show_if_met(q, {"staff_approval_needed": "no"}) is False
+
+
+def test_show_if_met_multiselect_overlap():
+    """multiselect trigger — 교집합 있으면 True, 없으면 False."""
+    from app import _show_if_met
+    q = {"id": "x", "type": "textarea",
+         "show_if": {"industry": ["logistics", "manufacturing"]}}
+    # answer가 list인 경우 (multiselect)
+    assert _show_if_met(q, {"industry": ["logistics", "retail"]}) is True
+    assert _show_if_met(q, {"industry": ["retail", "finance"]}) is False
+    # answer가 str인 경우 (select/radio)
+    assert _show_if_met(q, {"industry": "logistics"}) is True
+    assert _show_if_met(q, {"industry": "retail"}) is False
+
+
+# ---------------------------------------------------------------------------
+# 테스트 12: _validate — show_if 미충족 시 required 질문 스킵
+# ---------------------------------------------------------------------------
+
+def test_validate_skips_required_when_show_if_unmet():
+    """show_if 조건 미충족인 required 질문은 _validate 에서 스킵된다."""
+    from app import _validate
+
+    fake_questions = [
+        {
+            "id": "trigger_q",
+            "type": "radio",
+            "persona": "all",
+            "required": True,
+            "label": "트리거 질문",
+            "options": [{"value": "yes", "label": "예"}, {"value": "no", "label": "아니요"}],
+        },
+        {
+            "id": "conditional_q",
+            "type": "textarea",
+            "persona": "all",
+            "required": True,  # required=True 지만 show_if 조건 미충족 시 스킵
+            "label": "조건부 질문",
+            "show_if": {"trigger_q": "yes"},
+        },
+    ]
+
+    # trigger_q=no → conditional_q 의 show_if 미충족 → 오류 없어야 함
+    errors = _validate({"trigger_q": "no"}, fake_questions)
+    assert not any("조건부 질문" in e for e in errors), (
+        "show_if 미충족인 required 질문이 검증됨: " + str(errors)
+    )
+
+    # trigger_q=yes → conditional_q 표시되어야 함 → 빈 값이면 오류 발생
+    errors2 = _validate({"trigger_q": "yes"}, fake_questions)
+    assert any("조건부 질문" in e for e in errors2), (
+        "show_if 충족된 required 질문이 검증 안 됨: " + str(errors2)
+    )
+
+
+# ---------------------------------------------------------------------------
+# 테스트 13: convert() — industry-default fallback
+# ---------------------------------------------------------------------------
+
+def test_convert_applies_industry_default_frontend():
+    """it_frontend_pref=unknown 일 때 industry-default frontend 가 주입된다."""
+    from intake_to_profile import convert, _INDUSTRY_DEFAULTS_CACHE
+    import intake_to_profile as itp
+
+    # 캐시 초기화 (테스트 격리)
+    itp._INDUSTRY_DEFAULTS_CACHE = None
+
+    answers = {
+        "contact_email": "default_test@example.com",
+        "industry": "manufacturing",
+        "data_domains": [],           # 도메인도 비어있음
+        "it_frontend_pref": "unknown",
+        "it_backend_pref": "unknown",
+        "it_db_dialect": "unknown",
+    }
+
+    profile_data, extra_signals = convert(answers)
+
+    # manufacturing default = vanilla-htmx/fastapi/postgres
+    assert profile_data["stack"].get("frontend") == "vanilla-htmx", (
+        f"expected vanilla-htmx, got {profile_data['stack'].get('frontend')}"
+    )
+    assert profile_data["stack"].get("backend") == "fastapi", (
+        f"expected fastapi, got {profile_data['stack'].get('backend')}"
+    )
+
+    # extra_signals 에 "industry-default 적용" 기록 확인
+    default_signals = [s for s in extra_signals if "industry-default 적용" in s]
+    assert default_signals, f"industry-default 신호 없음. signals={extra_signals}"
+    assert any("frontend=vanilla-htmx" in s for s in default_signals)
+
+
+def test_convert_applies_industry_default_domains_when_zero():
+    """data_domains 선택 없을 때 industry-default domains 가 주입된다."""
+    from intake_to_profile import convert
+    import intake_to_profile as itp
+
+    itp._INDUSTRY_DEFAULTS_CACHE = None
+
+    answers = {
+        "contact_email": "domain_test@example.com",
+        "industry": "logistics",
+        "data_domains": [],           # 빈 선택 → 0개 매핑 → default 주입
+        "it_frontend_pref": "react",  # 명시적 선택 → default 덮어쓰지 않아야
+        "it_backend_pref": "fastapi",
+        "it_db_dialect": "postgres",
+    }
+
+    profile_data, extra_signals = convert(answers)
+
+    # domains 가 비어있지 않아야 함 (logistics default 주입)
+    assert len(profile_data["domains"]) > 0, "industry-default domains 미주입"
+
+    # extra_signals 에 domains default 기록 확인
+    domain_signals = [s for s in extra_signals if "industry-default 적용" in s and "domains" in s]
+    assert domain_signals, f"domains default 신호 없음. signals={extra_signals}"
+
+    # 명시적 frontend 는 override 되지 않아야
+    assert profile_data["stack"].get("frontend") == "react", (
+        "명시적 frontend 가 default 로 덮어씌워짐"
+    )
