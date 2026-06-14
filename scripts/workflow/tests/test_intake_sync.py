@@ -379,10 +379,43 @@ def test_route_qualify_creates_profile_and_case_events(tmp_path, monkeypatch):
     assert "DRAFT_PROMOTED" in node_ids, f"DRAFT_PROMOTED not in {node_ids}"
     assert "SCAFFOLDED" in node_ids, f"SCAFFOLDED not in {node_ids}"
 
+    # triage_status must be set to qualify so G-14 / pipeline_monitor account for it
+    assert data.get("triage_status") == "qualify", (
+        f"qualify case must set triage_status=qualify, got {data.get('triage_status')!r}"
+    )
+
     # processed entry written with a 'built*' status
     assert is_processed(_FAKE_TS, processed)
     proc_line = json.loads(processed.read_text().strip())
     assert proc_line["status"].startswith("built")
+
+
+def test_route_qualify_sets_triage_status_visible_to_g14(tmp_path, monkeypatch):
+    """G-14 only accounts for triage_status==qualify cases; the qualify route must set it."""
+    mirror_dir = tmp_path / "mirror"
+    _make_draft_yaml(mirror_dir, null_stack=False)
+    entry = _make_entry(status="qualify", score=88)
+    cases_dir = tmp_path / "cases"
+
+    monkeypatch.setattr("intake_sync.subprocess.run", _fake_subprocess_ok)
+    route_entry(
+        entry,
+        no_ssh=True,
+        skip_deploy=True,
+        skip_ui_check=True,
+        mirror_dir=mirror_dir,
+        processed_path=tmp_path / "proc.jsonl",
+        profiles_dir=tmp_path / "profiles",
+        cases_dir=cases_dir,
+        evidence_dir=tmp_path / "evidence",
+        pm_inbox_path=tmp_path / "pm.md",
+        gap_registry_path=tmp_path / "gap.jsonl",
+        subprocess_run=_fake_subprocess_ok,
+    )
+
+    import yaml
+    data = yaml.safe_load((cases_dir / f"{_FAKE_CLIENT}.yaml").read_text())
+    assert data.get("triage_status") == "qualify"
 
 
 def test_route_qualify_scaffold_fail_records_failed(tmp_path, monkeypatch):
