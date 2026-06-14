@@ -545,3 +545,125 @@ def test_convert_applies_industry_default_domains_when_zero():
     assert profile_data["stack"].get("frontend") == "react", (
         "명시적 frontend 가 default 로 덮어씌워짐"
     )
+
+
+# ---------------------------------------------------------------------------
+# 테스트 14: Phase 3 — _post_submit_conversion 아티팩트 생성
+# ---------------------------------------------------------------------------
+
+_CEO_FORM = {
+    "contact_email": "phase3test@example.com",
+    "contact_phone": "010-9999-0001",
+    "company_name": "Phase3Corp",
+    "industry": "manufacturing",
+    "data_domains": ["customer", "order"],
+    "existing_system": "excel_manual",
+    "persona_role": "ceo",
+    "ceo_pain_bottleneck": "재고 오류가 잦음",
+    "ceo_pain_frequency": "daily",
+    "ceo_cost_of_pain": "일 3시간 낭비",
+    "ceo_success_criteria": "오류 0건",
+    "ceo_user_count": "6-20",
+    "ceo_data_security": "cloud_ok",
+    "ceo_budget_setup": "500_1000",
+    "_hp": "",
+}
+
+
+def test_post_submit_conversion_creates_artifacts(client, tmp_data_dir):
+    """POST /submit 이후 draft.yaml, triage.json, needs-note.md, inbox.jsonl 이 생성된다."""
+    import app as intake_app
+
+    resp = client.post("/submit", data=_CEO_FORM)
+    assert resp.status_code == 200
+
+    # client_id 조회
+    index = intake_app._load_email_index()
+    client_id = index.get("phase3test@example.com")
+    assert client_id is not None, "email 인덱스에 없음"
+
+    client_path = intake_app._client_dir(client_id)
+
+    # 아티팩트 존재 확인
+    assert (client_path / "draft.yaml").exists(), "draft.yaml 미생성"
+    assert (client_path / "triage.json").exists(), "triage.json 미생성"
+    assert (client_path / "needs-note.md").exists(), "needs-note.md 미생성"
+
+    # triage.json 내용 확인
+    with open(client_path / "triage.json", encoding="utf-8") as f:
+        triage = json.load(f)
+    assert "score" in triage, "triage.json에 score 없음"
+    assert "status" in triage, "triage.json에 status 없음"
+    assert "slug" in triage, "triage.json에 slug 없음"
+
+    # inbox.jsonl 존재 + 해당 client 레코드 확인
+    inbox_path = tmp_data_dir / "inbox.jsonl"
+    assert inbox_path.exists(), "inbox.jsonl 미생성"
+
+    found = None
+    with open(inbox_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            record = json.loads(line)
+            if record.get("client_id") == client_id:
+                found = record
+                break
+
+    assert found is not None, "inbox.jsonl에 해당 client_id 레코드 없음"
+    assert "score" in found, "inbox 레코드에 score 없음"
+    assert "status" in found, "inbox 레코드에 status 없음"
+    assert "qualifies" in found, "inbox 레코드에 qualifies 없음"
+    # PII 금지: email/contact_email 키가 없어야 함
+    assert "email" not in found, "inbox 레코드에 PII(email) 포함됨"
+    assert "contact_email" not in found, "inbox 레코드에 PII(contact_email) 포함됨"
+
+
+def test_post_submit_conversion_never_raises(tmp_data_dir):
+    """convert_to_files 또는 qualify 가 예외를 던져도 _post_submit_conversion 은 None 을 반환한다."""
+    import app as intake_app
+    import intake_to_profile
+
+    original = intake_to_profile.convert_to_files
+
+    def _boom(answers, slug=None):
+        raise RuntimeError("테스트용 강제 예외")
+
+    intake_to_profile.convert_to_files = _boom
+    # _convert_to_files 도 교체 (app 모듈이 import 시 바인딩함)
+    original_app = intake_app._convert_to_files
+    intake_app._convert_to_files = _boom
+
+    try:
+        result = intake_app._post_submit_conversion(
+            "deadbeef00000001",
+            {"contact_email": "x@example.com", "industry": "manufacturing"},
+            "20260614T000000Z",
+        )
+        assert result is None, "_post_submit_conversion 이 None 이 아닌 값을 반환함"
+    finally:
+        intake_to_profile.convert_to_files = original
+        intake_app._convert_to_files = original_app
+
+
+def test_submit_returns_three_tuple():
+    """_submit 이 (edit_token, client_id, ts) 3-튜플을 반환한다."""
+    import tempfile, os
+    with tempfile.TemporaryDirectory() as tmp:
+        os.environ["DATA_DIR"] = tmp
+        import app as intake_app
+        answers = {
+            "contact_email": "tuple_test@example.com",
+            "company_name": "TupleTest",
+            "industry": "generic",
+            "data_domains": [],
+            "existing_system": "excel_manual",
+            "persona_role": "ceo",
+        }
+        result = intake_app._submit(answers)
+        assert len(result) == 3, f"_submit 이 3-튜플을 반환하지 않음: {result!r}"
+        edit_token, client_id, ts = result
+        assert isinstance(edit_token, str) and len(edit_token) > 10
+        assert isinstance(client_id, str) and len(client_id) > 0
+        assert isinstance(ts, str) and "T" in ts
