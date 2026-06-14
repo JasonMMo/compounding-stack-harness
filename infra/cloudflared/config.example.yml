@@ -1,0 +1,36 @@
+# Cloudflare Tunnel config template — pipeline-monitor
+#
+# USAGE
+#   1. Copy this file to infra/cloudflared/config.yml  (gitignored)
+#   2. Replace <TUNNEL_ID> with the UUID from:
+#        cloudflared tunnel create pipeline-monitor
+#   3. Ensure the credentials JSON was moved to infra/secrets/<TUNNEL_ID>.json
+#   4. Run:
+#        cloudflared tunnel --config infra\cloudflared\config.yml run pipeline-monitor
+#
+# SECURITY
+#   - config.yml (with the real tunnel ID) is gitignored — never commit it.
+#   - The credentials file at tunnel.credentials-file is gitignored via infra/secrets/*.
+#   - Cloudflare Access must be configured BEFORE exposing this hostname publicly.
+#     See docs/runbooks/external-pipeline-monitor.md Phase 3.
+#
+# PORT NOTE
+#   Port 8790 is the dedicated dashboard port.
+#   Port 8787 is reserved for HEADROOM monitoring — do not change the ingress below.
+
+tunnel: <TUNNEL_ID>
+credentials-file: infra/secrets/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: pipeline.n9n.co.kr
+    service: http://127.0.0.1:8790
+    originRequest:
+      # Disable TLS verification for the local plaintext HTTP origin (not needed,
+      # the tunnel itself is TLS-terminated at the Cloudflare edge).
+      noTLSVerify: true
+      # Keep connections alive for browser-initiated polling refreshes.
+      keepAliveConnections: 10
+      keepAliveTimeout: 90s
+
+  # Catch-all: reject any other hostname that might resolve to this tunnel.
+  - service: http_status:404
