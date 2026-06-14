@@ -225,11 +225,44 @@ def _submit(answers: dict) -> tuple[str, str]:
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
+
+def _show_if_met(q: dict, answers: dict) -> bool:
+    """show_if 조건이 충족되면 True, 아니면 False.
+
+    show_if 없으면 항상 True.
+    trigger 값이 str → 완전 일치.
+    trigger 값이 list → 포함 여부 (answers가 list이면 교집합 비어있지 않으면 True).
+    """
+    show_if = q.get("show_if")
+    if not show_if:
+        return True
+    for trigger_qid, allowed in show_if.items():
+        answer_val = answers.get(trigger_qid, "")
+        if isinstance(allowed, list):
+            if isinstance(answer_val, list):
+                # multiselect: 교집합
+                if not any(v in allowed for v in answer_val):
+                    return False
+            else:
+                if answer_val not in allowed:
+                    return False
+        else:
+            # str 단일값
+            if isinstance(answer_val, list):
+                if allowed not in answer_val:
+                    return False
+            else:
+                if answer_val != allowed:
+                    return False
+    return True
+
+
 def _validate(answers: dict, questions: list[dict]) -> list[str]:
     """required 필드 + email 형식 검증. 오류 메시지 리스트 반환.
 
     persona 분기: persona_role 값에 해당하는 섹션 질문만 required 검증.
     persona=all 질문은 항상 검증.
+    show_if 조건 미충족 질문은 required 검증 스킵.
     """
     persona_role = answers.get("persona_role", "")
     errors = []
@@ -240,6 +273,10 @@ def _validate(answers: dict, questions: list[dict]) -> list[str]:
 
         # persona 필터: all이 아니면 현재 role과 일치할 때만 required 검증
         if required and persona != "all" and persona != persona_role:
+            continue
+
+        # show_if 조건 미충족 시 스킵
+        if not _show_if_met(q, answers):
             continue
 
         val = answers.get(qid, "")
