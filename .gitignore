@@ -50,6 +50,10 @@ infra/secrets/*
 !infra/secrets/README.md
 !infra/secrets/*.example
 
+# Cloudflare Tunnel live config (contains real tunnel UUID — secret).
+# Only config.example.yml is tracked; config.yml is local-only.
+infra/cloudflared/config.yml
+
 # Intake submissions (의뢰인 PII -- 로컬/서버 런타임 데이터, 절대 커밋 금지)
 apps/intake/data/
 
