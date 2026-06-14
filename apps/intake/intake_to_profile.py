@@ -85,17 +85,18 @@ INDUSTRY_MAP = {
 }
 
 # domains[].entities 매핑 (multiselect value → domain slug + entity names)
+# 엔티티 키는 presets/ddl/catalog.yaml 의 최상위 entities: 키와 정확히 일치해야 한다 (하이픈 포함).
 DOMAIN_ENTITY_MAP = {
-    "customer": ("customer", ["customer", "contact", "address"]),
-    "order": ("order", ["order", "order_line"]),
-    "inventory": ("inventory", ["item", "stock", "warehouse"]),
-    "hr": ("hr", ["employee", "department"]),
-    "hr_leave": ("hr_leave", ["leave_request", "attendance"]),
-    "approval": ("approval", ["approval_request", "approver"]),
-    "asset": ("asset", ["asset", "maintenance"]),
-    "finance_ledger": ("finance_ledger", ["ledger_entry", "cost_center"]),
-    "document": ("document", ["document", "file_ref"]),
-    "report": ("report", ["report_def", "report_run"]),
+    "customer": ("customer", ["contact", "lead", "opportunity", "activity"]),
+    "order": ("order", ["sales-order", "sales-order-line"]),
+    "inventory": ("inventory", ["item", "warehouse", "stock-level", "stock-movement"]),
+    "hr": ("hr", ["employee", "department", "position"]),
+    "hr_leave": ("hr_leave", ["leave-request"]),
+    "approval": ("approval", ["approval-request", "approval-step", "approver", "approval-decision"]),
+    "asset": ("asset", ["asset", "asset-category", "depreciation-schedule", "maintenance-record"]),
+    "finance_ledger": ("finance_ledger", ["account", "journal-entry", "invoice", "payment"]),
+    "document": ("document", ["document", "document-category", "document-version", "access-rule"]),
+    "report": ("report", ["report-definition", "report-schedule", "report-parameter", "report-output"]),
     "other": None,  # needs note 로
 }
 
