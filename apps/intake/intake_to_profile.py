@@ -25,11 +25,14 @@ import textwrap
 from datetime import date
 from pathlib import Path
 
+import yaml
+
 # ---------------------------------------------------------------------------
 # 경로 상수
 # ---------------------------------------------------------------------------
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+_INDUSTRY_DEFAULTS_PATH = REPO_ROOT / "presets" / "industry-defaults.yaml"
 
 # ---------------------------------------------------------------------------
 # value 보정 맵 (questions.yaml의 value → profile schema value)
@@ -90,6 +93,25 @@ DOMAIN_ENTITY_MAP = {
     "report": ("report", ["report_def", "report_run"]),
     "other": None,  # needs note 로
 }
+
+# ---------------------------------------------------------------------------
+# industry-defaults 로드 (lazy + 모듈 수준 캐시)
+# ---------------------------------------------------------------------------
+
+_INDUSTRY_DEFAULTS_CACHE: dict | None = None
+
+
+def _load_industry_defaults() -> dict:
+    """presets/industry-defaults.yaml 를 로드한다. 모듈 수준 캐시로 반복 I/O 방지."""
+    global _INDUSTRY_DEFAULTS_CACHE
+    if _INDUSTRY_DEFAULTS_CACHE is None:
+        if _INDUSTRY_DEFAULTS_PATH.exists():
+            with open(_INDUSTRY_DEFAULTS_PATH, encoding="utf-8") as f:
+                _INDUSTRY_DEFAULTS_CACHE = yaml.safe_load(f) or {}
+        else:
+            _INDUSTRY_DEFAULTS_CACHE = {}
+    return _INDUSTRY_DEFAULTS_CACHE
+
 
 # ---------------------------------------------------------------------------
 # slug 생성 헬퍼
@@ -364,7 +386,8 @@ def convert(answers: dict) -> tuple[dict, list[str]]:
     # stack.frontend
     fe_raw = answers.get("it_frontend_pref", "")
     fe_mapped = FRONTEND_MAP.get(fe_raw)
-    if fe_raw and fe_raw not in (None, "unknown", ""):
+    _fe_explicit = fe_raw and fe_raw not in ("unknown", "")
+    if _fe_explicit:
         if fe_mapped:
             profile["stack"]["frontend"] = fe_mapped
         else:
@@ -373,7 +396,8 @@ def convert(answers: dict) -> tuple[dict, list[str]]:
     # stack.backend
     be_raw = answers.get("it_backend_pref", "")
     be_mapped = BACKEND_MAP.get(be_raw)
-    if be_raw and be_raw not in (None, "unknown", ""):
+    _be_explicit = be_raw and be_raw not in ("unknown", "")
+    if _be_explicit:
         if be_mapped:
             profile["stack"]["backend"] = be_mapped
         else:
@@ -382,7 +406,8 @@ def convert(answers: dict) -> tuple[dict, list[str]]:
     # ddl.dialect
     dialect_raw = answers.get("it_db_dialect", "")
     dialect_mapped = DIALECT_MAP.get(dialect_raw)
-    if dialect_raw and dialect_raw not in (None, "unknown", ""):
+    _dialect_explicit = dialect_raw and dialect_raw not in ("unknown", "")
+    if _dialect_explicit:
         if dialect_mapped:
             profile["ddl"]["dialect"] = dialect_mapped
         else:
@@ -405,6 +430,50 @@ def convert(answers: dict) -> tuple[dict, list[str]]:
             "display": d,
             "entities": entities,
         })
+
+    # industry-default fallback (LLM 0, 순수 dict lookup)
+    # unknown/blank 응답으로 stack/dialect/domains가 미결정된 경우에만 적용
+    _ind_defaults = _load_industry_defaults()
+    _ind_key = industry if industry in _ind_defaults else "generic"
+    _ind = _ind_defaults.get(_ind_key, {})
+    _ind_source = _ind.get("source", "generic-default")
+
+    # frontend fallback: only when answer was unknown/blank (not an explicit unsupported value)
+    if not profile["stack"].get("frontend") and not _fe_explicit and _ind.get("frontend"):
+        profile["stack"]["frontend"] = _ind["frontend"]
+        extra_signals.append(
+            f"industry-default 적용: frontend={_ind['frontend']} (source: {_ind_source})"
+        )
+
+    # backend fallback: only when answer was unknown/blank
+    if not profile["stack"].get("backend") and not _be_explicit and _ind.get("backend"):
+        profile["stack"]["backend"] = _ind["backend"]
+        extra_signals.append(
+            f"industry-default 적용: backend={_ind['backend']} (source: {_ind_source})"
+        )
+
+    # dialect fallback: only when answer was unknown/blank (not mssql/none_new etc.)
+    if not profile["ddl"].get("dialect") and not _dialect_explicit and _ind.get("dialect"):
+        profile["ddl"]["dialect"] = _ind["dialect"]
+        extra_signals.append(
+            f"industry-default 적용: dialect={_ind['dialect']} (source: {_ind_source})"
+        )
+
+    if len(profile["domains"]) == 0 and _ind.get("domains"):
+        for d in _ind["domains"]:
+            mapping = DOMAIN_ENTITY_MAP.get(d)
+            if mapping is None:
+                continue
+            domain_slug, entities = mapping
+            profile["domains"].append({
+                "slug": domain_slug,
+                "display": d,
+                "entities": entities,
+            })
+        if profile["domains"]:
+            extra_signals.append(
+                f"industry-default 적용: domains={_ind['domains']} (source: {_ind_source})"
+            )
 
     # 스키마 불일치 항목들 → extra_signals (profile에 넣지 않음)
 
