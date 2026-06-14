@@ -1,0 +1,107 @@
+/* global.css — imported by layouts/BaseLayout.astro
+ * Imports: @fontsource self-hosted fonts (DEC-2) + generated token CSS.
+ * Tailwind directives are managed by @astrojs/tailwind integration.
+ */
+
+/* ── Self-hosted fonts (DEC-2: no external CDN) ───────────────────────────── */
+/* Aurora theme: Plus Jakarta Sans (display) + Inter (body) */
+@import "@fontsource/plus-jakarta-sans/400.css";
+@import "@fontsource/plus-jakarta-sans/500.css";
+@import "@fontsource/plus-jakarta-sans/600.css";
+@import "@fontsource/plus-jakarta-sans/700.css";
+@import "@fontsource/plus-jakarta-sans/800.css";
+
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+
+/* Studio theme: DM Serif Display (display) + DM Sans (body) */
+@import "@fontsource/dm-serif-display/400.css";
+
+@import "@fontsource/dm-sans/400.css";
+@import "@fontsource/dm-sans/500.css";
+@import "@fontsource/dm-sans/700.css";
+
+/* font-display: swap is set per @fontsource package default */
+
+/* ── Generated token CSS (injected by build-tokens.mjs) ───────────────────── */
+@import "./tokens.gen.css";
+
+/* ── Base reset ────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-body, 'Inter', system-ui, sans-serif);
+  color: var(--color-text-1, #111827);
+  background: var(--color-surface-1, #ffffff);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Motion: entrance animation classes ────────────────────────────────────── */
+/* Applied by motion-observer.ts island via IntersectionObserver */
+
+.motion-hidden {
+  opacity: 0;
+}
+
+.motion-fade-simple {
+  animation: fade-simple var(--animation-duration, 200ms) var(--animation-easing, cubic-bezier(0, 0, 0.2, 1)) forwards;
+}
+
+.motion-fade-up {
+  animation: fade-up var(--animation-duration, 500ms) var(--animation-easing, cubic-bezier(0, 0, 0.2, 1)) forwards;
+}
+
+.motion-stagger-child {
+  opacity: 0;
+  /* delay is set inline via style attribute from the observer */
+}
+
+.motion-stagger-child.motion-visible {
+  animation: fade-up var(--child-animation-duration, 450ms) var(--child-animation-easing, cubic-bezier(0, 0, 0.2, 1)) forwards;
+}
+
+.motion-scale-in {
+  animation: scale-in var(--animation-duration, 300ms) var(--animation-easing, cubic-bezier(0, 0, 0.2, 1)) forwards;
+}
+
+/* ── Hover lift (pure CSS — no JS) ─────────────────────────────────────────── */
+.hover-lift {
+  transition: transform var(--transition-duration, 200ms) var(--transition-easing, cubic-bezier(0.2, 0, 0, 1)),
+              box-shadow var(--transition-duration, 200ms) var(--transition-easing, cubic-bezier(0.2, 0, 0, 1));
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -4px rgba(0,0,0,0.15);
+}
+
+/* ── prefers-reduced-motion override ────────────────────────────────────────── */
+/* All motion classes degrade to fade-simple (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  .motion-hidden {
+    animation: fade-simple 200ms cubic-bezier(0, 0, 0.2, 1) forwards !important;
+    opacity: 0;
+  }
+  .motion-fade-up,
+  .motion-stagger-child,
+  .motion-stagger-child.motion-visible,
+  .motion-scale-in {
+    animation: fade-simple 200ms cubic-bezier(0, 0, 0.2, 1) forwards !important;
+    transform: none !important;
+  }
+  .hover-lift:hover {
+    transform: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
