@@ -1,0 +1,99 @@
+---
+/**
+ * BaseLayout.astro — Root HTML layout for all landing pages.
+ * Imports global CSS (tokens + fonts + motion keyframes).
+ * Injects motion observer island as a deferred script.
+ */
+import '../styles/global.css'
+
+interface Props {
+  title?: string
+  description?: string
+  ogImage?: string
+  siteSlug?: string
+}
+
+const { title, description, ogImage, siteSlug = '' } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    {title && <title>{title}</title>}
+    {description && <meta name="description" content={description} />}
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    {title && <meta property="og:title" content={title} />}
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <slot />
+
+    <!-- Motion observer island: IntersectionObserver for scroll-triggered animations.
+         Deferred (type=module). Respects prefers-reduced-motion via CSS.
+         No autoplay (WCAG 2.2.2). -->
+    <script type="module">
+      // Motion observer — lightweight IntersectionObserver island.
+      // Targets elements with data-motion attribute.
+      // prefers-reduced-motion: CSS @media overrides handle fallback (global.css).
+      const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+      function initMotion() {
+        const targets = document.querySelectorAll('[data-motion]')
+        if (!targets.length) return
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return
+              const el = entry.target
+              const preset = el.dataset.motion
+
+              if (motionQuery.matches) {
+                // reduced-motion: CSS handles fade-simple; just make visible
+                el.classList.remove('motion-hidden')
+                el.classList.add('motion-fade-simple')
+              } else if (preset === 'stagger-children') {
+                // Stagger: animate each direct child with delay offset
+                const staggerDelay = Number(el.dataset.staggerDelay ?? 80)
+                Array.from(el.children).forEach((child, i) => {
+                  child.style.animationDelay = `${i * staggerDelay}ms`
+                  child.classList.remove('motion-hidden')
+                  child.classList.add('motion-stagger-child', 'motion-visible')
+                })
+              } else if (preset === 'fade-up' || preset === 'reveal-on-scroll') {
+                el.classList.remove('motion-hidden')
+                el.classList.add('motion-fade-up')
+              } else if (preset === 'scale-in') {
+                el.classList.remove('motion-hidden')
+                el.classList.add('motion-scale-in')
+              } else {
+                // fade-simple fallback for unknown presets
+                el.classList.remove('motion-hidden')
+                el.classList.add('motion-fade-simple')
+              }
+
+              observer.unobserve(el)
+            })
+          },
+          { threshold: 0.15, rootMargin: '0px 0px -64px 0px' }
+        )
+
+        targets.forEach((el) => {
+          el.classList.add('motion-hidden')
+          observer.observe(el)
+        })
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMotion)
+      } else {
+        initMotion()
+      }
+    </script>
+  </body>
+</html>
