@@ -27,6 +27,7 @@ from pipeline_monitor import (  # noqa: E402
     load_cases,
     project_node_states,
     detect_stalls,
+    action_hint,
 )
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -275,6 +276,9 @@ def render_drillin_text(bundle: dict) -> str:
             lines.append(f"      dwell        : {_format_duration(iss.get('dwell_seconds', 0))}")
             lines.append(f"      entered_at   : {iss.get('entered_at') or '-'}")
             lines.append(f"      evidence_path: {iss.get('evidence_path') or '(none)'}")
+            hint = action_hint(iss.get("error_class") or "unknown")
+            lines.append(f"      owner        : {hint['owner']}")
+            lines.append(f"      action       : {hint['action']}")
     return "\n".join(lines)
 
 
