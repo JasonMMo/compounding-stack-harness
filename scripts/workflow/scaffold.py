@@ -202,6 +202,17 @@ def run_scaffold(
         print(f"ERROR: {e}", file=sys.stderr)
         return 1
 
+    # Early branch: marketing-site deliverable skips entity/DDL/screen-manifest pipeline
+    deliverable_kind = (profile.get("stack") or {}).get("deliverable_kind", "business-system")
+    if deliverable_kind == "marketing-site":
+        workflow_dir = Path(__file__).resolve().parent
+        sys.path.insert(0, str(workflow_dir))
+        from site_manifest import emit_site_manifest  # type: ignore[import]
+        manifest_path = emit_site_manifest(profile, profile_slug, out_root)
+        print(f"scaffold complete — profile: {profile_slug} (marketing-site)")
+        print(f"  site-manifest output: {manifest_path.resolve()}")
+        return 0
+
     # Step 2: Collect entity keys
     entity_keys = collect_entity_keys(profile)
     if not entity_keys:
