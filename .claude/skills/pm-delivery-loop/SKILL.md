@@ -46,9 +46,44 @@ Step 4 Verify 와 Step 5 Deliver 사이에 삽입되는 감사 게이트. 상시
 - **입력**: `needs-note.md` + `acceptance-criteria.md` + `out/<slug>/screen-manifest.json` + `profiles/<slug>.yaml`
 - **방법**: needs 항목(누가/무엇을/왜) 추출 → manifest 엔티티·AC·flow 와 coverage matrix → COVERED/PARTIAL/GAP → 집계 PASS(GAP 0) / PASS-WITH-CAVEAT(PARTIAL 만) / BLOCK(GAP 존재)
 - **출력**: `docs/delivery/<slug>/needs-fit-review.md` (PII strip 필수) + main 에는 envelope(§4)만
-- **호출**: `Agent(subagent_type='codex:codex-rescue', prompt=<template>)`. 템플릿: `.claude/skills/pm-delivery-loop/needs-fit-prompt-template.md`. 래퍼: `scripts/workflow/needs_fit_audit.py` (선택)
 - **BLOCK 처리**: GAP=엔티티·adapter 부재 → CTO 백로그 / AC 누락 → PM 이 criteria 보강. Step 5 외부 인도는 charter §2 상 CEO 단독 불변.
 - 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md)
+
+### Codex 판정 패스 — 세션 절차 (정식 runbook)
+
+`intake_sync.py` 의 NEEDS_FIT 단계는 **결정론적 사전패스**(`needs_fit_audit.py`, LLM 0)만 돌린다.
+이 사전패스는 키워드·슬러그 중첩 휴리스틱이라 보수적이다 (AC 부재 시 거의 항상 PARTIAL/BLOCK).
+그래서 `final_status="built-needs-fit-block"` 은 **자동 정지 신호**일 뿐, 최종 판정이 아니다.
+최종 판정은 아래 세션 절차로 codex 가 내린다 (judgment 로 false-GAP 을 PARTIAL/COVERED 로 교정).
+
+**트리거**: `pipeline_status.py` 또는 `docs/intake-inbox/alerts.md` 에서 qualify 케이스의 NEEDS_FIT 가 `built-needs-fit-block` / `built-needs-fit-caveat` 로 멈춰 있을 때, CTO/PM 세션이 다음을 수행한다.
+
+1. **사전패스 + 프롬프트 생성** — codex 프롬프트를 stdout 으로 받는다 (PII 는 data-mirror 의 needs-note 경로로만 전달, 커밋 X):
+   ```bash
+   python scripts/workflow/needs_fit_audit.py \
+       --slug <slug> \
+       --needs-note apps/intake/data-mirror/clients/<client_id>/needs-note.md \
+       --manifest out/<slug>/screen-manifest.json \
+       --profile profiles/<slug>.yaml \
+       [--acceptance-criteria docs/delivery/<slug>/acceptance-criteria.md]
+   ```
+2. **codex 판정 spawn** — 출력된 프롬프트로 codex 를 띄운다. codex 가 refined `needs-fit-review.md` 를 직접 쓰고 envelope(VERDICT/COVERED/PARTIAL/GAP)만 반환:
+   ```
+   Agent(subagent_type='codex:codex-rescue', prompt=<step 1 이 출력한 CODEX PROMPT 블록>)
+   ```
+3. **판정 기록 (loop closer, LLM 0)** — codex envelope 의 VERDICT 로 NEEDS_FIT 재판정 노드 이벤트를 남긴다. 새 타임스탬프라 **latest-terminal-wins** 투영(pipeline_monitor / G-14)이 사전패스 BLOCK 을 덮어쓴다:
+   ```bash
+   python scripts/workflow/needs_fit_audit.py record-verdict \
+       --slug <slug> --client-id <client_id> \
+       --verdict PASS|PASS-WITH-CAVEAT|BLOCK \
+       [--gap "N-1: <PII-free 사유> -> CTO backlog" ...]
+   ```
+   - PASS / PASS-WITH-CAVEAT → `NODE_EXIT_OK` (모니터 complete, G-14 clear) → PROFILE_CONFIRMED(CEO 게이트)로 진행.
+   - BLOCK → `NODE_FAIL` + `alerts.md` 라우팅 블록 자동 추가. 엔티티 GAP → CTO 백로그(성장 ToDo) / AC 누락 → PM 이 `acceptance-criteria.md` 보강 후 1번부터 재실행.
+4. **envelope 만 main 에** — codex·record-verdict 의 상세는 파일로, main context 에는 VERDICT 한 줄 + 리포트 경로만 (변동비 hedge, subagent-output-protocol).
+
+> 템플릿: `.claude/skills/pm-delivery-loop/needs-fit-prompt-template.md`. 사전패스·loop closer: `scripts/workflow/needs_fit_audit.py`.
+> auto-path 는 LLM 0 (사전패스·record-verdict 모두 결정론적); codex judgment 만 세션 구동 — charter §2 외부 인도 CEO 단독 불변.
 
 ## Anti-patterns (위반 시 QA 경계 감사 대상)
 
