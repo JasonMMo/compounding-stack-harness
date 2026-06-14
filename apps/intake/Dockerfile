@@ -11,6 +11,14 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # 앱 소스 복사
 COPY apps/intake/ /app/
 
+# Vendor the single-source presets file so intake_to_profile._load_industry_defaults()
+# can resolve it at /app/presets/industry-defaults.yaml inside the container.
+# (REPO_ROOT candidate resolves to / inside the container and won't match;
+# the __file__-relative candidate /app/presets/... is what hits here.)
+# Single source of truth remains presets/industry-defaults.yaml in the repo — this is
+# a build-time copy, not a duplicate in the repo tree.
+COPY presets/industry-defaults.yaml /app/presets/industry-defaults.yaml
+
 # DATA_DIR 기본값 (/app/data — 컨테이너 내부)
 # Coolify compose에서 호스트 /data/intake/data → /app/data bind mount
 ENV DATA_DIR=/app/data
