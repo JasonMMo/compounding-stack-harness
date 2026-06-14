@@ -578,10 +578,6 @@ def aggregate_health(
             alerts = detect_stalls(states, now, processed=case_processed)
             all_alerts.extend(alerts)
 
-    if ts == "closed":
-        closed += 1
-        active = max(0, active)
-
     return PipelineHealth(
         generated_at=now.strftime("%Y-%m-%dT%H:%M:%SZ"),
         total_cases=total,
