@@ -653,6 +653,14 @@ def run_auto_preview(
     stages_failed: list[str] = []
     final_status = "built"
 
+    # Mark the case as qualify-tier so G-14 / pipeline_monitor account for it.
+    # Without this the case YAML triage_status stays null and the qualify lead is
+    # invisible to the health guard — defeating Phase 8 monitoring for exactly the
+    # tier that matters most. The non-qualify routes already set their triage_status
+    # in route_entry; the qualify route delegates here, so it is set here.
+    if not dry_run:
+        _set_triage(case_yaml, "qualify")
+
     # ---- Stage: DRAFT_PROMOTED ----
     node = "DRAFT_PROMOTED"
     if dry_run:
