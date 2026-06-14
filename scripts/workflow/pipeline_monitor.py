@@ -292,8 +292,20 @@ def project_node_states(case: dict, now: datetime) -> list[NodeState]:
         fails  = [e for e in node_evs if e.get("event") == "NODE_FAIL"]
 
         entered_at_str: str | None = enters[0].get("ts") if enters else None
-        exited_at_str: str | None  = exits[0].get("ts") if exits else None
-        error_class: str | None    = fails[0].get("error_class") if fails else None
+
+        # Latest-terminal-wins: a NODE_EXIT_OK or NODE_FAIL emitted later
+        # supersedes an earlier terminal event for the same node. This makes a
+        # retry (transient fail then success) and a re-judgment (codex Step 4b
+        # upgrading a conservative deterministic NEEDS_FIT BLOCK to PASS, or
+        # vice-versa) resolve to the current truth instead of latching on the
+        # first failure. The full event history stays in the case YAML for audit.
+        terminals = sorted(exits + fails, key=lambda e: e.get("ts") or "")
+        latest_terminal = terminals[-1] if terminals else None
+
+        exited_at_str: str | None = None
+        error_class: str | None = None
+        if latest_terminal is not None and latest_terminal.get("event") == "NODE_EXIT_OK":
+            exited_at_str = latest_terminal.get("ts")
 
         entered_at_dt = _parse_iso(entered_at_str)
         exited_at_dt  = _parse_iso(exited_at_str)
@@ -304,11 +316,13 @@ def project_node_states(case: dict, now: datetime) -> list[NodeState]:
             end = exited_at_dt if exited_at_dt else now
             dwell = max(0.0, (end - entered_at_dt).total_seconds())
 
-        # Determine status
-        if fails:
-            status = "failed"
-        elif exits:
-            status = "complete"
+        # Determine status from the latest terminal event
+        if latest_terminal is not None:
+            if latest_terminal.get("event") == "NODE_FAIL":
+                status = "failed"
+                error_class = latest_terminal.get("error_class")
+            else:
+                status = "complete"
         elif enters:
             # in_progress: check for stall
             if entered_at_dt and dwell > sla_seconds:
