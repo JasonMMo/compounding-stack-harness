@@ -1,0 +1,108 @@
+# profiles/agency-demo.yaml — Demo profile for marketing-site deliverable track
+# Fictional web agency landing page. deliverable_kind=marketing-site.
+# No domains/ddl blocks — site: block drives scaffold output.
+# ${ENV_VAR} placeholders would be G-4 round-trip preserved if added.
+
+version: 1
+
+customer:
+  slug: agency-demo
+  display: "Agency Demo (Marketing Site)"
+  status: active
+  contact: hello@agency-demo.example
+  industry: generic
+
+# ── Pluggable Stack ─────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site   # new key — triggers site-manifest branch in scaffold.py
+  frontend: landing-astro            # P3 adapter (not yet built; scaffold branch is the gate)
+  backend: none
+
+# ── Site Block (marketing-site schema) ─────────────────────────────────────
+site:
+  theme: default                     # presets/themes/default/ — soft ref (P2)
+
+  pages:
+    - slug: home
+      title: "Home"
+      seo:
+        title: "Agency Demo — We Build Stunning Sites"
+        description: "Expert web agency specialising in high-conversion landing pages and brand sites."
+        og_image: "assets/og-home.jpg"
+      sections:
+        - type: hero
+          variant: centered
+          copy:
+            headline: "We Build Sites That Convert"
+            subhead: "Full-service web agency for ambitious SMBs."
+          assets: ["assets/hero-bg.jpg"]
+          cta:
+            label: "Get a Free Quote"
+            href: "/contact"
+
+        - type: features
+          variant: three-col-icon
+          copy:
+            headline: "What We Deliver"
+            subhead: "From strategy to launch in weeks, not months."
+
+        - type: pricing
+          variant: three-tier
+          copy:
+            headline: "Simple, Transparent Pricing"
+            subhead: "No surprises. Pick the plan that fits your growth stage."
+
+        - type: cta
+          variant: centered
+          copy:
+            headline: "Ready to Launch?"
+          cta:
+            label: "Start Your Project"
+            href: "/contact"
+
+        - type: footer
+          variant: minimal
+          copy:
+            brand_name: "Agency Demo"
+            legal_notice: "© 2026 Agency Demo. All rights reserved."
+          assets: ["assets/logo.svg"]
+
+    - slug: about
+      title: "About Us"
+      seo:
+        title: "About Agency Demo"
+        description: "Learn about the team behind Agency Demo."
+      sections:
+        - type: hero
+          variant: centered
+          copy:
+            headline: "Our Story"
+            subhead: "Built by designers and engineers who care about craft."
+
+        - type: testimonial
+          variant: single-card
+          copy:
+            quote: "Agency Demo delivered a beautiful site that tripled our leads in 30 days."
+            author_name: "Kim Min-jun"
+            author_title: "CEO"
+            company: "TechStart Korea"
+          assets: ["assets/testimonial-kim.jpg"]
+
+        - type: footer
+          variant: minimal
+          copy:
+            brand_name: "Agency Demo"
+
+  contact:
+    enabled: true
+    fields: [name, email, message]
+
+# ── Defaults ────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: UTC
+
+# ── Cost tracking ────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 50
+  prepaid_credits_usd: 0
