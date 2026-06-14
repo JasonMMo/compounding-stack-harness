@@ -20,7 +20,7 @@ preview:
   # compose 서비스명 = intake (lawfirm/shop의 frontend와 다름 — domain PATCH 대상)
   domain_service: intake
   status: live
-  deployed_at: "2026-06-12"
+  deployed_at: "2026-06-14"
 production:
   install_method: null
   installed_at: null
