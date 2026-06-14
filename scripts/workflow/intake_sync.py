@@ -216,7 +216,18 @@ _SSH_OPTS = [
     "-o", "ConnectTimeout=15",
 ]
 
-_SUBPROCESS_ENCODING_KWARGS: dict = {"encoding": "utf-8", "errors": "replace"}
+# Child-process stdio must be UTF-8 too. The encoding/errors keys control how
+# the PARENT decodes the captured pipe; but on Windows a spawned Python child's
+# own sys.stdout defaults to the locale codec (cp949), so a child that print()s
+# a non-ASCII char (e.g. an em-dash from preview_package.py) crashes with
+# UnicodeEncodeError -> rc=1. PYTHONUTF8=1 (PEP 540) forces every child Python
+# onto UTF-8 stdio, fixing the whole class of pipeline subprocess at one site.
+_SUBPROCESS_ENV: dict = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
+_SUBPROCESS_ENCODING_KWARGS: dict = {
+    "encoding": "utf-8",
+    "errors": "replace",
+    "env": _SUBPROCESS_ENV,
+}
 
 
 def _rsync_cmd(src: str, dst: Path) -> list[str]:
