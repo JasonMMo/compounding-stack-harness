@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import textwrap
@@ -32,6 +33,7 @@ import yaml
 # ---------------------------------------------------------------------------
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+# Backward-compat reference (dev/local). Container path resolved via candidate list below.
 _INDUSTRY_DEFAULTS_PATH = REPO_ROOT / "presets" / "industry-defaults.yaml"
 
 # ---------------------------------------------------------------------------
@@ -101,15 +103,39 @@ DOMAIN_ENTITY_MAP = {
 _INDUSTRY_DEFAULTS_CACHE: dict | None = None
 
 
+def _industry_defaults_candidates() -> list[Path]:
+    """Return the ordered list of candidate paths for industry-defaults.yaml.
+
+    Resolution order:
+      1. INTAKE_INDUSTRY_DEFAULTS env override (if set)
+      2. REPO_ROOT / presets / ... — dev/local checkout, or CLI invoked from repo
+      3. Path(__file__).parent / presets / ... — container path (/app/presets/...)
+         where the Dockerfile vendors the file via
+         COPY presets/industry-defaults.yaml /app/presets/industry-defaults.yaml
+    """
+    candidates: list[Path] = []
+    env_override = os.environ.get("INTAKE_INDUSTRY_DEFAULTS", "").strip()
+    if env_override:
+        candidates.append(Path(env_override))
+    candidates.append(_INDUSTRY_DEFAULTS_PATH)  # REPO_ROOT candidate
+    candidates.append(Path(__file__).resolve().parent / "presets" / "industry-defaults.yaml")
+    return candidates
+
+
 def _load_industry_defaults() -> dict:
-    """presets/industry-defaults.yaml 를 로드한다. 모듈 수준 캐시로 반복 I/O 방지."""
+    """presets/industry-defaults.yaml 를 로드한다. 모듈 수준 캐시로 반복 I/O 방지.
+
+    Iterates _industry_defaults_candidates() and loads the first path that exists.
+    Returns {} if no candidate resolves (graceful degradation).
+    """
     global _INDUSTRY_DEFAULTS_CACHE
     if _INDUSTRY_DEFAULTS_CACHE is None:
-        if _INDUSTRY_DEFAULTS_PATH.exists():
-            with open(_INDUSTRY_DEFAULTS_PATH, encoding="utf-8") as f:
-                _INDUSTRY_DEFAULTS_CACHE = yaml.safe_load(f) or {}
-        else:
-            _INDUSTRY_DEFAULTS_CACHE = {}
+        _INDUSTRY_DEFAULTS_CACHE = {}
+        for candidate in _industry_defaults_candidates():
+            if candidate.exists():
+                with open(candidate, encoding="utf-8") as f:
+                    _INDUSTRY_DEFAULTS_CACHE = yaml.safe_load(f) or {}
+                break
     return _INDUSTRY_DEFAULTS_CACHE
 
 
