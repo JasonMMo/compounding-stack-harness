@@ -23,7 +23,7 @@ Steps (runbook docs/runbooks/preview-deploy.md §4):
   5. SCP manifest to server /data/coolify/manifests/<slug>/screen-manifest.json.
   6. Trigger instant deploy.
   7. Poll build status until finished or error (timeout 5 min).
-  8. External validation: /login HTTP 200, /health HTTP 200, TLS CN match.
+  8. External validation: /health HTTP 200 (authoritative), entry_path HTTP 200, TLS CN match.
   9. Update registry infra/registry/<slug>.yaml (merge — never clobber existing fields).
 
 Security:
@@ -740,17 +740,29 @@ def poll_deployment(deploy_uuid: str, token: str, timeout_s: int = 300) -> bool:
 # External validation
 # ---------------------------------------------------------------------------
 
-def validate_preview(slug: str) -> bool:
-    """Validate deployed preview: /login HTTP 200, /health HTTP 200, TLS CN match.
+def validate_preview(slug: str, entry_path: str = "/login") -> bool:
+    """Validate deployed preview: /health HTTP 200 (authoritative), entry_path HTTP 200, TLS CN match.
+
+    '/health' is the universal liveness probe — every app exposes it, so it drives
+    the PASS/FAIL verdict. entry_path is the app's UI landing page (default /login for
+    the fullstack demo scaffold; '/' for apps with no login such as intake). A non-200
+    entry_path is reported as WARN and only fails the verdict if /health is also down,
+    so an app that legitimately has no /login no longer false-negatives.
 
     Uses subprocess for TLS validation (openssl s_client).
-    Returns True if all 3 pass.
     """
     base_url = f"https://{slug}.n9n.co.kr"
     all_pass = True
 
-    # /login HTTP 200
-    for path in ["/login", "/health"]:
+    if not entry_path.startswith("/"):
+        entry_path = "/" + entry_path
+
+    # ("/health", authoritative) drives the verdict; entry_path is advisory.
+    checks = [("/health", True)]
+    if entry_path != "/health":
+        checks.append((entry_path, False))
+
+    for path, authoritative in checks:
         url = base_url + path
         print(f"[deploy_to_coolify] validating {url} ...")
         try:
@@ -761,13 +773,18 @@ def validate_preview(slug: str) -> bool:
             code = exc.code
         except Exception as exc:
             print(f"[deploy_to_coolify]   ERROR: {exc}", file=sys.stderr)
-            all_pass = False
+            if authoritative:
+                all_pass = False
             continue
 
-        status = "PASS" if code == 200 else "FAIL"
-        print(f"[deploy_to_coolify]   HTTP {code} - {status}")
-        if code != 200:
+        if code == 200:
+            status = "PASS"
+        elif authoritative:
+            status = "FAIL"
             all_pass = False
+        else:
+            status = f"WARN (advisory entry_path {path}; verdict driven by /health)"
+        print(f"[deploy_to_coolify]   HTTP {code} - {status}")
 
     # TLS CN check via openssl
     print(f"[deploy_to_coolify] validating TLS CN for {slug}.n9n.co.kr ...")
@@ -1317,6 +1334,15 @@ def main() -> int:
         help="Skip external HTTP/TLS validation after deploy.",
     )
     parser.add_argument(
+        "--entry-path", default="/login",
+        help=(
+            "App UI entry path checked during validation (default: /login for the "
+            "fullstack demo scaffold). Apps with no login page (e.g. the intake app) "
+            "serve their entry at '/' — pass --entry-path / to avoid a false-negative. "
+            "'/health' is always checked as the authoritative liveness probe."
+        ),
+    )
+    parser.add_argument(
         "--commit", action="store_true",
         help=(
             "Commit and push deploy/preview/<slug>.compose.yml before deploying. "
@@ -1465,7 +1491,7 @@ def main() -> int:
     if not args.skip_validation:
         print(f"[deploy_to_coolify] waiting 5s for traefik routing to settle ...")
         time.sleep(5)
-        all_pass = validate_preview(slug)
+        all_pass = validate_preview(slug, entry_path=args.entry_path)
         if not all_pass:
             print(
                 "[deploy_to_coolify] WARN: validation failures detected — preview may still be starting.",
@@ -1494,7 +1520,7 @@ def main() -> int:
         print("[deploy_to_coolify] --skip-registry: registry update skipped.")
 
     print()
-    print(f"[deploy_to_coolify] DONE. Preview: https://{slug}.n9n.co.kr/login")
+    print(f"[deploy_to_coolify] DONE. Preview: https://{slug}.n9n.co.kr{args.entry_path}")
     return 0
 
 
