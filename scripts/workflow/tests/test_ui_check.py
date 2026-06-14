@@ -140,6 +140,17 @@ class TestDeriveCheckPaths:
         paths = derive_check_paths({"entities": {}})
         assert paths == ["/login"]
 
+    def test_custom_entry_path_root(self) -> None:
+        # Apps with no login (e.g. intake) serve their entry at "/".
+        paths = derive_check_paths({}, entry_path="/")
+        assert paths == ["/"]
+        assert "/login" not in paths
+
+    def test_entry_path_normalized_leading_slash(self) -> None:
+        paths = derive_check_paths({"entities": {"contact": {}}}, entry_path="dashboard")
+        assert paths[0] == "/dashboard"
+        assert "/contact" in paths
+
 
 # ---------------------------------------------------------------------------
 # check_http tests
