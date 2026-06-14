@@ -6,7 +6,7 @@
 플랜 `idempotent-nibbling-puddle.md` Phase 8(Pipeline Monitor)의 후속 — CLI 모니터 위에 **localhost 전용 웹 대시보드 + 노드별 에러/deadlock breakdown**을 얹었다. 목적: 장애 발생 시 빠른 드릴인·대처.
 
 > ✅ **Growth-63 learn-log 환류 완료** (커밋 `2c7dcfd`+`663f9ba`).
-> ✅ **Growth-64 — HANDOFF 오픈루프 3건 완료**: P2(Capacitor 8 정렬·완전완료)·P1(외부모니터 Cloudflare Tunnel 스캐폴드, 활성화는 파운더)·P3(Supabase L4 턴키 준비, live 는 파운더). §6 5차 회전(Growth-33~48 아카이브)으로 G-9 PASS(122/200, 헤드룸 78행). 상세는 아래 오픈루프 섹션.
+> ✅ **Growth-64 — HANDOFF 오픈루프 3건 완료**: P2(Capacitor 8 정렬·완전완료)·**P1(외부모니터 LIVE — `pipeline.n9n.co.kr`, 부팅자동, 2026-06-15 검증)**·P3(Supabase L4 턴키 준비, live 는 파운더). §6 5차 회전(Growth-33~48 아카이브)으로 G-9 PASS(122/200, 헤드룸 78행). 상세는 아래 오픈루프 섹션.
 
 ---
 
@@ -94,9 +94,11 @@
 ### ~~P2 — Capacitor 로컬 플랫폼 setup~~ ✅ 완료 (Growth-64)
 - CLI 8 ↔ core 6 major 불일치 해소: 전 의존성 `^8.0.0` 정렬, v8 재설치·android 재생성·`cap sync` 검증("Android looking great", assets dir 복구). iOS native 는 Windows 빌드 불가 → macOS 에서 `npm run add:ios`. 커밋 `672c110`(package.json)·`a609aef`(lockfile).
 
-### ~~P1 — 외부/원격 모니터링 스캐폴드~~ ✅ 완료 (Growth-64) — 활성화는 파운더
-- Cloudflare Tunnel+Access 경로 스캐폴드: 런북 `docs/runbooks/external-pipeline-monitor.md` + `infra/cloudflared/config.example.yml` + `scripts/workflow/serve_dashboard.ps1`. 로컬 Windows 대시보드(127.0.0.1:**8790**) 아웃바운드 노출, 이메일 OTP(파운더 단독), VPS 무관여·PII-free·월 $0.
-- **파운더 인터랙티브 단계 (런북 Phase 1~3)**: `winget install cloudflare.cloudflared` → `! cloudflared tunnel login` → `cloudflared tunnel create pipeline-monitor` → config.yml 작성 → Zero Trust 대시보드에서 Access 앱(`pipeline.n9n.co.kr`, allow `aijasonmore@gmail.com`) 생성. 그 후 `.\scripts\workflow\serve_dashboard.ps1` 로 기동.
+### ~~P1 — 외부/원격 모니터링~~ ✅✅ LIVE 검증 완료 (2026-06-15, 부팅자동)
+- `https://pipeline.n9n.co.kr` → Cloudflare Access(OTP, `aijasonmore@gmail.com` 단독) → 대시보드. 엔드투엔드 OTP 로그인 확인됨. 게이트 정상(미인증 302→Access).
+- 터널 `pipeline-monitor`(UUID `e572d631…`)·로컬 8790. **부팅자동**: 터널=cloudflared **Windows 서비스**(Automatic), 대시보드=**작업 스케줄러 `PipelineDashboard`**(AtLogOn). ⚠️ 둘 다 떠야 함(서비스는 터널만 → 8790 죽으면 502).
+- 시크릿: `infra/secrets/e572d631-….json` + `infra/cloudflared/config.yml`(둘 다 gitignored). 상세: 메모리 [[todo-external-pipeline-monitor]], 런북 `docs/runbooks/external-pipeline-monitor.md`.
+- 관리: `net start/stop cloudflared` · `Start/Stop-ScheduledTask -TaskName PipelineDashboard`.
 
 ### ~~P3 — Supabase L4 준비~~ ✅ 코드 검증·턴키 완료 (Growth-64) — live 실행은 파운더
 - 어댑터 unit 16 PASS 재확인(MockTransport). env 템플릿 `infra/secrets/supabase.env.example` + README "L4 Live Activation" 5단계 턴키화.
