@@ -519,6 +519,31 @@ def convert(answers: dict) -> tuple[dict, list[str]]:
 
     return profile, extra_signals
 
+
+# ---------------------------------------------------------------------------
+# 인-프로세스 변환 (Phase 3) — 파일 미기록, CLI 불변
+# ---------------------------------------------------------------------------
+
+def convert_to_files(
+    answers: dict,
+    slug: str | None = None,
+) -> tuple[str, str, str]:
+    """answers → (slug, profile_yaml_str, needs_note_str).
+
+    Calls convert() + _render_profile() + _render_needs_note().
+    Writes NO files. CLI (main) is unchanged.
+    If slug override is provided it replaces the auto-generated slug in the
+    profile dict before rendering so both outputs share the same slug.
+    """
+    profile_dict, extra_signals = convert(answers)
+    if slug is not None:
+        profile_dict["customer"]["slug"] = slug
+    effective_slug = profile_dict["customer"]["slug"]
+    profile_yaml_str = _render_profile(profile_dict)
+    needs_note_str = _render_needs_note(effective_slug, answers, extra_signals)
+    return effective_slug, profile_yaml_str, needs_note_str
+
+
 # ---------------------------------------------------------------------------
 # 진입점
 # ---------------------------------------------------------------------------
