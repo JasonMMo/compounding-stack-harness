@@ -22,6 +22,11 @@
 # persona     : all | ceo | staff | it
 #               (all = 공통 섹션 — 모든 페르소나에게 출력됨)
 # section     : 폼 내 섹션 그룹 레이블
+# show_if     : 조건부 표시 — {trigger_qid: value} 또는 {trigger_qid: [value1, value2]}
+#               trigger_qid 의 현재 응답이 지정 값(들)에 포함될 때만 이 질문을 표시.
+#               multiselect trigger: 선택값과 지정 값 사이에 교집합이 있으면 표시.
+#               show_if 없으면 항상 표시. required:false 와 함께 사용하는 것이 원칙.
+#               app.py _show_if_met() / form.html initShowIf() 가 이 필드를 읽는다.
 #
 # ── profile schema 경로 약어 ─────────────────────────────────
 # customer.*         : profiles/<slug>.yaml customer 블록
@@ -353,6 +358,17 @@ questions:
       - value: unknown
         label: "잘 모르겠어요"
 
+  - id: approval_detail
+    section: "현재 상황 (업무담당자용)"
+    persona: staff
+    label: "결재·승인이 필요한 업무를 좀 더 구체적으로 설명해 주세요."
+    hint: "어떤 항목을 결재받는지, 결재 단계가 몇 단계인지 등을 적어주시면 도움이 됩니다."
+    type: textarea
+    required: false
+    maps_to: needs_note.what
+    show_if:
+      staff_approval_needed: ["yes_frequent", "yes_occasional"]
+
   - id: staff_approval_delay
     section: "현재 상황 (업무담당자용)"
     persona: staff
@@ -426,6 +442,17 @@ questions:
         label: "서버가 없음 / 신규 구축 필요"
       - value: unknown
         label: "잘 모르겠어요"
+
+  - id: it_onpremise_os_detail
+    section: "인프라 환경 (IT담당자용)"
+    persona: it
+    label: "사내 서버의 운영체제 버전·사양을 알고 계시면 적어주세요."
+    hint: "예: Ubuntu 22.04, Windows Server 2019, RAM 32GB, 디스크 1TB 등 — 몰라도 됩니다."
+    type: textarea
+    required: false
+    maps_to: needs_note.what
+    show_if:
+      it_server_env: ["onpremise_linux", "onpremise_windows"]
 
   - id: it_db_dialect
     section: "인프라 환경 (IT담당자용)"
@@ -526,14 +553,31 @@ questions:
       - value: unknown
         label: "잘 모르겠어요"
 
+  - id: it_has_external_integration
+    section: "기술 스택 선호 (IT담당자용)"
+    persona: it
+    label: "다른 시스템과 데이터를 주고받아야 하는 연동 요구가 있나요?"
+    type: radio
+    required: false
+    maps_to: needs_note.what
+    options:
+      - value: "yes"
+        label: "있어요"
+      - value: "no"
+        label: "없어요"
+      - value: unknown
+        label: "잘 모르겠어요"
+
   - id: it_external_integration
     section: "기술 스택 선호 (IT담당자용)"
     persona: it
-    label: "다른 시스템과 데이터를 주고받아야 하는 요구가 있나요?"
+    label: "연동이 필요한 시스템을 구체적으로 설명해 주세요."
     hint: "예: ERP, 회계 프로그램, 출퇴근 단말기, 전자세금계산서 등"
     type: textarea
     required: false
     maps_to: needs_note.what
+    show_if:
+      it_has_external_integration: "yes"
 
   - id: it_additional_notes
     section: "기술 스택 선호 (IT담당자용)"
@@ -548,6 +592,28 @@ questions:
   # ============================================================
   # 섹션 4 — 공통 마무리 (모든 페르소나)
   # ============================================================
+
+  - id: logistics_peak_volume
+    section: "추가 정보"
+    persona: all
+    label: "성수기·피크 시즌의 물동량(배송 건수, 재고 회전 등)이 어느 정도 되나요?"
+    hint: "물류·유통 업종에서 시스템 성능 설계에 중요한 정보입니다. 월 건수나 비율로 적어주세요."
+    type: textarea
+    required: false
+    maps_to: needs_note.what
+    show_if:
+      industry: logistics
+
+  - id: ceo_dept_structure
+    section: "추가 정보"
+    persona: ceo
+    label: "부서·팀 구조를 간단히 설명해 주세요."
+    hint: "예: 영업팀 10명 / 생산팀 20명 / 물류팀 15명 — 권한 체계 설계에 활용됩니다."
+    type: textarea
+    required: false
+    maps_to: needs_note.who
+    show_if:
+      ceo_user_count: ["21-50", "51-100", "100+"]
 
   - id: other_data_domains
     section: "추가 정보"
@@ -583,3 +649,17 @@ questions:
         label: "저녁 (17시 이후)"
       - value: anytime
         label: "언제든 괜찮아요"
+
+  - id: prefer_call
+    section: "추가 정보"
+    persona: all
+    label: "폼 작성이 어려우시면 직접 전화로 상담받으실 수 있습니다 — 통화를 원하시나요?"
+    hint: "통화를 원하시면 '예'를 선택하고, 위 연락처 전화번호란에 번호를 남겨 주세요."
+    type: radio
+    required: false
+    maps_to: needs_note.who
+    options:
+      - value: "yes"
+        label: "예, 전화 상담을 원합니다"
+      - value: "no"
+        label: "아니요, 폼으로 충분합니다"
