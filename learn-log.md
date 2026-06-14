@@ -419,3 +419,7 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **상세**: [pm.md](docs/learn-logs/pm.md)
 - **결정**: CEO+CTO 합의 (v2 ultraplan 반영). Step 5 외부 인도 게이트 불변(CEO 단독, charter §2)
 - **Open loops**: P1~P6·P8 코드 구현 (engineer) / G-14 SPEC→PASS (cases/ 첫 엔트리 후)
+- **후속 (2026-06-14, 동일 스레드)**:
+  - 배포 검증기 `/health` 권위·`--entry-path` advisory 화 → `/login` 없는 intake false-negative 제거
+  - **monitor·G-14 latest-terminal-wins**: 노드 상태를 최신 terminal 이벤트로 판정 → codex Step 4b 재판정·재시도가 첫 실패에 latch 안 됨
+  - **needs-fit codex 패스 정식화**: `needs_fit_audit.py record-verdict`(LLM 0 loop closer)로 codex 판정→NEEDS_FIT 재판정 이벤트·alerts 라우팅·review footer. SKILL Step 4b 세션 runbook 명문화. 핵심 통찰: 사전패스 BLOCK 은 자동 정지 신호일 뿐, codex judgment 가 false-GAP 교정
