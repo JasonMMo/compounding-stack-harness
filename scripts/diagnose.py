@@ -1001,6 +1001,181 @@ def g12_catalog_fk_hygiene() -> GuardResult:
 
 _OUTPUT_PROTOCOL_REF = "subagent-output-protocol"
 
+# ---------------------------------------------------------------------------
+# G-14 Intake pipeline health
+# ---------------------------------------------------------------------------
+
+_DEFAULT_CASES_DIR_FOR_G14 = REPO_ROOT / "infra" / "registry" / "cases"
+
+
+def g14_intake_pipeline_health(
+    cases_dir: Path | None = None,
+) -> GuardResult:
+    """G-14 / Phase 8 — intake pipeline health: qualify cases must not be stalled/failed.
+
+    Reads infra/registry/cases/*.yaml (PII-free).
+    Flags any triage_status=qualify case that has a NODE_FAIL event OR a
+    NODE_ENTER with no matching NODE_EXIT_OK where now - enter > SLA.
+
+    Returns SPEC if cases dir is absent or has no case files yet.
+    Returns FAIL on any detected stall or failure in a qualify-tier case.
+
+    The optional `cases_dir` parameter allows tests to inject a temporary
+    directory instead of the repo default.
+    """
+    from datetime import datetime as _datetime, timezone as _tz
+    import json as _json
+
+    _cases_dir: Path = cases_dir if cases_dir is not None else _DEFAULT_CASES_DIR_FOR_G14
+
+    if not _cases_dir.exists():
+        # Use relative_to only when the path is inside the repo root
+        try:
+            _dir_label = str(_cases_dir.relative_to(REPO_ROOT))
+        except ValueError:
+            _dir_label = str(_cases_dir)
+        return GuardResult(
+            "G-14", "intake pipeline health", "Phase 8",
+            status="SPEC",
+            notes=f"Cases directory not found ({_dir_label}) — "
+                  "guard activates once infra/registry/cases/ has entries.",
+        )
+
+    # Collect case YAML files (skip README, .gitkeep, hidden)
+    try:
+        import yaml as _yaml  # type: ignore[import]
+        _has_yaml = True
+    except ImportError:
+        _has_yaml = False
+
+    def _load_case(path: Path) -> dict:
+        if not path.exists():
+            return {}
+        try:
+            text = path.read_text(encoding="utf-8")
+            if _has_yaml:
+                data = _yaml.safe_load(text)
+                return data if isinstance(data, dict) else {}
+            # Fallback: return empty (cannot parse without pyyaml)
+            return {}
+        except Exception:
+            return {}
+
+    case_files = [
+        p for p in sorted(_cases_dir.iterdir())
+        if p.is_file()
+        and p.suffix.lower() in {".yaml", ".yml"}
+        and not p.name.startswith(".")
+        and not p.name.startswith("_")
+        and p.name.lower() not in {"readme.yaml", "readme.yml"}
+    ]
+
+    if not case_files:
+        return GuardResult(
+            "G-14", "intake pipeline health", "Phase 8",
+            status="SPEC",
+            notes="No case files in infra/registry/cases/ yet — "
+                  "guard activates once a case is registered.",
+        )
+
+    # SLA table (seconds) — matches pipeline_monitor.NODES
+    _SLA: dict[str, int] = {
+        "SUBMITTED": 360,
+        "TRIAGED": 3600,
+        "CALL_QUEUE": 86400,
+        "GAP_RECORDED": 3600,
+        "PM_TRIAGE": 172800,
+        "DRAFT_PROMOTED": 7200,
+        "SCAFFOLDED": 7200,
+        "DEPLOYED": 36000,
+        "UI_CHECKED": 3600,
+        "NEEDS_FIT": 7200,
+        "PROFILE_CONFIRMED": 172800,
+        "DELIVERED": 259200,
+        "FEEDBACK": 604800,
+        "CLOSED": 86400,
+    }
+
+    _NON_QUALIFY_NODES: frozenset[str] = frozenset({"CALL_QUEUE", "GAP_RECORDED", "PM_TRIAGE"})
+
+    def _parse_ts(ts_str: str | None) -> "_datetime | None":
+        if not ts_str:
+            return None
+        try:
+            clean = ts_str.replace("Z", "+00:00")
+            return _datetime.fromisoformat(clean)
+        except (ValueError, AttributeError):
+            return None
+
+    now = _datetime.now(_tz.utc)
+    violations: list[str] = []
+    qualify_count = 0
+
+    for cf in case_files:
+        case = _load_case(cf)
+        if not case:
+            continue
+
+        triage_status = case.get("triage_status")
+        if triage_status != "qualify":
+            continue
+
+        qualify_count += 1
+        slug = case.get("slug") or cf.stem
+        events: list[dict] = case.get("pipeline_events", []) or []
+
+        # Per-node: collect enter/exit/fail events
+        by_node: dict[str, dict] = {}
+        for ev in events:
+            nid = ev.get("node_id")
+            if not nid or nid in _NON_QUALIFY_NODES:
+                continue
+            if nid not in by_node:
+                by_node[nid] = {"enters": [], "exits": [], "fails": []}
+            evt = ev.get("event", "")
+            if evt == "NODE_ENTER":
+                by_node[nid]["enters"].append(ev)
+            elif evt == "NODE_EXIT_OK":
+                by_node[nid]["exits"].append(ev)
+            elif evt == "NODE_FAIL":
+                by_node[nid]["fails"].append(ev)
+
+        for nid, evs in by_node.items():
+            if evs["fails"]:
+                ec = evs["fails"][0].get("error_class", "unknown")
+                violations.append(
+                    f"{slug}:{nid} NODE_FAIL (error_class={ec!r})"
+                )
+            elif evs["enters"] and not evs["exits"]:
+                # Check for SLA breach
+                enter_ts = _parse_ts(evs["enters"][0].get("ts"))
+                if enter_ts:
+                    sla = _SLA.get(nid, 0)
+                    dwell = (now - enter_ts).total_seconds()
+                    if dwell > sla:
+                        violations.append(
+                            f"{slug}:{nid} stalled {dwell:.0f}s (SLA {sla}s)"
+                        )
+
+    notes = (
+        f"Scanned {len(case_files)} case file(s); {qualify_count} qualify-tier case(s). "
+        "Non-qualify triage statuses (call/gap/defer/closed) excluded from stall accounting."
+    )
+
+    if qualify_count == 0:
+        return GuardResult(
+            "G-14", "intake pipeline health", "Phase 8",
+            status="SPEC",
+            notes=notes + " No qualify cases yet.",
+        )
+
+    return GuardResult(
+        "G-14", "intake pipeline health", "Phase 8",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=notes,
+    )
+
 
 def g13_subagent_output_protocol_wired() -> GuardResult:
     """G-13 / Growth-34 — every persona loop SKILL wires the subagent output protocol.
@@ -1055,6 +1230,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-11": g11_creater_catalog_single_source,
     "G-12": g12_catalog_fk_hygiene,
     "G-13": g13_subagent_output_protocol_wired,
+    "G-14": g14_intake_pipeline_health,
 }
 
 
