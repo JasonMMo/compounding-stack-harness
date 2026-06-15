@@ -1,0 +1,22 @@
+# Digital asset record — hopwell (beer-brand launch landing demo, 2nd marketing-site theme).
+# Demo/시안: showcases the marketing-site track's theme axis with a 2nd theme (harvest) — warm craft-beer feel, opposite of gtm-landing's cold indigo. Growth-75.
+slug: hopwell
+contact:
+  channel: internal
+  handle: "compounding-stack (own demo asset)"
+preview:
+  subdomain: hopwell.n9n.co.kr
+  coolify_project: hopwell            # uuid: pfwbarlxcb7raljvd5gp5wnf
+  coolify_app: a4g7t9vvltsl7y3ab3tdr869
+  status: live
+  deployed_at: "2026-06-15"
+  deliverable_kind: marketing-site     # static SSG (no backend) — deploy_static_site.py lane
+  theme: harvest
+production:
+  install_method: remote
+  installed_at: null                   # preview/demo asset — no customer install
+  stack:
+    frontend: landing-astro
+    backend: none
+secret_ref: []                         # static site, no secrets
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5). 정적 SSG — 런타임 LLM 0."
