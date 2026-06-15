@@ -508,6 +508,13 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **교훈**: 서드파티 vendoring 절차 = ① 코어만 추출(중복 패키징 제외) ② LICENSE+NOTICE+SHA 핀 ③ **fetch/http/api/telemetry/openai/spawn grep 감사** ④ 네트워크 옵트아웃을 커밋(env 아닌 config 파일로 영구) ⑤ ASCII(G-8) 확인. 대용량 browser JS(live-browser 432KB 등)는 size 무관 커밋(읽기만 100KB 가드 대상).
 - **Cost**: engineer subagent 1회(39K tok) / envelope.
 
+### Growth-72 (2026-06-15) — typeset de-slop (gtm-landing)
+
+- **작업**: impeccable `/typeset` 실행. ① hero `bg-clip-text` 그래디언트 제거 → 솔리드 `#C4B5FD` accent + weight. ② 폰트 4종(plus-jakarta/inter/dm-serif-display/dm-sans, 전부 reflex-reject) 제거 → `@fontsource-variable/bricolage-grotesque` + `@fontsource-variable/epilogue`(MIT, self-host, Korean fallback). global.css 9 import→2, aurora theme.yaml font 토큰 갱신.
+- **검증**: build SUCCESS, detector gradient-text **제거**(em-dash 잔존, 별도 패스), 라이브 computed font=Bricolage/Epilogue 확인, no-JS h1 opacity 1.
+- **교훈**: @fontsource 기본 폰트가 impeccable reflex-reject 와 다수 겹침 — 신규 어댑터 폰트 선택 시 reflex 목록 대조 필요. theme.yaml font 토큰이 단일진실이라 1곳 수정으로 전 consumer 반영.
+- **Cost**: engineer subagent 1회(52K tok) / envelope.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
