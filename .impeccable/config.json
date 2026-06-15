@@ -1,0 +1,4 @@
+{
+  "updateCheck": false,
+  "_note": "vendored-pin discipline: impeccable skill is vendored at .claude/skills/impeccable/ (see NOTICE.vendored.md). updateCheck disabled to honor the harness no-network/no-API auto-path rule (CLAUDE.md). Re-sync upstream manually, not via npx."
+}
