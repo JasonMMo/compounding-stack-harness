@@ -1,0 +1,285 @@
+slug: kiln
+name: "Kiln"
+version: "1.0.0"
+description: >
+  Earthen and material. Warm clay surfaces, wood-ash neutrals, and a fired
+  terracotta-ember accent trace the arc of a ceramics studio: raw clay on
+  the wheel, then kiln heat, then glaze cool. Unmistakably tactile.
+persona_fit:
+  personas: [ceo, ops]
+  industry_tags: [artisan-ceramics, craft-studio, pottery, local-maker, artisan-food, f-and-b-artisan]
+  tone: "handmade material editorial-craft"
+
+# ── Color Override ─────────────────────────────────────────────────────────────
+# Strategy: The body bg IS the brand surface — a committed mid-clay field.
+# Not a near-white paper: oklch(78% 0.07 42) => L=0.78 (below the 0.84 trap floor)
+# and C=0.07 (above the 0.06 trap ceiling). This is genuinely the brand's own hue.
+#
+# OKLCH derivation notes (calibrated against atelier reference hex values):
+# oklch(78% 0.070 42)  => #C9A078  surface-1: mid warm clay — the body field
+# oklch(71% 0.075 41)  => #B08556  surface-2: deeper clay pocket, alt sections
+# oklch(62% 0.070 40)  => #8C6438  surface-3: clay shadow, borders
+# oklch(14% 0.030 40)  => #1E140A  text-1: near-black with warm clay undertone
+# oklch(32% 0.045 40)  => #4A3020  text-2: warm dark brown
+# oklch(27% 0.038 40)  => #3D2510  text-3: darkened for AA on clay surface
+# oklch(56% 0.160 38)  => #B5501A  primary: kiln-ember (fired terracotta, saturated)
+# oklch(64% 0.155 38)  => #CC6525  primary-hover: lighter ember
+# oklch(47% 0.150 38)  => #9A3E10  primary-active: darker fired
+# oklch(92% 0.040 44)  => #EDD8C0  primary-subtle: fired-bone badge bg (much lighter than surface)
+# oklch(74% 0.100 42)  => #D4935A  primary-border: mid-ember muted
+# oklch(14% 0.030 40)  => #1E140A  hero-bg-from: kiln interior dark
+# oklch(20% 0.032 40)  => #2C1E10  hero-bg-to: warm ash-black
+# oklch(71% 0.075 41)  => #B08556  section-alt-bg: deeper clay (same as surface-2)
+color:
+  primary: "#B5501A"
+  primary-hover: "#CC6525"
+  primary-active: "#9A3E10"
+  primary-subtle: "#EDD8C0"
+  primary-border: "#D4935A"
+  surface-1: "#C9A078"
+  surface-2: "#B08556"
+  surface-3: "#8C6438"
+  text-1: "#1E140A"
+  text-2: "#4A3020"
+  text-3: "#3D2510"
+  text-link: "#B5501A"
+  text-link-hover: "#9A3E10"
+  # Landing-specific additive tokens
+  hero-bg-from: "#1E140A"
+  hero-bg-to: "#2C1E10"
+  section-alt-bg: "#B08556"
+  accent-glow: "rgba(181,80,26,0.20)"
+  # Parallax-scroll texture tokens — 3 named material chapters
+  # Each defines gradient endpoints for a CSS gradient + a text-legibility overlay.
+  # Rendered as full-viewport sticky panels with CSS grain overlay in the adapter.
+  # Light text (#EDD8C0) is used on all three; contrast values verified below.
+  #
+  # texture-clay: raw clay fresh off the earth — warm ochre-to-dark-terracotta
+  #   from #8C4A1E: cr vs #EDD8C0 = 4.88 (PASS AA)
+  #   to   #5C2A0C: cr vs #EDD8C0 = 8.48 (PASS AAA)
+  texture-clay-from: "#8C4A1E"
+  texture-clay-to: "#5C2A0C"
+  texture-clay-overlay: "rgba(30,20,10,0.45)"
+  #
+  # texture-ash: wood-ash grey — the neutral counterpart, kiln residue
+  #   from #5A5048: cr vs #EDD8C0 = 5.67 (PASS AA)
+  #   to   #3A3028: cr vs #EDD8C0 = 9.30 (PASS AAA)
+  texture-ash-from: "#5A5048"
+  texture-ash-to: "#3A3028"
+  texture-ash-overlay: "rgba(20,16,10,0.40)"
+  #
+  # texture-ember: the kiln at peak heat — saturated orange-red gradient
+  #   from #C45A18: cr vs #EDD8C0 = 3.15 (PASS large-text >=3.0 for display headings)
+  #   to   #8C3A0A: cr vs #EDD8C0 = 5.57 (PASS AA)
+  #   Note: display headings on ember-from are large text (>=18pt/24px bold) -> 3.0 threshold
+  texture-ember-from: "#C45A18"
+  texture-ember-to: "#8C3A0A"
+  texture-ember-overlay: "rgba(40,15,5,0.35)"
+
+# ── Typography ─────────────────────────────────────────────────────────────────
+# Display: Cormorant Garamond — high-contrast old-style serif.
+#   A typeface with visible thick-thin stroke contrast and ink-trap details
+#   that evoke letterpress and hand-lettering. Reads as crafted, material,
+#   editorial-artisan. NOT the reflex list. Distinct from Raleway (atelier),
+#   Big Shoulders (harvest), Epilogue (aurora).
+#   Fontsource package: @fontsource-variable/cormorant-garamond
+#   (covers wght 300-700 axis; variable font for precise weight control)
+#
+# Body: Source Serif 4 — humanist slab/oldstyle serif.
+#   Pairing a serif display with a serif body is a deliberately off-reflex
+#   serif+serif contrast axis (editorial-craft register, not SaaS sans+sans).
+#   Source Serif 4 is warm, readable at body size, and has variable axes.
+#   Fontsource package: @fontsource-variable/source-serif-4
+#   Distinct from Karla (atelier), Hanken Grotesk (harvest).
+#
+# Korean fallback: Apple SD Gothic Neo / Malgun Gothic (system, no added cost).
+font:
+  family-display: "'Cormorant Garamond', 'Georgia', serif"
+  family-body: "'Source Serif 4 Variable', 'Source Serif 4', 'Georgia', 'Apple SD Gothic Neo', 'Malgun Gothic', serif"
+  # Landing-scale extensions
+  size-5xl: "48px"
+  size-6xl: "64px"
+  size-7xl: "80px"
+  line-5xl: "52px"
+  line-6xl: "68px"
+  line-7xl: "84px"
+  # Cormorant at heavy weight reads editorial-luxe, not SaaS bold
+  weight-display: "700"
+  # Within impeccable minimum (-0.04em floor). Cormorant optical axis suits -0.02em.
+  letter-spacing-display: "-0.02em"
+  letter-spacing-body: "0.01em"
+
+# ── Spacing ────────────────────────────────────────────────────────────────────
+# Measured — artisan pacing, not rushed SaaS rhythm or atelier-sparse
+space:
+  section-y: "104px"
+  section-y-mobile: "72px"
+  container-max: "1100px"
+  container-gutter: "24px"
+
+# ── Radius ─────────────────────────────────────────────────────────────────────
+# Minimal radius — the material aesthetic is hand-thrown, organic, NOT pill-rounded
+radius:
+  card: "6px"
+  button: "4px"
+  badge: "4px"
+  hero-media: "6px"
+
+# ── Shadow ─────────────────────────────────────────────────────────────────────
+# Warm clay-toned shadows (no cool/violet tint as in aurora, no cool-grey as in atelier)
+shadow:
+  card: "0 2px 10px -2px rgba(30,20,10,0.18), 0 1px 4px -1px rgba(30,20,10,0.12)"
+  hero-media: "0 24px 48px -8px rgba(30,20,10,0.50)"
+  cta-band: "inset 0 1px 0 rgba(237,216,192,0.08)"
+
+# ── Motion ─────────────────────────────────────────────────────────────────────
+# Kiln pacing: deliberate and weighted. Reveal-on-scroll as default (content-first).
+# Parallax-scroll section itself is a React-island scroll behavior — not a motion
+# preset — but the parallax-lite preset handles the reduced-motion degradation path.
+# Gallery/parallax chapters fall back to fade-simple under prefers-reduced-motion.
+motion:
+  default_preset: reveal-on-scroll
+  section_presets:
+    hero: fade-up
+    gallery: parallax-lite
+    story: fade-up
+    features: stagger-children
+    lead: fade-simple
+    faq: fade-up
+    cta: scale-in
+    footer: fade-simple
+  reduced_motion_fallback: fade-simple
+
+# ── Section Variant Styles ─────────────────────────────────────────────────────
+sections:
+  hero:
+    brew:
+      # Full-bleed image with grain overlay — "brew" variant reused for artisan hero
+      bg: image
+      text_align: left
+      cta_style: inverse-lg
+      media_position: behind
+    centered:
+      bg: gradient
+      text_align: center
+      cta_style: primary-lg
+      media_position: none
+    split-left:
+      bg: solid
+      text_align: left
+      cta_style: primary-lg
+      media_position: right
+
+  gallery:
+    parallax-scroll:
+      # Signature section: sticky full-viewport chapter panels.
+      # No image assets required — each chapter is rendered via theme texture tokens
+      # (texture-clay, texture-ash, texture-ember) as CSS gradients + grain layer.
+      # React-island handles IntersectionObserver + scroll-driven sticky logic.
+      # Reduced motion: parallax-lite preset degrades to static bg (CSS-only, safe).
+      bg: gradient
+      layout: stack
+      chapter_texture: theme-driven    # adapter reads texture-* color tokens
+      text_align: left
+      overlay: dark
+      caption_style: overlay
+    masonry-3col:
+      gap: normal
+      overlay: dark
+      caption_style: below
+
+  story:
+    timeline-year:
+      layout: vertical
+      bg: light
+    founder-split:
+      layout: text-left-image-right
+      quote_style: large
+      bg: light
+
+  features:
+    two-col-alternating:
+      icon_style: none
+      card_style: ghost
+      layout: alternating
+    three-col-icon:
+      icon_style: outline
+      card_style: flat
+      layout: grid-3
+
+  lead:
+    minimal-field:
+      # Single email field + CTA — minimal interruption, craft-appropriate
+      bg: solid
+      text_align: center
+      cta_style: primary-lg
+      show_newsletter_form: true
+
+  faq:
+    single-col:
+      divider: line
+      icon: plus
+      animation: collapse
+
+  footer:
+    minimal:
+      cols: 1
+      show_social: false
+      divider: top
+
+# ── A11y Self-check ───────────────────────────────────────────────────────────
+a11y:
+  contrast_checked: true
+  wcag_aa_pairs:
+    - bg: "#C9A078"
+      fg: "#1E140A"
+      ratio: 7.57
+      note: "Body ink (text-1) on clay surface-1 — PASS AAA"
+    - bg: "#C9A078"
+      fg: "#4A3020"
+      ratio: 5.06
+      note: "text-2 (warm dark brown) on clay surface-1 — PASS AA"
+    - bg: "#C9A078"
+      fg: "#3D2510"
+      ratio: 5.97
+      note: "text-3 (tertiary label) on clay surface-1 — PASS AA"
+    - bg: "#1E140A"
+      fg: "#C9A078"
+      ratio: 7.57
+      note: "Clay surface-1 text on kiln-dark hero (hero-bg-from) — PASS AAA"
+    - bg: "#2C1E10"
+      fg: "#C9A078"
+      ratio: 6.75
+      note: "Clay text on hero-bg-to (warm ash-black) — PASS AAA"
+    - bg: "#B08556"
+      fg: "#1E140A"
+      ratio: 5.46
+      note: "text-1 on surface-2 (alt section bg) — PASS AA"
+    - bg: "#EDD8C0"
+      fg: "#1E140A"
+      ratio: 13.09
+      note: "text-1 on primary-subtle badge background — PASS AAA"
+    - bg: "#B5501A"
+      fg: "#FFFFFF"
+      ratio: 5.09
+      note: "White label on ember primary CTA button — PASS AA"
+    - bg: "#8C4A1E"
+      fg: "#EDD8C0"
+      ratio: 4.88
+      note: "texture-clay-from panel: light text on clay gradient start — PASS AA"
+    - bg: "#5A5048"
+      fg: "#EDD8C0"
+      ratio: 5.67
+      note: "texture-ash-from panel: light text on ash gradient start — PASS AA"
+  kwcag_notes: >
+    Kiln-dark hero (#1E140A) with clay text (#C9A078): 7.57:1 (AAA). Body
+    ink (#1E140A) on clay surface (#C9A078): 7.57:1 (AAA). Ember CTA
+    (#B5501A) with white label: 5.09:1 (PASS AA). Alt section (#B08556)
+    with body ink: 5.46:1 (PASS AA). Parallax texture panels use dark
+    overlays (rgba 40-45% opacity) to ensure text legibility; heading text
+    meets large-text 3:1 minimum on the ember-from panel (3.15:1), all
+    other texture panels clear AA. No autoplay (WCAG 2.2.2). All entrance
+    animations fall back to fade-simple under prefers-reduced-motion
+    (WCAG 2.3.3). Gallery/parallax-scroll React island respects
+    prefers-reduced-motion via the parallax-lite preset degradation path.
+  reduced_motion_safe: true
