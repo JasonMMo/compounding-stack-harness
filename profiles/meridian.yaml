@@ -1,0 +1,155 @@
+# profiles/meridian.yaml — MERIDIAN Managed IT & Security Advisory landing
+# Brand: MERIDIAN — a managed-IT / security advisory consultancy for mid-market firms.
+# Marketing-site track (deliverable_kind=marketing-site); theme=meridian.
+# A6 archetype demo (B2B services): logos/quote-band (single client voice, not logo-soup),
+# process/numbered-stack (engagement steps), team/headshot-grid (monogram avatars, no stock faces).
+# No entity/DDL axis. DEMO_MODE form stub.
+
+version: 1
+
+customer:
+  slug: meridian
+  display: "MERIDIAN Managed IT & Security Advisory — Landing"
+  status: active
+  contact: demo@meridian.example
+  industry: managed-it-security
+
+# ── Pluggable Stack ─────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# ── Site Block (marketing-site schema) ─────────────────────────────────────
+site:
+  theme: meridian
+
+  pages:
+    - slug: home
+      title: "MERIDIAN"
+      seo:
+        title: "MERIDIAN — Managed IT & Security Advisory"
+        description: "Security, infrastructure, and compliance operations for mid-sized companies. Senior engineers, named contacts, no ticket queues."
+      sections:
+        # ── Hero: centered (dark forest bg, inverse CTA) ──────────────────
+        - type: hero
+          variant: centered
+          copy:
+            headline: "The IT team you can't afford to hire."
+            subhead: "MERIDIAN runs security, infrastructure, and compliance for mid-sized companies — the work that's too critical to ignore and too specialized to staff in-house."
+          cta:
+            label: "Book a risk review"
+            href: "#contact"
+
+        # ── Logos: quote-band (single client voice, not logo-soup) ────────
+        - type: logos
+          variant: quote-band
+          copy:
+            eyebrow: ""
+            quote: "We went from three unanswered security alerts a week to zero. MERIDIAN didn't sell us tools — they took the problem off our desk."
+            author_name: "Dana Whitfield"
+            author_title: "COO"
+            company: "Harborline Logistics"
+
+        # ── Process: numbered-stack (how an engagement works) ─────────────
+        - type: process
+          variant: numbered-stack
+          copy:
+            headline: "How an engagement works."
+            subhead: "No twelve-week discovery phase. We're operational by week two."
+          items:
+            - title: "Posture review"
+              description: "We map your stack, access, and exposure in five business days and hand you a prioritized risk register — yours to keep, engagement or not."
+            - title: "Remediation sprint"
+              description: "We close the critical gaps first: identity, backups, patching, and the three misconfigurations that cause most breaches."
+            - title: "Managed operations"
+              description: "Monitoring, patching, and incident response run on our clock. You get a named engineer, not a ticket queue."
+            - title: "Quarterly review"
+              description: "Every quarter we sit with leadership, walk the risk register, and show what changed. No jargon, no upsell theater."
+
+        # ── Features: two-col-alternating (services) ──────────────────────
+        - type: features
+          variant: two-col-alternating
+          copy:
+            headline: "What we cover."
+          items:
+            - title: "Security & compliance"
+              description: "SOC 2 and ISO 27001 readiness, access governance, endpoint hardening, and the evidence trail auditors actually ask for. We run the controls and keep the documentation current."
+            - title: "Infrastructure & cloud"
+              description: "Cloud cost and configuration reviews, identity consolidation, and backup and disaster-recovery you've actually tested. We inherit the messy environment and leave it boring."
+            - title: "Incident response"
+              description: "A defined escalation path with a named engineer on the other end. When something breaks at 2 a.m., you call a person who already knows your environment."
+
+        # ── Team: headshot-grid (monogram avatars — no fabricated faces) ──
+        - type: team
+          variant: headshot-grid
+          copy:
+            headline: "Senior people, not a call center."
+            subhead: "Every engagement is run by someone who has carried a pager."
+          items:
+            - name: "Marcus Reyes"
+              role: "Principal, Security"
+              bio: "Former SOC lead. Built detection programs for two fintech scale-ups."
+            - name: "Priya Nair"
+              role: "Principal, Infrastructure"
+              bio: "Fifteen years in cloud platform engineering across regulated industries."
+            - name: "Tomas Lindqvist"
+              role: "Compliance Lead"
+              bio: "Ran ISO 27001 and SOC 2 audits from both sides of the table."
+
+        # ── Testimonial: carousel (single strong quote) ───────────────────
+        - type: testimonial
+          variant: carousel
+          copy:
+            quote: "I've worked with three managed providers. MERIDIAN is the first that made my board feel calmer instead of more confused."
+            author_name: "Helen Osei"
+            author_title: "CFO"
+            company: "Brightseed Manufacturing"
+
+        # ── FAQ: single-col ───────────────────────────────────────────────
+        - type: faq
+          variant: single-col
+          copy:
+            headline: "Questions leadership asks."
+          items:
+            - question: "Do you replace our internal IT?"
+              answer: "Usually we augment it. We take the specialized security and infrastructure load off your existing team so they can focus on the business. For companies with no IT function, we run the whole thing."
+            - question: "How fast can you start?"
+              answer: "The posture review begins within a week of signing. We're handling live operations — monitoring, patching, escalation — by the second week. No multi-month onboarding."
+            - question: "What if we already have security tools?"
+              answer: "Good. We work with what you own before recommending anything new. Most companies have capable tools that were never configured or monitored properly. We fix that first."
+            - question: "Are we locked into a long contract?"
+              answer: "Engagements run on a rolling quarterly basis. If we're not earning our keep, you give one quarter's notice. We'd rather keep you by being useful than by contract."
+
+        # ── CTA: left-aligned (primary forest-green band) ─────────────────
+        - type: cta
+          variant: left-aligned
+          copy:
+            headline: "Find out what you're actually exposed to."
+            subhead: "A posture review takes five days and the risk register is yours to keep — whether or not we work together."
+          cta:
+            label: "Book a risk review"
+            href: "#contact"
+
+        # ── Footer: full-links ────────────────────────────────────────────
+        - type: footer
+          variant: full-links
+          copy:
+            brand_name: "MERIDIAN"
+            tagline: "Managed IT & security advisory for companies that have outgrown break-fix."
+            legal_notice: "© 2026 MERIDIAN Advisory. All rights reserved."
+
+  # ── Contact (G-1: wire key reference only; DEMO_MODE stubs submit) ─────────
+  contact:
+    enabled: true
+    fields: [name, email, message]
+
+# ── Defaults ────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: UTC
+
+# ── Cost tracking ────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 0        # static SSG landing — no runtime LLM
+  prepaid_credits_usd: 0
