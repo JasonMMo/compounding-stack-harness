@@ -1,0 +1,22 @@
+# Digital asset record — gtm-landing (OUR OWN M1 GTM landing, marketing-site dogfood).
+# Not a customer asset: this is our flagship landing demo. Growth-66/67.
+slug: gtm-landing
+contact:
+  channel: internal
+  handle: "compounding-stack (own asset)"
+preview:
+  subdomain: gtm-landing.n9n.co.kr
+  coolify_project: gtm-landing          # uuid: kt6fcno8hync4plaabxadtqj
+  coolify_app: umyt8l38jv386mwfja5v3d2p
+  status: live
+  deployed_at: "2026-06-15"
+  deliverable_kind: marketing-site       # static SSG (no backend) — deploy_static_site.py lane
+  theme: aurora
+production:
+  install_method: remote
+  installed_at: null                     # preview/marketing asset — no customer install
+  stack:
+    frontend: landing-astro
+    backend: none
+secret_ref: []                           # static site, no secrets
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5). 정적 SSG — 런타임 LLM 0."
