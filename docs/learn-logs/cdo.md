@@ -119,6 +119,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **검증**: 풀페이지 시각 게이트 3회(토큰 클로버·셰브론·blank 적발 후 수정). theme 축이 전 고객 재사용 자산으로 복리됨을 2번째 증명.
 - Cost: CDO 테마 디자인(design-agent) + engineer 픽스 위임.
 
+### Growth-76 (2026-06-15) — atelier 테마 + A2 아키타입 구성 craft (Studio North)
+
+- **문제 재정의**: gtm(aurora)·hopwell(harvest)이 테마만 다르고 **페이지 구조가 동일** → 의뢰인 눈엔 같은 템플릿. CDO 결론: 진짜 다양성은 **섹션 variant × 페이지 아키타입 × 테마**의 곱. theme 축 단독으로는 부족.
+- **atelier 테마**: 3번째 테마. ink-pressed editorial — 잉크블랙 hero(#141418) + warm-paper(#F5F2EC) + 단일 copper accent(#9A5B32, hover/CTA만). aurora(indigo)·harvest(amber)와 또 다른 정체성. 폰트 Raleway(art-deco display) + Karla(humanist body) — 둘 다 off-reflex, 기존 테마 폰트와 비중복. cream/sand AI 디폴트 회피(warm-paper는 chroma 낮은 의도적 종이, near-white 타이밍 아님).
+- **A2 구성**: headline-only hero(이미지 0, 타입 주도) → masonry 갤러리("selected work") → 창업자 split 스토리(POV+pull_quote) → single-col 리스트 → 단일 대형 후기 → 다크 CTA → 미니멀 푸터. SaaS hero-metric·카드그리드 클리셰 회피. 잉크/페이퍼 14.2:1 등 전 페어 AA.
+- **검증**: 풀페이지 시각 게이트 — CTA 빈 플레이스홀더 흰박스 적발→실콘텐츠 스샷 교체. detector CLEAN, no-JS h1 opacity 1.
+- Cost: CDO 디자인(design-agent 백그라운드 1회, ~126K tok) / envelope.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
