@@ -1,9 +1,16 @@
 ---
 /**
  * Testimonial.astro — Testimonial / Social Proof section (type: testimonial).
- * Variants: single-card | carousel | grid
+ * Variants: single-card | carousel | grid | pull-quote-wall
  * Style hints: layout, quote_style (large|normal), avatar (circle|square|none)
  * No autoplay (WCAG 2.2.2 — a11y invariant).
+ *
+ * pull-quote-wall: full-bleed asymmetric grid of 2-3 large pull-quotes (CDO spec 2026-06-16).
+ *   Typographic — no card boxing. Avatar: none by default.
+ *   Primary quote (items[0]): larger col, larger type (display family).
+ *   Secondary quotes: smaller col, subordinate type.
+ *   items[] required for multi-quote; falls back to copy.quote for single.
+ *   No JS required. Growth-69 invariant: all content visible without JS.
  */
 interface StyleHints {
   layout?: string
@@ -12,12 +19,21 @@ interface StyleHints {
   autoplay?: boolean
 }
 
+interface QuoteItem {
+  quote: string
+  author_name: string
+  author_title?: string
+  company?: string
+  author_photo?: string
+}
+
 interface Props {
   copy: Record<string, string>
   assets?: string[]
   variant?: string
   styleHints?: StyleHints
   motionPreset?: string
+  items?: QuoteItem[]
 }
 
 const {
@@ -26,6 +42,7 @@ const {
   variant = 'single-card',
   styleHints = {},
   motionPreset = 'stagger-children',
+  items = [],
 } = Astro.props
 
 const quoteStyle = styleHints.quote_style ?? 'normal'
@@ -48,6 +65,65 @@ const quoteClass = quoteStyle === 'large'
   data-stagger-delay="80"
 >
   <div class="max-w-[var(--space-container-max,1200px)] mx-auto">
+
+    {variant === 'pull-quote-wall' && (() => {
+      /* Build quote list: prefer items[], fall back to single copy.quote */
+      const quotes: QuoteItem[] = items.length > 0
+        ? items
+        : copy.quote
+          ? [{ quote: copy.quote, author_name: copy.author_name ?? '', author_title: copy.author_title, company: copy.company }]
+          : []
+      const isPrimary = (i: number) => i === 0
+      /*
+       * Mobile-first grid:
+       *   <768px  → single column (grid-cols-1), all quotes stack vertically.
+       *   ≥768px  → asymmetric columns via inline style on the md-breakpoint wrapper.
+       *   Tailwind alone cannot express `5fr 4fr 3fr` — we use a CSS custom property
+       *   set via a wrapper class trick: md:grid wrapper switches from 1-col to multi-col
+       *   using a data-attribute style injected only at md+ via a <style> block.
+       *   Simpler: keep grid-cols-1 always via Tailwind, then override at md with a
+       *   scoped class. We use the `[&]:md:` pattern via a sentinel class.
+       *
+       * Strategy: outer div is always grid-cols-1 on mobile. At md+ we apply the
+       * multi-column grid via a dedicated CSS class in a <style> tag (scoped to this
+       * component), not an inline style — so media queries work correctly.
+       */
+      const colClass = quotes.length >= 3 ? 'pqw-three' : 'pqw-two'
+      return (
+        <>
+          <style>{`
+            @media (min-width: 768px) {
+              .pqw-two  { grid-template-columns: 7fr 5fr; }
+              .pqw-three { grid-template-columns: 5fr 4fr 3fr; }
+            }
+          `}</style>
+          <div class={`grid grid-cols-1 items-start gap-10 md:gap-[clamp(32px,5vw,64px)] ${colClass}`}>
+            {quotes.map((q, i) => (
+              <div class={isPrimary(i) ? 'pull-quote-primary' : 'pull-quote-secondary'}>
+                {/* Opening quote mark — color: primary for primary, primary-border for secondary */}
+                <span
+                  class=”block leading-none mb-2 select-none”
+                  aria-hidden=”true”
+                  style={`font-size: ${isPrimary(i) ? '3.5rem' : '2.25rem'}; color: ${isPrimary(i) ? 'var(--color-primary)' : 'var(--color-primary-border)'};`}
+                >{'”'}</span>
+                <blockquote
+                  style={`font-family: var(--font-family-display, inherit); font-size: clamp(${isPrimary(i) ? '1.25rem, 2.5vw, 2rem' : '1rem, 1.8vw, 1.5rem'}); font-weight: ${isPrimary(i) ? '600' : '500'}; line-height: 1.3; color: var(${isPrimary(i) ? '--color-text-1' : '--color-text-2'});`}
+                >
+                  {q.quote}
+                </blockquote>
+                <p
+                  class=”mt-5 text-sm font-medium tracking-[0.02em] text-[var(--color-text-3)]”
+                  style=”font-family: var(--font-family-body, inherit);”
+                >
+                  {'— '}{[q.author_name, q.author_title, q.company].filter(Boolean).join(', ')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </>
+      )
+    })()}
+
     {(variant === 'single-card' || variant === 'carousel') && copy.quote && (
       <div class="max-w-3xl mx-auto text-center">
         <svg class="w-8 h-8 text-[var(--color-primary,#6D28D9)] mx-auto mb-6 opacity-40" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
