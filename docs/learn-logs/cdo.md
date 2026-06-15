@@ -65,6 +65,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
     - (b) split-left hero: hero media asset 없을 때 오른쪽 열 공백 → placeholder 이미지 또는 레이아웃 fallback 정책 결정 필요.
 - Cost: CDO 비주얼 리뷰(이 인격) + engineer subagent 구현 위임 (Growth-66 동일 세션).
 
+### Growth-68 (2026-06-15) — glowy-waves hero variant 비주얼 채택 (21st.dev → 8축)
+
+- **결정**: 외부 폴리시 컴포넌트(21st.dev) 도입은 "한 장에 붙이기"가 아니라 **테마/섹션 8축에 재사용 variant 로 등록**해야 복리. hero 의 첫 프리미엄 variant 로 glowy-waves 채택(canvas glow + framer-motion).
+- **토큰화 원칙**: 외부 컴포넌트의 자체 팔레트(딥 인디고 글로우)는 variant 시그니처로 허용하되, text/CTA/accent 는 우리 `--color-*` 토큰에 매핑 → 테마가 틴트 가능. shadcn 의존 제거(토큰 anchor 버튼).
+- **시각 판정**: desktop+mobile 풀페이지 검토 — hero **B급→프리미엄** 도약. 그래디언트 헤드라인("Zero dev team." 보라), pills 3개·stats 3개 M1 메시지 정렬, 하단 features/FAQ/CTA/footer/contact 전부 정상 렌더, 모바일 반응형 단열.
+- **후속**: (a) 동일 lightning 글리프 아이콘셋 매핑 미결(Growth-66 잔여 유지) (b) 3D Marquee·Feature Carousel 차기 variant 후보 (c) `headline_accent` 슬롯화로 그래디언트 split 안정화.
+- Cost: CDO 비주얼 게이트(이 인격) + engineer 구현 위임 (동일 세션).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
