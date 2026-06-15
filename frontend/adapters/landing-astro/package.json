@@ -22,6 +22,8 @@
     "@fontsource-variable/bricolage-grotesque": "^5.2.10",
     "@fontsource-variable/epilogue": "^5.2.8",
     "@fontsource-variable/hanken-grotesk": "^5.2.8",
+    "@fontsource-variable/karla": "^5.2.8",
+    "@fontsource-variable/raleway": "^5.2.8",
     "astro": "^4.16.18",
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.17",
