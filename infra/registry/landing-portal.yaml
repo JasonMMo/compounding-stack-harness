@@ -1,0 +1,21 @@
+# Digital asset record — landing-portal (landing-demo index at landing.n9n.co.kr).
+# Sibling to demo-portal (industry ERP demos). Lists marketing-site/landing demos. Growth-67.
+slug: landing-portal
+contact:
+  channel: internal
+  handle: "compounding-stack (own asset)"
+preview:
+  subdomain: landing.n9n.co.kr
+  coolify_project: landing-portal        # uuid: mqzuqcz0au9qgte38r80fcok
+  coolify_app: aqtrpz5vna8auictdquovbww
+  status: live
+  deployed_at: "2026-06-15"
+  deliverable_kind: static-portal        # static nginx index (no build) — deploy_static_site.py lane
+production:
+  install_method: remote
+  installed_at: null
+  stack:
+    frontend: static-html
+    backend: none
+secret_ref: []
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5). 정적 nginx."
