@@ -53,10 +53,25 @@ site:
             - label: "Data leaves network"
               value: "0 bits"
 
-        # NOTE: logos section intentionally omitted — we have no partner/stack logo
-        # assets yet, and the adapter renders a "Logo assets not yet added"
-        # placeholder without them. The "bring your own stack" message is already
-        # carried by feature card #2 and the FAQ. Re-add logos once SVG assets exist.
+        - type: logos
+          variant: marquee-3d
+          copy:
+            eyebrow: "Proof wall"
+            heading: "Real systems this harness generated"
+            subhead: "모든 스크린샷은 이 harness가 실제로 생성한 시스템입니다."
+          images:
+            - /proof/shop-demo.jpg
+            - /proof/lawfirm-demo.jpg
+            - /proof/construction-demo.jpg
+            - /proof/distribution-demo.jpg
+            - /proof/itservice-demo.jpg
+            - /proof/logistics-demo.jpg
+            - /proof/trading-demo.jpg
+            - /proof/edu-program.jpg
+            - /proof/example-corp.jpg
+            - /proof/landing.jpg
+            - /proof/gtm-landing.jpg
+            - /proof/intake.jpg
 
         - type: features
           variant: three-col-icon
