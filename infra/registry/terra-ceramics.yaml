@@ -1,0 +1,24 @@
+# Digital asset record — terra-ceramics (artisan ceramics landing demo, A4 archetype).
+# Demo/시안: first SCROLL-CINEMATIC archetype — gallery/parallax-scroll signature section
+# (sticky full-viewport material chapters). 4th marketing-site theme (kiln). Growth-77.
+slug: terra-ceramics
+contact:
+  channel: internal
+  handle: "compounding-stack (own demo asset)"
+preview:
+  subdomain: terra-ceramics.n9n.co.kr
+  coolify_project: itw5euifm5shu8vt84axxz8p
+  coolify_app: q9hq2xlr3cjzh47smq7z0xe8
+  status: live
+  deployed_at: "2026-06-16"
+  deliverable_kind: marketing-site     # static SSG (no backend) — deploy_static_site.py lane
+  theme: kiln
+  archetype: A4                        # F&B / Local / Artisan (landing-pattern-matrix)
+production:
+  install_method: remote
+  installed_at: null                   # preview/demo asset — no customer install
+  stack:
+    frontend: landing-astro
+    backend: none
+secret_ref: []                         # static site, no secrets
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5). 정적 SSG — 런타임 LLM 0. parallax-scroll 은 client:visible 아일랜드(framer-motion ~40KB gzip)."
