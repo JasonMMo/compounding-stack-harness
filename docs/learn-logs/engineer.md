@@ -523,6 +523,13 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **검증**: 단일 빌드 SUCCESS, detector `[]` CLEAN, no-JS h1 opacity 1. 무충돌 다건은 1빌드·1배포 배치가 효율.
 - **Cost**: engineer subagent 1회(56K tok) / envelope.
 
+### Growth-74 (2026-06-15) — /colorize accent-warm 토큰 + 3곳 적용
+
+- `accent-warm`(#AB5527) 토큰을 aurora theme.yaml 에 추가 → build-tokens.mjs 가 `--color-accent-warm` 방출(.gen.css/.gen.js 재생성, gitignored). 적용: HeroGlowyWaves 스탯값 조건부 색, FeatureCarousel 활성 dot, Faq.astro `group-open:`. 하드코딩 hex 없이 var() 참조.
+- **검증**: build SUCCESS, detector CLEAN, contrast AA(5.17/3.09:1), 라이브 "0 bits"=rgb(171,85,39).
+- **caveat**: 스탯 강조가 "0 으로 시작" 휴리스틱 — gtm-landing 엔 정확하나 재사용성 위해 manifest `highlight:true` 플래그가 더 견고(open loop).
+- **Cost**: engineer subagent 1회(86K tok) / envelope.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
