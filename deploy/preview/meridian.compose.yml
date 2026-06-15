@@ -1,0 +1,18 @@
+# deploy/preview/meridian.compose.yml
+# Coolify dockercompose -- marketing-site static preview at meridian.n9n.co.kr
+# Multi-stage build (scaffold + astro SSG -> nginx). Build context = repo root.
+# profile: meridian  |  theme: meridian  |  DEMO_MODE=1 (contact form stubbed)
+# A6 archetype (B2B services) -- logos/quote-band + process/numbered-stack + team/headshot-grid.
+# theme-aware build: build-tokens-auto.mjs reads theme from the generated manifest.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: frontend/adapters/landing-astro/Dockerfile
+      args:
+        PROFILE_SLUG: meridian
+        DEMO_MODE: "1"
+    ports:
+      - "80"
+    restart: unless-stopped
