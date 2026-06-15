@@ -7,10 +7,10 @@ contact:
   handle: "compounding-stack (own demo asset)"
 preview:
   subdomain: studio-north.n9n.co.kr
-  coolify_project: null                # filled after deploy
-  coolify_app: null                    # filled after deploy
-  status: deploying
-  deployed_at: null
+  coolify_project: pznz8dsk2h93frb51w4ejtlr
+  coolify_app: rls8w0yd6vxvq4721ava5a1n
+  status: live
+  deployed_at: "2026-06-15"
   deliverable_kind: marketing-site     # static SSG (no backend) — deploy_static_site.py lane
   theme: atelier
   archetype: A2                        # Creative Agency / Portfolio (landing-pattern-matrix)
