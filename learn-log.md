@@ -185,47 +185,10 @@
 
 CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+pointer entry 를 main §6 에 직접 작성 (integrator 마무리).
 
-> **아카이브**: Growth-4 ~ Growth-49 의 slim 엔트리는 [docs/learn-logs/growth-archive.md](docs/learn-logs/growth-archive.md) 로 이동 (G-9 cap 운영, 회전 6차 Growth-76). 회전 정책: slim §6 는 최근 시기 Growth 만 유지, cap 접근 시 오래된 엔트리를 원문 그대로 아카이브로 이동.
+> **아카이브**: Growth-4 ~ Growth-53 의 slim 엔트리는 [docs/learn-logs/growth-archive.md](docs/learn-logs/growth-archive.md) 로 이동 (G-9 cap 운영, 회전 7차 Growth-78). 회전 정책: slim §6 는 최근 시기 Growth 만 유지, cap 접근 시 오래된 엔트리를 원문 그대로 아카이브로 이동.
 
-> Growth-13 ~ Growth-15 (Growth-34 회전) · Growth-16 ~ Growth-20 (Growth-37 회전) · Growth-21 ~ Growth-32 (Growth-59 회전) · Growth-33 ~ Growth-48 (Growth-64 회전) 은 `growth-archive.md` 로 이동. 검색: `python scripts/ledger-index.py --symbol <name>` 또는 인격 ledger pointer.
+> Growth-13 ~ Growth-15 (Growth-34 회전) · Growth-16 ~ Growth-20 (Growth-37 회전) · Growth-21 ~ Growth-32 (Growth-59 회전) · Growth-33 ~ Growth-48 (Growth-64 회전) · Growth-50 ~ Growth-53 (Growth-78 회전) 은 `growth-archive.md` 로 이동. 검색: `python scripts/ledger-index.py --symbol <name>` 또는 인격 ledger pointer.
 
-### Growth-50 (2026-06-13) — 5개 산업 M2 데모 프로필 스캐폴드
-
-- **인격/Axis/Milestone**: CTO (설계) + CMO (데모 포트폴리오) / customer 축 / M2 — 숨고·크몽 영업용 데모 포트폴리오 구축
-- **Why (1줄)**: 잠재 고객이 "우리 업종에 맞는 기능이 있나?" 를 바로 확인할 수 있는 산업별 데모가 없으면 전환율 저하 → 5개 데모 프로필로 영업 접점 다각화
-- **작업**: `profiles/` 신규 5개 — logistics-demo(물류), distribution-demo(도매유통), construction-demo(건설시공), itservice-demo(IT에이전시), trading-demo(무역수출입). 각 프로필: catalog.yaml 실존 entity만 사용, feedback_url=intake.n9n.co.kr, status=draft. 커밋 5건.
-- **커밋**: d8cb723→33fea3c→7b9e39d→aaad26d→28a3449
-- **교훈 (1줄)**: 14 baseline domain이 충분히 포괄적이라 5개 산업 중 vertical agent 추가 없이 100% 커버 가능 — manufacturing만 production/quality 도메인 추가 시 vertical 필요
-- **Revenue/cost**: LLM=없음 / infra 변경 없음(배포 미완) / 5개 데모 → M2 영업 채널 준비 완료
-- **Open loops**: manufacturing-demo 추가(smallmfg-demo 보완) / 5개 데모 seed data 추가 / Supabase adapter 구현
-
-### Growth-51 (2026-06-13) — 5개 산업 데모 + 포털 Coolify 배포 완료
-
-- **인격/Axis/Milestone**: CTO (오케스트레이션) + DevOps / customer 축 / M2 — 숨고·크몽 영업용 데모 포트폴리오 라이브
-- **Why (1줄)**: 잠재 고객이 "우리 업종 맞나?" 를 직접 확인할 수 있는 라이브 데모가 없으면 문의 전환율 0% → 6개 URL 동시 오픈으로 업종별 영업 채널 확보
-- **작업**: demo-portal (nginx, demo.n9n.co.kr) + 5개 산업 데모 각 Coolify app + 서브도메인 + TLS. in-memory 스토어라 DB 설정 불필요. deploy_to_coolify.py cp949 UnicodeEncodeError 근본 수정 (stdout/stderr reconfigure UTF-8). scaffold.py 동일 수정.
-- **커밋**: 426f9a2 ~ 3d4b9db (compose 5 + portal 3 + deploy-fix 2 + scaffold-fix 1)
-- **교훈 (1줄)**: FastAPI 어댑터가 in-memory 스토어 → 데모에 DB 불필요. seed JSON 만 있으면 사전 데이터 주입 가능 — 향후 업종별 seed 추가로 "빈 화면" 해소 가능
-- **Revenue/cost**: LLM=없음 / VPS 컨테이너 6개 추가 (nginx 1 + fastapi+flask 10) / 데모 포트폴리오 → M2 고객 접점 완성
-- **Open loops**: 5개 데모 seed data (빈 화면 개선) / manufacturing-demo 추가 / Supabase adapter 구현 / demo-portal 중복 project 정리(Coolify UI)
-### Growth-52 (2026-06-13) — demo.n9n.co.kr 도메인 충돌 수정 + edu-demo 카드 추가
-
-- **인격/Axis/Milestone**: CTO (버그수정) / customer 축 / M2 — 데모 포트폴리오 완성
-- **Why (1줄)**: force_domain_override 로 demo.n9n.co.kr 이 edu-program 에도 연결되어 포털 대신 edu-program/home 이 노출 → 즉시 수정
-- **작업**: Coolify API PATCH로 edu-program 도메인 edu-program.n9n.co.kr 단독 복구 + 재배포. demo-portal HTML에 edu-demo(대학·교육기관) 6번째 카드 추가. 6개 업종 포털 완성.
-- **커밋**: acee3eb
-- **교훈 (1줄)**: Coolify force_domain_override 는 대상 앱만 패치하지 않고 기존 앱 도메인도 덮어쓰지 않는다 — 수동 복구 필요
-- **Revenue/cost**: LLM=없음 / 재배포 1회 / demo.n9n.co.kr 정상화 → 고객 체험 6개 업종 완비
-- **Open loops**: 5개 데모 seed data / manufacturing-demo / Supabase adapter
-### Growth-53 (2026-06-13) — 6개 데모 seed data 내장 + 배포
-
-- **인격/Axis/Milestone**: CTO+Engineer / backend 축 / M2 — 데모 품질 향상
-- **Why (1줄)**: 데모 앱 빈 화면은 고객 체험 품질을 저하 → 업종별 현실적 샘플 데이터로 즉시 개선
-- **작업**: seed-data/{slug}.json 6개 생성(한국 업종 현실 데이터). Dockerfile COPY seed-data/ 추가. 6개 compose SEED_FILE 환경변수 추가. 전체 재배포 HTTP 200 확인.
-- **커밋**: 257d1a4~8f6d53d (13 커밋)
-- **교훈 (1줄)**: seed data를 repo에 번들하면 서버 SCP 없이 이미지 빌드 시 자동 포함 — bind-mount보다 단순
-- **Revenue/cost**: LLM=없음 / 재배포 6회 / 데모 품질 향상 → 영업 접점 강화
-- **Open loops**: manufacturing-demo 추가 / Coolify stale app 정리 / Supabase adapter
 ### Growth-54 (2026-06-13) — manufacturing-demo 추가 + catalog 확장
 
 - **인격/Axis/Milestone**: CTO+Engineer / customer·ddl 축 / M2 — 데모 포트폴리오 7업종
@@ -435,5 +398,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 
 - **인격/Axis/Milestone**: CTO(방향·검증·배포) + CDO(kiln 테마·parallax-scroll craft) + Engineer(GalleryParallaxScroll·Lead·timeline-year·hooks 버그) + DevOps(배포·COOLIFY_API_BASE 오픈루프 종결) / **theme/section(8축)**·frontend·infra / M1(웹에이전시 데모 다양화)
 - **1줄 rollup**: A4 아키타입(공예/로컬) 첫 인스턴스 **TERRA ceramics** 산출 → **https://terra-ceramics.n9n.co.kr** LIVE(HTTP 200, 4번째 라이브 데모). 신규: 4번째 테마 **kiln**(점토 테라코타+목회재 중성+가마 엠버, Cormorant Garamond+Source Serif 4, OKLCH cream-trap 회피). 첫 **SCROLL-CINEMATIC variant** `gallery/parallax-scroll`(framer-motion useScroll sticky full-viewport 챕터, scroll-driven — gtm·hopwell·studio-north은 전부 static-scroll). 신규 `story/timeline-year` HAVE, `lead/minimal-field` HAVE. 카탈로그 11→13 type. `texture:clay|ash|ember` 센티넬로 사진 0 demo 운영. 2 결함 수정(rules-of-hooks·Growth-69 SSR opacity). `COOLIFY_API_BASE` env 오픈루프 종결. BUILD SUCCESS·71 pytest PASS·impeccable CLEAN·desktop+mobile+no-JS PASS.
+- **상세**: [cdo ledger](docs/learn-logs/cdo.md) · [engineer ledger](docs/learn-logs/engineer.md) · [devops ledger](docs/learn-logs/devops.md)
+- **결정 메모리**: [[marketing-site-track]] · [[infra-stack]]
+
+### Growth-78 (2026-06-16) — A6 아키타입 MERIDIAN(B2B 매니지드IT) LIVE + meridian 테마 + B2B 섹션 3종 + §6 회전 7차
+
+- **인격/Axis/Milestone**: CTO(방향·profile 카피·검증·배포·로깅) + CDO(meridian 테마·B2B 비주얼 게이트) + Engineer(Process·Team·Logos quote-band·라우팅·폰트) / **theme/section(8축)**·frontend·infra / M1(웹에이전시 데모 다양화)
+- **1줄 rollup**: A6 아키타입(B2B 서비스/컨설팅) 첫 인스턴스 **MERIDIAN**(매니지드IT·보안 자문) 산출 → **https://meridian.n9n.co.kr** LIVE(HTTP 200, 5번째 라이브 데모, 포털 카드 5장). 신규: 5번째 테마 **meridian**(쿨스톤 화이트 #F7F8F4 + 딥 포레스트그린 #1A5C3A, Syne+DM Sans, navy 반사 회피·AAA 전반). 신규 섹션 타입 2종 `process`(numbered-stack — 진행 단계, 합법적 시퀀스 넘버링)·`team`(headshot-grid — monogram-initials 폴백, 사진 0) HAVE, `logos/quote-band`(로고-수프 대안: 단일 고객 인용 다크 밴드) HAVE. 카탈로그 13 type(process·team 본격 구현). 전 섹션 **Astro-native(React 아일랜드 0)** — quote-band/numbered-stack/headshot-grid 무JS 렌더. BUILD SUCCESS·impeccable CLEAN·desktop+mobile+no-JS PASS(Growth-69)·forest-green 토큰 라이브 확인. §6 회전 7차(Growth-50~53 아카이브, G-9 199→167).
 - **상세**: [cdo ledger](docs/learn-logs/cdo.md) · [engineer ledger](docs/learn-logs/engineer.md) · [devops ledger](docs/learn-logs/devops.md)
 - **결정 메모리**: [[marketing-site-track]] · [[infra-stack]]
