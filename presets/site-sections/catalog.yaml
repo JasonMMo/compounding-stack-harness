@@ -24,9 +24,15 @@ sections:
     label: "Logo Bar / Social Proof"
     copy_slots:
       required: [eyebrow]
-      optional: []
+      optional: [heading, subhead]
     asset_slots: [logo_1, logo_2, logo_3, logo_4, logo_5, logo_6]
-    variants: [horizontal-scroll, grid]
+    # marquee-3d: 3D perspective proof wall — React island (framer-motion).
+    # Required copy: eyebrow (kept for catalog invariant; may be empty string).
+    # Optional copy: heading, subhead.
+    # images: required list of image paths (string[]) for this variant — threaded
+    #   through site_manifest.py and manifest.ts; validated at profile level.
+    # Other variants (horizontal-scroll, grid) use asset_slots; marquee-3d uses images[].
+    variants: [horizontal-scroll, grid, marquee-3d]
 
   features:
     label: "Feature List"
