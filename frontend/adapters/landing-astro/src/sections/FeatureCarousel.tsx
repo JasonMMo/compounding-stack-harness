@@ -434,7 +434,13 @@ export function FeatureCarousel({ items, heading, subhead }: FeatureCarouselProp
                       )}
                       aria-hidden="true"
                     >
-                      <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_10px_white]" />
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{
+                          background: "var(--color-accent-warm, #AB5527)",
+                          boxShadow: "0 0 8px var(--color-accent-warm, #AB5527)",
+                        }}
+                      />
                       <span className="text-white/80 text-[10px] font-normal uppercase tracking-[0.3em] font-mono">
                         Feature {index + 1}
                       </span>
