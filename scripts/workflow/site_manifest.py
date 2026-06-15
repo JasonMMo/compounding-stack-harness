@@ -275,6 +275,11 @@ def build_site_manifest(profile: dict[str, Any]) -> dict[str, Any]:
             if stats_val:
                 sec_out["stats"] = [dict(s) for s in stats_val]
 
+            # images: optional list[str] — used by logos/marquee-3d variant (proof wall).
+            images_val = section.get("images")
+            if images_val:
+                sec_out["images"] = list(images_val)
+
             sections_out.append(sec_out)
 
         page_out: dict[str, Any] = {
