@@ -1,0 +1,12 @@
+# deploy/preview/landing-portal.compose.yml
+# Coolify dockercompose -- static landing-demo portal at landing.n9n.co.kr
+# nginx:alpine serves landing-portal/index.html. Sibling to demo-portal (industry ERP demos).
+
+services:
+  portal:
+    build:
+      context: .
+      dockerfile: landing-portal/Dockerfile
+    ports:
+      - "80"
+    restart: unless-stopped
