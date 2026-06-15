@@ -366,16 +366,30 @@ export function HeroGlowyWaves({ headline, subhead, cta, pills, stats }: HeroGlo
               variants={statsVariants}
               className="grid gap-4 rounded-[var(--radius-card,16px)] border border-white/20 bg-white/10 p-6 backdrop-blur-sm sm:grid-cols-3"
             >
-              {stats.map((stat) => (
-                <motion.div key={stat.label} variants={itemVariants} className="space-y-1">
-                  <div className="text-xs uppercase tracking-[0.3em] text-white/50">
-                    {stat.label}
-                  </div>
-                  <div className="text-3xl font-semibold text-white">
-                    {stat.value}
-                  </div>
-                </motion.div>
-              ))}
+              {stats.map((stat) => {
+                // "0 bits" (Data leaves network) earns the warm accent — the single
+                // most important differentiator. Any stat value starting with "0"
+                // is semantically a "zero-egress / zero-cost" claim; accent-warm
+                // draws the eye without touching the headline's violet.
+                const isZeroStat = stat.value.startsWith("0");
+                return (
+                  <motion.div key={stat.label} variants={itemVariants} className="space-y-1">
+                    <div className="text-xs uppercase tracking-[0.3em] text-white/50">
+                      {stat.label}
+                    </div>
+                    <div
+                      className="text-3xl font-semibold"
+                      style={{
+                        color: isZeroStat
+                          ? "var(--color-accent-warm, #AB5527)"
+                          : "white",
+                      }}
+                    >
+                      {stat.value}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           )}
         </motion.div>
