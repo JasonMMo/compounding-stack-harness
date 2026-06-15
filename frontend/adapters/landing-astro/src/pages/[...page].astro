@@ -18,6 +18,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 import Hero from '../sections/Hero.astro'
 import { HeroGlowyWaves } from '../sections/HeroGlowyWaves'
 import { ProofMarquee3d } from '../sections/ProofMarquee3d'
+import { FeatureCarousel } from '../sections/FeatureCarousel'
 import Logos from '../sections/Logos.astro'
 import Features from '../sections/Features.astro'
 import Pricing from '../sections/Pricing.astro'
@@ -136,6 +137,18 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
     }
 
     if (section.type === 'features') {
+      // carousel variant: animated tab-driven React island (client:visible hydration).
+      if (section.variant === 'carousel') {
+        return (
+          <FeatureCarousel
+            client:visible
+            items={(section.items ?? []) as any}
+            heading={section.copy?.headline}
+            subhead={section.copy?.subhead}
+          />
+        )
+      }
+      // Default: static Astro three-col/other features (all other variants).
       return (
         <Features
           copy={section.copy ?? {}}
