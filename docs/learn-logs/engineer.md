@@ -545,6 +545,41 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **교훈**: ① 카탈로그 확장은 equality 검사를 subset로 바꿔 additive 보장. ② 신규 섹션이 기존 items 스레딩을 재사용하면 Python/contract 무변경(open-closed 설계의 배당). ③ theme-specific 토큰(gallery-overlay)은 CSS fallback으로 비-해당 테마 호환.
 - **Cost**: engineer/CDO 통합 백그라운드 agent 1회(~126K tok) / envelope.
 
+### Growth-77 (2026-06-16) — GalleryParallaxScroll + Lead + timeline-year + hooks/SSR 버그 2종 수정
+
+- Files touched:
+  - `frontend/adapters/landing-astro/src/sections/GalleryParallaxScroll.tsx` (신규 — React island, framer-motion useScroll, sticky chapters, `texture:` sentinel)
+  - `frontend/adapters/landing-astro/src/sections/Lead.astro` (신규 — minimal-field email input, `entity.create` 재사용)
+  - `frontend/adapters/landing-astro/src/pages/[...page].astro` (수정 — gallery/parallax-scroll·lead/minimal-field·story/timeline-year 라우팅 추가)
+  - `frontend/adapters/landing-astro/src/sections/Story.astro` (수정 — timeline-year variant: year/milestone/detail item_slots 스레딩)
+  - `presets/site-sections/catalog.yaml` (수정 — gallery/parallax-scroll variant 추가·story/timeline-year item_slots·lead/minimal-field 신규 type, 11→13 type)
+  - `presets/themes/kiln/` (신규 테마 디렉터리 — theme.yaml + texture token CSS)
+  - `profiles/terra-ceramics.yaml` (신규 — A4 customer profile)
+  - `deploy/preview/terra-ceramics.compose.yml` (신규)
+  - `infra/registry/terra-ceramics.yaml` (신규 — coolify project=itw5euifm5shu8vt84axxz8p, app=q9hq2xlr3cjzh47smq7z0xe8)
+
+- Implementation choices:
+  - **GalleryParallaxScroll.tsx**: `useScroll({target: containerRef})` 로 스크롤 진행도 추적. 각 챕터: `useTransform(scrollYProgress, [start, end], values)` 로 scale + overlay opacity 독립 계산. heading/subheading은 parallax offset track (시차). chapters 배열 길이가 동적이어도 고정 순서로 훅 호출(rules-of-hooks 준수를 위해 챕터당 훅 배열 선언 방식 채택).
+  - **rules-of-hooks 버그 수정**: 최초 구현에서 `reducedMotion` 조건부로 `useTransform` 호출 → React hooks-must-not-be-conditional 위반. 수정: `useTransform` 는 unconditional 선언, 반환값 사용 시 `reducedMotion` 분기로 value-branch. 훅 순서 불변 보장.
+  - **Growth-69 SSR opacity 버그 수정**: framer-motion이 `initial={{opacity:0}}`를 SSR HTML에 baked → `initial={false}` + JS 없는 환경에서 opacity:1 보장하는 conditional style application. 5/5 no-JS 콘텐츠 체크 PASS.
+  - **texture: sentinel**: `src` 값이 `texture:clay|ash|ember` 이면 실 이미지 `<img>` 대신 CSS gradient+grain div 렌더(테마 material-texture field). 실 고객은 `src: /path/to/photo.jpg` 입력, 데모는 sentinel로 사진 0 운영.
+  - **Lead.astro**: `entity.create`(entity_type=lead) 재사용 — wire key 신규 추가 없음(G-1, open-closed). email single field, `PUBLIC_DEMO_MODE` 분기로 demo stub.
+  - **story/timeline-year**: `Story.astro` 에 variant 분기 추가. items[]{year, milestone, detail} → vertical timeline 렌더. founder-split variant 무변경(additive).
+  - **catalog additive**: `test_eight_section_types` equality→subset 패턴 유지. Python/contract 무변경 — items 스레딩 재사용.
+
+- Tests added:
+  - **L1 pytest**: 71 PASS (0 regression). site_manifest·adapter 기존 케이스 전부 green.
+  - **L3**: `npm run build` BUILD SUCCESS.
+  - **no-JS**: 5/5 콘텐츠 체크 PASS (opacity:1 SSR 확인).
+  - **impeccable detector**: CLEAN.
+  - **visual**: desktop+mobile+no-JS 풀페이지 PASS (mobile scrollWidth−clientWidth=0px, 3 chapter headings, hero, lead 콘텐츠 확인).
+
+- Catches surfaced:
+  - rules-of-hooks 위반 — conditional `useTransform` 초기 구현 → unconditional + value-branch 로 자체 수정(CTO 에스컬레이션 없음).
+  - Growth-69 SSR 함정 재발 — GalleryParallaxScroll initial opacity:0 SSR bake → `initial={false}` 로 수정. 동일 계열 2번째 발견.
+
+- Cost: engineer subagent 다회 / envelope 반환.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
