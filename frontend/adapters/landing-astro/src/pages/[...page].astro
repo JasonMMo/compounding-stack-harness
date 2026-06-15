@@ -17,6 +17,7 @@ import type { GetStaticPaths } from 'astro'
 import BaseLayout from '../layouts/BaseLayout.astro'
 import Hero from '../sections/Hero.astro'
 import { HeroGlowyWaves } from '../sections/HeroGlowyWaves'
+import { ProofMarquee3d } from '../sections/ProofMarquee3d'
 import Logos from '../sections/Logos.astro'
 import Features from '../sections/Features.astro'
 import Pricing from '../sections/Pricing.astro'
@@ -108,6 +109,21 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
     }
 
     if (section.type === 'logos') {
+      // marquee-3d variant: 3D proof wall React island (client:visible hydration).
+      if (section.variant === 'marquee-3d') {
+        const proofImages = section.images ?? []
+        const proofHeading = section.copy?.heading
+        const proofSubhead = section.copy?.subhead
+        return (
+          <ProofMarquee3d
+            client:visible
+            images={proofImages}
+            heading={proofHeading}
+            subhead={proofSubhead}
+          />
+        )
+      }
+      // Default: static Astro logos bar (all other variants).
       return (
         <Logos
           copy={section.copy ?? {}}
