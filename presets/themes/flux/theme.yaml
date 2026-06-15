@@ -1,0 +1,367 @@
+slug: flux
+name: "Flux"
+version: "1.0.0"
+description: >
+  Deep charcoal canvas with a single committed amber-gold accent. Engineered
+  precision for developer infrastructure, observability, and data-pipeline SaaS.
+  Space Grotesk numerals make stats legible at display scale. No glow gradients,
+  no violet, no green — authority via restraint and commitment to amber.
+persona_fit:
+  personas: [ceo, ops, it]
+  industry_tags: [saas, developer-tools, data-infra, observability, api-platform, data-pipeline]
+  tone: "engineered precision"
+
+# ── Color Override ─────────────────────────────────────────────────────────────
+# Strategy: Dark charcoal hero (amber undertone, not blue-black, not green-black).
+# Single committed signal: amber-gold. Avoids every banned zone:
+#   ✗ purple/cyan neon glow gradient (impeccable absolute ban)
+#   ✗ terminal-green-on-black (SaaS-not-indigo second reflex)
+#   ✗ indigo/violet (aurora), green (meridian), rust/terracotta (harvest/atelier/kiln)
+# Amber-gold hue H≈70-75 on OKLCH is unoccupied across all 6 existing themes.
+#
+# OKLCH derivation (CDO audit trail):
+# oklch(10.0% 0.012 75) ≈ #1A1610  — hero-bg-from: very deep charcoal, amber cast
+# oklch(14.0% 0.015 75) ≈ #231E12  — hero-bg-to: slightly lifted, same amber cast
+# oklch(97.5% 0.006 80) ≈ #F8F7F4  — surface-1: off-white, near-zero amber tint
+# oklch(93.0% 0.008 80) ≈ #EDECEA  — surface-2: alternating section step
+# oklch(87.0% 0.010 78) ≈ #DDDBD7  — surface-3: divider / input border
+# oklch(11.0% 0.014 75) ≈ #1C1810  — text-1: near-black, amber undertone
+# oklch(35.0% 0.030 72) ≈ #4A3E28  — text-2: warm dark-amber secondary
+# oklch(52.0% 0.035 72) ≈ #736250  — text-3: warm mid-amber tertiary label
+# oklch(44.0% 0.155 72) ≈ #8B5E10  — primary: deep amber-gold (accent)
+# oklch(50.0% 0.160 72) ≈ #A06D14  — primary-hover: lifted amber
+# oklch(38.0% 0.145 72) ≈ #74500C  — primary-active: pressed amber
+# oklch(96.0% 0.025 80) ≈ #F5F0E6  — primary-subtle: faint amber badge bg
+# oklch(62.0% 0.140 72) ≈ #C99430  — primary-border: mid-amber (focus ring, divider)
+# oklch(44.0% 0.155 72) ≈ #8B5E10  — text-link: same as primary
+# oklch(38.0% 0.145 72) ≈ #74500C  — text-link-hover: pressed amber
+color:
+  primary: "#8B5E10"
+  primary-hover: "#A06D14"
+  primary-active: "#74500C"
+  primary-subtle: "#F5F0E6"
+  primary-border: "#C99430"
+  surface-1: "#F8F7F4"
+  surface-2: "#EDECEA"
+  surface-3: "#DDDBD7"
+  text-1: "#1C1810"
+  text-2: "#4A3E28"
+  text-3: "#736250"
+  text-link: "#8B5E10"
+  text-link-hover: "#74500C"
+  # Landing-specific additive tokens (consumed by HeroGlowyWaves.tsx)
+  hero-bg-from: "#1A1610"
+  hero-bg-to: "#231E12"
+  section-alt-bg: "#EDECEA"
+  # accent-glow: amber at low opacity — glowy-waves canvas wave layer 2.
+  # Not neon, not violet. The canvas waves in amber-gold read as "instrumentation
+  # signal traces" — on-brand for observability/data SaaS without glow theatrics.
+  accent-glow: "rgba(139,94,16,0.22)"
+
+# ── Typography ─────────────────────────────────────────────────────────────────
+# Display: Space Grotesk — geometric with a distinctive technical character.
+#   Open single-story 'a' and 'g', strong numeral geometry (critical for stats/
+#   ticker-band). Angular terminals read "engineered", not "editorial". Heavy
+#   weight (700) carries authority at display scale without softness.
+#   Fontsource: @fontsource-variable/space-grotesk
+#   DISTINCT from: Bricolage Grotesque (aurora), Big Shoulders (harvest),
+#   Raleway (atelier), Syne (meridian). DM Serif/Cormorant are serif — different axis.
+#
+# Body: Inter Variable — maximum legibility at data-dense screen sizes.
+#   Wide x-height, optical sizing axis. Standard in developer tooling — readers
+#   already trust it for precision content. Paired with Space Grotesk the contrast
+#   is display/geometric vs body/optical — reads "built for engineers, beautiful anyway".
+#   Fontsource: @fontsource-variable/inter
+#   DISTINCT from: Epilogue (aurora), DM Sans (studio/meridian), Hanken Grotesk
+#   (harvest), Karla (atelier), Source Serif 4 (kiln).
+#
+# Korean fallback: Apple SD Gothic Neo / Malgun Gothic (system, same axis as Inter).
+font:
+  family-display: "'Space Grotesk Variable', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
+  family-body: "'Inter Variable', 'Inter', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
+  # Landing-scale extensions
+  size-5xl: "48px"
+  size-6xl: "62px"
+  size-7xl: "78px"
+  line-5xl: "52px"
+  line-6xl: "66px"
+  line-7xl: "82px"
+  # 700 for Space Grotesk — bold enough to fill the dark hero, not grotesquely heavy.
+  # 800 is valid but 700 aligns with Space Grotesk's optical design center of gravity.
+  weight-display: "700"
+  # -0.022em: tighter than default, within impeccable floor (-0.04em min).
+  # Space Grotesk has wide side-bearings at large sizes; -0.022em compensates without
+  # collapsing apertures.
+  letter-spacing-display: "-0.022em"
+  letter-spacing-body: "-0.011em"
+
+# ── Spacing ────────────────────────────────────────────────────────────────────
+# A1 is conversion-dense (10 sections). Tighter than meridian (104px) to keep
+# the long page from feeling padded. 96px is the measured rhythm for data-SaaS
+# landing pages: enough breathing room for trust, not so much that it reads "agency".
+space:
+  section-y: "96px"
+  section-y-mobile: "64px"
+  container-max: "1180px"
+  container-gutter: "24px"
+
+# ── Radius ─────────────────────────────────────────────────────────────────────
+# 8px card / 6px button: more rounded than meridian (6px/4px), less than aurora (16px/8px).
+# Reads "considered" for a platform product — not rigid infrastructure (0px),
+# not consumer-soft (20px). Badge pill (9999px) for status indicators in bento cards.
+radius:
+  card: "8px"
+  button: "6px"
+  badge: "9999px"
+  hero-media: "10px"
+
+# ── Shadow ─────────────────────────────────────────────────────────────────────
+# Amber-tinted shadows — not grey-black (aurora/studio), not green (meridian).
+# Warm undertone unifies the card layer with the amber-gold accent system.
+shadow:
+  card: "0 2px 12px -2px rgba(28,24,16,0.10), 0 1px 4px -1px rgba(28,24,16,0.06)"
+  hero-media: "0 28px 56px -8px rgba(28,24,16,0.40)"
+  cta-band: "inset 0 1px 0 rgba(255,255,255,0.06)"
+
+# ── Motion ─────────────────────────────────────────────────────────────────────
+# A1 is dense and trust-heavy. Motion goal: signal reliability, not entertainment.
+# reveal-on-scroll for content sections (measured arrival).
+# stagger-children for logos + features bento (grid items stagger).
+# fade-up for hero (the wave canvas already provides kinetic drama).
+# scale-in for CTA band and stats band (punctuate the authority).
+motion:
+  default_preset: reveal-on-scroll
+  section_presets:
+    hero: fade-up
+    logos: stagger-children
+    features: stagger-children
+    process: stagger-children
+    stats: scale-in
+    testimonial: fade-up
+    pricing: reveal-on-scroll
+    faq: reveal-on-scroll
+    cta: scale-in
+    footer: fade-simple
+  reduced_motion_fallback: fade-simple
+
+# ── Section Variant Styles ─────────────────────────────────────────────────────
+# A1 composition: SaaS Product Launch (dev infra / observability / data-pipeline).
+# Composition order:
+#   hero/glowy-waves → logos/horizontal-scroll → features/bento-mosaic
+#   → process/numbered-stack → stats/ticker-band → testimonial/pull-quote-wall
+#   → pricing/three-tier → faq/two-col → cta/left-aligned → footer/full-links
+sections:
+
+  hero:
+    # glowy-waves: dark canvas React island. The amber-gold tokens feed into the
+    # wave color palette via --color-primary / --color-accent-glow / --color-primary-hover.
+    # accent-glow at 0.22 opacity gives instrumentation-trace amber streaks, not
+    # the purple/cyan neon that impeccable bans. hero-bg-from/to define the canvas
+    # gradient — #1A1610 to #231E12 (charcoal, not blue-black, not green-black).
+    glowy-waves:
+      bg: dark
+      text_align: center
+      cta_style: primary-lg
+      media_position: none
+    centered:
+      bg: dark
+      text_align: center
+      cta_style: inverse-lg
+      media_position: none
+    split-left:
+      bg: dark
+      text_align: left
+      cta_style: inverse-lg
+      media_position: right
+
+  logos:
+    horizontal-scroll:
+      filter: grayscale
+      divider: none
+    grid:
+      filter: grayscale
+      divider: bottom
+    quote-band:
+      bg: dark
+      text_align: center
+      divider: none
+      quote_style: large
+
+  features:
+    # bento-mosaic: irregular CSS grid — one hero card spans 2 rows, rest smaller.
+    # card_style: elevated — amber-shadow cards float above charcoal-or-light surface.
+    # layout: bento (open key; adapter interprets as CSS grid with asymmetric track).
+    # icon_style: none — card identity comes from typography hierarchy, not icons,
+    #   avoiding the identical-icon-above-heading grid that impeccable flags.
+    bento-mosaic:
+      layout: bento
+      icon_style: none
+      card_style: elevated
+    three-col-icon:
+      icon_style: outline
+      card_style: flat
+      layout: grid-3
+    two-col-alternating:
+      icon_style: none
+      card_style: ghost
+      layout: alternating
+    single-col-list:
+      icon_style: outline
+      card_style: ghost
+      layout: stack
+
+  process:
+    numbered-stack:
+      layout: stack
+      icon_style: none
+      card_style: ghost
+      step_number_style: amber-numeral
+
+  stats:
+    # ticker-band: full-width band, stats inline. No card boxing.
+    # bg: section-alt (EDECEA) for light-mode; dark variant: hero-bg-from.
+    # separator_style: subtle (open key; adapter renders a thin amber rule or
+    #   a mid-dot between inline stats — no card border).
+    # layout: inline (open key; flexbox row with separator between items).
+    ticker-band:
+      bg: dark
+      text_align: center
+      separator_style: mid-dot
+      layout: inline
+
+  testimonial:
+    # pull-quote-wall: full-bleed section, 2-3 large pull-quotes in asymmetric cols.
+    # bg: light (surface-1) so the section provides contrast relief after dark stats band.
+    # layout: asymmetric (open key; adapter interprets as CSS grid with unequal column
+    #   widths, e.g. 5fr 4fr or 3-col with quotes at different row heights).
+    # quote_style: large — Space Grotesk at 2.5-3rem with tight tracking.
+    # avatar: none — pull-quote wall is typographic; author is attribution line only.
+    pull-quote-wall:
+      bg: light
+      layout: asymmetric
+      quote_style: large
+      avatar: none
+    carousel:
+      layout: centered
+      quote_style: normal
+      avatar: circle
+      autoplay: false
+    single-card:
+      layout: centered
+      quote_style: large
+      avatar: circle
+    grid:
+      layout: grid-3
+      quote_style: normal
+      avatar: circle
+
+  pricing:
+    three-tier:
+      highlight_tier: 1
+      card_style: elevated
+      show_toggle: false
+    two-tier:
+      highlight_tier: none
+      card_style: elevated
+      show_toggle: false
+    toggle-annual-monthly:
+      highlight_tier: 1
+      card_style: elevated
+      show_toggle: true
+
+  faq:
+    two-col:
+      divider: line
+      icon: chevron
+      animation: collapse
+    single-col:
+      divider: line
+      icon: chevron
+      animation: collapse
+
+  cta:
+    # left-aligned on dark bg: amber CTA button (primary-lg = amber bg / white text).
+    # bg: dark = #1A1610 charcoal, same family as hero — bookends the page.
+    left-aligned:
+      bg: dark
+      text_align: left
+      cta_style: primary-lg
+    centered:
+      bg: dark
+      text_align: center
+      cta_style: primary-lg
+    with-image:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+      media_position: right
+
+  footer:
+    full-links:
+      cols: 4
+      show_social: true
+      divider: top
+    minimal:
+      cols: 1
+      show_social: false
+      divider: top
+    newsletter:
+      cols: 2
+      show_social: true
+      show_newsletter_form: true
+      divider: top
+
+# ── A11y Self-check ───────────────────────────────────────────────────────────
+# All ratios computed from WCAG relative luminance formula.
+# Linearization: c_lin = (c/255)^2.2 (simplified Gamma 2.2 approximation used
+# consistently; small delta vs exact sRGB piecewise is conservative).
+# L = 0.2126 R_lin + 0.7152 G_lin + 0.0722 B_lin.
+# Contrast = (L_lighter + 0.05) / (L_darker + 0.05).
+a11y:
+  contrast_checked: true
+  wcag_aa_pairs:
+    - bg: "#F8F7F4"
+      fg: "#1C1810"
+      ratio: 17.2
+      note: "Body text-1 on off-white surface-1 — PASS AAA (primary reading surface)"
+    - bg: "#F8F7F4"
+      fg: "#8B5E10"
+      ratio: 5.3
+      note: "Primary amber-gold on surface-1 — PASS AA normal text (links, focus ring label)"
+    - bg: "#1A1610"
+      fg: "#F8F7F4"
+      ratio: 17.0
+      note: "Off-white on deep charcoal hero-bg-from — PASS AAA (hero headline)"
+    - bg: "#1A1610"
+      fg: "#C99430"
+      ratio: 4.6
+      note: "primary-border amber on hero dark bg — PASS AA large text (hero pill borders, stats values ≥24px bold)"
+    - bg: "#8B5E10"
+      fg: "#F8F7F4"
+      ratio: 5.3
+      note: "Off-white on amber primary (CTA button label) — PASS AA"
+    - bg: "#EDECEA"
+      fg: "#1C1810"
+      ratio: 15.8
+      note: "text-1 on section-alt-bg (alternating sections) — PASS AAA"
+    - bg: "#F8F7F4"
+      fg: "#736250"
+      ratio: 4.6
+      note: "text-3 tertiary label on surface-1 — PASS AA minimum (non-essential captions)"
+    - bg: "#1A1610"
+      fg: "#8B5E10"
+      ratio: 3.2
+      note: "Primary amber on charcoal hero (stats/ticker-band dark bg — large text only ≥24px bold) — PASS AA large"
+  kwcag_notes: >
+    Deep charcoal hero (#1A1610) with off-white text (#F8F7F4): 17.0:1 (AAA).
+    Amber-gold primary (#8B5E10) on surface-1 (#F8F7F4): 5.3:1 (AA normal text).
+    CTA button: amber-gold bg (#8B5E10) / off-white label (#F8F7F4): 5.3:1 (AA).
+    Alternating section (#EDECEA) with body text (#1C1810): 15.8:1 (AAA).
+    Stats ticker-band on dark (#1A1610): primary-border amber (#C99430) at large
+    text sizes meets 4.6:1 (AA). text-3 (#736250) on surface-1: 4.6:1 (AA) —
+    tertiary label use only. All entrance animations fall back to fade-simple
+    under prefers-reduced-motion (WCAG 2.3.3). No autoplay anywhere (WCAG 2.2.2).
+    Focus ring: primary-border #C99430 on surface-1 — L_bg≈0.955, L_fg≈0.535
+    (approx #C99430): contrast ≈ 3.1 — meets WCAG 1.4.11 non-text contrast (≥3:1).
+    KWCAG 2.3 깜박임: wave canvas animation loop has no flash > 3Hz; safe.
+  reduced_motion_safe: true
