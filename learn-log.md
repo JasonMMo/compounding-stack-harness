@@ -356,3 +356,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **핵심 결정**: 정직성 — testimonial/구체 pricing 제외(M1 pricing 게이트), logos 제외(파트너 로고 자산 無 → placeholder 회피) / 트레일러 실제 co-author=Opus 4.8 반영(§9) / 교훈: **뷰포트 스크린샷만으론 below-fold 결함 못 잡음 — 풀페이지 캡처 필수**(ui_check viewport 검사가 hero 만 봐서 ②③ 놓칠 뻔).
 - **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [CDO ledger](docs/learn-logs/cdo.md)
 - **결정 메모리**: [[marketing-site-track]]
+
+### Growth-67 (2026-06-15) — 정적 marketing-site preview 레인 + n9n 공개 데모 2종 LIVE
+
+- **인격/Axis/Milestone**: CTO(통합·배포 결정·검증) + Engineer(데모-스텁·Dockerfile) + DevOps(배포 레인·레지스트리) / frontend·creater·infra / **M1 GTM**(고객 시연 자산)
+- **1줄 rollup**: marketing-site 는 정적 SSG(백엔드 無)라 기존 `deploy_to_coolify.py`(business-system: screen-manifest+SECRET_KEY+/login) 레인 불가 → **정적 preview 레인 신설**: 멀티스테이지 Dockerfile(scaffold+astro→nginx, ARG PROFILE_SLUG/DEMO_MODE) + `deploy_static_site.py`(demo-portal 스크립트 일반화, idempotent). **gtm-landing.n9n.co.kr**(우리 M1 GTM 랜딩, aurora) + **landing.n9n.co.kr**(랜딩 데모 인덱스 포털, demo-portal 형제) 2종 Coolify 배포·HTTPS 200·콘텐츠 검증 PASS.
+- **함정/교훈**: ① Git Bash **MSYS 경로 변환** — CLI 인자 `/deploy/...`가 `C:/Program Files/Git/deploy/...`로 둔갑해 Coolify 422(format invalid). `MSYS_NO_PATHCONV=1`로 해소(하드코딩 Python 스크립트는 무사했던 이유). ② 연락폼 데모-스텁: `PUBLIC_DEMO_MODE=1` → 제출 시 네트워크 호출 없이 성공 메시지(백엔드 없는 시안에서 깨진 폼 방지), 실 POST 경로는 비데모 빌드에서 불변.
+- **자산 레지스트리**: `infra/registry/{gtm-landing,landing-portal}.yaml` (status=live, coolify uuid 기록)
+- **상세**: [devops ledger](docs/learn-logs/devops.md) · [engineer ledger](docs/learn-logs/engineer.md)
+- **결정 메모리**: [[marketing-site-track]] · [[infra-stack]]
