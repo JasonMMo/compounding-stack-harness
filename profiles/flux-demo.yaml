@@ -1,0 +1,208 @@
+# profiles/flux-demo.yaml — A1 SaaS Product Launch demo (flux theme)
+# Demonstrates the full A1 archetype composition with all 3 CDO-spec variants:
+#   features/bento-mosaic, stats/ticker-band, testimonial/pull-quote-wall
+# Product: "Flux" — developer infrastructure / observability SaaS (fictional demo)
+# Stage: demo — fictional testimonials and pricing are permitted (same policy as terra/meridian demos)
+# deliverable_kind=marketing-site -> bypasses entity/DDL; site: block drives output
+
+version: 1
+
+customer:
+  slug: flux-demo
+  display: "Flux — Developer Infrastructure Demo"
+  status: active
+  contact: demo@fluxplatform.io
+  industry: developer-tools
+
+# ── Pluggable Stack ──────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# ── Site Block (marketing-site schema) ──────────────────────────────────────
+site:
+  theme: flux
+
+  pages:
+    - slug: home
+      title: "Flux — Developer Infrastructure Platform"
+      seo:
+        title: "Flux — Observability and Data Pipeline Infrastructure for Engineering Teams"
+        description: "Flux gives engineering teams a unified observability and data-pipeline platform: sub-50ms P99 latency, 99.99% uptime, and cost instrumentation from day one. No SaaS lock-in."
+        og_image: "assets/og-flux.png"
+      sections:
+
+        # ── 1. hero/glowy-waves ─────────────────────────────────────────────
+        - type: hero
+          variant: glowy-waves
+          copy:
+            headline: "Ship confident. Observe everything."
+            subhead: "Flux is the unified observability and data-pipeline platform built for engineering teams who refuse to guess."
+          cta:
+            label: "Start free — no card required"
+            href: "#contact"
+          pills:
+            - "Sub-50ms P99 latency"
+            - "Self-host or managed"
+            - "Cost instrumented by design"
+          stats:
+            - label: "Uptime SLA"
+              value: "99.99%"
+            - label: "Events / day"
+              value: "2.1B"
+            - label: "P99 latency"
+              value: "<50ms"
+
+        # ── 2. logos/horizontal-scroll ──────────────────────────────────────
+        # No image assets — text wordmarks rendered by Logos.astro companies[] fallback.
+        # Zero files, zero 404s. Stock-asset-free (same discipline as meridian/terra demos).
+        - type: logos
+          variant: horizontal-scroll
+          copy:
+            eyebrow: "Trusted by engineering teams at"
+          companies:
+            - "Acme Corp"
+            - "Nova Systems"
+            - "Redstone Labs"
+            - "Orbit Cloud"
+            - "Quanta IO"
+            - "Delta Edge"
+
+        # ── 3. features/bento-mosaic ────────────────────────────────────────
+        - type: features
+          variant: bento-mosaic
+          copy:
+            headline: "Everything your pipeline needs. Nothing it doesn't."
+            subhead: "Five capabilities that work together as a system — not five dashboards you have to stitch."
+          items:
+            # Card A — hero card (index 0): 2-row span, larger heading
+            - title: "Unified pipeline observability"
+              description: "One view across every data source, transformation, and sink. Latency heatmaps, error rates, and throughput trends — correlated automatically so you spend time fixing, not hunting."
+            # Card B (index 1): 1×1
+            - title: "Adaptive alerting"
+              description: "Alerts that learn your traffic patterns and suppress noise automatically. You get paged for real anomalies, not Tuesday's batch job spike."
+            # Card C (index 2): 1×1
+            - title: "Cost attribution"
+              description: "Per-pipeline, per-tenant cost breakdowns updated every 60 seconds. Know which workload is spending before the bill lands."
+            # Card D (index 3): 1×1
+            - title: "Zero-config schema registry"
+              description: "Schemas inferred, versioned, and diffed on ingestion. Breaking changes surface in CI before they reach production."
+            # Card E (index 4): wide card (2-col span)
+            - title: "One-line deployment — your infra or ours"
+              description: "Docker Compose for air-gapped data centres. Managed cloud for teams who want SLAs without the ops overhead. Both run the same binary; your data stays where you put it."
+
+        # ── 4. process/numbered-stack ───────────────────────────────────────
+        - type: process
+          variant: numbered-stack
+          copy:
+            headline: "From zero to production in four steps."
+            subhead: "No professional services, no six-week onboarding. Ship observability the week you sign."
+          items:
+            - title: "Connect your sources"
+              description: "Point Flux at your Kafka topics, Postgres CDC, S3 buckets, or HTTP endpoints. Auto-discovery maps the schema tree."
+            - title: "Define your SLOs"
+              description: "Set latency, throughput, and freshness targets per pipeline. Flux calculates burn rate and sends you daily burn-rate digests."
+            - title: "Instrument your costs"
+              description: "Tag workloads by team, customer, or feature. Cost attribution runs automatically — no extra instrumentation code."
+            - title: "Ship with confidence"
+              description: "Promotion gates block deploys that would breach your SLO. Green gate means the pipeline is ready. Red gate means you caught it before your users did."
+
+        # ── 5. stats/ticker-band ────────────────────────────────────────────
+        - type: stats
+          variant: ticker-band
+          items:
+            - value: "99.99%"
+              label: "Uptime SLA"
+            - value: "2.1B"
+              label: "Events / day"
+            - value: "<50ms"
+              label: "P99 latency"
+            - value: "94%"
+              label: "Alert noise reduction"
+            - value: "10k+"
+              label: "Engineering teams"
+
+        # ── 6. testimonial/pull-quote-wall ──────────────────────────────────
+        # copy.quote / author_name satisfy catalog copy_slots.required validation.
+        # The component uses items[] for multi-quote pull-quote-wall rendering.
+        - type: testimonial
+          variant: pull-quote-wall
+          copy:
+            quote: "We spent six months building our own observability stack. Three weeks after switching to Flux we shut it all down."
+            author_name: "Priya Desai"
+            author_title: "VP Engineering"
+            company: "Orbit Cloud"
+          items:
+            - quote: "We spent six months building our own observability stack. Three weeks after switching to Flux we shut it all down. The time-to-insight difference is not incremental — it is a different category."
+              author_name: "Priya Desai"
+              author_title: "VP Engineering"
+              company: "Orbit Cloud"
+            - quote: "We cut alert noise by 94% in day one. On-call is no longer a punishment rotation."
+              author_name: "Marcus Webb"
+              author_title: "Staff SRE"
+              company: "Redstone Labs"
+            - quote: "Cost attribution used to be a quarterly archaeology project. Now it is a live dashboard."
+              author_name: "Soo-Jin Park"
+              author_title: "Platform Lead"
+              company: "Quanta IO"
+
+        # ── 7. pricing/three-tier ───────────────────────────────────────────
+        - type: pricing
+          variant: three-tier
+          copy:
+            headline: "Simple pricing. No surprises."
+            subhead: "Start free. Scale when you grow. Self-host at any tier."
+            disclaimer: "All prices in USD. Annual billing. Monthly billing available at 1.2× rate."
+
+        # ── 8. faq/two-col ──────────────────────────────────────────────────
+        - type: faq
+          variant: two-col
+          copy:
+            headline: "Questions engineering teams ask before signing"
+            subhead: "Direct answers. No marketing language."
+          items:
+            - question: "Does our data leave our network?"
+              answer: "No. The self-host deployment runs entirely inside your VPC or on-premise data centre. Flux never phones home with payload data. Optional telemetry (error reports, usage stats) is opt-in and covers only aggregate counts, never pipeline content."
+            - question: "How does Flux handle schema evolution?"
+              answer: "Flux tracks schema history per topic and per table. When a new ingestion batch carries a column addition or type change, Flux versions the schema, logs the diff, and optionally blocks promotion gates if the change is breaking. Your downstream consumers never see unannounced schema breaks."
+            - question: "What is the on-call latency for SLO breach alerts?"
+              answer: "Flux evaluates SLO burn rate every 30 seconds and fires a page within 60 seconds of a fast burn threshold crossing. P99 alert delivery latency end-to-end (Flux eval → PagerDuty or Slack) is under 90 seconds for 99% of breaches in our SRE data."
+            - question: "Can we run Flux alongside our existing Datadog or Grafana setup?"
+              answer: "Yes. Flux exposes a Prometheus-compatible scrape endpoint and a Grafana data source plugin. Teams typically run Flux as the pipeline-layer source of truth and feed aggregated metrics into their existing dashboards. Full replacement is optional, not required."
+            - question: "What does self-host licensing cover?"
+              answer: "The self-host license covers unlimited events, unlimited users, and all features listed at your tier. There are no per-seat fees and no event volume overages. You pay a flat annual fee for the binary and a support SLA. Air-gapped licence keys are available for regulated industries."
+            - question: "How do we migrate from our current observability tool?"
+              answer: "Flux ships a migration assistant that reads your existing Datadog monitors, Grafana alerts, or Prometheus rules and translates them into Flux SLO definitions. Most teams complete migration in under two weeks. We provide migration office hours as part of onboarding."
+
+        # ── 9. cta/left-aligned ─────────────────────────────────────────────
+        - type: cta
+          variant: left-aligned
+          copy:
+            headline: "Your pipeline deserves better observability."
+            subhead: "Start a free 30-day trial — full feature access, no credit card, cancel anytime. Self-host or managed: your call."
+          cta:
+            label: "Start free trial"
+            href: "#contact"
+
+        # ── 10. footer/full-links ───────────────────────────────────────────
+        - type: footer
+          variant: full-links
+          copy:
+            brand_name: "Flux"
+            tagline: "Observability infrastructure that compounds with your engineering team."
+            legal_notice: "© 2026 Flux Platform, Inc. All rights reserved."
+
+  contact:
+    enabled: true
+    fields: [name, email, company, message]
+
+# ── Defaults ────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: UTC
+
+# ── Cost tracking ────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 0        # static SSG landing — no runtime LLM
+  prepaid_credits_usd: 0
