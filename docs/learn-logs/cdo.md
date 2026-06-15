@@ -127,6 +127,19 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **검증**: 풀페이지 시각 게이트 — CTA 빈 플레이스홀더 흰박스 적발→실콘텐츠 스샷 교체. detector CLEAN, no-JS h1 opacity 1.
 - Cost: CDO 디자인(design-agent 백그라운드 1회, ~126K tok) / envelope.
 
+### Growth-77 (2026-06-16) — kiln 테마 + A4 아키타입 parallax-scroll craft (TERRA ceramics)
+
+- **Deliverable**:
+  - 4번째 테마 `presets/themes/kiln/` — 점토 테라코타(clay #C9A078, OKLCH L0.78/C0.07·cream-trap 회피) + 목회재 중성(ash) + 가마-엠버 accent(#B5501A). 폰트: Cormorant Garamond(display) + Source Serif 4(body) — off-reflex serif+serif 대비 축, editorial-craft 지향. texture-clay/ash/ember 3 토큰(CSS gradient+grain, 사진 0). AA 10 pair 검증. aurora(indigo-glow)·harvest(amber-craft)·atelier(ink-paper)와 4번째 완전 고유 정체성.
+  - 첫 **SCROLL-CINEMATIC variant** `gallery/parallax-scroll` — 21st.dev "Text Parallax Content" 적응. framer-motion `useScroll` 기반 sticky full-viewport "챕터" 패널이 스크롤에 따라 scale+overlay, 각 챕터의 heading/subheading은 parallax offset으로 독립 이동. 챕터 아래 editorial body+CTA 블록. 라이브러리 8축 중 처음으로 **scroll-driven 모션**(gtm·hopwell·studio-north은 intersect 기반 static-scroll). 시간 축에서 CEO "같은 패턴, 다른 색" 비판에 정면 응답.
+  - `texture:clay|ash|ember` 센티넬 — parallax-scroll `src` 가 sentinel이면 테마 material-texture 필드 렌더(CSS gradient+grain). 실 고객은 실사 `src` 경로 입력, 데모는 사진 0으로 운영(A2 CTA blank-box 계열 결함 구조적 회피).
+  - item_slots 보강: `gallery/parallax-scroll`(heading/subheading/body/cta_label/cta_href), `story/timeline-year`(year/milestone/detail). 신규 섹션 type `lead/minimal-field`(`entity.create`(entity_type=lead) 재사용, G-1 — 신규 wire key 0). 카탈로그 11→13 type.
+- **Persona served**: 업무담당자 (공예·로컬 홈페이지 의뢰 고객), CEO (인도 전 게이트)
+- **Accessibility checks**: AA 10 pair 검증(clay/ash/ember 조합 전부). no-JS 콘텐츠 5/5 PASS(framer-motion SSR baked opacity 함정 회피 — Growth-69 계열). mobile body.scrollWidth−clientWidth=0px, hero "Made of earth, fire, and time." 390w Cormorant 줄바꿈 정상.
+- **Visual verdict**: desktop+mobile+no-JS 풀페이지 PASS — kiln 토큰(#C9A078), 3 chapter heading, hero, lead 전부 라이브 콘텐츠 그랩 확인(terra-ceramics.n9n.co.kr).
+- **Cross-agent dependency**: Engineer — GalleryParallaxScroll.tsx(rules-of-hooks 수정·SSR opacity 수정), Lead.astro, Story timeline-year 구현. DevOps — terra-ceramics 배포 + COOLIFY_API_BASE 오픈루프 종결.
+- **Cost**: CDO 디자인(design-agent) + engineer 구현 위임.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
