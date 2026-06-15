@@ -1,0 +1,154 @@
+---
+/**
+ * Story.astro — Story / About section (type: story).
+ * Variants: founder-split | timeline-year
+ *
+ * founder-split: two-column layout.
+ *   Left: section heading + body prose. Right: a large typographic pull-quote
+ *   block OR a single supporting image if assets[] is provided.
+ *   No fabricated founder photo — a text-only right column is valid and
+ *   intentional for the A2 archetype (creative agency without stock headshots).
+ *
+ * All colors via theme tokens. Fully visible without JS (Growth-69).
+ */
+interface StyleHints {
+  layout?: string
+  quote_style?: string
+  bg?: string
+}
+
+interface Props {
+  copy: Record<string, string>
+  assets?: string[]
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+}
+
+const {
+  copy = {},
+  assets = [],
+  variant = 'founder-split',
+  styleHints = {},
+  motionPreset = 'fade-up',
+} = Astro.props
+
+const bg = styleHints.bg ?? 'light'
+const bgClass = bg === 'dark'
+  ? 'bg-[var(--color-hero-bg-from,#141418)]'
+  : bg === 'alt'
+    ? 'bg-[var(--color-section-alt-bg,#E8E2D8)]'
+    : 'bg-[var(--color-surface-1,#F5F2EC)]'
+
+const onDark = bg === 'dark'
+const headlineColor = onDark ? 'text-[var(--color-surface-1,#F5F2EC)]' : 'text-[var(--color-text-1,#201F27)]'
+const bodyColor = onDark ? 'text-[var(--color-surface-2,#E8E2D8)]' : 'text-[var(--color-text-2,#4A4957)]'
+const pullQuoteColor = onDark ? 'text-[var(--color-surface-1,#F5F2EC)]' : 'text-[var(--color-text-1,#201F27)]'
+const borderColor = onDark ? 'border-[var(--color-surface-3,#D8D0C4)]' : 'border-[var(--color-primary,#9A5B32)]'
+---
+
+<section
+  class={`w-full py-[var(--space-section-y,120px)] px-[var(--space-container-gutter,24px)] ${bgClass}`}
+  data-motion={motionPreset}
+>
+  <div class="max-w-[var(--space-container-max,1120px)] mx-auto">
+    {variant === 'founder-split' && (
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-start">
+        <!-- Left column: heading + body prose -->
+        <div>
+          {copy.headline && (
+            <h2
+              class={`text-3xl md:text-4xl font-[var(--font-weight-display,800)] mb-6 tracking-[var(--font-letter-spacing-display,-0.03em)] ${headlineColor}`}
+              style="font-family: var(--font-family-display, inherit);"
+            >
+              {copy.headline}
+            </h2>
+          )}
+          {copy.body && (
+            <div class={`text-base md:text-lg leading-relaxed space-y-4 ${bodyColor}`}>
+              {/* Body may contain paragraph-break-separated text */}
+              {copy.body.split('\n\n').map((para: string) => (
+                <p>{para.trim()}</p>
+              ))}
+            </div>
+          )}
+          {copy.subhead && !copy.body && (
+            <p class={`text-lg leading-relaxed ${bodyColor}`}>{copy.subhead}</p>
+          )}
+        </div>
+
+        <!-- Right column: pull quote block OR supporting image if provided -->
+        <div class="relative">
+          {assets.length > 0 ? (
+            <!-- Image option: single supporting image, no fabricated headshot needed -->
+            <img
+              src={assets[0]}
+              alt={copy.headline ?? ''}
+              class="w-full h-auto block"
+              style="border-radius: var(--radius-card, 4px);"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : copy.pull_quote ? (
+            <!-- Typographic pull quote block — the text IS the visual -->
+            <blockquote class={`relative pl-6 border-l-2 ${borderColor}`}>
+              <p
+                class={`text-2xl md:text-3xl font-[var(--font-weight-display,800)] leading-snug tracking-[var(--font-letter-spacing-display,-0.03em)] ${pullQuoteColor}`}
+                style="font-family: var(--font-family-display, inherit);"
+              >
+                &ldquo;{copy.pull_quote}&rdquo;
+              </p>
+              {copy.author_name && (
+                <footer class={`mt-6 text-sm font-semibold uppercase tracking-[0.12em] ${bodyColor}`}>
+                  {copy.author_name}
+                  {copy.author_title && (
+                    <span class="font-normal normal-case tracking-normal ml-2 opacity-70">
+                      — {copy.author_title}
+                    </span>
+                  )}
+                </footer>
+              )}
+            </blockquote>
+          ) : (
+            <!-- Fallback: a large decorative numeral or accent line, still visible -->
+            <div class={`text-[120px] font-[var(--font-weight-display,800)] leading-none select-none opacity-10 ${headlineColor}`} aria-hidden="true" style="font-family: var(--font-family-display, inherit);">
+              01
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    {variant === 'timeline-year' && (
+      <div>
+        {copy.headline && (
+          <h2
+            class={`text-3xl md:text-4xl font-[var(--font-weight-display,800)] mb-12 tracking-[var(--font-letter-spacing-display,-0.03em)] ${headlineColor}`}
+            style="font-family: var(--font-family-display, inherit);"
+          >
+            {copy.headline}
+          </h2>
+        )}
+        <!-- timeline-year renders placeholder milestones if no items provided -->
+        <!-- (items support added when profile supplies them; same items[] pattern as features) -->
+        <div class={`space-y-0 border-l border-[var(--color-surface-3,#D8D0C4)]`}>
+          {copy.body && copy.body.split('\n\n').map((para: string, i: number) => (
+            <div class="relative pl-8 pb-10">
+              <div
+                class="absolute left-[-5px] top-1 w-[9px] h-[9px] rounded-full bg-[var(--color-primary,#9A5B32)]"
+                aria-hidden="true"
+              />
+              <p class={`text-base leading-relaxed ${bodyColor}`}>{para.trim()}</p>
+            </div>
+          ))}
+          {!copy.body && (
+            <div class="relative pl-8 pb-10">
+              <div class="absolute left-[-5px] top-1 w-[9px] h-[9px] rounded-full bg-[var(--color-primary,#9A5B32)]" aria-hidden="true" />
+              <p class={`text-base ${bodyColor}`}>Studio founded — work begins.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+</section>
