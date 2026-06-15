@@ -33,6 +33,7 @@ Thumbs.db
 # Project artifacts
 out/
 docs/scaffolds/
+docs/intake-inbox/ui-checks/
 Videos/
 *.local.yaml
 *.local.json
