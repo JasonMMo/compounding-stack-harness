@@ -397,3 +397,11 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **함정/교훈**: ① **감사가 실네트워크 1건 적발** — `context.mjs` 가 매 세션 `impeccable.style/api/version` 폴링(UPDATE_AVAILABLE) → no-network auto-path 위반. `.impeccable/config.json {updateCheck:false}` 로 중화(커밋되어 전 운영자·headless 적용, env 보다 견고). 서드파티 vendoring 은 **반드시 네트워크/telemetry/API 감사 후 도입**. ② vendored-pin 규율: 업스트림 재동기화는 `npx` 자동 아닌 수동. ③ **도구가 우리 craft drift 를 사전 차단** — impeccable anti-slop 이 우리 glowy hero(보라 그래디언트+글로우)를 slop 으로 깜 → reconcile 거리(첫 실전 = gtm-landing critique 패스). motion 규칙은 Growth-69 교훈과 글자그대로 동일.
 - **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
 - **결정 메모리**: [[marketing-site-track]] · [[impeccable-design-skill]]
+
+### Growth-72 (2026-06-15) — impeccable 첫 dogfood: critique → typeset de-slop (gtm-landing)
+
+- **인격/Axis/Milestone**: CTO(critique 실행·검증·배포) + Engineer(typeset 실행) + CDO(폰트 결정) / tooling(design)·theme/section / M1
+- **1줄 rollup**: vendored impeccable 첫 실전 — `/impeccable critique gtm-landing` (Brand register, NO_PRODUCT_MD 우회) → Design Health **27/40**, **결정론 detector(detect.mjs)가 실슬롭 2건 적발**: ① gradient-text(hero "Zero dev team." — Absolute Ban) ② em-dash 9개. + LLM 적발: 폰트 4/4 reflex-reject(Plus Jakarta/Inter/DM Sans/DM Serif), indigo-glow SaaS first-order reflex. → `/typeset` 패스: 그래디언트 텍스트 제거(솔리드 #C4B5FD), 폰트 → **Bricolage Grotesque(display)+Epilogue(body)** off-reflex contrast-axis 교체(@fontsource-variable self-host, Korean fallback). 라이브 재검증 detector **gradient-text 제거**(em-dash만 잔존), computed font 적용 확인, no-JS opacity 1. critique 스냅샷 `.impeccable/critique/` 영구화(트렌드·polish 백로그).
+- **함정/교훈**: ① **도구가 우리 craft drift 를 사전/사후 정확히 적발** — 우리가 의도 적응한 glowy hero 의 그래디언트·제네릭폰트를 dogfood 가 잡음(도구 가치 입증). ② impeccable reflex-reject 폰트 목록에 우리 @fontsource 기본 4종 전부 포함 → 디폴트 폰트=AI 모노컬처 tell. ③ critique 의 결정론 detector 는 grep 사각(em-dash cadence)도 잡음 — vision-QA 보완재.
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
+- **결정 메모리**: [[impeccable-design-skill]] · [[marketing-site-track]]
