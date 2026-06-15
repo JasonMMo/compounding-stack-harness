@@ -447,6 +447,36 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 
 - Cost: engineer subagent 다회 / envelope 반환 (main context 격리).
 
+### Growth-66 (2026-06-15) — dogfood GTM 랜딩: repeatable items pipeline + favicon + motion 버그 3종 수정
+
+- Files touched:
+  - `presets/site-sections/catalog.yaml` (수정 — `item_slots` 추가: features(required title/description, optional icon/image), faq(required question/answer))
+  - `scripts/workflow/site_manifest.py` (수정 — `build_site_manifest()` items[] threading; `validate_site()` item_slots.required 검증; items 없는 섹션 통과 허용)
+  - `frontend/adapters/landing-astro/src/lib/manifest.ts` (수정 — Section type에 `items?` 필드 추가)
+  - `frontend/adapters/landing-astro/src/pages/[...page].astro` (수정 — router가 Features·Faq에 `items` prop 전달)
+  - `frontend/adapters/landing-astro/public/favicon.svg` (신규 — 테마 중립 "compounding stack" 3-bar 마크, indigo #4F46E5)
+  - `frontend/adapters/landing-astro/src/layouts/BaseLayout.astro` (수정 — motion IntersectionObserver: stagger-children 컨테이너 `el` 자체도 `motion-hidden` 제거; prefers-reduced-motion 즉시 보이기(a11y 수정))
+  - `scripts/workflow/ui_check.py` (수정 — Playwright context `reduced_motion="reduce"` + full-page screenshot 캡처)
+  - `scripts/workflow/tests/test_site_manifest.py` (수정 — 42 cases)
+
+- Implementation choices:
+  - **Root cause — item_slots 누락**: feature 카드 / FAQ 항목에 schema slot이 없어 컴포넌트 demo placeholder로 폴백되고 있었음. catalog에 `item_slots` 신설 후 manifest → TypeScript type → router 순서로 threaded.
+  - **favicon 404 수정**: BaseLayout이 `/favicon.svg` 를 참조하는데 adapter에 `public/` 디렉터리 자체가 없었음. 테마 중립 마크(SVG) 추가. 각 테마는 `public/favicon.svg` overwrite로 per-theme 파비콘 제공 가능 (future slot 문서화).
+  - **stagger-children motion 버그 (주요 a11y 결함)**: IntersectionObserver island의 stagger-children 분기가 `el.children` 에서만 `motion-hidden` 제거 → 컨테이너 `el` 자신은 `opacity:0` 유지 → Features·Logos 섹션이 전 방문자에게 영구 비표시. 수정: `el.classList.remove('motion-hidden')` 을 모든 교차 요소에 공통 실행되도록 호이스트.
+  - **prefers-reduced-motion a11y 수정**: motion init 진입 시 `motionQuery.matches` 이면 early-return — reduced-motion 사용자에게 below-fold 콘텐츠가 숨겨지는 a11y 결함 수정.
+  - **full-page screenshot (QA reliability)**: ui_check의 기본 캡처가 viewport 상단(hero)만 찍어 favicon 404·motion 버그가 시야 밖이었음. Playwright `full_page=True` + `reduced_motion="reduce"` → 전체 페이지 7/7 PASS.
+
+- Tests added:
+  - **L1 test_site_manifest.py**: 42 cases (items threading / item_slots required 검증 / items 없는 섹션 통과 / 각 section type 왕복)
+  - **L3**: `npm run build` SUCCESS
+  - **vision ui_check**: verdict=PASS 7/7 (full-page, reduced-motion)
+  - **diagnose**: G-8 green, 전체 가드 FAIL 0
+
+- Catches surfaced:
+  - **교훈 (viewport-only 스크린샷 맹점)**: ui_check 기본 캡처가 hero 상단만 보여줘 아래 섹션 버그(favicon 404, motion 영구 숨김)를 놓침. full-page 캡처 필수 — below-fold 결함 탐지 요건. QA 에 공유.
+
+- Cost: engineer subagent 다회 / envelope 반환.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
