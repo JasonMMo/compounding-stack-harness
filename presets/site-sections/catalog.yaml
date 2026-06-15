@@ -18,7 +18,9 @@ sections:
     asset_slots: [bg_image]
     # glowy-waves: animated canvas hero with React island (framer-motion).
     # Required: headline, subhead, cta. Optional: pills (string[]), stats ({label,value}[]).
-    variants: [centered, split-left, split-right, fullscreen-video, glowy-waves]
+    # brew: warm-organic hero — CSS grain noise + effervescence bubbles (harvest theme).
+    # No JS required. Reduced-motion safe (bubbles static). No dark canvas.
+    variants: [centered, split-left, split-right, fullscreen-video, glowy-waves, brew]
 
   logos:
     label: "Logo Bar / Social Proof"
