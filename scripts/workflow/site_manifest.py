@@ -280,6 +280,12 @@ def build_site_manifest(profile: dict[str, Any]) -> dict[str, Any]:
             if images_val:
                 sec_out["images"] = list(images_val)
 
+            # companies: optional list[str] — used by logos/horizontal-scroll for
+            # asset-free text wordmark rendering (zero image files, no 404s).
+            companies_val = section.get("companies")
+            if companies_val:
+                sec_out["companies"] = list(companies_val)
+
             sections_out.append(sec_out)
 
         page_out: dict[str, Any] = {
