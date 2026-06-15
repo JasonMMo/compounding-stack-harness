@@ -1,0 +1,104 @@
+# profiles/hopwell.yaml — HOPWELL Craft Brewery launch landing
+# Brand: HOPWELL — a craft brewery launching its flagship session ale.
+# Tagline: "Brewed from the ground up."
+# Marketing-site track (deliverable_kind=marketing-site); theme=harvest.
+# No entity/DDL axis. No fake testimonials (pre-launch). No logos (no assets).
+# Contact form in DEMO_MODE stub (same pattern as gtm-landing).
+# Sensation brief: roasted malt / fresh hops / crisp finish.
+
+version: 1
+
+customer:
+  slug: hopwell
+  display: "HOPWELL Craft Brewery — Launch Landing"
+  status: active
+  contact: demo@hopwell.example
+  industry: craft-beverage
+
+# ── Pluggable Stack ─────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# ── Site Block (marketing-site schema) ─────────────────────────────────────
+site:
+  theme: harvest
+
+  pages:
+    - slug: home
+      title: "HOPWELL Craft Brewery"
+      seo:
+        title: "HOPWELL — Brewed from the ground up"
+        description: "HOPWELL is a craft brewery launching its flagship session ale. Roasted malt, fresh hops, crisp finish. Find a tap near you."
+        og_image: "assets/og-hopwell.png"
+      sections:
+        - type: hero
+          variant: brew
+          copy:
+            headline: "HOPWELL"
+            subhead: "Brewed from the ground up. A session ale with roasted malt depth, fresh hop aroma, and a finish so crisp it earns a second pour."
+          cta:
+            label: "Find a tap near you"
+            href: "#contact"
+
+        - type: features
+          variant: carousel
+          copy:
+            headline: "Three things in every pour"
+            subhead: "We built this beer around three non-negotiables. No shortcuts, no adjuncts, no apologies."
+          items:
+            - title: "Roasted malt"
+              icon: "wheat"
+              description: "Our base malt is slow-drum-roasted on site. It gives every pour that warm amber colour and a biscuit depth you taste before it even hits your palate."
+            - title: "Fresh hops"
+              icon: "leaf"
+              description: "We dry-hop twice with whole-cone Cascade and Mosaic. The result is a nose that's genuinely green — citrus pith, pine, and something just-picked that no extract can fake."
+            - title: "Crisp finish"
+              icon: "droplets"
+              description: "Cold-conditioned for two weeks. No chill haze, no sweetness hangover. The finish is cold and clean — the kind that makes you look at your glass and pour another."
+
+        - type: faq
+          variant: single-col
+          copy:
+            headline: "What people ask before the first pint"
+            subhead: "Straight answers. No tap-room gloss."
+          items:
+            - question: "When does the flagship launch?"
+              answer: "We are pouring our first kegs to a small cohort of local taprooms in Q3 2026. Sign up below and we will tell you which handle has HOPWELL before anyone else does."
+            - question: "Is it available in cans or only on tap?"
+              answer: "Tap-first. We believe the first experience of a new beer should be on draft. Canned four-packs follow in Q4 once the flagship recipe is locked and the canning line is commissioned."
+            - question: "Is it gluten-reduced?"
+              answer: "Not currently. HOPWELL flagship is a traditional barley-malt ale. We are developing a sorghum-based variant for Q1 2027 — sign up to hear about it first."
+            - question: "Where is HOPWELL brewed?"
+              answer: "On-site at our 10-barrel brewhouse. We roast our own malt, source whole-cone hops from two family farms, and use the same well water we always have. Every batch is brewed, conditioned, and poured here."
+
+        - type: cta
+          variant: centered
+          copy:
+            headline: "Be first on tap."
+            subhead: "Join the launch list. We will reach out when HOPWELL hits a handle near you — no spam, one message per milestone."
+          cta:
+            label: "Join the launch list"
+            href: "#contact"
+
+        - type: footer
+          variant: minimal
+          copy:
+            brand_name: "HOPWELL"
+            tagline: "Brewed from the ground up."
+            legal_notice: "© 2026 HOPWELL Brewing Co. All rights reserved."
+
+  contact:
+    enabled: true
+    fields: [name, email, message]
+
+# ── Defaults ────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: UTC
+
+# ── Cost tracking ────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 0        # static SSG landing — no runtime LLM
+  prepaid_credits_usd: 0
