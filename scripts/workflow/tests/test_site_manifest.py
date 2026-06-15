@@ -1040,3 +1040,127 @@ class TestLeadSection:
         manifest = build_site_manifest(profile)
         lead_sec = manifest["pages"][0]["sections"][0]
         assert "items" not in lead_sec
+
+
+# ---------------------------------------------------------------------------
+# A4 artisan: story/timeline-year items[] (Growth-65+ additive)
+# ---------------------------------------------------------------------------
+
+class TestStoryTimelineYear:
+    """story/timeline-year: item_slots added additively; founder-split unchanged."""
+
+    def _story_site(self, variant, items=None, copy=None):
+        section = {
+            "type": "story",
+            "variant": variant,
+            "copy": copy or {"headline": "Our story"},
+        }
+        if items is not None:
+            section["items"] = items
+        return {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [section],
+                }
+            ]
+        }
+
+    def test_story_catalog_has_item_slots(self, catalog):
+        """story type must have item_slots after additive update."""
+        story = catalog["sections"]["story"]
+        assert "item_slots" in story, "story must have item_slots after catalog update"
+        required = story["item_slots"]["required"]
+        assert "year" in required
+        assert "milestone" in required
+
+    def test_story_item_slots_optional_detail(self, catalog):
+        story = catalog["sections"]["story"]
+        optional = story["item_slots"].get("optional", [])
+        assert "detail" in optional
+
+    def test_timeline_year_valid_with_items(self, catalog):
+        """timeline-year with well-formed items[] passes validation."""
+        items = [
+            {"year": "2016", "milestone": "Studio opens"},
+            {"year": "2019", "milestone": "First gas kiln fired", "detail": "Built by hand."},
+        ]
+        errs = validate_site(self._story_site("timeline-year", items=items), catalog)
+        assert errs == [], f"timeline-year with valid items should pass: {errs}"
+
+    def test_timeline_year_item_missing_milestone_flagged(self, catalog):
+        """item missing required 'milestone' produces a violation."""
+        items = [{"year": "2016"}]  # milestone missing
+        errs = validate_site(self._story_site("timeline-year", items=items), catalog)
+        assert any("milestone" in e for e in errs), (
+            f"Missing 'milestone' must be flagged: {errs}"
+        )
+
+    def test_timeline_year_item_missing_year_flagged(self, catalog):
+        """item missing required 'year' produces a violation."""
+        items = [{"milestone": "Studio opens"}]  # year missing
+        errs = validate_site(self._story_site("timeline-year", items=items), catalog)
+        assert any("year" in e for e in errs), (
+            f"Missing 'year' must be flagged: {errs}"
+        )
+
+    def test_timeline_year_without_items_valid(self, catalog):
+        """timeline-year without items[] is still valid (falls back to copy.body)."""
+        errs = validate_site(self._story_site("timeline-year"), catalog)
+        assert errs == [], f"timeline-year with no items should be valid: {errs}"
+
+    def test_founder_split_unchanged(self, catalog):
+        """founder-split variant must still be valid after additive item_slots addition."""
+        errs = validate_site(self._story_site("founder-split"), catalog)
+        assert errs == [], f"founder-split must remain valid: {errs}"
+
+    def test_timeline_year_items_thread_through_manifest(self):
+        """items[] thread through build_site_manifest for story/timeline-year."""
+        profile = {
+            "customer": {"slug": "terra-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "kiln",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "story",
+                                "variant": "timeline-year",
+                                "copy": {"headline": "A studio measured in firings"},
+                                "items": [
+                                    {"year": "2016", "milestone": "Studio opens in a converted garage"},
+                                    {"year": "2019", "milestone": "First gas kiln fired", "detail": "Built in 6 weeks."},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        story_sec = manifest["pages"][0]["sections"][0]
+        assert story_sec["variant"] == "timeline-year"
+        assert "items" in story_sec
+        assert len(story_sec["items"]) == 2
+        assert story_sec["items"][0]["year"] == "2016"
+        assert story_sec["items"][0]["milestone"] == "Studio opens in a converted garage"
+        assert story_sec["items"][1]["detail"] == "Built in 6 weeks."
+
+    def test_terra_ceramics_profile_validates(self, catalog):
+        """terra-ceramics.yaml profile must validate cleanly against the catalog."""
+        try:
+            import yaml as _yaml
+        except ImportError:
+            pytest.skip("PyYAML not available")
+        path = PROFILES_DIR / "terra-ceramics.yaml"
+        if not path.exists():
+            pytest.skip("terra-ceramics.yaml not yet created")
+        with open(path, encoding="utf-8") as f:
+            profile = _yaml.safe_load(f)
+        site = profile.get("site", {})
+        errs = validate_site(site, catalog)
+        assert errs == [], f"terra-ceramics.yaml has catalog violations: {errs}"
