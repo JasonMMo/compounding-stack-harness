@@ -1,0 +1,25 @@
+# Digital asset record — meridian (B2B managed-IT / security advisory landing demo, A6 archetype).
+# Demo/시안: first B2B-SERVICES archetype — logos/quote-band (single client voice, not
+# logo-soup) + process/numbered-stack + team/headshot-grid (monogram avatars). 5th
+# marketing-site theme (meridian: cool-stone white + deep forest-green). Growth-78.
+slug: meridian
+contact:
+  channel: internal
+  handle: "compounding-stack (own demo asset)"
+preview:
+  subdomain: meridian.n9n.co.kr
+  coolify_project: jrum1rdwq1oa53bmsb6awhvr
+  coolify_app: b17ccvgfsqqhieucir9ymbnu
+  status: live
+  deployed_at: "2026-06-16"
+  deliverable_kind: marketing-site     # static SSG (no backend) — deploy_static_site.py lane
+  theme: meridian
+  archetype: A6                        # B2B / Services / Consulting (landing-pattern-matrix)
+production:
+  install_method: remote
+  installed_at: null                   # preview/demo asset — no customer install
+  stack:
+    frontend: landing-astro
+    backend: none
+secret_ref: []                         # static site, no secrets
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5). 정적 SSG — 런타임 LLM 0. 전 섹션 Astro-native (React 아일랜드 0) — quote-band/numbered-stack/headshot-grid 모두 무JS 렌더, JS는 entrance 모션만."
