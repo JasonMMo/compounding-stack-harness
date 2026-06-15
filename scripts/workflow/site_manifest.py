@@ -95,6 +95,8 @@ def validate_site(site: dict[str, Any], catalog: dict[str, Any]) -> list[str]:
       - Each section.type slug must be ASCII (G-8).
       - All copy_slots.required keys must be present in section.copy.
       - section.variant (if set) must appear in catalog variants list.
+      - If catalog entry has item_slots AND section.items is present, each item must
+        contain all item_slots.required keys. Omitting items entirely is not an error.
       - site.theme existence is a soft/warning check only (P2 incomplete).
     """
     violations: list[str] = []
@@ -164,6 +166,19 @@ def validate_site(site: dict[str, Any], catalog: dict[str, Any]) -> list[str]:
                         f"variant '{variant}' is not in catalog variants {cat_variants}"
                     )
 
+            # item_slots validation: only when catalog has item_slots AND section has items
+            item_slots: dict[str, Any] = cat_entry.get("item_slots", {})
+            if item_slots:
+                section_items: list[Any] = section.get("items") or []
+                required_item_slots: list[str] = item_slots.get("required", [])
+                for idx, item in enumerate(section_items):
+                    for slot in required_item_slots:
+                        if slot not in item:
+                            violations.append(
+                                f"page '{page_slug}' section '{sec_type}' item[{idx}]: "
+                                f"required item slot '{slot}' is missing"
+                            )
+
     return violations
 
 
@@ -197,7 +212,8 @@ def build_site_manifest(profile: dict[str, Any]) -> dict[str, Any]:
                 "variant": "<variant>",   # omitted if not set
                 "copy": { ... },
                 "assets": [ ... ],        # omitted if empty/absent
-                "cta": { ... }            # omitted if absent
+                "cta": { ... },           # omitted if absent
+                "items": [ ... ]          # omitted if absent; repeated item entries (features, faq)
               }
             ]
           }
@@ -244,6 +260,10 @@ def build_site_manifest(profile: dict[str, Any]) -> dict[str, Any]:
             cta_val = section.get("cta")
             if cta_val:
                 sec_out["cta"] = dict(cta_val)
+
+            items_val = section.get("items")
+            if items_val:
+                sec_out["items"] = [dict(it) for it in items_val]
 
             sections_out.append(sec_out)
 
