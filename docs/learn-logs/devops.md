@@ -179,6 +179,14 @@
 - **함정 ② SSH 터널 드롭 + 좀비 소켓**: 대량 배포/폴링 중 `localhost:8000` 터널 드롭. 재수립 시 죽은 PID가 8000을 Listen 점유("Address already in use", taskkill 불가 — OS 지연 해제). 해소: **다른 로컬 포트로 재수립**(`-L 8010:localhost:8000`) 후 직접 API 호출로 진행(deploy_static_site.py는 8000 하드코딩이라 우회).
 - **교훈**: API 자동화 장시간 작업은 터널 안정성(ServerAliveInterval)과 포트 재사용 실패를 전제로 폴백 포트를 준비하라.
 
+### Growth-77 (2026-06-16) — terra-ceramics 배포 + COOLIFY_API_BASE 오픈루프 종결 + leading-slash 422 함정
+
+- **배포**: terra-ceramics.n9n.co.kr (Coolify project=itw5euifm5shu8vt84axxz8p, app=q9hq2xlr3cjzh47smq7z0xe8, kiln 테마, DEMO_MODE=1). `deploy_static_site.py` + `deploy/preview/terra-ceramics.compose.yml`. landing 포털에 공예/로컬 카드(🏺) 추가 후 재배포. 둘 다 HTTPS 200, 콘텐츠 검증 PASS.
+- **COOLIFY_API_BASE 오픈루프 종결**: Growth-76 교훈 ②(하드코딩 API_BASE → env-var 화 권고)를 이번 세션에서 실행. `deploy_static_site.py` 의 `API_BASE=localhost:8000` 하드코딩 → `COOLIFY_API_BASE` 환경변수로 교체(default `http://localhost:8000/api/v1`). 8000 좀비소켓 재발 시 `MSYS_NO_PATHCONV=1 COOLIFY_API_BASE=http://localhost:8010/api/v1 python deploy_static_site.py ...` 로 임시패치·git-checkout 없이 운영 가능. Growth-75·76 의 임시 8010 패치 후 복구(커밋 오염 방지) 댄스가 영구 해소됨.
+- **leading-slash --compose 422 함정 확인**: `deploy_static_site.py --compose` 인자는 **반드시 `/` 로 시작하는 repo-rooted 경로**(`/deploy/preview/<slug>.compose.yml`). 슬래시 없거나 상대경로 → Coolify HTTP 422 `docker_compose_location format invalid`. Git Bash 에서 `MSYS_NO_PATHCONV=1` 없으면 MSYS 경로 변환으로 둔갑하므로 함께 사용.
+- **레지스트리**: `infra/registry/terra-ceramics.yaml` (status=live, project/app UUID 기록).
+- **교훈 (1줄)**: 하드코딩 엔드포인트를 env-var 화하면 좀비소켓·포트 충돌 같은 운영 이변에 코드 오염 없이 대응 가능 — "임시 패치 후 git-checkout 복구" 패턴은 항상 env-var 화로 전환해야 할 신호.
+
 ### Growth-76 (2026-06-15) — studio-north(atelier) 배포 + 8000 좀비소켓 폴백
 
 - **배포**: studio-north.n9n.co.kr (project=pznz8dsk2h93frb51w4ejtlr, app=rls8w0yd6vxvq4721ava5a1n, atelier 테마, DEMO_MODE=1) `deploy_static_site.py` + 신규 `deploy/preview/studio-north.compose.yml`. landing 포털 "준비 중" 카드를 라이브 카드로 교체 후 재배포. 둘 다 HTTPS 200, 콘텐츠+토큰(9A5B32/141418) 검증 PASS.
