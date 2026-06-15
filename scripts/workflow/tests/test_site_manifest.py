@@ -91,9 +91,14 @@ class TestCatalogLoad:
         assert catalog.get("version") == "1.0"
 
     def test_eight_section_types(self, catalog):
+        # Catalog grows as new archetypes are added (A2 added gallery + story).
+        # Invariant: original 8 types must still be present; new types are additive.
         sections = catalog["sections"]
-        expected = {"hero", "logos", "features", "pricing", "testimonial", "faq", "cta", "footer"}
-        assert set(sections.keys()) == expected
+        original_eight = {"hero", "logos", "features", "pricing", "testimonial", "faq", "cta", "footer"}
+        assert original_eight.issubset(set(sections.keys())), (
+            f"Original 8 section types missing from catalog: "
+            f"{original_eight - set(sections.keys())}"
+        )
 
     def test_each_section_has_required_copy_slots(self, catalog):
         for sec_type, entry in catalog["sections"].items():
