@@ -493,6 +493,14 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **검증**: 라이브 no-JS h1 opacity `1`(이전 `0`), JS-on opacity `1`+canvas+demo 정상. 컴포넌트 전용 변경, 카탈로그/매니페스트 무영향.
 - **교훈**: 정적 산출물 검증은 case-insensitive grep + JS-off 렌더 둘 다 필요(대문자 grep false-negative 로 SEO 오진했음).
 
+### Growth-70 (2026-06-15) — 21st.dev variant 2종: marquee-3d + carousel
+
+- **marquee-3d** (`src/sections/ProofMarquee3d.tsx`): Shatlyk1011 3D Marquee 적응. deps `clsx`+`tailwind-merge` 추가. props `images:string[]`, 외부 defaultImages 제거. logos 섹션 variant 등록, `images[]` manifest 스레딩. SSR opacity:1(transform-only), reduced-motion 정적. 콘텐츠=`public/proof/*.jpg`(12 라이브 데모 캡처, 520px JPEG 130KB).
+- **carousel** (`src/sections/FeatureCarousel.tsx`): 0xUrvish Feature Carousel 적응. `motion/react`→`framer-motion`, `@hugeicons`→`lucide-react`(아이콘 lookup, 새 의존 0), `@/lib/utils`→로컬 cn(twMerge+clsx). 외부 unsplash 제거, items props(title/desc/icon/image). features variant 등록(image optional slot). 첫 feature SSR 가시(no-JS img opacity 1, noscript fallback), AnimatePresence는 JS 점진향상.
+- **검증**: 두 변경 모두 `astro build` SUCCESS, test_site_manifest 42/42, no-JS 렌더 img opacity 1. 라이브 no-JS Playwright로 marquee 12 img·"real systems" 확인.
+- **교훈**: ① island prop은 escaped-slash JSON 직렬화 → 정적 HTML grep 대신 Playwright 렌더가 ground truth. ② Chromium innerText가 CSS uppercase 반영 → DOM 텍스트 검증은 case-insensitive. ③ 외부 컴포넌트 새 의존은 기존 설치분으로 치환(번들·공급망 hedge).
+- **Cost**: engineer subagent 2회(71K+78K tok) / envelope 반환.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
