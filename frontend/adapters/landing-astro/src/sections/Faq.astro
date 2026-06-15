@@ -73,18 +73,18 @@ const displayItems: FaqItem[] = items.length > 0 ? items : [
           <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-[var(--color-text-1,#111827)] hover:text-[var(--color-primary,#6D28D9)] group-open:text-[var(--color-accent-warm,#AB5527)] transition-colors">
             <span>{item.question}</span>
             {iconType === 'chevron' && (
-              <svg class="w-5 h-5 flex-shrink-0 ml-4 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <svg class="flex-shrink-0 ml-4 transition-transform group-open:rotate-180" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" style="min-width:20px;max-width:20px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             )}
             {iconType === 'plus' && (
-              <svg class="w-5 h-5 flex-shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <svg class="flex-shrink-0 ml-4" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" style="min-width:20px;max-width:20px;">
                 <path class="group-open:hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 <path class="hidden group-open:block" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
               </svg>
             )}
             {iconType === 'arrow' && (
-              <svg class="w-5 h-5 flex-shrink-0 ml-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <svg class="flex-shrink-0 ml-4 transition-transform group-open:rotate-90" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" style="min-width:20px;max-width:20px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             )}
