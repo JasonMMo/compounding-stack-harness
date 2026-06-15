@@ -3,7 +3,7 @@
 > CDO doc. Decision-oriented map for the multi-session buildout of diverse landing-page patterns.
 > Canonical positions: section-type taxonomy (§1), variant table (§2), page archetypes (§3),
 > buildout backlog (§4), invariants (§5).
-> Last updated: 2026-06-16 (CDO, Growth-77)
+> Last updated: 2026-06-16 (CDO, Growth-79 — A1 SaaS archetype + flux theme + 3 new variants)
 
 ---
 
@@ -43,8 +43,8 @@ Ordered by usage frequency across archetypes.
 |13 | `lead`          | Lead / Newsletter          | Inline capture; lighter than full contact form  |
 |14 | `footer`        | Footer                     | Nav, legal, brand close                         |
 
-**Currently in catalog**: hero, logos, features, pricing, testimonial, faq, cta, footer, lead, gallery, story (Growth-77), process, team (Growth-78) — 13 of 14.
-**Missing from catalog**: stats (1 new type needed — backlog #2).
+**Currently in catalog**: hero, logos, features, pricing, testimonial, faq, cta, footer, lead, gallery, story (Growth-77), process, team (Growth-78), stats (Growth-79) — 14 of 14.
+**Missing from catalog**: none — full taxonomy registered.
 
 ---
 
@@ -178,9 +178,10 @@ Status: HAVE (existing variant name) or NEED.
 ---
 
 **Variant count summary**:
-14 section types · 50 total variants · 27 HAVE · 23 NEED
+14 section types · 52 total variants · 30 HAVE · 22 NEED
 (Growth-77 additions: gallery/parallax-scroll HAVE + story/timeline-year HAVE + lead/minimal-field HAVE; gallery/full-bleed-strip added as NEED)
 (Growth-78 additions: logos/quote-band HAVE + process/numbered-stack HAVE + team/headshot-grid HAVE — A6 B2B-services archetype shipped)
+(Growth-79 additions: stats section type NEW + features/bento-mosaic HAVE + stats/ticker-band HAVE + testimonial/pull-quote-wall HAVE — A1 SaaS Product Launch CDO spec shipped; flux theme added)
 
 ---
 
@@ -329,15 +330,15 @@ Ordered by: (visible differentiation delivered / implementation cost). First 10.
 | # | Item                                   | Type     | Variant          | Impact reason                                              | Source hint          |
 |---|----------------------------------------|----------|------------------|------------------------------------------------------------|----------------------|
 | ~~1~~ | ✅ `process` + numbered-stack (DONE Growth-78) | NEW TYPE | numbered-stack | Built; shipped in A6 MERIDIAN                       | done                 |
-| 2 | `stats` section type + ticker-band     | NEW TYPE | ticker-band      | Quantitative proof is the fastest trust signal; zero cost  | build from scratch   |
+| ~~2~~ | ✅ `stats` section type + ticker-band (DONE Growth-79) | NEW TYPE | ticker-band | Built; CDO spec in out/a1-saas/; catalog registered | done |
 | 3 | hero / bento-grid                      | NEW VAR  | bento-grid       | Breaks the centered/split duopoly; screenshotable for SaaS | 21st.dev bento       |
 | 4 | hero / headline-only                   | NEW VAR  | headline-only    | Maximum visual contrast to all 3 existing heroes; type-led | build from scratch   |
-| 5 | features / bento-mosaic                | NEW VAR  | bento-mosaic     | Solves card-grid sameness; high perceived design quality   | 21st.dev bento grids |
+| ~~5~~ | ✅ features / bento-mosaic (DONE Growth-79) | NEW VAR | bento-mosaic | Built; CDO spec in out/a1-saas/; catalog registered | done |
 | 6 | `gallery` section type + full-bleed-strip | NEW TYPE | full-bleed-strip | A4 archetype requires it; single image > card grids      | build from scratch   |
 | ~~7~~ | ✅ logos / quote-band (DONE Growth-78)  | NEW VAR  | quote-band       | Built; shipped in A6 MERIDIAN                              | done                 |
 | 8 | `story` section type + founder-split   | NEW TYPE | founder-split    | A2 and A4 archetypes; differentiates from faceless SaaS   | build from scratch   |
 | 9 | process / horizontal-steps             | NEW VAR  | horizontal-steps | A3 event archetype; visually distinct from numbered-stack  | 21st.dev timelines   |
-|10 | testimonial / pull-quote-wall          | NEW VAR  | pull-quote-wall  | A1 archetype; large-format proof vs carousel/grid          | 21st.dev quote       |
+| ~~10~~ | ✅ testimonial / pull-quote-wall (DONE Growth-79) | NEW VAR | pull-quote-wall | Built; CDO spec in out/a1-saas/; catalog registered | done |
 
 **21st.dev notes**: Items 3, 5, 9 have strong analogs in 21st.dev component library (bento, timelines).
 Items 1, 2, 4, 6, 7, 8, 10 are better built from scratch — simpler than adapting a component with
