@@ -17,6 +17,7 @@
 | [studio](studio/theme.yaml) | Studio | Minimal editorial / portfolio | Creative agency, consulting, professional services, architecture | CEO, ops | PASS | 2026-06-15 |
 | [harvest](harvest/theme.yaml) | Harvest | Warm drenched craft / artisan | Craft beverage, brewery, food CPG, artisan hospitality | CEO | PASS | 2026-06-15 |
 | [atelier](atelier/theme.yaml) | Atelier | Ink-pressed deliberate sparse | Creative studio, design consultancy, architecture, portfolio | CEO, ops | PASS | 2026-06-15 |
+| [kiln](kiln/theme.yaml) | Kiln | Earthen material handcraft | Artisan ceramics, craft studio, pottery, local maker, artisan F&B | CEO, ops | PASS | 2026-06-15 |
 
 ---
 
