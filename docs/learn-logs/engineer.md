@@ -537,6 +537,14 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **교훈**: build green·detector CLEAN ≠ 비주얼 정상 — 풀페이지 스샷이 토큰 클로버·거대 셰브론·below-fold blank 3차 적발. 멀티테마는 빌드 파이프라인의 테마 가정을 의심.
 - **Cost**: engineer subagent 3회(67+67+103K tok) / envelope.
 
+### Growth-76 (2026-06-15) — 신규 섹션 type 2종(gallery·story) + hero variant + 라우팅
+
+- **신규 섹션 type**: `gallery`(item_slots src/alt+caption/href, variants masonry-3col/full-bleed-strip/grid-2x2) + `story`(copy_slots headline+body/pull_quote/..., variants founder-split/timeline-year) → `presets/site-sections/catalog.yaml`(8→10 type, additive). hero.variants에 `headline-only` 추가.
+- **컴포넌트**: `HeroHeadlineOnly.astro`(no-JS opacity 1), `Gallery.astro`(masonry-3col + copper hover overlay, gallery-overlay 토큰 + 비-atelier CSS fallback), `Story.astro`(founder-split, 다단락 body \n\n 분리). `[...page].astro`에 import+라우팅 추가(open-closed, 기존 무변경).
+- **스레딩**: `manifest.ts`의 `Section.items`가 이미 `Array<Record<string,unknown>>`이라 gallery items 무변경 통과. `site_manifest.py` items 경로 재사용 → Python 무변경. 테스트 `test_eight_section_types` equality→subset(additive). 42/42 PASS.
+- **교훈**: ① 카탈로그 확장은 equality 검사를 subset로 바꿔 additive 보장. ② 신규 섹션이 기존 items 스레딩을 재사용하면 Python/contract 무변경(open-closed 설계의 배당). ③ theme-specific 토큰(gallery-overlay)은 CSS fallback으로 비-해당 테마 호환.
+- **Cost**: engineer/CDO 통합 백그라운드 agent 1회(~126K tok) / envelope.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
