@@ -1,0 +1,132 @@
+# profiles/terra-ceramics.yaml — TERRA Artisan Ceramics Studio landing
+# Brand: TERRA — an artisan wheel-thrown ceramics studio.
+# Marketing-site track (deliverable_kind=marketing-site); theme=kiln.
+# A4 archetype demo: gallery/parallax-scroll signature section, story/timeline-year,
+# lead/minimal-field. No entity/DDL axis. DEMO_MODE form stub.
+
+version: 1
+
+customer:
+  slug: terra-ceramics
+  display: "TERRA Artisan Ceramics Studio — Landing"
+  status: active
+  contact: demo@terra-ceramics.example
+  industry: artisan-ceramics
+
+# ── Pluggable Stack ─────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# ── Site Block (marketing-site schema) ─────────────────────────────────────
+site:
+  theme: kiln
+
+  pages:
+    - slug: home
+      title: "TERRA Ceramics"
+      seo:
+        title: "TERRA — Made of earth, fire, and time."
+        description: "A small ceramics studio throwing functional stoneware by hand, one kiln at a time. Commissions, workshops, wholesale."
+      sections:
+        # ── Hero ──────────────────────────────────────────────────────────
+        - type: hero
+          variant: brew
+          copy:
+            headline: "Made of earth, fire, and time."
+            subhead: "A small ceramics studio throwing functional stoneware by hand, one kiln at a time."
+          cta:
+            label: "See the work"
+            href: "#lead"
+
+        # ── Gallery: parallax-scroll (signature section) ──────────────────
+        - type: gallery
+          variant: parallax-scroll
+          copy:
+            headline: "The process"
+          items:
+            - src: "texture:clay"
+              alt: "Raw clay chapter — earth as material"
+              subheading: "EARTH"
+              heading: "It begins as mud."
+              body: "We dig and slake local stoneware clay, wedge out the air, and let it rest. Nothing here is poured into a mold."
+            - src: "texture:ash"
+              alt: "Hand-throwing chapter — centered on the wheel"
+              subheading: "HAND"
+              heading: "Thrown, not manufactured."
+              body: "Every piece is centered and pulled on the wheel. Walls vary by a millimeter — that variance is the signature, not the defect."
+            - src: "texture:ember"
+              alt: "Kiln firing chapter — 1280 degrees and patience"
+              subheading: "FIRE"
+              heading: "1,280°C, then patience."
+              body: "A single firing takes fourteen hours and two days to cool. The wood-ash glaze finds its color only in the kiln’s own atmosphere."
+
+        # ── Story: timeline-year ──────────────────────────────────────────
+        - type: story
+          variant: timeline-year
+          copy:
+            headline: "A studio measured in firings, not quarters."
+          items:
+            - year: 2016
+              milestone: "Studio opens in a converted garage"
+            - year: 2019
+              milestone: "First gas kiln fired"
+            - year: 2022
+              milestone: "Wholesale to twelve cafes and restaurants"
+            - year: 2025
+              milestone: "Teaching studio + open-shelf seconds sale"
+
+        # ── Features: two-col-alternating ─────────────────────────────────
+        - type: features
+          variant: two-col-alternating
+          copy:
+            headline: "What we make"
+          items:
+            - title: "Commissions"
+              description: "Bespoke dinnerware sets for restaurants and private clients. Each set is matched to your table, your food, your light. Minimum four settings, six-week lead time."
+            - title: "Workshops"
+              description: "Weekend wheel-throwing sessions for groups of up to six. No experience required — just a willingness to get your hands dirty and ruin a few mugs."
+            - title: "Wholesale"
+              description: "Small-batch standing orders for cafes, restaurants, and hotel F&B programs. We supply on a seasonal cadence so every batch reflects the current kiln firing."
+
+        # ── Lead: minimal-field ───────────────────────────────────────────
+        - type: lead
+          variant: minimal-field
+          copy:
+            headline: "Join the next kiln opening."
+            subhead: "We email once a month when new pieces come out of the kiln. No more than that."
+            button_label: "Notify me"
+            placeholder: "you@email.com"
+            success_message: "You're on the list. See you at the next opening."
+
+        # ── FAQ: single-col ───────────────────────────────────────────────
+        - type: faq
+          variant: single-col
+          copy:
+            headline: "Questions"
+          items:
+            - question: "How long does shipping take?"
+              answer: "Each piece is handmade and kiln-fired. Allow two to three weeks from order to dispatch. Fragile items are packed in double-walled boxes with recycled paper cushioning."
+            - question: "Do you take custom orders?"
+              answer: "Yes. We take commissions for dinnerware sets, individual pieces, and gifts. Contact us with your brief — quantity, form, glaze direction — and we will respond within five days. Lead time is typically six weeks."
+            - question: "How do I book a workshop?"
+              answer: "Workshops run monthly on Saturday mornings, maximum six participants. Send us an email to reserve your spot. We confirm once payment is received. Cancellations with more than seven days notice receive a full refund."
+
+        # ── Footer: minimal ───────────────────────────────────────────────
+        - type: footer
+          variant: minimal
+          copy:
+            brand_name: "TERRA"
+            tagline: "Wheel-thrown stoneware. Made by hand in the studio."
+            legal_notice: "© 2026 TERRA Ceramics. All rights reserved."
+
+# ── Defaults ────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: UTC
+
+# ── Cost tracking ────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 0        # static SSG landing — no runtime LLM
+  prepaid_credits_usd: 0
