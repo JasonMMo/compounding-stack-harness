@@ -35,6 +35,11 @@ import {
   BarChart2,
   CheckCircle,
   Settings,
+  Wheat,
+  Leaf,
+  Droplets,
+  Sprout,
+  Snowflake,
   type LucideProps,
 } from "lucide-react";
 
@@ -64,6 +69,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
   chart: BarChart2,
   check: CheckCircle,
   settings: Settings,
+  // Craft / food-beverage icons (harvest theme)
+  wheat: Wheat,
+  leaf: Leaf,
+  droplets: Droplets,
+  sprout: Sprout,
+  snowflake: Snowflake,
 };
 
 function resolveIcon(name?: string): LucideIcon {
@@ -222,7 +233,7 @@ export function FeatureCarousel({ items, heading, subhead }: FeatureCarouselProp
           4. We additionally render a static visible-by-default first-item block
              in the left panel (see "SSR-visible first item" below).
         */}
-        <div className="relative overflow-hidden rounded-[2.5rem] lg:rounded-[4rem] flex flex-col lg:flex-row min-h-[600px] lg:aspect-video border border-[var(--color-border,rgba(0,0,0,0.1))]">
+        <div className="relative overflow-hidden rounded-[2.5rem] lg:rounded-[4rem] flex flex-col lg:flex-row lg:aspect-video border border-[var(--color-border,rgba(0,0,0,0.1))]" style={{ minHeight: "600px" }}>
 
           {/* ── Left: scrolling tab list ─────────────────────────────────── */}
           <div
