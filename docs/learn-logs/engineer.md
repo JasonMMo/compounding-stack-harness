@@ -515,6 +515,14 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **교훈**: @fontsource 기본 폰트가 impeccable reflex-reject 와 다수 겹침 — 신규 어댑터 폰트 선택 시 reflex 목록 대조 필요. theme.yaml font 토큰이 단일진실이라 1곳 수정으로 전 consumer 반영.
 - **Cost**: engineer subagent 1회(52K tok) / envelope.
 
+### Growth-73 (2026-06-15) — critique 백로그 3패스(quieter+clarify+polish)
+
+- **quieter**: HeroGlowyWaves 웨이브 opacity 0.45→0.22 등 ~절반, 진폭 70→50px, shadowBlur 35→14, radial blob 520→380px/alpha 0.35→0.15. canvas/폰트/accent 불변.
+- **clarify**: gtm-landing.yaml body 카피 em-dash 9→0(콜론/괄호/마침표). detector CLEAN.
+- **polish**: carousel feature image → non-login richer(edu-program/gtm-landing/construction). 한계: auth-gated 라 dashboard 캡처 불가, 공개 캡처 중 richest.
+- **검증**: 단일 빌드 SUCCESS, detector `[]` CLEAN, no-JS h1 opacity 1. 무충돌 다건은 1빌드·1배포 배치가 효율.
+- **Cost**: engineer subagent 1회(56K tok) / envelope.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
