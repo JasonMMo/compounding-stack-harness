@@ -347,3 +347,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [CDO ledger](docs/learn-logs/cdo.md) · [pm ledger](docs/learn-logs/pm.md)
 - **Open loops**: dogfood(우리 M1 GTM 랜딩) 미빌드 / vision-QA live 채점·테마 레퍼런스샷(첫 인도 시 CDO+QA) / toggle-annual pricing·carousel JS(후속 Growth) / vision-verdict.json 스키마 공식화
 - **결정 메모리**: [[marketing-site-track]]
+
+### Growth-66 (2026-06-15) — marketing-site track dogfood: 우리 자신의 M1 GTM 랜딩 + 3 실버그 수정
+
+- **인격/Axis/Milestone**: CTO(통합·프로필·검증·커밋) + CMO(카피) + Engineer(파이프라인·모션·캡처 수정) / theme·frontend·creater / **M1 GTM**(랜딩=리드수집 자산, M1→M2 게이팅 "lead 5건")
+- **1줄 rollup**: `profiles/gtm-landing.yaml`(deliverable_kind=marketing-site, theme=aurora) 로 우리 제품의 M1 GTM 랜딩을 track 으로 실제 산출(dogfood) — scaffold→site-manifest→landing-astro build→ui_check PASS(7/7)·desktop+mobile 풀페이지 시각 검증. Growth-65 가 만든 track 을 처음 end-to-end 로 태움.
+- **dogfood 가 잡은 3 실버그(전부 수정)**: ① 반복 항목 미전달 — catalog→manifest→router 에 `items[]` 슬롯 부재로 feature 카드/FAQ 가 컴포넌트 데모 placeholder 로 렌더 → catalog `item_slots` + manifest 통과·검증 + router 전달 신설. ② `/favicon.svg` 404 — 어댑터에 `public/` 자산 부재 → 테마중립 기본 favicon 배포. ③ **stagger-children 모션이 컨테이너 영구 은닉** — `el.children` 만 reveal 하고 `el` 자신의 motion-hidden 미제거 → Features/Logos(둘다 기본 stagger) 가 모든 방문자에게 opacity:0. + reduced-motion 도 below-fold 은닉(a11y 결함). → 컨테이너 항상 reveal + reduced-motion 시 미은닉, ui_check 캡처도 reduced_motion 적용(vision-QA 신뢰성).
+- **핵심 결정**: 정직성 — testimonial/구체 pricing 제외(M1 pricing 게이트), logos 제외(파트너 로고 자산 無 → placeholder 회피) / 트레일러 실제 co-author=Opus 4.8 반영(§9) / 교훈: **뷰포트 스크린샷만으론 below-fold 결함 못 잡음 — 풀페이지 캡처 필수**(ui_check viewport 검사가 hero 만 봐서 ②③ 놓칠 뻔).
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [CDO ledger](docs/learn-logs/cdo.md)
+- **결정 메모리**: [[marketing-site-track]]
