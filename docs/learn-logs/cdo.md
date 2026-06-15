@@ -104,6 +104,13 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **후속(open)**: carousel 전용 도메인 목업(P2), indigo 보조 accent(/colorize, 선택), 연락폼 실엔드포인트(실고객).
 - Cost: CDO 큐레이션(이 인격) + engineer 위임.
 
+### Growth-74 (2026-06-15) — /colorize: warm 보조 accent 채택
+
+- **팔레트 결정**: indigo 단색 → indigo(주) + **terracotta #AB5527**(보조). 보색·비-네온·AA. 전략 = Committed-leaning Restrained, 보조색 ≲15% 도징. navy+gold/cyan+purple 슬롭 회피.
+- **적용 철학**: 차별화 1포인트("0 bits" = data leaves network 0)에 색 집중 → 단색 절제 유지하며 시선 유도. carousel 인디케이터·FAQ open-state 는 보조 wayfinding.
+- **토큰화**: `accent-warm` semantic 토큰 → 전 landing 재사용(복리). 헤드라인 accent(violet)는 불변 — 2색 위계 명확.
+- Cost: CDO 색 전략(이 인격) + engineer 적용.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
