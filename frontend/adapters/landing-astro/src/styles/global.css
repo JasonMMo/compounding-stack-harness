@@ -26,6 +26,11 @@
 @import "@fontsource-variable/cormorant-garamond";
 @import "@fontsource-variable/source-serif-4";
 
+/* Meridian theme: Syne (display) + DM Sans (body)
+   Geometric-angular display vs open humanist body — precise/credible B2B register. */
+@import "@fontsource-variable/syne";
+@import "@fontsource-variable/dm-sans";
+
 /* font-display: swap is set per @fontsource package default */
 
 /* ── Generated token CSS (injected by build-tokens.mjs) ───────────────────── */
