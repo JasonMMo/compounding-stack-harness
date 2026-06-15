@@ -1,0 +1,156 @@
+# profiles/studio-north.yaml — STUDIO NORTH creative agency landing (A2 archetype)
+# Brand: Studio North — a small design and brand consultancy.
+# "We make brand identities that outlast their launch year."
+# Deliverable: marketing-site, archetype A2 (Creative Agency / Portfolio).
+# Theme: atelier (ink + warm paper + copper; Raleway + Karla).
+# Structure: headline-only hero → gallery/masonry → story/founder-split →
+#   features/single-col-list → testimonial/single-card → cta/with-image → footer/minimal
+# No fake testimonials FROM REAL PEOPLE — fictional client, explicitly framed as demo.
+# Contact form in DEMO_MODE stub.
+
+version: 1
+
+customer:
+  slug: studio-north
+  display: "Studio North — Brand Design Consultancy"
+  status: active
+  contact: hello@studionorth.example
+  industry: creative-agency
+
+# ── Pluggable Stack ─────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# ── Site Block (marketing-site schema) ─────────────────────────────────────
+site:
+  theme: atelier
+
+  pages:
+    - slug: home
+      title: "Studio North"
+      seo:
+        title: "Studio North — Brand Identities That Outlast Their Launch Year"
+        description: "Studio North is a brand design consultancy. We build deliberate brand identities, digital systems, and print work for founders who want something that holds up."
+        og_image: "assets/og-studio-north.png"
+      sections:
+
+        # 1. Hero — headline-only (NEW variant, A2 archetype)
+        #    No imagery. Type at 7xl. Left-aligned. CTA: invite to see the work.
+        - type: hero
+          variant: headline-only
+          copy:
+            headline: "Brand identities that outlast their launch year."
+            subhead: "We design for founders who want something deliberate."
+            eyebrow: "Studio North"
+          cta:
+            label: "See selected work"
+            href: "#work"
+
+        # 2. Gallery — masonry-3col (NEW section type + variant)
+        #    Populated by the harness proof screenshots.
+        #    Honest framing: these are business systems the harness generated,
+        #    shown as the design portfolio of the "harness system" product.
+        - type: gallery
+          variant: masonry-3col
+          copy:
+            headline: "Selected work."
+            subhead: "Business systems and digital products built with the harness."
+          items:
+            - src: /proof/gtm-landing.jpg
+              alt: "GTM launch landing page for compounding-stack-harness"
+              caption: "GTM Landing"
+            - src: /proof/lawfirm-demo.jpg
+              alt: "Law firm matter management system"
+              caption: "Legal practice"
+            - src: /proof/edu-program.jpg
+              alt: "Education program management system"
+              caption: "Education"
+            - src: /proof/construction-demo.jpg
+              alt: "Construction project tracking system"
+              caption: "Construction"
+            - src: /proof/itservice-demo.jpg
+              alt: "IT service desk management system"
+              caption: "IT services"
+            - src: /proof/logistics-demo.jpg
+              alt: "Logistics route and fleet management system"
+              caption: "Logistics"
+            - src: /proof/trading-demo.jpg
+              alt: "Trading order management system"
+              caption: "Trading"
+            - src: /proof/shop-demo.jpg
+              alt: "Retail shop management system"
+              caption: "Retail"
+            - src: /proof/distribution-demo.jpg
+              alt: "Distribution inventory management system"
+              caption: "Distribution"
+
+        # 3. Story — founder-split (NEW section type + variant)
+        #    POV, not a mission statement. Pull quote fills the right column.
+        - type: story
+          variant: founder-split
+          copy:
+            headline: "We started in a spare room with one rule."
+            body: "Studio North began in 2019 when two designers left a large agency on the same Friday. We had different styles and one conviction: that most brand work is too safe to be useful.\n\nWe work with founders, not committees. The best identity decisions happen when the person who has to live with the brand is in the room from the first brief to the final file.\n\nOur process takes six weeks. We deliver a complete brand system: mark, type, colour, digital templates, print specs, and a usage guide that stays relevant for five years. No retainers, no maintenance packages, no dependency."
+            pull_quote: "The best brand work happens when the person who has to live with it is in the room from brief to file."
+
+        # 4. Features — single-col-list (EXISTING variant, spare type-led list)
+        - type: features
+          variant: single-col-list
+          copy:
+            headline: "What we do."
+          items:
+            - title: "Brand identity"
+              description: "Mark, type system, colour palette, and usage documentation. Built to hold up in print and on screen, at 16px and at 3 metres."
+            - title: "Digital brand systems"
+              description: "Component libraries, design tokens, and handoff specs your development team can use without a weekly brief. No bespoke per-page designs."
+            - title: "Print and collateral"
+              description: "Stationery, packaging, signage, and pitch decks that extend the brand without asking the brand to perform."
+            - title: "Brand audit and refresh"
+              description: "If you have an existing identity that has started to feel wrong, we diagnose the source and rebuild from the foundation up. No cosmetic layer over a structural problem."
+
+        # 5. Testimonial — single-card (EXISTING variant)
+        #    One strong quote, large format. Fictional client, clearly a demo.
+        - type: testimonial
+          variant: single-card
+          copy:
+            quote: "Six weeks in, we had a brand that finally matched what we had been building for three years. That is not a marketing claim — that is what our investors said when they saw the deck."
+            author_name: "Fictional Client — Demo"
+            author_title: "Founder"
+            company: "Placeholder Co."
+
+        # 6. CTA — with-image (EXISTING variant)
+        #    Project image beside the contact invite. Image reuses a proof screenshot.
+        - type: cta
+          variant: with-image
+          copy:
+            headline: "Start a project."
+            subhead: "We take two new brand projects per quarter. Tell us what you are building and we will tell you if we are the right studio."
+          assets:
+            - /proof/landing.jpg
+          cta:
+            label: "Get in touch"
+            href: "#contact"
+
+        # 7. Footer — minimal (EXISTING variant)
+        - type: footer
+          variant: minimal
+          copy:
+            brand_name: "Studio North"
+            tagline: "Brand identities that outlast their launch year."
+            legal_notice: "© 2026 Studio North. All work shown is generated by the compounding-stack-harness (demo mode)."
+
+  contact:
+    enabled: true
+    fields: [name, email, message]
+
+# ── Defaults ────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: UTC
+
+# ── Cost tracking ────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 0        # static SSG landing — no runtime LLM
+  prepaid_credits_usd: 0
