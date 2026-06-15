@@ -43,7 +43,7 @@ sections:
     item_slots:
       required: [title, description]
       optional: [icon, image]
-    variants: [three-col-icon, two-col-alternating, single-col-list]
+    variants: [three-col-icon, two-col-alternating, single-col-list, carousel]
 
   pricing:
     label: "Pricing Table"
