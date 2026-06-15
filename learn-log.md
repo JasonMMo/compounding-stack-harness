@@ -185,19 +185,9 @@
 
 CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+pointer entry 를 main §6 에 직접 작성 (integrator 마무리).
 
-> **아카이브**: Growth-4 ~ Growth-12 의 slim 엔트리는 [docs/learn-logs/growth-archive.md](docs/learn-logs/growth-archive.md) 로 이동 (Growth-20, G-9 cap 운영). 회전 정책: slim §6 는 최근 시기 Growth 만 유지, cap 접근 시 오래된 엔트리를 원문 그대로 아카이브로 이동.
+> **아카이브**: Growth-4 ~ Growth-49 의 slim 엔트리는 [docs/learn-logs/growth-archive.md](docs/learn-logs/growth-archive.md) 로 이동 (G-9 cap 운영, 회전 6차 Growth-76). 회전 정책: slim §6 는 최근 시기 Growth 만 유지, cap 접근 시 오래된 엔트리를 원문 그대로 아카이브로 이동.
 
 > Growth-13 ~ Growth-15 (Growth-34 회전) · Growth-16 ~ Growth-20 (Growth-37 회전) · Growth-21 ~ Growth-32 (Growth-59 회전) · Growth-33 ~ Growth-48 (Growth-64 회전) 은 `growth-archive.md` 로 이동. 검색: `python scripts/ledger-index.py --symbol <name>` 또는 인격 ledger pointer.
-
-### Growth-49 (2026-06-13) — Capacitor axis-4 어댑터 스캐폴드 + PWA Phase 1 완료
-
-- **인격/Axis/Milestone**: CTO (설계) / frontend axis-4 pluggable / M2 — App Store/Play Store 제출 경로 확보
-- **Why (1줄)**: PWA가 완성됐으나 iOS App Store는 PWA 배포 불가 → Capacitor native shell이 기존 코드 재작성 없이 스토어 등록 경로를 열어줌
-- **작업**: `frontend/adapters/capacitor/` 신설 (capacitor.config.ts — remote server mode, package.json, README, .gitignore). Phase 1 = 기존 `https://edu-program.n9n.co.kr` live URL wrap; Phase 2 = local bundle + native 플러그인. React Native는 M3-M4 유료 고객 퍼포먼스 불만 시점으로 이연. frontend/adapters/INDEX.md capacitor row 추가.
-- **커밋**: (이후 별도)
-- **교훈 (1줄)**: Capacitor server mode는 웹 코드 변경 없이 스토어 제출 가능 — 단, iOS WebView는 WKWebView 정책(CORS, CSP)이 브라우저보다 엄격하므로 HTTPS + 동일 도메인 API 필수
-- **Revenue/cost**: LLM=없음 / infra 변경 없음 / App Store 등록 → M2 고객 확보 접점 확대
-- **Open loops**: Capacitor android/ ios/ 플랫폼 추가 (npm install 후) / App Store 아이콘·빌드 서명 / 5개 industry demo Coolify 배포 / Supabase adapter 구현
 
 ### Growth-50 (2026-06-13) — 5개 산업 M2 데모 프로필 스캐폴드
 
@@ -430,4 +420,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **1줄 rollup**: gtm(차가운 indigo-glow)과 **정반대 질감**의 맥주 런칭 랜딩 신설 — 신규 **harvest 테마**(앰버-카퍼 drench + 홉그린 + 포말, OKLCH; Big Shoulders Display + Hanken Grotesk off-reflex; 그레인 텍스처 + 탄산 버블, canvas 아님) + **hopwell 프로파일**(hero `brew` variant + 3 pillar=roasted malt/fresh hops/crisp finish + faq + cta). **https://hopwell.n9n.co.kr** LIVE + landing 포털에 카드 추가(2번째 라이브 테마). detector CLEAN, no-JS 가시, 전 섹션 AA. theme 축이 진짜 복리로 도는 것 2번째 증명.
 - **함정/교훈**: ① **빌드 파이프라인이 aurora 하드코딩**이라 harvest 토큰이 덮여 carousel/FAQ가 indigo로 렌더 → `build-tokens-auto.mjs`(manifest의 theme 자동 읽기)로 **theme-aware 빌드** 픽스(전 미래 테마의 전제조건, Docker 무변경). ② **build green·detector CLEAN ≠ 비주얼 정상** — 풀페이지 스크린샷이 3차례 결함 적발(aurora 색 클로버, 거대 셰브론, below-fold 모션 blank). 시각검증 불가결 재확인. ③ 모션 reveal가 headless/below-fold에서 blank → threshold 0 + rootMargin 200px + 800ms fallback(Growth-69 계열 재발). ④ **배포 함정 2종**: `deploy_static_site.py --domain`은 **https:// 스킴 필수**(없으면 422 Invalid URL); docker_compose_domains PATCH 포맷은 `[{"name":svc,"domain":url}]` 배열. ⑤ SSH 터널(8000) 드롭+좀비소켓 점유 시 **다른 로컬 포트(8010)로 재수립** 후 직접 API 호출로 우회.
 - **상세**: [devops ledger](docs/learn-logs/devops.md) · [cdo ledger](docs/learn-logs/cdo.md) · [engineer ledger](docs/learn-logs/engineer.md)
+- **결정 메모리**: [[marketing-site-track]] · [[infra-stack]]
+
+### Growth-76 (2026-06-15) — 첫 구조-다양성 아키타입: A2 에이전시/포트폴리오 (Studio North, atelier 테마) LIVE
+
+- **인격/Axis/Milestone**: CTO(방향·검증·배포·커밋) + CDO(atelier 테마·A2 구성 craft) + Engineer(신규 섹션 type·라우팅) / **theme/section(8축)**·frontend·infra / M1(웹에이전시 데모 다양화)
+- **1줄 rollup**: gtm/hopwell이 "색·텍스트만 다른 같은 패턴"이란 CEO 지적 → 진짜 차별은 **페이지 구조**라는 결론(블루프린트 [landing-pattern-matrix](docs/architecture/landing-pattern-matrix.md)). 첫 구조-차별 아키타입 **A2 Creative Agency/Portfolio** 산출: 신규 섹션 type 2종(**gallery** masonry-3col / **story** founder-split) + hero **headline-only** variant + 3번째 테마 **atelier**(잉크블랙 hero + warm-paper + copper, Raleway+Karla off-reflex). 구성=headline-only hero→masonry 갤러리→창업자 split 스토리→single-col 리스트→단일 후기→다크 CTA→미니멀 푸터. **https://studio-north.n9n.co.kr** LIVE + 포털 "준비 중" placeholder를 라이브 카드로 교체. 카탈로그 8→10 type(additive). detector CLEAN, no-JS h1 opacity 1, 전 섹션 AA(잉크/페이퍼 14.2:1).
+- **함정/교훈**: ① **theme≠pattern 다양성** — 테마축만으론 의뢰인이 구조 동일성을 간파. 섹션 variant × 페이지 아키타입 × 테마의 곱이 진짜 다양성(CEO는 취향, CTO가 분해·카탈로그화). ② **build green·detector CLEAN ≠ 비주얼 정상** 재확인 — CTA `with-image`가 3.7KB 빈 플레이스홀더(example-corp.jpg) 참조해 흰 박스 렌더 → 실제 콘텐츠 스샷(landing.jpg)으로 교체(풀페이지 스샷이 적발). ③ 8000 좀비소켓은 프로세스 소멸로 kill 불가(커널 누수) → deploy 스크립트 API_BASE를 임시 8010 패치 후 `git checkout` 복구(커밋 오염 방지). ④ 백그라운드 에이전트가 세션 cwd를 landing-astro에 고정 → 상대경로 훅 깨짐, 루트로 Set-Location 복구.
+- **잔여(open)**: story `timeline-year` variant items[] 스레딩(A4 때), 갤러리가 dev 대시보드를 "brand work"로 재사용(데모 한정), 매트릭스 잔여 27 variant·A1/A3/A4/A5/A6 아키타입.
+- **상세**: [cdo ledger](docs/learn-logs/cdo.md) · [engineer ledger](docs/learn-logs/engineer.md) · [devops ledger](docs/learn-logs/devops.md)
 - **결정 메모리**: [[marketing-site-track]] · [[infra-stack]]
