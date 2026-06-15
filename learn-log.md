@@ -407,3 +407,9 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **1줄 rollup**: A6 아키타입(B2B 서비스/컨설팅) 첫 인스턴스 **MERIDIAN**(매니지드IT·보안 자문) 산출 → **https://meridian.n9n.co.kr** LIVE(HTTP 200, 5번째 라이브 데모, 포털 카드 5장). 신규: 5번째 테마 **meridian**(쿨스톤 화이트 #F7F8F4 + 딥 포레스트그린 #1A5C3A, Syne+DM Sans, navy 반사 회피·AAA 전반). 신규 섹션 타입 2종 `process`(numbered-stack — 진행 단계, 합법적 시퀀스 넘버링)·`team`(headshot-grid — monogram-initials 폴백, 사진 0) HAVE, `logos/quote-band`(로고-수프 대안: 단일 고객 인용 다크 밴드) HAVE. 카탈로그 13 type(process·team 본격 구현). 전 섹션 **Astro-native(React 아일랜드 0)** — quote-band/numbered-stack/headshot-grid 무JS 렌더. BUILD SUCCESS·impeccable CLEAN·desktop+mobile+no-JS PASS(Growth-69)·forest-green 토큰 라이브 확인. §6 회전 7차(Growth-50~53 아카이브, G-9 199→167).
 - **상세**: [cdo ledger](docs/learn-logs/cdo.md) · [engineer ledger](docs/learn-logs/engineer.md) · [devops ledger](docs/learn-logs/devops.md)
 - **결정 메모리**: [[marketing-site-track]] · [[infra-stack]]
+
+### Growth-79 (2026-06-16) — 공식 Anthropic 스킬 5종 검토 → 1종(webapp-testing)만 채택
+
+- **인격/Axis/Milestone**: CTO(스킬 적합성 판정·vendoring·드리프트 차단) / 툴링 / M1(마케팅사이트 트랙 검증 인프라)
+- **1줄 rollup**: anthropics/skills 5종 검토. **채택 1**: `webapp-testing`(Playwright `with_server.py` 서버 라이프사이클 + recon-then-action — landing-astro 로컬 pre-deploy E2E 갭; ui_check.py 는 서빙 중 URL 가정, 빌드→serve→Playwright 일괄관리 부재). 순수 테스트 인프라라 drift 0, Apache-2.0 동봉 vendoring. **skip 4** — `frontend-design`(vendored impeccable 의 부분집합·중복→경쟁 가이던스 드리프트), `brand-guidelines`(Anthropic 자사 브랜드 주입 = "고객마다 다른 회사로 보인다" thesis 정면 위배), `theme-factory`(10 프리셋+자체 테마 포맷 = 우리 `presets/themes/` 8축 단일진실과 경쟁→축 파편화), `web-artifacts-builder`(claude.ai 단일HTML 아티팩트용 = Astro SSG→Coolify 배포 타깃과 무관). 판정 원칙: 디자인 가이던스/테마 시스템 중복은 거부(드리프트), 보완적 테스트/인프라만 흡수.
+- **결정 메모리**: [[official-skill-adoption-policy]] · [[impeccable-design-skill]]
