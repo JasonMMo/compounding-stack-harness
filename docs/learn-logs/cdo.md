@@ -111,6 +111,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **토큰화**: `accent-warm` semantic 토큰 → 전 landing 재사용(복리). 헤드라인 accent(violet)는 불변 — 2색 위계 명확.
 - Cost: CDO 색 전략(이 인격) + engineer 적용.
 
+### Growth-75 (2026-06-15) — harvest 테마 craft (맥주 런칭, 2번째 테마)
+
+- **테마 컨셉**: gtm의 차가운 indigo-glow와 **정반대 질감** = 따뜻한 크래프트-맥주. 팔레트 = 로스팅 맥아 앰버-카퍼 drench(#9C5118 등) + 신선한 홉그린 + 상쾌한 포말 쿨 하이라이트(OKLCH). impeccable "cream/sand AI 디폴트" 회피 — 따뜻함을 timid near-white 아닌 committed 앰버로 표현.
+- **타이포**: Big Shoulders Display(컨덴스드 "맥주 라벨" 디스플레이) + Hanken Grotesk(휴머니스트 본문). 둘 다 off-reflex, gtm의 Bricolage/Epilogue와 구분되는 별도 브랜드 정체성.
+- **질감**: 그레인 SVG 노이즈 + CSS 탄산 버블(canvas 아님) = 유기적·촉각적. 3 pillar(roasted malt/fresh hops/crisp finish)가 CEO가 요청한 3 감각 직역.
+- **검증**: 풀페이지 시각 게이트 3회(토큰 클로버·셰브론·blank 적발 후 수정). theme 축이 전 고객 재사용 자산으로 복리됨을 2번째 증명.
+- Cost: CDO 테마 디자인(design-agent) + engineer 픽스 위임.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
