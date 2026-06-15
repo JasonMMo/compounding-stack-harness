@@ -19,6 +19,7 @@
 | [atelier](atelier/theme.yaml) | Atelier | Ink-pressed deliberate sparse | Creative studio, design consultancy, architecture, portfolio | CEO, ops | PASS | 2026-06-15 |
 | [kiln](kiln/theme.yaml) | Kiln | Earthen material handcraft | Artisan ceramics, craft studio, pottery, local maker, artisan F&B | CEO, ops | PASS | 2026-06-15 |
 | [meridian](meridian/theme.yaml) | Meridian | Precise cool-stone / B2B advisory | Managed-IT, security advisory, consulting, professional services | CEO, ops, IT | PASS | 2026-06-16 |
+| [flux](flux/theme.yaml) | Flux | Engineered charcoal / data-infra SaaS | Developer tools, observability, API platform, data pipeline | CEO, ops, IT | PASS | 2026-06-16 |
 
 ---
 
