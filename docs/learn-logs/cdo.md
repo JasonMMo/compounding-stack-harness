@@ -96,6 +96,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **후속(open)**: hero glow 톤다운(/quieter, 유저 승인됨) → 다음. carousel /login 이미지 교체(/polish). em-dash(/clarify). critique 재실행해 27→상승 확인 권장.
 - Cost: CDO 폰트 결정(이 인격) + engineer 위임.
 
+### Growth-73 (2026-06-15) — critique 백로그 청산 (27→30 Good)
+
+- **quieter 판정**: indigo glow 절제 채택(반사 완화), 단색 아이덴티티 유지 — 보조 accent(/colorize)는 현 단계 불요(restraint 의도).
+- **polish 이미지 큐레이션**: carousel feature 이미지를 bare login(lawfirm/shop) → 콘텐츠 풍부 공개 캡처(edu-program/gtm-landing/construction)로. 도메인 충실 목업은 후속 자산 작업(auth-gated 한계).
+- **결과**: detector CLEAN, Design Health 27→30(Good 진입). critique→fix→re-critique 트렌드가 craft 복리 루프를 수치로 입증.
+- **후속(open)**: carousel 전용 도메인 목업(P2), indigo 보조 accent(/colorize, 선택), 연락폼 실엔드포인트(실고객).
+- Cost: CDO 큐레이션(이 인격) + engineer 위임.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
