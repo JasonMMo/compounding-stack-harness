@@ -34,17 +34,24 @@ const { title, description, ogImage, siteSlug = '' } = Astro.props
     <slot />
 
     <!-- Motion observer island: IntersectionObserver for scroll-triggered animations.
-         Deferred (type=module). Respects prefers-reduced-motion via CSS.
+         Deferred (type=module). Respects prefers-reduced-motion:
+           - reduced-motion ON  => content shown immediately, no hiding, no observer.
+           - reduced-motion OFF => elements hidden at init, revealed on intersection.
          No autoplay (WCAG 2.2.2). -->
     <script type="module">
       // Motion observer — lightweight IntersectionObserver island.
       // Targets elements with data-motion attribute.
-      // prefers-reduced-motion: CSS @media overrides handle fallback (global.css).
+      // prefers-reduced-motion: when active, we skip hiding entirely so content
+      // is immediately visible (accessibility — no content ever lost).
       const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 
       function initMotion() {
         const targets = document.querySelectorAll('[data-motion]')
         if (!targets.length) return
+
+        // Reduced-motion short-circuit: do not hide or observe anything.
+        // Content stays visible immediately — no scroll-reveal behaviour.
+        if (motionQuery.matches) return
 
         const observer = new IntersectionObserver(
           (entries) => {
@@ -53,11 +60,10 @@ const { title, description, ogImage, siteSlug = '' } = Astro.props
               const el = entry.target
               const preset = el.dataset.motion
 
-              if (motionQuery.matches) {
-                // reduced-motion: CSS handles fade-simple; just make visible
-                el.classList.remove('motion-hidden')
-                el.classList.add('motion-fade-simple')
-              } else if (preset === 'stagger-children') {
+              // Always reveal the container first, regardless of preset.
+              el.classList.remove('motion-hidden')
+
+              if (preset === 'stagger-children') {
                 // Stagger: animate each direct child with delay offset
                 const staggerDelay = Number(el.dataset.staggerDelay ?? 80)
                 Array.from(el.children).forEach((child, i) => {
@@ -66,14 +72,11 @@ const { title, description, ogImage, siteSlug = '' } = Astro.props
                   child.classList.add('motion-stagger-child', 'motion-visible')
                 })
               } else if (preset === 'fade-up' || preset === 'reveal-on-scroll') {
-                el.classList.remove('motion-hidden')
                 el.classList.add('motion-fade-up')
               } else if (preset === 'scale-in') {
-                el.classList.remove('motion-hidden')
                 el.classList.add('motion-scale-in')
               } else {
                 // fade-simple fallback for unknown presets
-                el.classList.remove('motion-hidden')
                 el.classList.add('motion-fade-simple')
               }
 
