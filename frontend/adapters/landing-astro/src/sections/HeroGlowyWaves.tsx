@@ -311,11 +311,7 @@ export function HeroGlowyWaves({ headline, subhead, cta, pills, stats }: HeroGlo
               <>
                 {headline.split(".")[0]}.{" "}
                 <span
-                  className="bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(to right, var(--color-primary,#6D28D9), var(--color-primary-border,#C4B5FD), #fff)",
-                  }}
+                  style={{ color: "var(--color-primary-border,#C4B5FD)", fontWeight: "inherit" }}
                 >
                   {headline.split(".").slice(1).join(".").trim()}
                 </span>
