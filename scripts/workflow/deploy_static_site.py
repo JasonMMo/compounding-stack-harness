@@ -24,6 +24,7 @@ Usage:
 """
 import argparse
 import json
+import os
 import sys
 import time
 import urllib.error
@@ -36,7 +37,10 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-API_BASE = "http://localhost:8000/api/v1"
+# Coolify API base. Override with COOLIFY_API_BASE when the default port is held by
+# a dead/zombie socket (see Growth-75/77 devops ledger) — e.g.
+# COOLIFY_API_BASE=http://localhost:8010/api/v1. No trailing slash.
+API_BASE = os.environ.get("COOLIFY_API_BASE", "http://localhost:8000/api/v1").rstrip("/")
 
 # Reusable fixed assets (preview-deploy.md runbook — never regenerate)
 SERVER_UUID = "n12vdydjpwp81hu5i15n1gsb"
