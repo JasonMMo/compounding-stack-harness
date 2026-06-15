@@ -1,0 +1,16 @@
+# deploy/preview/gtm-landing.compose.yml
+# Coolify dockercompose -- marketing-site static preview at gtm-landing.n9n.co.kr
+# Multi-stage build (scaffold + astro SSG -> nginx). Build context = repo root.
+# profile: gtm-landing  |  theme: aurora  |  DEMO_MODE=1 (contact form stubbed)
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: frontend/adapters/landing-astro/Dockerfile
+      args:
+        PROFILE_SLUG: gtm-landing
+        DEMO_MODE: "1"
+    ports:
+      - "80"
+    restart: unless-stopped
