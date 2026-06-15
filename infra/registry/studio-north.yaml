@@ -1,0 +1,24 @@
+# Digital asset record — studio-north (creative-agency/portfolio landing demo, A2 archetype).
+# Demo/시안: first STRUCTURAL-diversity archetype — page composition itself differs from
+# gtm-landing/hopwell (not just color/text). 3rd marketing-site theme (atelier). Growth-76.
+slug: studio-north
+contact:
+  channel: internal
+  handle: "compounding-stack (own demo asset)"
+preview:
+  subdomain: studio-north.n9n.co.kr
+  coolify_project: null                # filled after deploy
+  coolify_app: null                    # filled after deploy
+  status: deploying
+  deployed_at: null
+  deliverable_kind: marketing-site     # static SSG (no backend) — deploy_static_site.py lane
+  theme: atelier
+  archetype: A2                        # Creative Agency / Portfolio (landing-pattern-matrix)
+production:
+  install_method: remote
+  installed_at: null                   # preview/demo asset — no customer install
+  stack:
+    frontend: landing-astro
+    backend: none
+secret_ref: []                         # static site, no secrets
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5). 정적 SSG — 런타임 LLM 0."
