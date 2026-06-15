@@ -1164,3 +1164,446 @@ class TestStoryTimelineYear:
         site = profile.get("site", {})
         errs = validate_site(site, catalog)
         assert errs == [], f"terra-ceramics.yaml has catalog violations: {errs}"
+
+
+# ---------------------------------------------------------------------------
+# A6 B2B services: catalog structure — process, team, logos/quote-band
+# ---------------------------------------------------------------------------
+
+class TestCatalogA6B2BServices:
+    """Catalog structure tests for A6 archetype additions (Growth-78)."""
+
+    def test_catalog_has_process_and_team(self, catalog):
+        """process and team must exist in catalog after A6 additive update."""
+        sections = catalog["sections"]
+        assert "process" in sections, "process section type must be in catalog"
+        assert "team" in sections, "team section type must be in catalog"
+
+    def test_catalog_has_process_team_and_thirteen_total(self, catalog):
+        """Catalog must contain process + team (A6 additions) for a total of 13 section types.
+        Pre-A6 count: 11 (8 original + gallery + story + lead from Growth-77).
+        Post-A6 count: 13 (+process +team). Header comment in catalog.yaml says 15 for
+        forward reference (stats type is backlog #2); actual YAML key count is 13.
+        """
+        sections = catalog["sections"]
+        assert "process" in sections, "process must be in catalog after A6 additions"
+        assert "team" in sections, "team must be in catalog after A6 additions"
+        assert len(sections) == 13, (
+            f"Expected 13 section types after A6 additions, got {len(sections)}: "
+            f"{sorted(sections.keys())}"
+        )
+
+    def test_process_copy_slots(self, catalog):
+        process = catalog["sections"]["process"]
+        assert "headline" in process["copy_slots"]["required"]
+        assert "subhead" in process["copy_slots"].get("optional", [])
+
+    def test_process_item_slots(self, catalog):
+        process = catalog["sections"]["process"]
+        assert "item_slots" in process
+        required = process["item_slots"]["required"]
+        assert "title" in required
+        optional = process["item_slots"].get("optional", [])
+        assert "description" in optional
+        assert "step_label" in optional
+
+    def test_process_variants(self, catalog):
+        process = catalog["sections"]["process"]
+        variants = process.get("variants", [])
+        assert "numbered-stack" in variants
+        assert "horizontal-steps" in variants
+        assert "split-animation" in variants
+
+    def test_team_copy_slots(self, catalog):
+        team = catalog["sections"]["team"]
+        assert "headline" in team["copy_slots"]["required"]
+        assert "subhead" in team["copy_slots"].get("optional", [])
+
+    def test_team_item_slots(self, catalog):
+        team = catalog["sections"]["team"]
+        assert "item_slots" in team
+        required = team["item_slots"]["required"]
+        assert "name" in required
+        assert "role" in required
+        optional = team["item_slots"].get("optional", [])
+        assert "bio" in optional
+        assert "photo" in optional
+
+    def test_team_variants(self, catalog):
+        team = catalog["sections"]["team"]
+        variants = team.get("variants", [])
+        assert "headshot-grid" in variants
+        assert "headshot-list" in variants
+
+    def test_logos_has_quote_band_variant(self, catalog):
+        logos = catalog["sections"]["logos"]
+        assert "quote-band" in logos.get("variants", [])
+
+    def test_logos_quote_band_copy_slots_additive(self, catalog):
+        """quote-band copy slots are additive — eyebrow remains required, new slots optional."""
+        logos = catalog["sections"]["logos"]
+        assert "eyebrow" in logos["copy_slots"]["required"]
+        optional = logos["copy_slots"].get("optional", [])
+        for slot in ["quote", "author_name", "author_title", "company"]:
+            assert slot in optional, f"logos copy_slots.optional missing '{slot}'"
+
+    def test_logos_existing_variants_unchanged(self, catalog):
+        """Existing logos variants must not be broken by quote-band addition."""
+        logos = catalog["sections"]["logos"]
+        for variant in ["horizontal-scroll", "grid", "marquee-3d"]:
+            assert variant in logos.get("variants", []), (
+                f"logos variant '{variant}' must still be present"
+            )
+
+    def test_original_eight_still_present(self, catalog):
+        """All original 8 types remain present after A6 additions."""
+        sections = catalog["sections"]
+        original = {"hero", "logos", "features", "pricing", "testimonial", "faq", "cta", "footer"}
+        assert original.issubset(set(sections.keys()))
+
+
+# ---------------------------------------------------------------------------
+# A6 B2B services: process section — validation + manifest threading
+# ---------------------------------------------------------------------------
+
+class TestProcessSection:
+    """validate_site + build_site_manifest for process section type (A6)."""
+
+    def _process_site(self, copy, variant=None, items=None):
+        section = {"type": "process", "copy": copy}
+        if variant:
+            section["variant"] = variant
+        if items is not None:
+            section["items"] = items
+        return {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [section],
+                }
+            ]
+        }
+
+    def test_process_numbered_stack_valid(self, catalog):
+        items = [
+            {"title": "Discovery"},
+            {"title": "Design", "description": "We prototype fast."},
+            {"title": "Delivery", "description": "Shipped in 4 weeks.", "step_label": "Step 3"},
+        ]
+        errs = validate_site(
+            self._process_site({"headline": "How it works"}, "numbered-stack", items), catalog
+        )
+        assert errs == [], f"process/numbered-stack should be valid: {errs}"
+
+    def test_process_horizontal_steps_valid(self, catalog):
+        items = [
+            {"title": "Brief"},
+            {"title": "Build"},
+            {"title": "Launch"},
+        ]
+        errs = validate_site(
+            self._process_site({"headline": "Our process"}, "horizontal-steps", items), catalog
+        )
+        assert errs == [], f"process/horizontal-steps should be valid: {errs}"
+
+    def test_process_split_animation_valid(self, catalog):
+        items = [{"title": "Onboard"}, {"title": "Configure"}, {"title": "Go live"}]
+        errs = validate_site(
+            self._process_site({"headline": "How it works"}, "split-animation", items), catalog
+        )
+        assert errs == [], f"process/split-animation should be valid: {errs}"
+
+    def test_process_missing_headline_rejected(self, catalog):
+        errs = validate_site(self._process_site({}), catalog)
+        assert any("headline" in e for e in errs)
+
+    def test_process_invalid_variant_rejected(self, catalog):
+        errs = validate_site(
+            self._process_site({"headline": "Steps"}, variant="no-such-variant"), catalog
+        )
+        assert any("no-such-variant" in e for e in errs)
+
+    def test_process_item_missing_title_flagged(self, catalog):
+        """item missing required 'title' produces a violation."""
+        items = [{"description": "No title here"}]
+        errs = validate_site(
+            self._process_site({"headline": "Steps"}, items=items), catalog
+        )
+        assert any("title" in e for e in errs), f"Expected 'title' violation, got: {errs}"
+
+    def test_process_no_items_valid(self, catalog):
+        """process without items[] is valid (falls back to component demo steps)."""
+        errs = validate_site(self._process_site({"headline": "How it works"}), catalog)
+        assert errs == [], f"process without items should be valid: {errs}"
+
+    def test_process_items_thread_through_manifest(self):
+        """process items[] thread through build_site_manifest verbatim."""
+        profile = {
+            "customer": {"slug": "b2b-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "studio",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "process",
+                                "variant": "numbered-stack",
+                                "copy": {"headline": "How it works", "subhead": "Three steps."},
+                                "items": [
+                                    {"title": "Discovery", "description": "We learn your context."},
+                                    {"title": "Design", "description": "We prototype.", "step_label": "02"},
+                                    {"title": "Deliver"},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        sec = manifest["pages"][0]["sections"][0]
+        assert sec["type"] == "process"
+        assert sec["variant"] == "numbered-stack"
+        assert "items" in sec
+        assert len(sec["items"]) == 3
+        assert sec["items"][0]["title"] == "Discovery"
+        assert sec["items"][0]["description"] == "We learn your context."
+        assert sec["items"][1]["step_label"] == "02"
+        # optional-only item (title only) still present
+        assert sec["items"][2]["title"] == "Deliver"
+        assert "description" not in sec["items"][2]
+
+
+# ---------------------------------------------------------------------------
+# A6 B2B services: team section — validation + manifest threading
+# ---------------------------------------------------------------------------
+
+class TestTeamSection:
+    """validate_site + build_site_manifest for team section type (A6)."""
+
+    def _team_site(self, copy, variant=None, items=None):
+        section = {"type": "team", "copy": copy}
+        if variant:
+            section["variant"] = variant
+        if items is not None:
+            section["items"] = items
+        return {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [section],
+                }
+            ]
+        }
+
+    def test_team_headshot_grid_valid(self, catalog):
+        items = [
+            {"name": "Alice Kim", "role": "CEO"},
+            {"name": "Bob Lee", "role": "CTO", "bio": "20 years in managed services.", "photo": "img/bob.jpg"},
+        ]
+        errs = validate_site(
+            self._team_site({"headline": "Meet the team"}, "headshot-grid", items), catalog
+        )
+        assert errs == [], f"team/headshot-grid should be valid: {errs}"
+
+    def test_team_headshot_list_valid(self, catalog):
+        items = [
+            {"name": "Alice Kim", "role": "CEO", "bio": "Leads strategy."},
+            {"name": "Bob Lee", "role": "CTO"},
+        ]
+        errs = validate_site(
+            self._team_site({"headline": "Our experts"}, "headshot-list", items), catalog
+        )
+        assert errs == [], f"team/headshot-list should be valid: {errs}"
+
+    def test_team_no_photo_valid(self, catalog):
+        """photo is optional — a team item without photo must still pass validation."""
+        items = [
+            {"name": "Alice Kim", "role": "CEO"},  # no photo — monogram fallback
+            {"name": "Bob Lee", "role": "CTO"},    # no photo
+        ]
+        errs = validate_site(
+            self._team_site({"headline": "Team"}, "headshot-grid", items), catalog
+        )
+        assert errs == [], f"team item without photo must be valid (monogram fallback): {errs}"
+
+    def test_team_missing_headline_rejected(self, catalog):
+        errs = validate_site(self._team_site({}), catalog)
+        assert any("headline" in e for e in errs)
+
+    def test_team_invalid_variant_rejected(self, catalog):
+        errs = validate_site(
+            self._team_site({"headline": "Team"}, variant="unknown-layout"), catalog
+        )
+        assert any("unknown-layout" in e for e in errs)
+
+    def test_team_item_missing_name_flagged(self, catalog):
+        """item missing required 'name' produces a violation."""
+        items = [{"role": "Engineer"}]  # name missing
+        errs = validate_site(self._team_site({"headline": "Team"}, items=items), catalog)
+        assert any("name" in e for e in errs), f"Expected 'name' violation, got: {errs}"
+
+    def test_team_item_missing_role_flagged(self, catalog):
+        """item missing required 'role' produces a violation."""
+        items = [{"name": "Alice Kim"}]  # role missing
+        errs = validate_site(self._team_site({"headline": "Team"}, items=items), catalog)
+        assert any("role" in e for e in errs), f"Expected 'role' violation, got: {errs}"
+
+    def test_team_no_items_valid(self, catalog):
+        """team without items[] is valid (falls back to component demo cards)."""
+        errs = validate_site(self._team_site({"headline": "The team"}), catalog)
+        assert errs == [], f"team without items should be valid: {errs}"
+
+    def test_team_items_thread_through_manifest(self):
+        """team items[] thread through build_site_manifest; photo absence preserved."""
+        profile = {
+            "customer": {"slug": "b2b-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "studio",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "team",
+                                "variant": "headshot-grid",
+                                "copy": {"headline": "Meet the team"},
+                                "items": [
+                                    {"name": "Alice Kim", "role": "CEO", "photo": "img/alice.jpg"},
+                                    {"name": "Bob Lee", "role": "CTO", "bio": "20 years exp."},
+                                    {"name": "Cara Mia", "role": "COO"},  # no photo, no bio
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        sec = manifest["pages"][0]["sections"][0]
+        assert sec["type"] == "team"
+        assert sec["variant"] == "headshot-grid"
+        assert "items" in sec
+        assert len(sec["items"]) == 3
+        assert sec["items"][0]["name"] == "Alice Kim"
+        assert sec["items"][0]["photo"] == "img/alice.jpg"
+        assert sec["items"][1]["bio"] == "20 years exp."
+        assert "photo" not in sec["items"][1]   # absent in input, absent in output
+        assert sec["items"][2]["name"] == "Cara Mia"
+        assert "photo" not in sec["items"][2]
+        assert "bio" not in sec["items"][2]
+
+
+# ---------------------------------------------------------------------------
+# A6 B2B services: logos/quote-band — validation + manifest threading
+# ---------------------------------------------------------------------------
+
+class TestLogosQuoteBand:
+    """validate_site + build_site_manifest for logos/quote-band variant (A6)."""
+
+    def _logos_site(self, copy, variant=None):
+        section = {"type": "logos", "copy": copy}
+        if variant:
+            section["variant"] = variant
+        return {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [section],
+                }
+            ]
+        }
+
+    def test_logos_quote_band_valid_minimal(self, catalog):
+        """logos/quote-band with eyebrow (empty) + quote passes."""
+        errs = validate_site(
+            self._logos_site(
+                {"eyebrow": "", "quote": "They transformed our ops.", "author_name": "Jane Doe"},
+                "quote-band",
+            ),
+            catalog,
+        )
+        assert errs == [], f"logos/quote-band minimal should be valid: {errs}"
+
+    def test_logos_quote_band_valid_full(self, catalog):
+        """logos/quote-band with all optional quote-band slots passes."""
+        copy = {
+            "eyebrow": "",
+            "quote": "Best managed services partner we have worked with.",
+            "author_name": "Jane Doe",
+            "author_title": "CTO",
+            "company": "Acme Corp",
+        }
+        errs = validate_site(self._logos_site(copy, "quote-band"), catalog)
+        assert errs == [], f"logos/quote-band full should be valid: {errs}"
+
+    def test_logos_missing_eyebrow_rejected(self, catalog):
+        """logos requires eyebrow (may be empty string but key must be present)."""
+        errs = validate_site(
+            self._logos_site({"quote": "Great service."}, "quote-band"), catalog
+        )
+        assert any("eyebrow" in e for e in errs), f"Missing eyebrow must be flagged: {errs}"
+
+    def test_logos_quote_band_invalid_variant_rejected(self, catalog):
+        """Confirm quote-band is valid but made-up variant is still rejected."""
+        errs = validate_site(
+            self._logos_site({"eyebrow": "Clients"}, "not-a-variant"), catalog
+        )
+        assert any("not-a-variant" in e for e in errs)
+
+    def test_logos_existing_variants_still_valid(self, catalog):
+        """All three pre-existing logos variants must still pass after quote-band addition."""
+        for variant in ["horizontal-scroll", "grid", "marquee-3d"]:
+            errs = validate_site(
+                self._logos_site({"eyebrow": "Trusted by"}, variant), catalog
+            )
+            assert errs == [], f"logos/{variant} must still be valid: {errs}"
+
+    def test_logos_quote_band_copy_threads_through_manifest(self):
+        """quote-band copy slots (quote, author_name, etc.) thread verbatim into manifest."""
+        profile = {
+            "customer": {"slug": "b2b-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "studio",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "logos",
+                                "variant": "quote-band",
+                                "copy": {
+                                    "eyebrow": "",
+                                    "quote": "Best partners we have ever had.",
+                                    "author_name": "Jane Doe",
+                                    "author_title": "CTO",
+                                    "company": "Acme Corp",
+                                },
+                                "assets": ["img/acme-logo.svg"],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        sec = manifest["pages"][0]["sections"][0]
+        assert sec["type"] == "logos"
+        assert sec["variant"] == "quote-band"
+        copy = sec["copy"]
+        assert copy["eyebrow"] == ""
+        assert copy["quote"] == "Best partners we have ever had."
+        assert copy["author_name"] == "Jane Doe"
+        assert copy["author_title"] == "CTO"
+        assert copy["company"] == "Acme Corp"
+        assert "items" not in sec  # logos has no item_slots
