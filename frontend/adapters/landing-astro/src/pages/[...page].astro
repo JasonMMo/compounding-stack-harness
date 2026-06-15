@@ -17,6 +17,7 @@ import type { GetStaticPaths } from 'astro'
 import BaseLayout from '../layouts/BaseLayout.astro'
 import Hero from '../sections/Hero.astro'
 import { HeroGlowyWaves } from '../sections/HeroGlowyWaves'
+import HeroBrewBubbles from '../sections/HeroBrewBubbles.astro'
 import { ProofMarquee3d } from '../sections/ProofMarquee3d'
 import { FeatureCarousel } from '../sections/FeatureCarousel'
 import Logos from '../sections/Logos.astro'
@@ -93,6 +94,16 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
             cta={heroCta}
             pills={section.pills}
             stats={section.stats}
+          />
+        )
+      }
+      // brew variant: warm-organic hero with grain texture + effervescence bubbles.
+      if (section.variant === 'brew') {
+        return (
+          <HeroBrewBubbles
+            copy={section.copy ?? {}}
+            cta={section.cta}
+            motionPreset={motionPreset}
           />
         )
       }
