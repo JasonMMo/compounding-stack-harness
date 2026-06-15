@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>랜딩·홈페이지 제작 데모 — Compounding Stack</title>
+  <meta name="description" content="웹에이전시 수준의 랜딩페이지·브랜드 사이트를 빠르고 합리적으로. 테마 기반 자동 생성 랜딩 데모를 직접 확인해보세요.">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1b1033;
+      --ink-2: #2c1a55;
+      --accent: #6d28d9;
+      --accent-hover: #5b21b6;
+      --accent-soft: #f3effe;
+      --text: #1a202c;
+      --text-muted: #64748b;
+      --bg: #faf9fe;
+      --card-bg: #ffffff;
+      --border: #e7e2f2;
+      --radius: 14px;
+      --shadow: 0 2px 8px rgba(45,26,85,.08), 0 0 0 1px rgba(45,26,85,.05);
+      --shadow-hover: 0 10px 28px rgba(45,26,85,.16), 0 0 0 1px rgba(45,26,85,.08);
+    }
+
+    body {
+      font-family: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 130%);
+      color: white;
+      text-align: center;
+      padding: 3.75rem 1.5rem 2.75rem;
+    }
+    .header-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.22);
+      color: rgba(255,255,255,.92);
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      padding: .3rem .85rem;
+      border-radius: 999px;
+      margin-bottom: 1.2rem;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: .75rem;
+    }
+    header p {
+      font-size: 1rem;
+      color: rgba(255,255,255,.8);
+      max-width: 560px;
+      margin: 0 auto 1.8rem;
+    }
+    .header-cta {
+      display: inline-block;
+      background: white;
+      color: var(--ink);
+      font-weight: 700;
+      font-size: .9rem;
+      padding: .65rem 1.4rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .header-cta:hover { opacity: .88; }
+
+    /* ── Main ── */
+    main {
+      flex: 1;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+      width: 100%;
+    }
+    .section-label {
+      text-align: center;
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: .6rem;
+    }
+    .section-title {
+      text-align: center;
+      font-size: clamp(1.25rem, 3vw, 1.6rem);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: .5rem;
+    }
+    .section-desc {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: .95rem;
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+    }
+
+    /* ── Demo Grid ── */
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+    .demo-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: .9rem;
+      transition: box-shadow .2s, transform .2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .demo-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+    }
+    .card-icon { font-size: 2rem; line-height: 1; }
+    .card-meta { display: flex; align-items: center; gap: .5rem; }
+    .card-tag {
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: .2rem .55rem;
+      border-radius: 999px;
+    }
+    .card-title { font-size: 1.15rem; font-weight: 700; color: var(--ink); margin: 0; }
+    .card-desc { font-size: .88rem; color: var(--text-muted); line-height: 1.65; flex: 1; }
+    .card-domains { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .domain-chip {
+      font-size: .72rem;
+      color: #475569;
+      background: #f1f0f7;
+      padding: .18rem .5rem;
+      border-radius: 4px;
+    }
+    .card-link {
+      margin-top: .25rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .card-link::after { content: '→'; }
+
+    /* ── Soon card ── */
+    .demo-card.soon { opacity: .7; cursor: default; }
+    .demo-card.soon:hover { transform: none; box-shadow: var(--shadow); }
+
+    /* ── Divider ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 140%);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: white;
+    }
+    .cta-section h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: .6rem; }
+    .cta-section p { color: rgba(255,255,255,.78); font-size: .9rem; margin-bottom: 1.5rem; }
+    .cta-btn {
+      display: inline-block;
+      background: white;
+      color: var(--ink);
+      font-weight: 700;
+      font-size: .9rem;
+      padding: .7rem 1.6rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .cta-btn:hover { opacity: .88; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: .78rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 640px) {
+      .demo-grid { grid-template-columns: 1fr; }
+      header { padding: 2.75rem 1rem 2.25rem; }
+      main { padding: 2rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">웹에이전시급 랜딩 · 빠르고 합리적으로</div>
+  <h1>랜딩페이지·홈페이지<br>데모를 직접 확인하세요</h1>
+  <p>테마 기반으로 전환 최적화된 랜딩을 자동 생성합니다.<br>아래 데모를 클릭해 실제 결과물을 확인하세요.</p>
+  <a href="https://intake.n9n.co.kr/" class="header-cta">우리 사이트 문의하기 →</a>
+</header>
+
+<main>
+  <p class="section-label">랜딩·홈페이지 데모</p>
+  <h2 class="section-title">자동 생성된 랜딩, 직접 보세요</h2>
+  <p class="section-desc">아래 카드를 클릭하면 실제 동작하는 랜딩 데모로 이동합니다.</p>
+
+  <div class="demo-grid">
+
+    <a class="demo-card" href="https://gtm-landing.n9n.co.kr" target="_blank" rel="noopener">
+      <span class="card-icon">🚀</span>
+      <div class="card-meta">
+        <span class="card-tag">B2B SaaS · 테크</span>
+      </div>
+      <h3 class="card-title">SaaS / 제품 런칭 랜딩</h3>
+      <p class="card-desc">전환 중심 단일 페이지. 히어로·핵심가치 3선·FAQ·CTA·문의폼을 하나의 흐름으로. Aurora 테마(대담한 그라데이션).</p>
+      <div class="card-domains">
+        <span class="domain-chip">Aurora 테마</span>
+        <span class="domain-chip">반응형</span>
+        <span class="domain-chip">전환 최적화</span>
+        <span class="domain-chip">문의폼</span>
+      </div>
+      <span class="card-link">데모 보기</span>
+    </a>
+
+    <div class="demo-card soon">
+      <span class="card-icon">🎨</span>
+      <div class="card-meta">
+        <span class="card-tag">준비 중</span>
+      </div>
+      <h3 class="card-title">Studio 테마 (미니멀 에디토리얼)</h3>
+      <p class="card-desc">크리에이티브 에이전시·컨설팅·전문 서비스용 미니멀 포트폴리오 스타일. 곧 공개됩니다.</p>
+      <div class="card-domains">
+        <span class="domain-chip">Studio 테마</span>
+        <span class="domain-chip">포트폴리오</span>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider">
+
+  <div class="cta-section">
+    <h2>우리 브랜드에 맞는 사이트가 필요하신가요?</h2>
+    <p>업종·톤·페이지 구성에 맞춰 빠르게 시안을 만들어드립니다. 먼저 요구사항을 남겨주세요.</p>
+    <a href="https://intake.n9n.co.kr/" class="cta-btn">무료 사이트 상담 신청 →</a>
+  </div>
+</main>
+
+<footer>
+  © 2026 Compounding Stack — <a href="https://intake.n9n.co.kr/" style="color:inherit">intake.n9n.co.kr</a>
+</footer>
+
+</body>
+</html>
