@@ -34,14 +34,24 @@ site:
         og_image: "assets/og-home.png"
       sections:
         - type: hero
-          variant: split-left
+          variant: glowy-waves
           copy:
             headline: "Build business systems. Zero dev team."
             subhead: "Self-hosted AI agents generate your full-stack app — inside your network, on your chosen stack."
-            supporting_text: "Three personas — CEO, ops staff, IT staff — each get what they need from a single in-house harness that never phones home."
           cta:
             label: "Book a free assessment"
             href: "#contact"
+          pills:
+            - "Self-host, zero data egress"
+            - "Swap stack in one line"
+            - "Cost instrumented by design"
+          stats:
+            - label: "Domain presets"
+              value: "14+"
+            - label: "Stack adapters"
+              value: "5"
+            - label: "Data leaves network"
+              value: "0 bits"
 
         # NOTE: logos section intentionally omitted — we have no partner/stack logo
         # assets yet, and the adapter renders a "Logo assets not yet added"
