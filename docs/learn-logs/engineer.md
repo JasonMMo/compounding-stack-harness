@@ -477,6 +477,15 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 
 - Cost: engineer subagent 다회 / envelope 반환.
 
+### Growth-68 (2026-06-15) — 첫 React-island section variant: glowy-waves hero
+
+- **무엇**: 순수 Astro SSG였던 landing-astro 에 React 아일랜드 인프라 도입 + 21st.dev "Glowy Waves Hero"를 재사용 hero variant 로 적응.
+- **인프라**: `@astrojs/react ^3.6.2` + `react/react-dom ^18.3.1` + `framer-motion ^11.11.17` + `lucide-react ^0.462.0` (+types). `astro.config.mjs` react() integration. `npm install` 로 lock 재생성(Dockerfile npm ci 대응). **나머지 페이지 SSG 불변** — `client:visible` 로 hero 아일랜드만 hydrate(번들 121.77KB/40.46KB gzip).
+- **컴포넌트** `src/sections/HeroGlowyWaves.tsx`: shadcn `@/components/ui/button` 제거→토큰 anchor, 하드코딩 카피→props(headline/subhead/cta/pills/stats, 옵션 fallback), canvas glow + framer-motion entrance 유지, `prefers-reduced-motion` 준수(BaseLayout 모션 수정과 동일 — reduced 시 즉시 표시).
+- **파이프라인**: `manifest.ts` Section 에 variant/pills/stats(StatItem) optional 추가, `[...page].astro` 에 variant==glowy-waves 분기(default hero 무변경, regression-safe), `catalog.yaml` hero.variants 등록, `site_manifest.py` items[] 패턴대로 pills/stats 스레딩. **test_site_manifest 42/42 PASS**, `astro build` SUCCESS(5.31s).
+- **교훈**: ① 21st.dev 소스는 `__next_f.push` SSR 페이로드에 인라인 — curl+파싱으로 추출(로그인·버튼 불필요, WebFetch는 SPA 셸만). ② IDE TS "Cannot find module" = npm install 전 stale LSP, `astro build`(vite) 통과가 출고 기준. ③ headline 그래디언트가 첫 마침표 split 의존 → `headline_accent` 슬롯화 open-loop.
+- **Cost**: engineer subagent 1회(89K tok) / envelope 반환.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
