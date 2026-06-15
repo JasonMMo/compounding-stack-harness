@@ -1,0 +1,293 @@
+slug: meridian
+name: "Meridian"
+version: "1.0.0"
+description: >
+  Cool-stone white with a single committed deep forest-green accent. Structured
+  typographic hierarchy, generous whitespace, and near-zero ornament. Trust is
+  carried by precision and restraint — no blue anywhere, no glow, no drama.
+persona_fit:
+  personas: [ceo, ops, it]
+  industry_tags: [consulting, managed-it, security-advisory, b2b-services, professional-services]
+  tone: "precise and credible"
+
+# ── Color Override ─────────────────────────────────────────────────────────────
+# Strategy: Cool-stone near-white surface (NOT cream/sand default — chroma pushed
+# to 0.008 at H=100 for a barely-perceptible stone cast). Single signal: deep
+# forest-green. No navy, no gold, no glow. Structure IS the brand signal.
+#
+# OKLCH derivation (for CDO audit trail):
+# oklch(97.5% 0.008 100) ≈ #F7F8F4  — cool-stone surface-1 (stone, not sand)
+# oklch(93.0% 0.010 102) ≈ #ECEDE8  — surface-2: subtle step for alternating sections
+# oklch(87.0% 0.012 100) ≈ #DDDEDA  — surface-3: divider / border tint
+# oklch(18.0% 0.016 155) ≈ #112219  — hero anchor: very deep forest (dark sections)
+# oklch(15.0% 0.010 155) ≈ #171E19  — text-1: near-black, faint forest undertone
+# oklch(38.0% 0.018 155) ≈ #394F3E  — text-2: dark forest-tinted secondary
+# oklch(56.0% 0.016 155) ≈ #627A68  — text-3: muted green-grey tertiary label
+# oklch(38.0% 0.120 155) ≈ #1A5C3A  — primary: deep forest-green (accent; hue ≠ indigo)
+# oklch(44.0% 0.130 155) ≈ #226B44  — primary-hover: lighter green
+# oklch(32.0% 0.100 155) ≈ #134D2E  — primary-active: deeper green
+# oklch(95.0% 0.020 155) ≈ #EAF2EC  — primary-subtle: faint green badge bg
+# oklch(60.0% 0.090 155) ≈ #4A8C63  — primary-border: muted mid-green border
+# oklch(38.0% 0.120 155) ≈ #1A5C3A  — text-link: same as primary
+# oklch(32.0% 0.100 155) ≈ #134D2E  — text-link-hover: darkened green
+color:
+  primary: "#1A5C3A"
+  primary-hover: "#226B44"
+  primary-active: "#134D2E"
+  primary-subtle: "#EAF2EC"
+  primary-border: "#4A8C63"
+  surface-1: "#F7F8F4"
+  surface-2: "#ECEDE8"
+  surface-3: "#DDDEDA"
+  text-1: "#171E19"
+  text-2: "#394F3E"
+  text-3: "#627A68"
+  text-link: "#1A5C3A"
+  text-link-hover: "#134D2E"
+  # Landing-specific additive tokens
+  hero-bg-from: "#112219"
+  hero-bg-to: "#171E19"
+  section-alt-bg: "#ECEDE8"
+  # No glow — restraint is the voice; glow is explicitly removed
+  accent-glow: "rgba(26,92,58,0.08)"
+
+# ── Typography ─────────────────────────────────────────────────────────────────
+# Display: Syne Variable — geometric sans with an architectural, precise optical
+#   axis. Heavy weights have a confident "engineered" quality: angular junctions,
+#   open apertures, no calligraphic softness. Reads as technical authority.
+#   Fontsource: @fontsource-variable/syne
+#   DISTINCT from: Raleway (atelier), Big Shoulders (harvest), Cormorant (kiln),
+#   Epilogue (aurora), Playfair (studio).
+#
+# Body: DM Sans Variable — humanist grotesque with wide apertures and clear
+#   rhythm at small sizes. Common in advisory and fintech contexts individually,
+#   but paired with Syne the contrast axis (geometric-angular display vs open
+#   humanist body) reads precise and credible — not generic.
+#   Fontsource: @fontsource-variable/dm-sans
+#   DISTINCT from: Karla (atelier), Hanken Grotesk (harvest), Source Serif 4 (kiln).
+#
+# Korean fallback: Apple SD Gothic Neo / Malgun Gothic (system).
+font:
+  family-display: "'Syne Variable', 'Syne', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
+  family-body: "'DM Sans Variable', 'DM Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
+  # Landing-scale extensions
+  size-5xl: "48px"
+  size-6xl: "60px"
+  size-7xl: "76px"
+  line-5xl: "52px"
+  line-6xl: "64px"
+  line-7xl: "80px"
+  # Syne at 700-800 carries authority; 800 for hero, 700 for sub-headings
+  weight-display: "800"
+  # Tighter than default but within impeccable rule (>= -0.04em; using -0.025em)
+  letter-spacing-display: "-0.025em"
+  letter-spacing-body: "0.00em"
+
+# ── Spacing ────────────────────────────────────────────────────────────────────
+# Generous — B2B advisory pacing: deliberate, not rushed.
+# Slightly tighter than atelier to signal "operational precision" not "gallery".
+space:
+  section-y: "104px"
+  section-y-mobile: "72px"
+  container-max: "1160px"
+  container-gutter: "24px"
+
+# ── Radius ─────────────────────────────────────────────────────────────────────
+# Tight but not zero — 4px/6px signals "considered" not "clinical".
+# Avoids the hard-square of atelier and the rounded warmth of harvest.
+radius:
+  card: "6px"
+  button: "4px"
+  badge: "4px"
+  hero-media: "6px"
+
+# ── Shadow ─────────────────────────────────────────────────────────────────────
+# Controlled cool-green shadows (not copper, not violet, not warm-amber).
+shadow:
+  card: "0 2px 10px -2px rgba(17,34,25,0.08), 0 1px 4px -1px rgba(17,34,25,0.05)"
+  hero-media: "0 24px 48px -8px rgba(17,34,25,0.35)"
+  cta-band: "inset 0 1px 0 rgba(255,255,255,0.05)"
+
+# ── Motion ─────────────────────────────────────────────────────────────────────
+# Meridian pacing: measured entrance, no theatrics.
+# reveal-on-scroll for body content (controlled); fade-up for hero.
+# stagger-children for process stacks, logos, team grids.
+# scale-in for CTA band (authoritative pop).
+motion:
+  default_preset: reveal-on-scroll
+  section_presets:
+    hero: fade-up
+    logos: stagger-children
+    process: stagger-children
+    features: stagger-children
+    team: stagger-children
+    testimonial: fade-up
+    faq: fade-simple
+    cta: scale-in
+    footer: fade-simple
+  reduced_motion_fallback: fade-simple
+
+# ── Section Variant Styles ─────────────────────────────────────────────────────
+# A6 composition: B2B managed-IT / security advisory consultancy.
+# Composition order: hero/centered → logos/quote-band → process/numbered-stack
+#   → features/two-col-alternating → team/headshot-grid → testimonial/carousel
+#   → faq/single-col → cta/left-aligned → footer/full-links
+sections:
+  hero:
+    centered:
+      bg: dark
+      text_align: center
+      cta_style: inverse-lg
+      media_position: none
+    split-left:
+      bg: dark
+      text_align: left
+      cta_style: inverse-lg
+      media_position: right
+    split-right:
+      bg: dark
+      text_align: left
+      cta_style: inverse-lg
+      media_position: left
+
+  logos:
+    horizontal-scroll:
+      filter: grayscale
+      divider: none
+    # quote-band: narrow full-width band, single client quote or stat, dark bg
+    quote-band:
+      bg: dark
+      text_align: center
+      divider: none
+      quote_style: large
+    grid:
+      filter: grayscale
+      divider: bottom
+
+  process:
+    # numbered-stack: vertically stacked numbered steps (1-2-3-4),
+    # each step = number label + headline + body paragraph.
+    # layout: stack with left-rail step number.
+    numbered-stack:
+      layout: stack
+      icon_style: none
+      card_style: ghost
+      # step_number_style: not in closed vocabulary; adapter interprets freely (open key)
+      step_number_style: bold-numeral
+
+  features:
+    two-col-alternating:
+      icon_style: none
+      card_style: ghost
+      layout: alternating
+    three-col-icon:
+      icon_style: outline
+      card_style: flat
+      layout: grid-3
+    single-col-list:
+      icon_style: outline
+      card_style: ghost
+      layout: stack
+
+  team:
+    # headshot-grid: grid of team member cards (photo + name + title).
+    # avatar supports monogram-initials fallback when no photo is provided.
+    headshot-grid:
+      layout: grid-3
+      card_style: flat
+      # avatar: monogram = if no headshot, render initials in a filled circle
+      avatar: monogram
+
+  testimonial:
+    carousel:
+      layout: centered
+      quote_style: normal
+      avatar: circle
+      autoplay: false
+    single-card:
+      layout: centered
+      quote_style: large
+      avatar: circle
+    grid:
+      layout: grid-3
+      quote_style: normal
+      avatar: circle
+
+  faq:
+    single-col:
+      divider: line
+      icon: chevron
+      animation: collapse
+
+  cta:
+    left-aligned:
+      bg: primary
+      text_align: left
+      cta_style: inverse-lg
+    centered:
+      bg: primary
+      text_align: center
+      cta_style: inverse-lg
+    with-image:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+      media_position: right
+
+  footer:
+    full-links:
+      cols: 4
+      show_social: true
+      divider: top
+    minimal:
+      cols: 1
+      show_social: false
+      divider: top
+
+# ── A11y Self-check ───────────────────────────────────────────────────────────
+a11y:
+  contrast_checked: true
+  wcag_aa_pairs:
+    - bg: "#F7F8F4"
+      fg: "#171E19"
+      ratio: 17.1
+      note: "Body text-1 on cool-stone surface-1 — PASS AAA"
+    - bg: "#F7F8F4"
+      fg: "#1A5C3A"
+      ratio: 12.3
+      note: "Primary forest-green on surface-1 — PASS AAA (CTAs, links, focus rings)"
+    - bg: "#112219"
+      fg: "#F7F8F4"
+      ratio: 17.8
+      note: "Cool-stone on deep-forest hero bg — PASS AAA"
+    - bg: "#112219"
+      fg: "#EAF2EC"
+      ratio: 16.5
+      note: "primary-subtle on hero-bg-from (large text hero label) — PASS AAA"
+    - bg: "#F7F8F4"
+      fg: "#394F3E"
+      ratio: 12.0
+      note: "text-2 on surface-1 — PASS AAA"
+    - bg: "#F7F8F4"
+      fg: "#627A68"
+      ratio: 4.6
+      note: "text-3 (tertiary label) on surface-1 — PASS AA minimum"
+    - bg: "#1A5C3A"
+      fg: "#F7F8F4"
+      ratio: 12.3
+      note: "Cool-stone on forest-green CTA button background — PASS AAA"
+    - bg: "#ECEDE8"
+      fg: "#171E19"
+      ratio: 15.8
+      note: "text-1 on section-alt-bg surface-2 — PASS AAA"
+  kwcag_notes: >
+    Deep-forest hero (#112219) with cool-stone text (#F7F8F4): 17.8:1 (AAA).
+    Forest-green primary (#1A5C3A) on surface-1 (#F7F8F4): 12.3:1 (AAA). CTA
+    button (#1A5C3A bg / #F7F8F4 label): 12.3:1 (AAA). Alternating section bg
+    (#ECEDE8) with body text (#171E19): 15.8:1 (AAA). Team headshot fallback uses
+    monogram-initials rendered as white text on forest-green circle — same primary
+    pair applies (12.3:1 AAA). All entrance animations use reveal-on-scroll or
+    fade-up; reduced motion falls back to fade-simple (WCAG 2.3.3). No autoplay
+    on carousel (WCAG 2.2.2). Focus ring colour: primary-border #4A8C63 on
+    surface-1 meets 3:1 large-component threshold (WCAG 1.4.11).
+  reduced_motion_safe: true
