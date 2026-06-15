@@ -125,38 +125,38 @@ export function HeroGlowyWaves({ headline, subhead, cta, pills, stats }: HeroGlo
       wavePalette: [
         {
           offset: 0,
-          amplitude: 70,
+          amplitude: 50,
           frequency: 0.003,
-          color: resolveColor(["--color-primary"], 0.8),
-          opacity: 0.45,
+          color: resolveColor(["--color-primary"], 0.5),
+          opacity: 0.22,
         },
         {
           offset: Math.PI / 2,
-          amplitude: 90,
+          amplitude: 65,
           frequency: 0.0026,
-          color: resolveColor(["--color-accent-glow", "--color-primary"], 0.7),
-          opacity: 0.35,
+          color: resolveColor(["--color-accent-glow", "--color-primary"], 0.4),
+          opacity: 0.16,
         },
         {
           offset: Math.PI,
-          amplitude: 60,
+          amplitude: 40,
           frequency: 0.0034,
-          color: resolveColor(["--color-primary-hover", "--color-primary"], 0.65),
-          opacity: 0.3,
+          color: resolveColor(["--color-primary-hover", "--color-primary"], 0.35),
+          opacity: 0.12,
         },
         {
           offset: Math.PI * 1.5,
-          amplitude: 80,
+          amplitude: 55,
           frequency: 0.0022,
-          color: resolveColor(["--color-primary-active", "--color-primary"], 0.25),
-          opacity: 0.25,
+          color: resolveColor(["--color-primary-active", "--color-primary"], 0.18),
+          opacity: 0.09,
         },
         {
           offset: Math.PI * 2,
-          amplitude: 55,
+          amplitude: 35,
           frequency: 0.004,
-          color: resolveColor(["--color-primary-border", "--color-primary"], 0.2),
-          opacity: 0.2,
+          color: resolveColor(["--color-primary-border", "--color-primary"], 0.14),
+          opacity: 0.07,
         },
       ] satisfies WaveConfig[],
     });
@@ -219,7 +219,7 @@ export function HeroGlowyWaves({ headline, subhead, cta, pills, stats }: HeroGlo
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = wave.color;
       ctx.globalAlpha = wave.opacity;
-      ctx.shadowBlur = 35;
+      ctx.shadowBlur = 14;
       ctx.shadowColor = wave.color;
       ctx.stroke();
       ctx.restore();
@@ -280,8 +280,8 @@ export function HeroGlowyWaves({ headline, subhead, cta, pills, stats }: HeroGlo
 
       {/* Radial glow overlays — decorative */}
       <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden="true">
-        <div className="absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[var(--color-accent-glow,rgba(139,92,246,0.35))] blur-[140px]" />
-        <div className="absolute bottom-0 right-0 h-[360px] w-[360px] rounded-full bg-[var(--color-accent-glow,rgba(139,92,246,0.35))] blur-[120px] opacity-60" />
+        <div className="absolute left-1/2 top-0 h-[380px] w-[380px] -translate-x-1/2 rounded-full bg-[var(--color-accent-glow,rgba(139,92,246,0.15))] blur-[160px]" />
+        <div className="absolute bottom-0 right-0 h-[240px] w-[240px] rounded-full bg-[var(--color-accent-glow,rgba(139,92,246,0.12))] blur-[140px] opacity-50" />
       </div>
 
       {/* Content */}
