@@ -81,6 +81,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **후속(open)**: (a) carousel feature 이미지가 /login 화면이라 "domain expert" 의미 약함 → 도메인 충실 스샷/목업으로 교체 (b) carousel 탭 표시 순서 정렬 (c) feature 아이콘셋 매핑(기존 잔여) (d) 차기 variant: pricing·testimonial.
 - Cost: CDO 큐레이션(이 인격) + engineer 2회 위임.
 
+### Growth-71 (2026-06-15) — impeccable craft 엔진 채택
+
+- **결정**: 디자인 품질을 매 작업 노동이 아니라 도구로 — vendored `impeccable` SKILL 을 CDO 1차 craft 엔진으로 채택(design-agent.md "Craft 엔진" 절 명문화). register Brand/Product 가 우리 deliverable_kind 와 동형이라 마찰 적음.
+- **craft 법규 흡수 대상**: impeccable anti-slop(보라/시안 그래디언트+글로우+다크네온, cream/sand AI 디폴트, 동일카드 reflex, 자간 ≤-0.04em)·motion 규칙(reveal=already-visible 위에서만, headless blank 금지) → vision-QA 루브릭 체크로 편입(후속).
+- **reconcile**: impeccable 이 우리 glowy-waves hero(보라 그래디언트+글로우)를 slop 으로 판정 → 도구 가치 증명 겸 첫 실전 = `/impeccable critique gtm-landing` 권장. 결과에 따라 hero 그래디언트 톤다운 검토.
+- **후속(open)**: 6 커맨드(layout/colorize/typeset/bolder/delight/polish) 검토 완료 — gtm-landing 에 layout(동일카드 격파)+polish 패스 후보. vision-QA 안티패턴 편입 미시행.
+- Cost: CDO 검토(이 인격).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
