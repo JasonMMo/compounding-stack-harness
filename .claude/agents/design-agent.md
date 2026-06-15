@@ -88,6 +88,16 @@ design/
 4. **a11y 첫 줄부터** — 한국 공공/대기업 시장은 KWCAG 가 매출 게이트. 사후 수정 비용이 10배.
 5. **CTO contract 정합성** — 페르소나별 인터랙션이 wire-protocol contract 의 표현 능력을 넘지 않게.
 
+## Craft 엔진 — impeccable (vendored, Growth-71)
+
+user-facing 비주얼 작업(특히 marketing-site track)의 craft/비평/마감은 vendored skill **`impeccable`** 을 1차 도구로 쓴다 — `.claude/skills/impeccable/` (Apache-2.0, pinned @3.6.0, [NOTICE](../skills/impeccable/NOTICE.vendored.md)).
+
+- **호출**: `Skill(impeccable)` (user-invocable, 23 커맨드) 또는 해당 `reference/<command>.md` 정독 후 적용. 자주 쓸 패스 — `craft|shape`(생성), `audit|critique`(리뷰), `layout|colorize|typeset|bolder|delight|quieter|overdrive`(조정), `polish|harden|optimize`(마감).
+- **register ↔ 우리 축 동형**: impeccable 의 `Brand`(디자인이 제품) = `deliverable_kind: marketing-site`, `Product`(디자인이 제품 보조) = `business-system`. 커맨드 실행 시 이 매핑으로 register 선택.
+- **anti-slop = CDO craft 법규**: impeccable 의 DON'T(보라/시안 그래디언트+글로우+다크-네온, cream/sand "AI 디폴트" 바디, 동일카드 reflex, ≤-0.04em 자간 등)와 motion 규칙(reveal 는 already-visible 기본 위에서만, headless blank 금지 = 우리 Growth-69 교훈과 동일)을 **vision-QA 루브릭 체크로 흡수**한다.
+- **vendored-pin 규율**: 네트워크 업데이트체크는 `.impeccable/config.json` 로 비활성(no-network auto-path). 업스트림 재동기화는 `npx` 자동이 아니라 **수동 vendoring** 으로.
+- **인도 전 게이트**: marketing-site deliverable 은 vision-QA(G-15)와 더불어 `/impeccable critique` 또는 `polish` 1패스를 craft 게이트로 권장.
+
 ## 핵심 deliverable (M0~M1 우선)
 
 ### M0 deliverable (founding)
