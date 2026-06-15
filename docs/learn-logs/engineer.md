@@ -501,6 +501,13 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **교훈**: ① island prop은 escaped-slash JSON 직렬화 → 정적 HTML grep 대신 Playwright 렌더가 ground truth. ② Chromium innerText가 CSS uppercase 반영 → DOM 텍스트 검증은 case-insensitive. ③ 외부 컴포넌트 새 의존은 기존 설치분으로 치환(번들·공급망 hedge).
 - **Cost**: engineer subagent 2회(71K+78K tok) / envelope 반환.
 
+### Growth-71 (2026-06-15) — impeccable 디자인 SKILL vendoring + 네트워크 감사
+
+- **작업**: `pbakaus/impeccable` shallow-clone → `.claude/skills/impeccable/` 코어만 복사(93파일 ~2.1MB, SHA fff712c v3.6.0). LICENSE + NOTICE.vendored.md 동봉. 13개 AI툴 중복·site/tests/cli 제외.
+- **감사(핵심)**: telemetry/posthog/OpenAI API 없음, 전 파일 ASCII(G-8). 단 `scripts/context.mjs:161` 이 `fetch(impeccable.style/api/version)` 으로 **매 세션 업데이트 폴링(NETWORK)** → no-network 위반. live-mode·detector fetch 는 localhost 한정(무해). 중화: `.impeccable/config.json {updateCheck:false}`(context.mjs 가 config/env 둘 다 인식, 커밋되어 영구).
+- **교훈**: 서드파티 vendoring 절차 = ① 코어만 추출(중복 패키징 제외) ② LICENSE+NOTICE+SHA 핀 ③ **fetch/http/api/telemetry/openai/spawn grep 감사** ④ 네트워크 옵트아웃을 커밋(env 아닌 config 파일로 영구) ⑤ ASCII(G-8) 확인. 대용량 browser JS(live-browser 432KB 등)는 size 무관 커밋(읽기만 100KB 가드 대상).
+- **Cost**: engineer subagent 1회(39K tok) / envelope.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
