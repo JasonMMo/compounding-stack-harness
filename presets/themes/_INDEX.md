@@ -15,6 +15,7 @@
 |---|---|---|---|---|---|---|
 | [aurora](aurora/theme.yaml) | Aurora | Bold gradient / SaaS energy | SaaS, fintech, tech startup, B2B platform | CEO-forward, ops secondary | PASS | 2026-06-15 |
 | [studio](studio/theme.yaml) | Studio | Minimal editorial / portfolio | Creative agency, consulting, professional services, architecture | CEO, ops | PASS | 2026-06-15 |
+| [harvest](harvest/theme.yaml) | Harvest | Warm drenched craft / artisan | Craft beverage, brewery, food CPG, artisan hospitality | CEO | PASS | 2026-06-15 |
 
 ---
 
