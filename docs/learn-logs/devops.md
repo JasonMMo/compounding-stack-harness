@@ -171,3 +171,10 @@
 - **함정 (신규)**: Git Bash **MSYS 경로 변환** — CLI 인자 `/deploy/preview/x.yml`가 `C:/Program Files/Git/deploy/preview/x.yml`로 둔갑 → Coolify 422 `docker_compose_location format invalid`. 해소: `MSYS_NO_PATHCONV=1`. (deploy_demo_portal.py는 경로를 Python 상수로 하드코딩해 무사했음 — CLI 인자화하며 노출된 함정.) deploy_static_site.py 사용 시 항상 `MSYS_NO_PATHCONV=1` 프리픽스.
 - **레지스트리**: `infra/registry/{gtm-landing,landing-portal}.yaml` status=live.
 - **교훈 (1줄)**: Windows에서 절대경로를 CLI 인자로 넘길 때는 MSYS 변환을 의심하라 — 같은 값이 하드코딩이면 통과, 인자면 둔갑한다.
+
+### Growth-75 (2026-06-15) — hopwell(harvest) 배포 + 배포 함정 2종
+
+- **배포**: hopwell.n9n.co.kr (project=pfwbarlxcb7raljvd5gp5wnf, app=a4g7t9vvltsl7y3ab3tdr869, harvest 테마, DEMO_MODE=1) `deploy_static_site.py` + 신규 `deploy/preview/hopwell.compose.yml`. landing 포털에 HOPWELL 카드 추가 후 재배포. 둘 다 HTTPS 200.
+- **함정 ① `--domain` 스킴 필수**: `deploy_static_site.py --domain hopwell.n9n.co.kr`(스킴 없음) → docker_compose_domains PATCH 422 `Invalid URL`. **반드시 `--domain https://hopwell.n9n.co.kr`**. PATCH 본문 포맷 = `[{"name":svc,"domain":url}]` 배열(+force_domain_override). 또 fresh app은 compose 파싱 전 PATCH가 레이스로 422 → 스크립트 재실행(idempotent)이면 2회차에 성공.
+- **함정 ② SSH 터널 드롭 + 좀비 소켓**: 대량 배포/폴링 중 `localhost:8000` 터널 드롭. 재수립 시 죽은 PID가 8000을 Listen 점유("Address already in use", taskkill 불가 — OS 지연 해제). 해소: **다른 로컬 포트로 재수립**(`-L 8010:localhost:8000`) 후 직접 API 호출로 진행(deploy_static_site.py는 8000 하드코딩이라 우회).
+- **교훈**: API 자동화 장시간 작업은 터널 안정성(ServerAliveInterval)과 포트 재사용 실패를 전제로 폴백 포트를 준비하라.
