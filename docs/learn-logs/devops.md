@@ -178,3 +178,10 @@
 - **함정 ① `--domain` 스킴 필수**: `deploy_static_site.py --domain hopwell.n9n.co.kr`(스킴 없음) → docker_compose_domains PATCH 422 `Invalid URL`. **반드시 `--domain https://hopwell.n9n.co.kr`**. PATCH 본문 포맷 = `[{"name":svc,"domain":url}]` 배열(+force_domain_override). 또 fresh app은 compose 파싱 전 PATCH가 레이스로 422 → 스크립트 재실행(idempotent)이면 2회차에 성공.
 - **함정 ② SSH 터널 드롭 + 좀비 소켓**: 대량 배포/폴링 중 `localhost:8000` 터널 드롭. 재수립 시 죽은 PID가 8000을 Listen 점유("Address already in use", taskkill 불가 — OS 지연 해제). 해소: **다른 로컬 포트로 재수립**(`-L 8010:localhost:8000`) 후 직접 API 호출로 진행(deploy_static_site.py는 8000 하드코딩이라 우회).
 - **교훈**: API 자동화 장시간 작업은 터널 안정성(ServerAliveInterval)과 포트 재사용 실패를 전제로 폴백 포트를 준비하라.
+
+### Growth-76 (2026-06-15) — studio-north(atelier) 배포 + 8000 좀비소켓 폴백
+
+- **배포**: studio-north.n9n.co.kr (project=pznz8dsk2h93frb51w4ejtlr, app=rls8w0yd6vxvq4721ava5a1n, atelier 테마, DEMO_MODE=1) `deploy_static_site.py` + 신규 `deploy/preview/studio-north.compose.yml`. landing 포털 "준비 중" 카드를 라이브 카드로 교체 후 재배포. 둘 다 HTTPS 200, 콘텐츠+토큰(9A5B32/141418) 검증 PASS.
+- **함정 (Growth-75 ② 후속, 악화)**: 8000 좀비소켓이 이번엔 **프로세스 자체 소멸**(PID 6356 존재하지 않으나 소켓 Listen 유지 — 커널 레벨 누수, taskkill 대상 없음). 8000 회복 불가 → 8010 터널만 정상(API `/version`→200, 8000→http=000). deploy_static_site.py가 `API_BASE=localhost:8000` 하드코딩이라 **임시로 8010 패치 후 실행, 완료 즉시 `git checkout`으로 복구**(커밋 오염 0).
+- **함정 (신규)**: 백그라운드 빌드 에이전트가 종료 후 **세션 cwd를 frontend/adapters/landing-astro에 고정** → 상대경로 PreToolUse/PostToolUse 훅(`scripts/hooks/*.py`)이 FileNotFound로 깨짐. `Set-Location <repo-root>`로 복구.
+- **교훈**: ① 좀비 소켓은 PID 부재 시 OS 재부팅 외 회복 불가 — 폴백 포트 상시 준비. ② 하드코딩 엔드포인트는 env-var 화(`COOLIFY_API_BASE`)가 운영 유연성 — deploy 스크립트 API_BASE 후보(open loop). ③ 백그라운드 에이전트 후엔 세션 cwd를 명시 복구.
