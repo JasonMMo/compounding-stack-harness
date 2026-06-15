@@ -5,6 +5,7 @@
 
 import { defineConfig } from 'astro/config'
 import tailwind from '@astrojs/tailwind'
+import react from '@astrojs/react'
 
 export default defineConfig({
   output: 'static',
@@ -13,6 +14,7 @@ export default defineConfig({
       // tailwind.config.js lives at adapter root — Astro resolves relative to project root
       configFile: './tailwind.config.js',
     }),
+    react(),
   ],
   // PUBLIC_SITE_MANIFEST and PUBLIC_API_BASE are passed as env vars at build time.
   // astro.env is not used — env vars are read by src/lib/manifest.ts at build time.
