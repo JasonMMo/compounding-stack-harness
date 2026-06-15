@@ -19,6 +19,11 @@ export interface SectionCta {
   href: string
 }
 
+export interface StatItem {
+  label: string
+  value: string
+}
+
 export interface Section {
   type: string
   variant?: string
@@ -26,6 +31,10 @@ export interface Section {
   assets?: string[]
   cta?: SectionCta
   items?: Array<Record<string, unknown>>
+  /** Optional highlight pills (used by glowy-waves hero variant). */
+  pills?: string[]
+  /** Optional stat tiles (used by glowy-waves hero variant). */
+  stats?: StatItem[]
 }
 
 export interface PageSeo {
