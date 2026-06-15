@@ -74,19 +74,22 @@ site:
             - /proof/intake.jpg
 
         - type: features
-          variant: three-col-icon
+          variant: carousel
           copy:
             headline: "Three reasons SMBs switch to compounding-stack-harness"
             subhead: "Domain expertise, architectural flexibility, and cost control — built in from day one."
           items:
             - title: "AI domain experts included"
               icon: "brain"
+              image: "/proof/lawfirm-demo.jpg"
               description: "Industry-specific AI agents curate presets for your business domain — no need to hire or brief a human domain expert before you can start."
             - title: "Swap frontend or backend freely"
               icon: "layers"
+              image: "/proof/distribution-demo.jpg"
               description: "React, Vue, htmx on the front; Spring Boot, FastAPI, Node, or Go on the back — change either with a one-line profile edit, no rewrites."
             - title: "Every LLM call is measured"
               icon: "gauge"
+              image: "/proof/intake.jpg"
               description: "Built-in cost instrumentation and multi-provider hedging keep AI inference bills predictable; self-host means your data never leaves the building."
 
         - type: faq
