@@ -53,7 +53,10 @@ sections:
     item_slots:
       required: [title, description]
       optional: [icon, image]
-    variants: [three-col-icon, two-col-alternating, single-col-list, carousel]
+    # bento-mosaic: irregular CSS grid — one large feature card spans 2 rows, rest smaller.
+    # Breaks card-grid sameness via layout structure (not via color variation per card).
+    # A1 SaaS Product Launch archetype. No JS required. icon_style: none by default in flux theme.
+    variants: [three-col-icon, two-col-alternating, single-col-list, carousel, bento-mosaic]
 
   pricing:
     label: "Pricing Table"
@@ -69,7 +72,10 @@ sections:
       required: [quote, author_name]
       optional: [author_title, company]
     asset_slots: [author_photo]
-    variants: [single-card, carousel, grid]
+    # pull-quote-wall: full-bleed section, 2-3 large pull-quotes in asymmetric column layout.
+    # Typographic — no card boxing. Distinct from carousel (one-at-a-time) and grid (equal cards).
+    # A1 SaaS Product Launch archetype. No JS required. avatar: none by default.
+    variants: [single-card, carousel, grid, pull-quote-wall]
 
   faq:
     label: "FAQ Accordion"
@@ -154,6 +160,19 @@ sections:
     # horizontal-steps: left-to-right steps with connectors; collapses to stack on mobile.
     # split-animation: step number locks left, right column scrolls through step content (React island).
     variants: [numbered-stack, horizontal-steps, split-animation]
+
+  stats:
+    label: "Stats / Metrics Band"
+    copy_slots:
+      required: []
+      optional: [headline, subhead]
+    asset_slots: []
+    # item_slots: each stat is a value (large number/percentage/string) + label (descriptor).
+    # ticker-band: full-width band, stats inline, subtle separator, no card boxing.
+    # four-up: 4 stats in a grid row; large number + small label per cell (A3 Event, A5 Mobile).
+    item_slots:
+      required: [value, label]
+    variants: [ticker-band, four-up]
 
   team:
     label: "Team / People"
