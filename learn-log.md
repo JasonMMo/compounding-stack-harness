@@ -381,3 +381,11 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **함정/교훈**: ① **대소문자 일치 grep false-negative** — 정적 HTML 을 대문자(CSS `uppercase` 결과)로 grep 해 "client-only 렌더, SEO 결함" 으로 오진했으나, 대소문자 무시 재검 결과 pills/stats 텍스트는 **처음부터 전부 SSR**됨(`client:visible`는 hydration만 지연, HTML SSR 유지). 진짜 결함은 SEO 가 아니라 opacity:0 no-JS 가시성이었다 → 정적 산출물 검증은 **case-insensitive + JS-off 렌더(java_script_enabled=False)** 둘 다 필수. ② 모션 진입효과는 opacity 페이드보다 **transform-only** 가 no-JS-safe.
 - **상세**: [engineer ledger](docs/learn-logs/engineer.md)
 - **결정 메모리**: [[marketing-site-track]]
+
+### Growth-70 (2026-06-15) — 21st.dev 폴리시 컴포넌트 2종 → 재사용 variant 축적 (marquee-3d + carousel)
+
+- **인격/Axis/Milestone**: CTO(카드선택·소스추출·proof캡처·시각/배포 게이트) + Engineer(2 variant 구현·L3·no-JS검증) + CDO(콘텐츠 큐레이션) / **theme/section(8축)**·frontend / M1 GTM(데모 폴리시·proof)
+- **1줄 rollup**: ① **logos variant `marquee-3d`** (Shatlyk1011 3D Marquee 적응, deps clsx+tailwind-merge) — 콘텐츠를 로고 아닌 **우리 12개 라이브 생성 데모 스크린샷 월**("Real systems this harness generated", `public/proof/*.jpg` 130KB self-host)로 = 정직한 proof. ② **features variant `carousel`** (0xUrvish Feature Carousel 적응) — `motion/react`→framer-motion, `@hugeicons`→기존 lucide-react(새 의존 0), 외부 unsplash→proof 스샷. 둘 다 `client:visible` 아일랜드, items/images manifest 스레딩(42/42 PASS), no-JS 가시(img opacity 1·첫 feature SSR), gtm-landing 적용·배포. 페이지: hero(glowy)→proof월→feature 카루셀→FAQ→CTA→contact.
+- **함정/교훈**: ① **innerText case-transform 재확인** — Chromium `innerText`가 CSS `uppercase`를 반영해, mixed-case 부분일치 검증이 false-negative(Growth-69 grep 교훈의 런타임판). DOM 검증은 case-insensitive 또는 `textContent` 사용. ② Astro island가 prop을 **escaped-slash JSON**으로 직렬화 → 정적 HTML 리터럴 `/proof/` grep 0건이나 no-JS 렌더엔 12 img 존재 → island 검증은 **렌더(Playwright) ground truth**가 grep보다 신뢰. ③ 외부 컴포넌트 적응 표준화: 새 아이콘/모션 의존은 **기존 설치분 재사용**(lucide/framer-motion)으로 치환.
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
+- **결정 메모리**: [[marketing-site-track]]
