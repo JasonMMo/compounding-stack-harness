@@ -230,7 +230,8 @@ def screenshot_and_check(
                 vp_w = vp["width"]
                 vp_h = vp["height"]
                 context = browser.new_context(
-                    viewport={"width": vp_w, "height": vp_h}
+                    viewport={"width": vp_w, "height": vp_h},
+                    reduced_motion="reduce",
                 )
                 try:
                     for path in paths:
