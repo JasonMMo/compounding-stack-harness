@@ -23,6 +23,9 @@ sections:
       required: [headline, subhead]   # keys that MUST be present in section.copy{}
       optional: [supporting_text]     # keys that MAY be present
     asset_slots: [bg_image]           # asset ref names expected; empty list = none
+    item_slots:                       # present only on sections with repeated items[]
+      required: [title, description]  # keys that MUST be present in each items[] entry
+      optional: [icon, image]         # keys that MAY be present in each items[] entry
     variants: [centered, split-left]  # valid values for section.variant (optional field)
 ```
 
@@ -33,6 +36,8 @@ sections:
 **copy_slots.optional**: listed for documentation; validation does not check for them.
 
 **asset_slots**: informational — lists expected `assets[]` entries. Validation does not enforce presence (assets are always optional at schema level; theme/CDO may enforce at render time).
+
+**item_slots**: present only on section types that render a repeated list (e.g. `features`, `faq`). A section instance carries its repeated entries under a sibling `items:` list in the profile — parallel to `copy:`, `assets:`, and `cta:`. If `item_slots` is present in the catalog entry and the section instance includes an `items:` list, `validate_site()` checks each entry for all `item_slots.required` keys. A section may legitimately omit `items:` entirely (falling back to the component's built-in demo items); omitting `items:` is not an error.
 
 **variants**: valid choices for `section.variant`. If the profile sets a variant not in this list, `validate_site()` raises an error.
 
@@ -57,6 +62,14 @@ site:
           cta:
             label: "Get Started"
             href: "/contact"
+        - type: features         # example: section with repeated items[]
+          copy:
+            headline: "Our Features"
+          items:                 # optional; parallel to copy/assets/cta
+            - title: "Fast"
+              description: "Ships in seconds."
+            - title: "Reliable"
+              description: "99.9% uptime SLA."
 ```
 
 ## 4. Validation Rules (site_manifest.py::validate_site)
@@ -67,6 +80,7 @@ site:
 4. `section.variant` — if set, must appear in the catalog `variants` list.
 5. `section.type` slug — must be ASCII (G-8).
 6. `site.theme` — existence of `presets/themes/<slug>/theme.yaml` is a **soft** check: warning only (P2 not yet complete). Not an error.
+7. `section.items[]` — if the catalog entry has `item_slots` AND the section includes an `items:` list, each entry must contain all `item_slots.required` keys. Omitting `items:` entirely is not an error.
 
 ## 5. Invariants
 
