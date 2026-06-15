@@ -1,5 +1,5 @@
 version: "1.0"
-# Site-Sections Catalog — 12 section types for marketing-site deliverables.
+# Site-Sections Catalog — 13 section types for marketing-site deliverables.
 # Dialect-neutral; site_manifest.py validates profile site.pages[].sections[] against this.
 # Pattern: presets/ddl/catalog.yaml (machine truth, format: presets/site-sections/_catalog-format.md)
 #
@@ -83,6 +83,17 @@ sections:
     asset_slots: []
     variants: [centered, left-aligned, with-image]
 
+  lead:
+    label: "Lead / Newsletter Capture"
+    copy_slots:
+      required: [headline]
+      optional: [subhead, button_label, success_message, placeholder]
+    asset_slots: []
+    # minimal-field: single email input + submit, centered, soft ask. Submits via
+    #   entity.create(entity_type=lead) — reuses the contact-form wire key (G-1: reads
+    #   middle contract, no new key). multi-field-card: name+email+message in a raised card.
+    variants: [minimal-field, multi-field-card]
+
   gallery:
     label: "Gallery / Showcase"
     copy_slots:
@@ -90,13 +101,21 @@ sections:
       optional: [subhead]
     asset_slots: []
     # items[].src: image path. items[].alt: required alt text. items[].caption: optional.
+    # parallax-scroll items also support: heading, subheading, body, cta_label, cta_href.
     item_slots:
       required: [src, alt]
-      optional: [caption, href]
+      optional: [caption, href, heading, subheading, body, cta_label, cta_href]
     # masonry-3col: 3-column CSS masonry of images; heights vary by image AR.
     # full-bleed-strip: single decisive image fills full viewport width, tall aspect.
     # grid-2x2: 2x2 product screenshot grid with optional per-cell caption.
-    variants: [masonry-3col, full-bleed-strip, grid-2x2]
+    # parallax-scroll: sticky full-viewport chapter panels; on scroll the panel scales +
+    #   a dark overlay fades in, and overlay heading/subheading parallax through; an
+    #   editorial body + CTA block follows below each chapter. `src` is OPTIONAL — when
+    #   absent, the panel renders a theme material-texture field (CSS gradient+grain, no
+    #   image asset), so the variant looks intentional with zero photos. React island
+    #   (framer-motion useScroll); MUST render full content statically with no JS
+    #   (Growth-69 invariant — images/text visible, just no parallax).
+    variants: [masonry-3col, full-bleed-strip, grid-2x2, parallax-scroll]
 
   story:
     label: "Story / About"
