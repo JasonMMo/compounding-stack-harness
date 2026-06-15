@@ -3,7 +3,7 @@
 > CDO doc. Decision-oriented map for the multi-session buildout of diverse landing-page patterns.
 > Canonical positions: section-type taxonomy (§1), variant table (§2), page archetypes (§3),
 > buildout backlog (§4), invariants (§5).
-> Last updated: 2026-06-15 (CDO, initial draft)
+> Last updated: 2026-06-16 (CDO, Growth-77)
 
 ---
 
@@ -111,20 +111,21 @@ Status: HAVE (existing variant name) or NEED.
 | four-up          | 4 stats in a row; large number, small label                                 | NEED           |
 | ticker-band      | Full-width band, stats inline, subtle separator; no card boxing             | NEED           |
 
-### gallery (NEW type — not yet in catalog)
+### gallery (currently: masonry-3col, parallax-scroll)
 
 | Variant          | Structural description                                                      | Status         |
 |------------------|-----------------------------------------------------------------------------|----------------|
-| masonry-3col     | 3-column masonry of images; no equal heights                                | NEED           |
+| masonry-3col     | 3-column masonry of images; no equal heights                                | HAVE           |
+| parallax-scroll  | Sticky full-viewport chapters; scale+overlay on scroll; editorial body+CTA below each; scroll-driven (React island, framer-motion useScroll); texture: sentinel for photo-free demo | HAVE           |
 | full-bleed-strip | Single image fills full viewport width, tall aspect ratio                   | NEED           |
 | grid-2x2         | 2×2 product screenshot grid with optional caption per cell                  | NEED           |
 
-### story (NEW type — not yet in catalog)
+### story (currently: founder-split, timeline-year)
 
 | Variant          | Structural description                                                      | Status         |
 |------------------|-----------------------------------------------------------------------------|----------------|
-| founder-split    | Photo left, long-form founder text right; typographic emphasis on one quote | NEED           |
-| timeline-year    | Vertical timeline with year markers and short milestones                    | NEED           |
+| founder-split    | Photo left, long-form founder text right; typographic emphasis on one quote | HAVE           |
+| timeline-year    | Vertical timeline with year markers and short milestones                    | HAVE           |
 
 ### team (NEW type — not yet in catalog)
 
@@ -150,11 +151,11 @@ Status: HAVE (existing variant name) or NEED.
 | with-image       | CTA copy left, product or scene image right                                 | HAVE           |
 | newsletter-inline| Email input + submit inline in the band; softer commitment than form       | NEED           |
 
-### lead (NEW type — not yet in catalog)
+### lead (currently: minimal-field)
 
 | Variant          | Structural description                                                      | Status         |
 |------------------|-----------------------------------------------------------------------------|----------------|
-| minimal-field    | Single email input + submit, centered, no other fields                      | NEED           |
+| minimal-field    | Single email input + submit, centered, no other fields                      | HAVE           |
 | multi-field-card | Name + email + optional message in a raised card; contact-form pattern      | NEED           |
 
 ### pricing (currently: two-tier, three-tier, toggle-annual-monthly)
@@ -177,7 +178,8 @@ Status: HAVE (existing variant name) or NEED.
 ---
 
 **Variant count summary**:
-14 section types · 47 total variants · 20 HAVE · 27 NEED
+14 section types · 50 total variants · 24 HAVE · 26 NEED
+(Growth-77 additions: gallery/parallax-scroll HAVE + story/timeline-year HAVE + lead/minimal-field HAVE; gallery/full-bleed-strip added as NEED)
 
 ---
 
@@ -248,13 +250,16 @@ Shared with A1: faq/single-col, minimal footer. Everything else diverges.
 
 ---
 
-### A4 — F&B / Local / Artisan
+### A4 — F&B / Local / Artisan — **BUILT** (Growth-77, 2026-06-16)
+
+Live: **https://terra-ceramics.n9n.co.kr** (kiln 테마, artisan wheel-thrown ceramics studio)
+Theme: kiln — clay terracotta #C9A078 + wood-ash neutrals + kiln-ember accent #B5501A; Cormorant Garamond + Source Serif 4.
 
 Target: brewery, restaurant, coffee roaster, food CPG, local hospitality.
 
 ```
 hero           / brew           (full-bleed image + texture; no JS)
-gallery        / full-bleed-strip (one decisive product or place photo)
+gallery        / parallax-scroll (scroll-driven sticky chapters; texture:clay/ash/ember sentinel — FIRST SCROLL-CINEMATIC)
 story          / timeline-year  (founding story; craft provenance)
 features       / two-col-alternating (product detail rows with image)
 lead           / minimal-field  (launch list or reservation; soft ask)
@@ -262,8 +267,9 @@ faq            / single-col
 footer         / minimal
 ```
 
-DNA: Image-drenched hero → one hero photo → origin story → product detail rows → soft capture.
+DNA: Image-drenched hero → scroll-cinematic material chapters → origin story → product detail rows → soft capture.
 No logos section (no enterprise trust signals in this register). Shortest composition — 7 sections.
+Note: gallery variant changed from full-bleed-strip (NEED) to parallax-scroll (HAVE) — scroll-driven motion answers the CEO same-pattern critique on the time axis.
 
 ---
 
