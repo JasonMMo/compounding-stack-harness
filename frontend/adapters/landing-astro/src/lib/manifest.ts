@@ -35,6 +35,8 @@ export interface Section {
   pills?: string[]
   /** Optional stat tiles (used by glowy-waves hero variant). */
   stats?: StatItem[]
+  /** Optional image paths (used by logos/marquee-3d variant — proof wall). */
+  images?: string[]
 }
 
 export interface PageSeo {
