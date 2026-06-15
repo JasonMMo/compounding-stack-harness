@@ -365,3 +365,11 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **자산 레지스트리**: `infra/registry/{gtm-landing,landing-portal}.yaml` (status=live, coolify uuid 기록)
 - **상세**: [devops ledger](docs/learn-logs/devops.md) · [engineer ledger](docs/learn-logs/engineer.md)
 - **결정 메모리**: [[marketing-site-track]] · [[infra-stack]]
+
+### Growth-68 (2026-06-15) — landing-astro 첫 React-island section variant: glowy-waves hero (21st.dev → 8축 누적)
+
+- **인격/Axis/Milestone**: CTO(카드 선택·통합·시각 게이트·배포) + Engineer(React 아일랜드 인프라·variant 구현·L3) + CDO(비주얼 토큰화) / **theme/section(8축)**·frontend / **M1 GTM**(데모 폴리시 상향)
+- **1줄 rollup**: 순수 Astro SSG였던 landing-astro 에 `@astrojs/react`+`framer-motion` 도입(아일랜드 한정, `client:visible` 40KB gzip만 hydrate, 나머지 SSG 유지) → 21st.dev "Glowy Waves Hero"를 **재사용 hero variant `glowy-waves`**로 적응(shadcn Button 제거→토큰 anchor, headline/subhead/cta/pills/stats props 파라미터화, prefers-reduced-motion 준수) → `catalog.yaml` hero.variants 등록 + `site_manifest.py` variant/pills/stats 스레딩(42/42 PASS) → gtm-landing 적용·재배포. hero B급→프리미엄.
+- **함정/교훈**: ① 21st.dev 소스는 로그인/버튼 불필요 — Next.js SSR `__next_f.push` 페이로드에 전체 코드 인라인, curl+파싱으로 추출 가능(WebFetch는 SPA 셸만 반환). ② 외부 컴포넌트는 "한 장에 붙이기"(§3 안티패턴)가 아니라 **section variant로 카탈로그 등록**해야 복리. ③ IDE TS "Cannot find module" 진단은 npm install 전 stale LSP — `astro build`(vite 타입인지) 통과가 출고 기준. ④ headline 그래디언트 split이 첫 마침표 의존 → `headline_accent` 슬롯화는 open-loop.
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
+- **결정 메모리**: [[marketing-site-track]]
