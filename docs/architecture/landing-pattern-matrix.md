@@ -43,8 +43,8 @@ Ordered by usage frequency across archetypes.
 |13 | `lead`          | Lead / Newsletter          | Inline capture; lighter than full contact form  |
 |14 | `footer`        | Footer                     | Nav, legal, brand close                         |
 
-**Currently in catalog**: hero, logos, features, pricing, testimonial, faq, cta, footer (8 of 14).
-**Missing from catalog**: process, stats, gallery, story, team, lead (6 new types needed).
+**Currently in catalog**: hero, logos, features, pricing, testimonial, faq, cta, footer, lead, gallery, story (Growth-77), process, team (Growth-78) — 13 of 14.
+**Missing from catalog**: stats (1 new type needed — backlog #2).
 
 ---
 
@@ -85,7 +85,7 @@ Status: HAVE (existing variant name) or NEED.
 | horizontal-scroll| Static centered row, responsive wrap                                        | HAVE           |
 | grid             | 2-3 row grid of logos with optional copy                                    | HAVE           |
 | marquee-3d       | Perspective proof wall, React island, infinite scroll                       | HAVE           |
-| quote-band       | Single customer quote spans full width, logo beside name; no logo grid      | NEED           |
+| quote-band       | Single customer quote spans full width, logo beside name; no logo grid      | HAVE           |
 
 ### testimonial (currently: single-card, carousel, grid)
 
@@ -96,11 +96,11 @@ Status: HAVE (existing variant name) or NEED.
 | grid             | 2-3 column card grid                                                        | HAVE           |
 | pull-quote-wall  | Full-bleed section; 2-3 large pull quotes in an asymmetric column layout    | NEED           |
 
-### process (NEW type — not yet in catalog)
+### process (currently: numbered-stack)
 
 | Variant          | Structural description                                                      | Status         |
 |------------------|-----------------------------------------------------------------------------|----------------|
-| numbered-stack   | Vertical numbered steps, each with a headline and one-line description      | NEED           |
+| numbered-stack   | Vertical numbered steps, each with a headline and one-line description      | HAVE           |
 | horizontal-steps | Left-to-right numbered steps with connectors; collapses to stack mobile     | NEED           |
 | split-animation  | Step number locks left, right column scrolls through step content           | NEED           |
 
@@ -127,11 +127,11 @@ Status: HAVE (existing variant name) or NEED.
 | founder-split    | Photo left, long-form founder text right; typographic emphasis on one quote | HAVE           |
 | timeline-year    | Vertical timeline with year markers and short milestones                    | HAVE           |
 
-### team (NEW type — not yet in catalog)
+### team (currently: headshot-grid)
 
 | Variant          | Structural description                                                      | Status         |
 |------------------|-----------------------------------------------------------------------------|----------------|
-| headshot-grid    | 3-4 column grid of photo + name + role                                      | NEED           |
+| headshot-grid    | 3-4 column grid of photo + name + role; monogram-initials avatar fallback   | HAVE           |
 | headshot-list    | Horizontal cards; photo + name + two-line bio                               | NEED           |
 
 ### faq (currently: single-col, two-col)
@@ -178,8 +178,9 @@ Status: HAVE (existing variant name) or NEED.
 ---
 
 **Variant count summary**:
-14 section types · 50 total variants · 24 HAVE · 26 NEED
+14 section types · 50 total variants · 27 HAVE · 23 NEED
 (Growth-77 additions: gallery/parallax-scroll HAVE + story/timeline-year HAVE + lead/minimal-field HAVE; gallery/full-bleed-strip added as NEED)
+(Growth-78 additions: logos/quote-band HAVE + process/numbered-stack HAVE + team/headshot-grid HAVE — A6 B2B-services archetype shipped)
 
 ---
 
@@ -293,25 +294,31 @@ Shares carousel/features with hopwell, but everything surrounding it is differen
 
 ---
 
-### A6 — B2B Services / Consulting
+### A6 — B2B Services / Consulting — **BUILT** (Growth-78, 2026-06-16)
+
+Live: **https://meridian.n9n.co.kr** (meridian 테마, MERIDIAN managed-IT / security advisory)
+Theme: meridian — cool-stone white #F7F8F4 + deep forest-green #1A5C3A (navy-reflex avoided, AAA throughout); Syne + DM Sans.
 
 Target: IT consultancy, HR firm, legal, accountancy, managed services.
 
+Shipped composition (all HAVE variants — the blueprint's split-animation / comparison-table / categorized remain NEED):
 ```
-hero           / centered       (clear headline; no dark canvas, no grain)
-logos          / quote-band     (one client quote + logo; more credible than logo soup)
-process        / split-animation (how engagement works; left step locks, right scrolls)
-features       / two-col-alternating (service detail with supporting visual)
-team           / headshot-grid  (named experts; reduces "faceless agency" fear)
-testimonial    / carousel       (multiple client voices; rotating)
-pricing        / comparison-table (package comparison; enterprise buyers expect tables)
-faq            / categorized    (separate sets for different buyer roles)
-cta            / left-aligned
+hero           / centered       (deep-forest dark bg; clear headline, no grain)
+logos          / quote-band     (one client quote on dark band; more credible than logo soup)
+process        / numbered-stack (how engagement works; bold numerals + step copy)
+features       / two-col-alternating (service detail)
+team           / headshot-grid  (named experts; monogram-initials avatars — no stock faces)
+testimonial    / carousel       (client voice)
+faq            / single-col      (leadership objections)
+cta            / left-aligned    (forest-green band; book a risk review)
 footer         / full-links
 ```
+Original blueprint (NEED variants for a future richer A6 instance):
+process/split-animation · pricing/comparison-table · faq/categorized.
 
-DNA: Clear centered hero → single-client quote → animated process → alternating services → faces → table pricing.
+DNA: Clear centered hero → single-client quote → numbered process → alternating services → faces → close.
 Shares almost nothing structurally with A1 (different hero, different features, different proof format).
+All sections Astro-native (zero React islands) — entire archetype renders without JS (Growth-69).
 
 ---
 
@@ -321,13 +328,13 @@ Ordered by: (visible differentiation delivered / implementation cost). First 10.
 
 | # | Item                                   | Type     | Variant          | Impact reason                                              | Source hint          |
 |---|----------------------------------------|----------|------------------|------------------------------------------------------------|----------------------|
-| 1 | `process` section type + numbered-stack| NEW TYPE | numbered-stack   | Missing from catalog; 4 of 6 archetypes use it            | build from scratch   |
+| ~~1~~ | ✅ `process` + numbered-stack (DONE Growth-78) | NEW TYPE | numbered-stack | Built; shipped in A6 MERIDIAN                       | done                 |
 | 2 | `stats` section type + ticker-band     | NEW TYPE | ticker-band      | Quantitative proof is the fastest trust signal; zero cost  | build from scratch   |
 | 3 | hero / bento-grid                      | NEW VAR  | bento-grid       | Breaks the centered/split duopoly; screenshotable for SaaS | 21st.dev bento       |
 | 4 | hero / headline-only                   | NEW VAR  | headline-only    | Maximum visual contrast to all 3 existing heroes; type-led | build from scratch   |
 | 5 | features / bento-mosaic                | NEW VAR  | bento-mosaic     | Solves card-grid sameness; high perceived design quality   | 21st.dev bento grids |
 | 6 | `gallery` section type + full-bleed-strip | NEW TYPE | full-bleed-strip | A4 archetype requires it; single image > card grids      | build from scratch   |
-| 7 | logos / quote-band                     | NEW VAR  | quote-band       | Structurally replaces logo soup with a single credible voice | build from scratch |
+| ~~7~~ | ✅ logos / quote-band (DONE Growth-78)  | NEW VAR  | quote-band       | Built; shipped in A6 MERIDIAN                              | done                 |
 | 8 | `story` section type + founder-split   | NEW TYPE | founder-split    | A2 and A4 archetypes; differentiates from faceless SaaS   | build from scratch   |
 | 9 | process / horizontal-steps             | NEW VAR  | horizontal-steps | A3 event archetype; visually distinct from numbered-stack  | 21st.dev timelines   |
 |10 | testimonial / pull-quote-wall          | NEW VAR  | pull-quote-wall  | A1 archetype; large-format proof vs carousel/grid          | 21st.dev quote       |
