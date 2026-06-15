@@ -25,6 +25,7 @@ export interface Section {
   copy?: Record<string, string>
   assets?: string[]
   cta?: SectionCta
+  items?: Array<Record<string, unknown>>
 }
 
 export interface PageSeo {
