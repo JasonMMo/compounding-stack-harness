@@ -486,6 +486,13 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **교훈**: ① 21st.dev 소스는 `__next_f.push` SSR 페이로드에 인라인 — curl+파싱으로 추출(로그인·버튼 불필요, WebFetch는 SPA 셸만). ② IDE TS "Cannot find module" = npm install 전 stale LSP, `astro build`(vite) 통과가 출고 기준. ③ headline 그래디언트가 첫 마침표 split 의존 → `headline_accent` 슬롯화 open-loop.
 - **Cost**: engineer subagent 1회(89K tok) / envelope 반환.
 
+### Growth-69 (2026-06-15) — hero no-JS 가시성 보강 (transform-only entrance)
+
+- **문제**: framer-motion `initial="hidden"`(opacity:0)이 `client:visible` SSR 출력에 baked → `java_script_enabled=False` 에서 `<h1>` computed opacity "0"(불가시). dogfood #3 와 동일 계열.
+- **수정**: approach A — `containerVariants`/`itemVariants`/`statsVariants` 의 hidden opacity 0→1, `y:24`/`scale:0.95` 이동은 유지. SSR HTML 은 opacity:1 + transform 만 → no-JS 콘텐츠 보임, JS 사용자는 slide/scale 진입(플래시 없음). reduced-motion 경로 불변.
+- **검증**: 라이브 no-JS h1 opacity `1`(이전 `0`), JS-on opacity `1`+canvas+demo 정상. 컴포넌트 전용 변경, 카탈로그/매니페스트 무영향.
+- **교훈**: 정적 산출물 검증은 case-insensitive grep + JS-off 렌더 둘 다 필요(대문자 grep false-negative 로 SEO 오진했음).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
