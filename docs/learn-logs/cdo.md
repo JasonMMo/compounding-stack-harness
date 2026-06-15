@@ -45,6 +45,26 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
   - PM: ms_tone → theme 매핑 (aurora/studio) — intake answer 가 CDO 테마 결정에 1:1 연결.
 - Cost: engineer subagent 위임 (이 인격 design spec 산출 + 검증).
 
+### Growth-66 (2026-06-15) — dogfood GTM 랜딩 비주얼 검토 + favicon 슬롯 정책
+
+- Deliverable:
+  - `public/favicon.svg` (landing-astro adapter 신규 — "compounding stack" 3-bar 마크, indigo #4F46E5, 테마 중립 기본값)
+  - 자사 GTM 랜딩 desktop+mobile full-page 비주얼 리뷰 (dogfood: theme=aurora, hero/features/faq 섹션)
+  - **favicon per-theme 슬롯 정책 확립**: 테마가 `public/favicon.svg` 를 자체 파일로 override 하면 per-brand 파비콘 적용 가능. 이를 future per-theme asset slot 으로 문서화.
+- Persona served: CEO (인도 전 비주얼 게이트), 업무담당자 (랜딩 페이지 방문 고객)
+- Accessibility checks:
+  - `prefers-reduced-motion` a11y 결함 수정 확인 (motion island 초기화 시 early-return → reduced-motion 사용자 콘텐츠 즉시 표시)
+  - stagger-children 컨테이너 영구 숨김 수정 (Features·Logos 섹션 opacity:0 → 전 방문자 노출 복구)
+- Cross-agent dependency:
+  - Engineer: landing-astro adapter `public/` 디렉터리 신설 + motion 버그 수정 (Growth-66).
+  - QA: full-page screenshot + reduced_motion="reduce" Playwright 캡처 — vision-QA 7/7 PASS 확인.
+- Visual verdict (dogfood, desktop+mobile):
+  - **판정 B급 professional** — 강한 타입 계층, aurora 그라데이션 hero, CTA 대비 양호, responsive 단열 모바일.
+  - **후속 개선 후보** (future Growth):
+    - (a) feature 카드 아이콘: `icon` 필드명(brain/layers/gauge)이 Features.astro 아이콘셋 미매핑 → 모든 카드가 동일 lightning 글리프 표시. 아이콘셋 매핑 작업 필요.
+    - (b) split-left hero: hero media asset 없을 때 오른쪽 열 공백 → placeholder 이미지 또는 레이아웃 fallback 정책 결정 필요.
+- Cost: CDO 비주얼 리뷰(이 인격) + engineer subagent 구현 위임 (Growth-66 동일 세션).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
