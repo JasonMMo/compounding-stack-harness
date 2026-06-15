@@ -25,6 +25,8 @@ import Logos from '../sections/Logos.astro'
 import Features from '../sections/Features.astro'
 import Gallery from '../sections/Gallery.astro'
 import { GalleryParallaxScroll } from '../sections/GalleryParallaxScroll'
+import Process from '../sections/Process.astro'
+import Team from '../sections/Team.astro'
 import Story from '../sections/Story.astro'
 import Lead from '../sections/Lead.astro'
 import Pricing from '../sections/Pricing.astro'
@@ -203,6 +205,30 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
       // Default: static Astro gallery (masonry-3col, grid-2x2, full-bleed-strip).
       return (
         <Gallery
+          copy={section.copy ?? {}}
+          variant={section.variant}
+          styleHints={styleHints}
+          motionPreset={motionPreset}
+          items={(section.items ?? []) as any}
+        />
+      )
+    }
+
+    if (section.type === 'process') {
+      return (
+        <Process
+          copy={section.copy ?? {}}
+          variant={section.variant}
+          styleHints={styleHints}
+          motionPreset={motionPreset}
+          items={(section.items ?? []) as any}
+        />
+      )
+    }
+
+    if (section.type === 'team') {
+      return (
+        <Team
           copy={section.copy ?? {}}
           variant={section.variant}
           styleHints={styleHints}
