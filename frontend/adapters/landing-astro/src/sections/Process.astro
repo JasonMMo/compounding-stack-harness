@@ -1,0 +1,136 @@
+---
+/**
+ * Process.astro — How-It-Works / Process section (type: process).
+ * Variants: numbered-stack (implemented) | horizontal-steps | split-animation
+ *
+ * numbered-stack: vertical stacked steps with a left-rail bold numeral.
+ *   Per theme sections.process.numbered-stack:
+ *     layout: stack, icon_style: none, card_style: ghost, step_number_style: bold-numeral
+ *   Step numeral: var(--font-family-display), var(--color-primary), large bold.
+ *   Ghost cards: no boxed borders. Thin var(--color-surface-3) divider between steps.
+ *   Positional numbering (1,2,3,4) unless item.step_label overrides.
+ *   Numbering is LEGITIMATE here — the section IS an ordered sequence (impeccable §numbers).
+ *
+ * All colors via theme tokens. Fully visible without JS (Growth-69).
+ * motion: data-motion={motionPreset} + data-stagger-delay per step child.
+ */
+interface StyleHints {
+  layout?: string
+  icon_style?: string
+  card_style?: string
+  step_number_style?: string
+}
+
+interface ProcessItem {
+  title: string
+  description?: string
+  step_label?: string
+}
+
+interface Props {
+  copy: Record<string, string>
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+  items?: ProcessItem[]
+}
+
+const {
+  copy = {},
+  variant = 'numbered-stack',
+  styleHints = {},
+  motionPreset = 'stagger-children',
+  items = [],
+} = Astro.props
+
+// Default demo steps if no items provided.
+const displayItems: ProcessItem[] = items.length > 0 ? items : [
+  { title: 'Discovery', description: 'We map your current state and define the target.' },
+  { title: 'Planning', description: 'A prioritized roadmap with clear milestones.' },
+  { title: 'Execution', description: 'We run the work — you see progress weekly.' },
+  { title: 'Review', description: 'Measure outcomes and adjust the next cycle.' },
+]
+---
+
+<section
+  class="w-full py-[var(--space-section-y,104px)] px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-1,#F7F8F4)]"
+  data-motion={motionPreset}
+  data-stagger-delay="80"
+>
+  <div class="max-w-[var(--space-container-max,1160px)] mx-auto">
+    {copy.headline && (
+      <div class="mb-14">
+        <h2
+          class="text-3xl md:text-4xl font-[var(--font-weight-display,800)] text-[var(--color-text-1,#171E19)] tracking-[var(--font-letter-spacing-display,-0.025em)]"
+          style="font-family: var(--font-family-display, inherit);"
+        >
+          {copy.headline}
+        </h2>
+        {copy.subhead && (
+          <p class="mt-4 text-lg text-[var(--color-text-2,#394F3E)] max-w-2xl">
+            {copy.subhead}
+          </p>
+        )}
+      </div>
+    )}
+
+    {variant === 'numbered-stack' && (
+      <ol class="list-none m-0 p-0">
+        {displayItems.map((item, i) => {
+          const stepNum = item.step_label ?? String(i + 1)
+          const isLast = i === displayItems.length - 1
+          return (
+            <li
+              class={`flex gap-8 md:gap-12 items-start py-10 ${isLast ? '' : 'border-b border-[var(--color-surface-3,#DDDEDA)]'}`}
+            >
+              {/* Left rail: bold numeral */}
+              <div
+                class="flex-shrink-0 w-14 text-right select-none"
+                aria-hidden="true"
+              >
+                <span
+                  class="text-5xl md:text-6xl font-[var(--font-weight-display,800)] leading-none"
+                  style="font-family: var(--font-family-display, inherit); color: var(--color-primary, #1A5C3A);"
+                >
+                  {stepNum}
+                </span>
+              </div>
+
+              {/* Right column: title + description */}
+              <div class="flex-1 pt-1">
+                <h3
+                  class="text-xl md:text-2xl font-semibold text-[var(--color-text-1,#171E19)] mb-2"
+                  style="font-family: var(--font-family-body, inherit);"
+                >
+                  {item.title}
+                </h3>
+                {item.description && (
+                  <p class="text-base md:text-lg text-[var(--color-text-2,#394F3E)] leading-relaxed">
+                    {item.description}
+                  </p>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    )}
+
+    {variant !== 'numbered-stack' && (
+      /* Graceful fallback for unimplemented variants */
+      <ol class="list-none m-0 p-0">
+        {displayItems.map((item, i) => {
+          const isLast = i === displayItems.length - 1
+          return (
+            <li class={`py-8 ${isLast ? '' : 'border-b border-[var(--color-surface-3,#DDDEDA)]'}`}>
+              <h3 class="text-lg font-semibold text-[var(--color-text-1,#171E19)] mb-1">{item.title}</h3>
+              {item.description && (
+                <p class="text-[var(--color-text-2,#394F3E)]">{item.description}</p>
+              )}
+            </li>
+          )
+        })}
+      </ol>
+    )}
+  </div>
+</section>
