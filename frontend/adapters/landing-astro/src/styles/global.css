@@ -20,6 +20,12 @@
 @import "@fontsource-variable/raleway";
 @import "@fontsource-variable/karla";
 
+/* Kiln theme: Cormorant Garamond (display) + Source Serif 4 (body)
+   Serif+serif pairing — editorial-craft register, distinct from SaaS sans+sans.
+   font-display: swap set by @fontsource-variable defaults. */
+@import "@fontsource-variable/cormorant-garamond";
+@import "@fontsource-variable/source-serif-4";
+
 /* font-display: swap is set per @fontsource package default */
 
 /* ── Generated token CSS (injected by build-tokens.mjs) ───────────────────── */
