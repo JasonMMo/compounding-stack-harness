@@ -1,0 +1,110 @@
+# profiles/gtm-landing.yaml — OUR OWN M1 GTM landing (dogfood, Growth-66)
+# First real artifact of the marketing-site deliverable track: we use our own
+# 8th axis (visual-asset) to build our own lead-generation landing.
+# Purpose: collect M1 sales leads (M1->M2 gating requires 5 leads).
+# Copy authored by CMO (out/gtm-landing/cmo-copy.yaml), folded in by CTO.
+# Stage M1: pre-customer -> NO fake testimonials, NO public pricing (gated).
+# deliverable_kind=marketing-site -> bypasses entity/DDL; site: block drives output.
+
+version: 1
+
+customer:
+  slug: gtm-landing
+  display: "compounding-stack-harness — GTM Landing"
+  status: active
+  contact: aijasonmore@gmail.com
+  industry: generic
+
+# ── Pluggable Stack ─────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# ── Site Block (marketing-site schema) ─────────────────────────────────────
+site:
+  theme: aurora                      # SaaS/tech flagship — fits our positioning
+
+  pages:
+    - slug: home
+      title: "compounding-stack-harness"
+      seo:
+        title: "Self-Host Full-Stack Code Generation — compounding-stack-harness"
+        description: "An in-network AI code-generation harness that lets non-technical teams build and run their own business systems — no dev environment required, no data leaves your network."
+        og_image: "assets/og-home.png"
+      sections:
+        - type: hero
+          variant: split-left
+          copy:
+            headline: "Build business systems. Zero dev team."
+            subhead: "Self-hosted AI agents generate your full-stack app — inside your network, on your chosen stack."
+            supporting_text: "Three personas — CEO, ops staff, IT staff — each get what they need from a single in-house harness that never phones home."
+          cta:
+            label: "Book a free assessment"
+            href: "#contact"
+
+        # NOTE: logos section intentionally omitted — we have no partner/stack logo
+        # assets yet, and the adapter renders a "Logo assets not yet added"
+        # placeholder without them. The "bring your own stack" message is already
+        # carried by feature card #2 and the FAQ. Re-add logos once SVG assets exist.
+
+        - type: features
+          variant: three-col-icon
+          copy:
+            headline: "Three reasons SMBs switch to compounding-stack-harness"
+            subhead: "Domain expertise, architectural flexibility, and cost control — built in from day one."
+          items:
+            - title: "AI domain experts included"
+              icon: "brain"
+              description: "Industry-specific AI agents curate presets for your business domain — no need to hire or brief a human domain expert before you can start."
+            - title: "Swap frontend or backend freely"
+              icon: "layers"
+              description: "React, Vue, htmx on the front; Spring Boot, FastAPI, Node, or Go on the back — change either with a one-line profile edit, no rewrites."
+            - title: "Every LLM call is measured"
+              icon: "gauge"
+              description: "Built-in cost instrumentation and multi-provider hedging keep AI inference bills predictable; self-host means your data never leaves the building."
+
+        - type: faq
+          variant: two-col
+          copy:
+            headline: "Questions IT teams ask before the first call"
+            subhead: "Straight answers — no marketing gloss."
+          items:
+            - question: "Does our data leave our network?"
+              answer: "No. The harness runs entirely inside your network on your own servers. LLM inference is routed through whichever provider you configure (including on-premise models); no telemetry is sent to us by default. You control every egress point."
+            - question: "Are we locked into a specific frontend or backend?"
+              answer: "No. The only stable layer is the wire-protocol contract in the middle. You can start with Spring Boot and React, then migrate the backend to FastAPI later — the profile change is one line and a rebuild. New adapters are addable without touching the contract."
+            - question: "How do you control LLM costs as usage grows?"
+              answer: "Every agent call is instrumented with token counts and cost estimates logged per request. Automatic fallback routes expensive calls to cheaper providers or cached responses. You see a cost report monthly — and you can cap spend per tenant or per workflow."
+            - question: "How much effort is the initial self-host setup?"
+              answer: "A single docker-compose bring-up with Vault Agent + Keycloak SSO sidecars included. One customer-profile YAML captures your conventions. Typical IT-staff setup time: under a day for the first domain. We run a free assessment call to scope your environment first."
+
+        - type: cta
+          variant: centered
+          copy:
+            headline: "Get early access before general availability."
+            subhead: "We are accepting a small cohort of M1 design partners. Book a 30-minute assessment — no commitment, no sales pitch."
+          cta:
+            label: "Get on the early-access list"
+            href: "#contact"
+
+        - type: footer
+          variant: minimal
+          copy:
+            brand_name: "compounding-stack-harness"
+            tagline: "Self-host AI codegen that compounds with every project."
+            legal_notice: "© 2026 compounding-stack-harness."
+
+  contact:
+    enabled: true
+    fields: [name, email, message]
+
+# ── Defaults ────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: UTC
+
+# ── Cost tracking ────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 0        # static SSG landing — no runtime LLM
+  prepaid_credits_usd: 0
