@@ -73,6 +73,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **후속**: (a) 동일 lightning 글리프 아이콘셋 매핑 미결(Growth-66 잔여 유지) (b) 3D Marquee·Feature Carousel 차기 variant 후보 (c) `headline_accent` 슬롯화로 그래디언트 split 안정화.
 - Cost: CDO 비주얼 게이트(이 인격) + engineer 구현 위임 (동일 세션).
 
+### Growth-70 (2026-06-15) — marquee-3d + carousel variant 콘텐츠 큐레이션
+
+- **marquee-3d proof 월**: 3D 이미지 마키는 로고 티커가 아닌 사각 타일 그리드 → 콘텐츠를 파트너 로고(자산 無) 대신 **우리 12개 라이브 생성 데모 스크린샷**으로 결정 = thesis 정렬된 정직한 proof("이게 harness가 뽑은 실물"). 헤딩 "Real systems this harness generated" + 한글 서브헤드. 딥 인디고 배경이 glowy hero에서 연속.
+- **carousel**: 탭형 feature 쇼케이스로 기존 three-col 대비 인터랙티브·시각 강화. 3 차별점(AI domain experts/swap stack/cost measured)에 proof 스샷 매핑.
+- **시각 판정**: hero→proof월→카루셀→FAQ→CTA 흐름 B+/A- 도달. 8축(theme/section)에 hero·logos·features 각 1 프리미엄 variant 축적 = 복리 실증.
+- **후속(open)**: (a) carousel feature 이미지가 /login 화면이라 "domain expert" 의미 약함 → 도메인 충실 스샷/목업으로 교체 (b) carousel 탭 표시 순서 정렬 (c) feature 아이콘셋 매핑(기존 잔여) (d) 차기 variant: pricing·testimonial.
+- Cost: CDO 큐레이션(이 인격) + engineer 2회 위임.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
