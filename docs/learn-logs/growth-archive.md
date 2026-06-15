@@ -506,3 +506,43 @@
 - **교훈 (1줄)**: Capacitor server mode는 웹 코드 변경 없이 스토어 제출 가능 — 단, iOS WebView는 WKWebView 정책(CORS, CSP)이 브라우저보다 엄격하므로 HTTPS + 동일 도메인 API 필수
 - **Revenue/cost**: LLM=없음 / infra 변경 없음 / App Store 등록 → M2 고객 확보 접점 확대
 - **Open loops**: Capacitor android/ ios/ 플랫폼 추가 (npm install 후) / App Store 아이콘·빌드 서명 / 5개 industry demo Coolify 배포 / Supabase adapter 구현
+
+## Growth-50 ~ Growth-53 (2026-06-13, move: Growth-78 rotation)
+
+### Growth-50 (2026-06-13) — 5개 산업 M2 데모 프로필 스캐폴드
+
+- **인격/Axis/Milestone**: CTO (설계) + CMO (데모 포트폴리오) / customer 축 / M2 — 숨고·크몽 영업용 데모 포트폴리오 구축
+- **Why (1줄)**: 잠재 고객이 "우리 업종에 맞는 기능이 있나?" 를 바로 확인할 수 있는 산업별 데모가 없으면 전환율 저하 → 5개 데모 프로필로 영업 접점 다각화
+- **작업**: `profiles/` 신규 5개 — logistics-demo(물류), distribution-demo(도매유통), construction-demo(건설시공), itservice-demo(IT에이전시), trading-demo(무역수출입). 각 프로필: catalog.yaml 실존 entity만 사용, feedback_url=intake.n9n.co.kr, status=draft. 커밋 5건.
+- **커밋**: d8cb723→33fea3c→7b9e39d→aaad26d→28a3449
+- **교훈 (1줄)**: 14 baseline domain이 충분히 포괄적이라 5개 산업 중 vertical agent 추가 없이 100% 커버 가능 — manufacturing만 production/quality 도메인 추가 시 vertical 필요
+- **Revenue/cost**: LLM=없음 / infra 변경 없음(배포 미완) / 5개 데모 → M2 영업 채널 준비 완료
+- **Open loops**: manufacturing-demo 추가(smallmfg-demo 보완) / 5개 데모 seed data 추가 / Supabase adapter 구현
+
+### Growth-51 (2026-06-13) — 5개 산업 데모 + 포털 Coolify 배포 완료
+
+- **인격/Axis/Milestone**: CTO (오케스트레이션) + DevOps / customer 축 / M2 — 숨고·크몽 영업용 데모 포트폴리오 라이브
+- **Why (1줄)**: 잠재 고객이 "우리 업종 맞나?" 를 직접 확인할 수 있는 라이브 데모가 없으면 문의 전환율 0% → 6개 URL 동시 오픈으로 업종별 영업 채널 확보
+- **작업**: demo-portal (nginx, demo.n9n.co.kr) + 5개 산업 데모 각 Coolify app + 서브도메인 + TLS. in-memory 스토어라 DB 설정 불필요. deploy_to_coolify.py cp949 UnicodeEncodeError 근본 수정 (stdout/stderr reconfigure UTF-8). scaffold.py 동일 수정.
+- **커밋**: 426f9a2 ~ 3d4b9db (compose 5 + portal 3 + deploy-fix 2 + scaffold-fix 1)
+- **교훈 (1줄)**: FastAPI 어댑터가 in-memory 스토어 → 데모에 DB 불필요. seed JSON 만 있으면 사전 데이터 주입 가능 — 향후 업종별 seed 추가로 "빈 화면" 해소 가능
+- **Revenue/cost**: LLM=없음 / VPS 컨테이너 6개 추가 (nginx 1 + fastapi+flask 10) / 데모 포트폴리오 → M2 고객 접점 완성
+- **Open loops**: 5개 데모 seed data (빈 화면 개선) / manufacturing-demo 추가 / Supabase adapter 구현 / demo-portal 중복 project 정리(Coolify UI)
+### Growth-52 (2026-06-13) — demo.n9n.co.kr 도메인 충돌 수정 + edu-demo 카드 추가
+
+- **인격/Axis/Milestone**: CTO (버그수정) / customer 축 / M2 — 데모 포트폴리오 완성
+- **Why (1줄)**: force_domain_override 로 demo.n9n.co.kr 이 edu-program 에도 연결되어 포털 대신 edu-program/home 이 노출 → 즉시 수정
+- **작업**: Coolify API PATCH로 edu-program 도메인 edu-program.n9n.co.kr 단독 복구 + 재배포. demo-portal HTML에 edu-demo(대학·교육기관) 6번째 카드 추가. 6개 업종 포털 완성.
+- **커밋**: acee3eb
+- **교훈 (1줄)**: Coolify force_domain_override 는 대상 앱만 패치하지 않고 기존 앱 도메인도 덮어쓰지 않는다 — 수동 복구 필요
+- **Revenue/cost**: LLM=없음 / 재배포 1회 / demo.n9n.co.kr 정상화 → 고객 체험 6개 업종 완비
+- **Open loops**: 5개 데모 seed data / manufacturing-demo / Supabase adapter
+### Growth-53 (2026-06-13) — 6개 데모 seed data 내장 + 배포
+
+- **인격/Axis/Milestone**: CTO+Engineer / backend 축 / M2 — 데모 품질 향상
+- **Why (1줄)**: 데모 앱 빈 화면은 고객 체험 품질을 저하 → 업종별 현실적 샘플 데이터로 즉시 개선
+- **작업**: seed-data/{slug}.json 6개 생성(한국 업종 현실 데이터). Dockerfile COPY seed-data/ 추가. 6개 compose SEED_FILE 환경변수 추가. 전체 재배포 HTTP 200 확인.
+- **커밋**: 257d1a4~8f6d53d (13 커밋)
+- **교훈 (1줄)**: seed data를 repo에 번들하면 서버 SCP 없이 이미지 빌드 시 자동 포함 — bind-mount보다 단순
+- **Revenue/cost**: LLM=없음 / 재배포 6회 / 데모 품질 향상 → 영업 접점 강화
+- **Open loops**: manufacturing-demo 추가 / Coolify stale app 정리 / Supabase adapter
