@@ -162,3 +162,12 @@
 - **전환 트리거**: 테넌트 ≥ 5 개 AND SECRET_KEY rotate 월 1회 이상 필요 AND Coolify 4.x 가 F-4/F-5 미해소 확인 시.
 - **전체 비교 문서**: `out/analysis/spike-caddy-vs-coolify.md` (gitignored)
 - **교훈 (1줄)**: 함정이 코드 레벨로 캡슐화된 뒤에는, 전환 비용 계산을 "남은 함정" 이 아닌 "캡슐화 유지 비용 vs 전환 후 ops 비용" 으로 해야 한다.
+
+### Growth-67 정적 marketing-site preview 레인 + n9n 공개 데모 2종 (2026-06-15)
+
+- **목적**: marketing-site(정적 SSG, 백엔드 無)는 business-system 전용 `deploy_to_coolify.py`(screen-manifest+SECRET_KEY+/login) 레인을 못 탐 → 정적 preview 레인 신설.
+- **신규 자산**: `frontend/adapters/landing-astro/Dockerfile`(멀티스테이지: node+python3로 scaffold→astro build→nginx, ARG PROFILE_SLUG/DEMO_MODE) · `scripts/workflow/deploy_static_site.py`(deploy_demo_portal.py 일반화, `--slug/--domain/--compose/--service`, idempotent) · `deploy/preview/{gtm-landing,landing-portal}.compose.yml` · `landing-portal/{index.html,Dockerfile}`.
+- **배포 결과**: gtm-landing.n9n.co.kr (project=kt6fcno8hync4plaabxadtqj, app=umyt8l38jv386mwfja5v3d2p, aurora 테마, DEMO_MODE=1) + landing.n9n.co.kr (project=mqzuqcz0au9qgte38r80fcok, app=aqtrpz5vna8auictdquovbww, 랜딩 데모 인덱스 포털) — 둘 다 build finished, HTTPS 200, 콘텐츠 검증 PASS.
+- **함정 (신규)**: Git Bash **MSYS 경로 변환** — CLI 인자 `/deploy/preview/x.yml`가 `C:/Program Files/Git/deploy/preview/x.yml`로 둔갑 → Coolify 422 `docker_compose_location format invalid`. 해소: `MSYS_NO_PATHCONV=1`. (deploy_demo_portal.py는 경로를 Python 상수로 하드코딩해 무사했음 — CLI 인자화하며 노출된 함정.) deploy_static_site.py 사용 시 항상 `MSYS_NO_PATHCONV=1` 프리픽스.
+- **레지스트리**: `infra/registry/{gtm-landing,landing-portal}.yaml` status=live.
+- **교훈 (1줄)**: Windows에서 절대경로를 CLI 인자로 넘길 때는 MSYS 변환을 의심하라 — 같은 값이 하드코딩이면 통과, 인자면 둔갑한다.
