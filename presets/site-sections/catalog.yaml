@@ -1,5 +1,6 @@
 version: "1.0"
 # Site-Sections Catalog — 13 section types for marketing-site deliverables.
+# (Growth-78 adds process + team for A6 B2B services archetype; stats is backlog #2, not yet added)
 # Dialect-neutral; site_manifest.py validates profile site.pages[].sections[] against this.
 # Pattern: presets/ddl/catalog.yaml (machine truth, format: presets/site-sections/_catalog-format.md)
 #
@@ -28,7 +29,7 @@ sections:
     label: "Logo Bar / Social Proof"
     copy_slots:
       required: [eyebrow]
-      optional: [heading, subhead]
+      optional: [heading, subhead, quote, author_name, author_title, company]
     asset_slots: [logo_1, logo_2, logo_3, logo_4, logo_5, logo_6]
     # marquee-3d: 3D perspective proof wall — React island (framer-motion).
     # Required copy: eyebrow (kept for catalog invariant; may be empty string).
@@ -36,7 +37,12 @@ sections:
     # images: required list of image paths (string[]) for this variant — threaded
     #   through site_manifest.py and manifest.ts; validated at profile level.
     # Other variants (horizontal-scroll, grid) use asset_slots; marquee-3d uses images[].
-    variants: [horizontal-scroll, grid, marquee-3d]
+    # quote-band: single full-width customer quote + author attribution + one brand logo.
+    #   Replaces the logo grid with a single credible client voice. Uses copy slots:
+    #   quote (required for this variant), author_name, author_title, company.
+    #   eyebrow may be empty string (catalog invariant). logo_1 serves as the single brand logo.
+    #   Structural alternative to logo-soup for B2B / consulting register (A6 archetype).
+    variants: [horizontal-scroll, grid, marquee-3d, quote-band]
 
   features:
     label: "Feature List"
@@ -133,6 +139,36 @@ sections:
     #   single image right. No fabricated founder photo required; type fills the split.
     # timeline-year: vertical timeline with year markers and short milestone text.
     variants: [founder-split, timeline-year]
+
+  process:
+    label: "How-It-Works / Process"
+    copy_slots:
+      required: [headline]
+      optional: [subhead]
+    asset_slots: []
+    item_slots:
+      required: [title]
+      optional: [description, step_label]
+    # step_label optional: numbering is positional by default (step 1, 2, 3…).
+    # numbered-stack: vertical numbered steps; each step headline + one-line description.
+    # horizontal-steps: left-to-right steps with connectors; collapses to stack on mobile.
+    # split-animation: step number locks left, right column scrolls through step content (React island).
+    variants: [numbered-stack, horizontal-steps, split-animation]
+
+  team:
+    label: "Team / People"
+    copy_slots:
+      required: [headline]
+      optional: [subhead]
+    asset_slots: []
+    item_slots:
+      required: [name, role]
+      optional: [bio, photo]
+    # photo OPTIONAL — when absent the component renders a monogram-initials avatar
+    #   (initials-in-a-circle; no fabricated stock faces).
+    # headshot-grid: 3-4 column grid of avatar + name + role.
+    # headshot-list: horizontal cards; avatar + name + two-line bio.
+    variants: [headshot-grid, headshot-list]
 
   footer:
     label: "Footer"
