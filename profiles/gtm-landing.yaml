@@ -30,14 +30,14 @@ site:
       title: "compounding-stack-harness"
       seo:
         title: "Self-Host Full-Stack Code Generation — compounding-stack-harness"
-        description: "An in-network AI code-generation harness that lets non-technical teams build and run their own business systems — no dev environment required, no data leaves your network."
+        description: "An in-network AI code-generation harness that lets non-technical teams build and run their own business systems. No dev environment required. No data leaves your network."
         og_image: "assets/og-home.png"
       sections:
         - type: hero
           variant: glowy-waves
           copy:
             headline: "Build business systems. Zero dev team."
-            subhead: "Self-hosted AI agents generate your full-stack app — inside your network, on your chosen stack."
+            subhead: "Self-hosted AI agents generate your full-stack app: inside your network, on your chosen stack."
           cta:
             label: "Book a free assessment"
             href: "#contact"
@@ -77,33 +77,33 @@ site:
           variant: carousel
           copy:
             headline: "Three reasons SMBs switch to compounding-stack-harness"
-            subhead: "Domain expertise, architectural flexibility, and cost control — built in from day one."
+            subhead: "Domain expertise, architectural flexibility, and cost control: built in from day one."
           items:
             - title: "AI domain experts included"
               icon: "brain"
-              image: "/proof/lawfirm-demo.jpg"
-              description: "Industry-specific AI agents curate presets for your business domain — no need to hire or brief a human domain expert before you can start."
+              image: "/proof/edu-program.jpg"
+              description: "Industry-specific AI agents curate presets for your business domain. No need to hire or brief a human domain expert before you can start."
             - title: "Swap frontend or backend freely"
               icon: "layers"
-              image: "/proof/distribution-demo.jpg"
-              description: "React, Vue, htmx on the front; Spring Boot, FastAPI, Node, or Go on the back — change either with a one-line profile edit, no rewrites."
+              image: "/proof/gtm-landing.jpg"
+              description: "React, Vue, htmx on the front; Spring Boot, FastAPI, Node, or Go on the back. Change either with a one-line profile edit, no rewrites."
             - title: "Every LLM call is measured"
               icon: "gauge"
-              image: "/proof/intake.jpg"
+              image: "/proof/construction-demo.jpg"
               description: "Built-in cost instrumentation and multi-provider hedging keep AI inference bills predictable; self-host means your data never leaves the building."
 
         - type: faq
           variant: two-col
           copy:
             headline: "Questions IT teams ask before the first call"
-            subhead: "Straight answers — no marketing gloss."
+            subhead: "Straight answers. No marketing gloss."
           items:
             - question: "Does our data leave our network?"
               answer: "No. The harness runs entirely inside your network on your own servers. LLM inference is routed through whichever provider you configure (including on-premise models); no telemetry is sent to us by default. You control every egress point."
             - question: "Are we locked into a specific frontend or backend?"
-              answer: "No. The only stable layer is the wire-protocol contract in the middle. You can start with Spring Boot and React, then migrate the backend to FastAPI later — the profile change is one line and a rebuild. New adapters are addable without touching the contract."
+              answer: "No. The only stable layer is the wire-protocol contract in the middle. You can start with Spring Boot and React, then migrate the backend to FastAPI later (the profile change is one line and a rebuild). New adapters are addable without touching the contract."
             - question: "How do you control LLM costs as usage grows?"
-              answer: "Every agent call is instrumented with token counts and cost estimates logged per request. Automatic fallback routes expensive calls to cheaper providers or cached responses. You see a cost report monthly — and you can cap spend per tenant or per workflow."
+              answer: "Every agent call is instrumented with token counts and cost estimates logged per request. Automatic fallback routes expensive calls to cheaper providers or cached responses. You see a cost report monthly, and you can cap spend per tenant or per workflow."
             - question: "How much effort is the initial self-host setup?"
               answer: "A single docker-compose bring-up with Vault Agent + Keycloak SSO sidecars included. One customer-profile YAML captures your conventions. Typical IT-staff setup time: under a day for the first domain. We run a free assessment call to scope your environment first."
 
@@ -111,7 +111,7 @@ site:
           variant: centered
           copy:
             headline: "Get early access before general availability."
-            subhead: "We are accepting a small cohort of M1 design partners. Book a 30-minute assessment — no commitment, no sales pitch."
+            subhead: "We are accepting a small cohort of M1 design partners. Book a 30-minute assessment: no commitment, no sales pitch."
           cta:
             label: "Get on the early-access list"
             href: "#contact"
