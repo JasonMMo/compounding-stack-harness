@@ -1,8 +1,15 @@
 ---
 /**
  * Features.astro — Feature List section (type: features).
- * Variants: three-col-icon | two-col-alternating | single-col-list
- * Style hints: icon_style (filled|outline|emoji|none), card_style (flat|elevated|bordered|ghost), layout (grid-3|alternating|stack)
+ * Variants: three-col-icon | two-col-alternating | single-col-list | bento-mosaic
+ * Style hints: icon_style (filled|outline|emoji|none), card_style (flat|elevated|bordered|ghost), layout (grid-3|alternating|stack|bento)
+ *
+ * bento-mosaic: irregular CSS grid (CDO spec 2026-06-16).
+ *   Card A (index 0): hero card, grid-row 1/3. Larger heading. Optional image.
+ *   Card E (index 4): wide card, grid-column 1/3 (full row).
+ *   Cards B,C,D: 1×1 grid cells.
+ *   icon_style: none by default in flux theme — typography carries cards.
+ *   No JS required. Growth-69 invariant: all content visible without JS.
  */
 interface StyleHints {
   icon_style?: string
@@ -73,7 +80,63 @@ const displayItems = items.length > 0 ? items : [
       </div>
     )}
 
-    {variant === 'two-col-alternating' ? (
+    {variant === 'bento-mosaic' ? (
+      /*
+       * bento-mosaic: mobile-first.
+       *   <768px  → single column (grid-cols-1). No span overrides — all cards full-width.
+       *   ≥768px  → 2-column grid with hero card spanning 2 rows, wide card spanning 2 cols.
+       *   Inline style cannot be media-queried, so span rules live in a scoped <style> block.
+       *   gap-3 (12px) keeps total padding within 390px:
+       *     section px-6 (24px) × 2 + gap-3 (12px) = 60px overhead. 390 - 60 = 330px usable.
+       */
+      <>
+        <style>{`
+          @media (min-width: 768px) {
+            .bento-grid { grid-template-columns: 1fr 1fr; }
+            .bento-card--hero { grid-row: 1 / 3; grid-column: 1 / 2; }
+            .bento-card--wide { grid-column: 1 / 3; }
+          }
+        `}</style>
+        <div class="bento-grid grid grid-cols-1 gap-3" data-bento-grid>
+          {displayItems.map((item, i) => {
+            const isHero = i === 0
+            const isWide = i === 4
+            const spanClass = isHero ? 'bento-card--hero' : isWide ? 'bento-card--wide' : ''
+            const cardBg = isHero
+              ? 'bg-[var(--color-surface-1)] shadow-[var(--shadow-card)]'
+              : 'bg-[var(--color-surface-2,var(--color-surface-1))]'
+            return (
+              <div
+                class={`${spanClass} p-4 md:p-6 rounded-[var(--radius-card,8px)] border border-[var(--color-surface-3)] ${cardBg}`}
+              >
+                {iconStyle !== 'none' && item.icon && (
+                  <div class="w-6 h-6 mb-3 text-[var(--color-primary)]" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                )}
+                <h3
+                  class={`font-semibold text-[var(--color-text-1)] mb-3 ${isHero ? 'text-xl md:text-2xl lg:text-3xl' : 'text-lg md:text-xl'}`}
+                  style="font-family: var(--font-family-display, inherit);"
+                >
+                  {item.title}
+                </h3>
+                <p class="text-[var(--color-text-2)] text-sm md:text-base">{item.description}</p>
+                {isHero && item.image && (
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    class="mt-4 w-full rounded-[var(--radius-card,8px)]"
+                    loading="lazy"
+                  />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </>
+    ) : variant === 'two-col-alternating' ? (
       <div class="flex flex-col gap-16">
         {displayItems.map((item, i) => (
           <div class={`flex flex-col ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 items-center`}>
