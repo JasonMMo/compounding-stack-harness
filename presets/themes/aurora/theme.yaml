@@ -25,6 +25,9 @@ color:
   hero-bg-to: "#4C1D95"        # violet-900 — gradient end
   section-alt-bg: "#F5F3FF"    # violet-050 — subtle alternating section bg
   accent-glow: "rgba(139,92,246,0.35)"   # violet-500 glow for hero elements
+  # Secondary warm accent — coral/terracotta complement to indigo.
+  # oklch(52% 0.135 42) — refined, not neon; used at ≲15% surface coverage.
+  accent-warm: "#AB5527"                  # warm coral — secondary accent (≲15% coverage)
 
 # ── Typography ─────────────────────────────────────────────────────────────────
 font:
@@ -218,6 +221,14 @@ a11y:
       fg: "#6B7280"
       ratio: 4.61
       note: "text-3 (gray-500) on white — PASS AA minimum (non-essential labels)"
+    - bg: "#FFFFFF"
+      fg: "#AB5527"
+      ratio: 5.17
+      note: "accent-warm on white (FAQ open-state, wayfinding) — PASS AA normal text"
+    - bg: "#1E1B4B"
+      fg: "#AB5527"
+      ratio: 3.09
+      note: "accent-warm on hero-bg-from (stat value — large text 24px bold) — PASS AA large text (≥3:1)"
   kwcag_notes: >
     Gradient hero background maintains white text contrast across the full gradient
     span (darkest point indigo-950: 14.5:1, lightest point violet-900: 9.2:1 — both AAA).
