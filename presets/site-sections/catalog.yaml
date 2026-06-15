@@ -16,7 +16,9 @@ sections:
       required: [headline, subhead]
       optional: [supporting_text]
     asset_slots: [bg_image]
-    variants: [centered, split-left, split-right, fullscreen-video]
+    # glowy-waves: animated canvas hero with React island (framer-motion).
+    # Required: headline, subhead, cta. Optional: pills (string[]), stats ({label,value}[]).
+    variants: [centered, split-left, split-right, fullscreen-video, glowy-waves]
 
   logos:
     label: "Logo Bar / Social Proof"
