@@ -31,6 +31,12 @@
 @import "@fontsource-variable/syne";
 @import "@fontsource-variable/dm-sans";
 
+/* Flux theme: Space Grotesk (display) + Inter (body)
+   Geometric technical display vs optical-precision body — engineered-precision SaaS register.
+   Space Grotesk numerals carry the stats/ticker-band at display scale. */
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/inter";
+
 /* font-display: swap is set per @fontsource package default */
 
 /* ── Generated token CSS (injected by build-tokens.mjs) ───────────────────── */
