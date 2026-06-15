@@ -140,6 +140,14 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **Cross-agent dependency**: Engineer — GalleryParallaxScroll.tsx(rules-of-hooks 수정·SSR opacity 수정), Lead.astro, Story timeline-year 구현. DevOps — terra-ceramics 배포 + COOLIFY_API_BASE 오픈루프 종결.
 - **Cost**: CDO 디자인(design-agent) + engineer 구현 위임.
 
+### Growth-78 (2026-06-16) — meridian 테마 + A6 B2B-services 비주얼 게이트 (MERIDIAN)
+
+- **Decision**: 5번째 테마 **meridian** — B2B 매니지드IT/보안 자문 레지스터. 색 전략 = **Committed(단일 시그널)**: 쿨스톤 화이트 surface #F7F8F4(OKLCH C0.008 H100 — cream/sand 디폴트 회피, 돌 캐스트)에 **딥 포레스트그린 #1A5C3A**(OKLCH H155 = green, navy/indigo 반사 회피) 단 하나. glow·gold·gradient 0. 신뢰는 구조·정밀·여백으로 전달. 폰트 = Syne(geometric-angular display, 엔지니어드 권위) + DM Sans(humanist body) — 대비축 페어링, 이전 5 테마와 전부 distinct.
+- **Accessibility checks**: a11y 8 pair 전부 AA~AAA(body 17:1, primary on surface 12.3:1, hero dark 17.8:1, team monogram white-on-forest 12.3:1 AAA). text-3 tertiary 4.6:1 AA minimum.
+- **Visual verdict (CTO/CDO 게이트)**: desktop+mobile+no-JS 풀페이지 PASS. hero(near-black)→quote-band(forest-green) 연속 다크밴드지만 hue shift 로 의도적 분리 확인. process 넘버럴(합법적 시퀀스), team monogram(MR/PN/TL forest 원), forest-green CTA 밴드 — A6 가 SaaS/F&B/agency 와 구조적으로 다른 회사로 읽힘. 약점=features 텍스트 스택 sparse(이미지 0)이나 B2B 절제로 수용. forest 토큰(#1A5C3A) 라이브 확인.
+- **Cross-agent dependency**: Engineer — Process.astro·Team.astro(monogram)·Logos quote-band·라우팅·Syne/DM Sans 폰트. DevOps — meridian 배포 + 포털 재배포. CTO — profile B2B 카피 직접 작성.
+- **Cost**: design 토큰 CTO 직접(design-agent 미spawn) + engineer 구현 위임.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
