@@ -4,23 +4,11 @@
  */
 
 /* ── Self-hosted fonts (DEC-2: no external CDN) ───────────────────────────── */
-/* Aurora theme: Plus Jakarta Sans (display) + Inter (body) */
-@import "@fontsource/plus-jakarta-sans/400.css";
-@import "@fontsource/plus-jakarta-sans/500.css";
-@import "@fontsource/plus-jakarta-sans/600.css";
-@import "@fontsource/plus-jakarta-sans/700.css";
-@import "@fontsource/plus-jakarta-sans/800.css";
-
-@import "@fontsource/inter/400.css";
-@import "@fontsource/inter/500.css";
-@import "@fontsource/inter/600.css";
-
-/* Studio theme: DM Serif Display (display) + DM Sans (body) */
-@import "@fontsource/dm-serif-display/400.css";
-
-@import "@fontsource/dm-sans/400.css";
-@import "@fontsource/dm-sans/500.css";
-@import "@fontsource/dm-sans/700.css";
+/* Aurora theme: Bricolage Grotesque (display) + Epilogue (body)
+   Variable fonts — single file covers all weights. font-display: swap is
+   set by @fontsource-variable defaults. */
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/epilogue";
 
 /* font-display: swap is set per @fontsource package default */
 
