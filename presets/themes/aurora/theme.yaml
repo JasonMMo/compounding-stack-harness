@@ -28,8 +28,8 @@ color:
 
 # ── Typography ─────────────────────────────────────────────────────────────────
 font:
-  family-display: "'Plus Jakarta Sans', 'Inter Variable', 'Inter', -apple-system, sans-serif"
-  family-body: "'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+  family-display: "'Bricolage Grotesque Variable', 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, sans-serif"
+  family-body: "'Epilogue Variable', 'Epilogue', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
   # Landing-scale extensions
   size-5xl: "48px"
   size-6xl: "60px"
