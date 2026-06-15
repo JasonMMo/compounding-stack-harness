@@ -1,0 +1,174 @@
+---
+/**
+ * Team.astro — Team / People section (type: team).
+ * Variants: headshot-grid (implemented) | headshot-list
+ *
+ * headshot-grid: responsive 3-column grid of team member cards.
+ *   Per theme sections.team.headshot-grid: layout:grid-3, card_style:flat, avatar:monogram.
+ *   Avatar: if item.photo present, render image (rounded). If absent, render monogram
+ *   fallback: filled circle in var(--color-primary) with member initials in white.
+ *   Monogram pair: white #FFFFFF on forest-green #1A5C3A → 12.3:1 (AAA) — from theme a11y.
+ *   card_style:flat = no heavy card chrome (no box-shadow, no heavy borders).
+ *   Name: var(--color-text-1), bold. Role: var(--color-text-3). Bio: var(--color-text-2), small.
+ *
+ * All colors via theme tokens. Fully visible without JS (Growth-69).
+ * motion: data-motion={motionPreset} + data-stagger-delay per card.
+ */
+interface StyleHints {
+  layout?: string
+  card_style?: string
+  avatar?: string
+}
+
+interface TeamMember {
+  name: string
+  role: string
+  bio?: string
+  photo?: string
+}
+
+interface Props {
+  copy: Record<string, string>
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+  items?: TeamMember[]
+}
+
+const {
+  copy = {},
+  variant = 'headshot-grid',
+  styleHints = {},
+  motionPreset = 'stagger-children',
+  items = [],
+} = Astro.props
+
+// Default demo members if no items provided.
+const displayItems: TeamMember[] = items.length > 0 ? items : [
+  { name: 'Alex Morgan', role: 'Principal', bio: 'Leads strategy and client relationships.' },
+  { name: 'Jordan Kim', role: 'Lead Engineer', bio: 'Specializes in cloud infrastructure.' },
+  { name: 'Sam Rivera', role: 'Operations', bio: 'Keeps delivery on track.' },
+]
+
+/**
+ * Compute monogram initials: first letter of each of the first two words.
+ * "Marcus Reyes" → "MR", "Priya Nair" → "PN", "Tomas Lindqvist" → "TL".
+ */
+function getInitials(name: string): string {
+  const words = name.trim().split(/\s+/)
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase()
+  }
+  return (words[0]?.slice(0, 2) ?? 'XX').toUpperCase()
+}
+---
+
+<section
+  class="w-full py-[var(--space-section-y,104px)] px-[var(--space-container-gutter,24px)] bg-[var(--color-section-alt-bg,#ECEDE8)]"
+  data-motion={motionPreset}
+  data-stagger-delay="80"
+>
+  <div class="max-w-[var(--space-container-max,1160px)] mx-auto">
+    {copy.headline && (
+      <div class="mb-12">
+        <h2
+          class="text-3xl md:text-4xl font-[var(--font-weight-display,800)] text-[var(--color-text-1,#171E19)] tracking-[var(--font-letter-spacing-display,-0.025em)]"
+          style="font-family: var(--font-family-display, inherit);"
+        >
+          {copy.headline}
+        </h2>
+        {copy.subhead && (
+          <p class="mt-4 text-lg text-[var(--color-text-2,#394F3E)] max-w-2xl">
+            {copy.subhead}
+          </p>
+        )}
+      </div>
+    )}
+
+    {variant === 'headshot-grid' && (
+      <ul class="list-none m-0 p-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-10">
+        {displayItems.map((member) => {
+          const initials = getInitials(member.name)
+          return (
+            <li class="flex flex-col items-start">
+              {/* Avatar: photo or monogram fallback */}
+              {member.photo ? (
+                <img
+                  src={member.photo}
+                  alt={member.name}
+                  class="w-16 h-16 rounded-full object-cover mb-4"
+                  loading="lazy"
+                />
+              ) : (
+                /*
+                  Monogram: white initials on forest-green circle.
+                  Color pair: #FFFFFF on #1A5C3A → 12.3:1 (AAA) per theme a11y notes.
+                  aria-hidden because the name is rendered below.
+                */
+                <div
+                  class="w-16 h-16 rounded-full flex items-center justify-center mb-4 select-none flex-shrink-0"
+                  style="background: var(--color-primary, #1A5C3A);"
+                  aria-hidden="true"
+                >
+                  <span
+                    class="text-lg font-bold leading-none"
+                    style="color: #ffffff; font-family: var(--font-family-display, inherit);"
+                  >
+                    {initials}
+                  </span>
+                </div>
+              )}
+
+              {/* Name */}
+              <p
+                class="text-base font-semibold text-[var(--color-text-1,#171E19)] mb-0.5"
+                style="font-family: var(--font-family-body, inherit);"
+              >
+                {member.name}
+              </p>
+
+              {/* Role */}
+              <p
+                class="text-sm text-[var(--color-text-3,#627A68)] mb-2"
+                style="font-family: var(--font-family-body, inherit);"
+              >
+                {member.role}
+              </p>
+
+              {/* Bio — optional */}
+              {member.bio && (
+                <p
+                  class="text-sm text-[var(--color-text-2,#394F3E)] leading-relaxed"
+                  style="font-family: var(--font-family-body, inherit);"
+                >
+                  {member.bio}
+                </p>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    )}
+
+    {variant !== 'headshot-grid' && (
+      /* Graceful fallback for unimplemented variants */
+      <ul class="list-none m-0 p-0 flex flex-col gap-6">
+        {displayItems.map((member) => (
+          <li class="flex items-center gap-4">
+            <div
+              class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+              style="background: var(--color-primary, #1A5C3A);"
+              aria-hidden="true"
+            >
+              <span class="text-sm font-bold" style="color: #ffffff;">{getInitials(member.name)}</span>
+            </div>
+            <div>
+              <p class="font-semibold text-[var(--color-text-1,#171E19)]">{member.name}</p>
+              <p class="text-sm text-[var(--color-text-3,#627A68)]">{member.role}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</section>
