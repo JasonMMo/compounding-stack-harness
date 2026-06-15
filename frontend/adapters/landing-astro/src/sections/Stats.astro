@@ -1,0 +1,144 @@
+---
+/**
+ * Stats.astro — Stats / Metrics Band section (type: stats).
+ * Variants: ticker-band | four-up
+ *
+ * ticker-band: full-width dark band, stats inline separated by thin left-border.
+ *   No card boxing. Large display-font numerals on dark bg (amber-gold accent).
+ *   Pure Astro — no React island. No JS required. Growth-69 invariant.
+ *   CDO spec 2026-06-16: value color = var(--color-primary-border) (4.6:1 on dark bg,
+ *   AA large text). Label color = var(--color-surface-3).
+ *   Separator = border-left on adjacent items (CSS, no DOM node).
+ *   Background = var(--color-hero-bg-from) — charcoal band.
+ *
+ * four-up: 4 stats in a grid row; large number + small label per cell (light bg).
+ *   Fallback variant — basic implementation.
+ *
+ * All colors via theme tokens. No hardcoded hex.
+ * Motion: data-motion attribute for IntersectionObserver entrance (scale-in preset per flux).
+ */
+
+interface StatItem {
+  value: string
+  label: string
+}
+
+interface StyleHints {
+  bg?: string
+  text_align?: string
+  separator_style?: string
+  layout?: string
+}
+
+interface Props {
+  copy?: Record<string, string>
+  variant?: string
+  styleHints?: StyleHints
+  motionPreset?: string
+  items?: StatItem[]
+}
+
+const {
+  copy = {},
+  variant = 'ticker-band',
+  styleHints = {},
+  motionPreset = 'scale-in',
+  items = [],
+} = Astro.props
+
+// Default demo stats if no items provided
+const displayItems: StatItem[] = items.length > 0 ? items : [
+  { value: '99.99%', label: 'Uptime SLA' },
+  { value: '2.1B', label: 'Events / day' },
+  { value: '<50ms', label: 'P99 latency' },
+  { value: '10k+', label: 'Teams' },
+]
+---
+
+{variant === 'ticker-band' ? (
+  <section
+    class="w-full py-[var(--space-section-y-mobile,64px)] px-[var(--space-container-gutter,24px)]"
+    style="background: var(--color-hero-bg-from, #1A1610);"
+    aria-label={copy.headline ?? 'Platform statistics'}
+    data-motion={motionPreset}
+  >
+    <div class="max-w-[var(--space-container-max,1180px)] mx-auto">
+      {copy.headline && (
+        <p
+          class="text-center text-sm font-medium uppercase tracking-[0.1em] mb-8 text-[var(--color-surface-3)]"
+          style="font-family: var(--font-family-body, inherit);"
+        >
+          {copy.headline}
+        </p>
+      )}
+      {/*
+        Mobile (<640px): 2-column grid — each stat gets full cell width, no overflow.
+        sm+ (≥640px): flex row with dividers between items.
+        border-left dividers applied only on sm+ via a CSS class to avoid
+        misaligned dividers on wrapped rows.
+      */}
+      <ul
+        class="grid grid-cols-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-center list-none m-0 p-0 gap-y-8 sm:gap-y-0"
+        role="list"
+      >
+        {displayItems.map((stat, i) => (
+          <li
+            class={`flex flex-col items-center text-center py-2 sm:py-4 px-4 sm:px-[clamp(20px,3vw,48px)]${i > 0 ? ' sm:[border-left:1px_solid_var(--color-surface-3,#DDDBD7)]' : ''}`}
+          >
+            <span
+              class="leading-none font-[var(--font-weight-display,700)]"
+              style="font-family: var(--font-family-display, inherit); font-size: clamp(2rem, 5vw, 3.5rem); color: var(--color-primary-border, #C99430);"
+            >
+              {stat.value}
+            </span>
+            <span
+              class="mt-2 text-xs font-medium uppercase tracking-[0.1em] text-[var(--color-surface-3,#DDDBD7)]"
+              style="font-family: var(--font-family-body, inherit);"
+            >
+              {stat.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+) : (
+  /* four-up: 4 stats grid, light bg */
+  <section
+    class="w-full py-[var(--space-section-y,96px)] px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-2,var(--color-surface-1))]"
+    aria-label={copy.headline ?? 'Platform statistics'}
+    data-motion={motionPreset}
+  >
+    <div class="max-w-[var(--space-container-max,1180px)] mx-auto">
+      {copy.headline && (
+        <h2
+          class="text-center text-3xl font-bold text-[var(--color-text-1)] mb-12"
+          style="font-family: var(--font-family-display, inherit);"
+        >
+          {copy.headline}
+        </h2>
+      )}
+      <ul
+        class="grid grid-cols-2 md:grid-cols-4 gap-8 list-none m-0 p-0"
+        role="list"
+      >
+        {displayItems.map((stat) => (
+          <li class="flex flex-col items-center text-center">
+            <span
+              class="leading-none font-[var(--font-weight-display,700)] text-[var(--color-primary)]"
+              style="font-family: var(--font-family-display, inherit); font-size: clamp(2rem, 4vw, 3.5rem);"
+            >
+              {stat.value}
+            </span>
+            <span
+              class="mt-2 text-sm text-[var(--color-text-2)]"
+              style="font-family: var(--font-family-body, inherit);"
+            >
+              {stat.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+)}
