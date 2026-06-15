@@ -9,6 +9,11 @@
  *   No fabricated founder photo — a text-only right column is valid and
  *   intentional for the A2 archetype (creative agency without stock headshots).
  *
+ * timeline-year: vertical timeline with year markers and short milestone text.
+ *   Accepts items[] with required slots: year, milestone; optional: detail.
+ *   Added additively — founder-split unchanged. No JS required.
+ *   Catalog change: story type now has item_slots (year, milestone, detail).
+ *
  * All colors via theme tokens. Fully visible without JS (Growth-69).
  */
 interface StyleHints {
@@ -17,12 +22,19 @@ interface StyleHints {
   bg?: string
 }
 
+interface TimelineItem {
+  year: string | number
+  milestone: string
+  detail?: string
+}
+
 interface Props {
   copy: Record<string, string>
   assets?: string[]
   variant?: string
   styleHints?: StyleHints
   motionPreset?: string
+  items?: TimelineItem[]
 }
 
 const {
@@ -31,6 +43,7 @@ const {
   variant = 'founder-split',
   styleHints = {},
   motionPreset = 'fade-up',
+  items = [],
 } = Astro.props
 
 const bg = styleHints.bg ?? 'light'
@@ -129,24 +142,52 @@ const borderColor = onDark ? 'border-[var(--color-surface-3,#D8D0C4)]' : 'border
             {copy.headline}
           </h2>
         )}
-        <!-- timeline-year renders placeholder milestones if no items provided -->
-        <!-- (items support added when profile supplies them; same items[] pattern as features) -->
+        <!-- timeline-year: items[] with {year, milestone, detail?} are the primary source.
+             Falls back to copy.body paragraphs if no items provided (backward compat).
+             Astro-native, no JS. All colors via theme tokens. Growth-69 invariant met. -->
         <div class={`space-y-0 border-l border-[var(--color-surface-3,#D8D0C4)]`}>
-          {copy.body && copy.body.split('\n\n').map((para: string, i: number) => (
-            <div class="relative pl-8 pb-10">
-              <div
-                class="absolute left-[-5px] top-1 w-[9px] h-[9px] rounded-full bg-[var(--color-primary,#9A5B32)]"
-                aria-hidden="true"
-              />
-              <p class={`text-base leading-relaxed ${bodyColor}`}>{para.trim()}</p>
-            </div>
-          ))}
-          {!copy.body && (
-            <div class="relative pl-8 pb-10">
-              <div class="absolute left-[-5px] top-1 w-[9px] h-[9px] rounded-full bg-[var(--color-primary,#9A5B32)]" aria-hidden="true" />
-              <p class={`text-base ${bodyColor}`}>Studio founded — work begins.</p>
-            </div>
-          )}
+          {items.length > 0
+            ? items.map((item: TimelineItem) => (
+                <div class="relative pl-8 pb-10">
+                  <div
+                    class="absolute left-[-5px] top-1.5 w-[9px] h-[9px] rounded-full bg-[var(--color-primary,#9A5B32)]"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <span
+                      class="text-xs font-semibold uppercase tracking-[0.14em] mr-3"
+                      style={`color: var(--color-primary, #9A5B32); font-family: var(--font-family-body, inherit);`}
+                    >
+                      {item.year}
+                    </span>
+                    <span class={`text-base font-medium ${headlineColor}`} style="font-family: var(--font-family-body, inherit);">
+                      {item.milestone}
+                    </span>
+                    {item.detail && (
+                      <p class={`mt-1 text-sm leading-relaxed ${bodyColor}`} style="font-family: var(--font-family-body, inherit);">
+                        {item.detail}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))
+            : copy.body
+              ? copy.body.split('\n\n').map((para: string) => (
+                  <div class="relative pl-8 pb-10">
+                    <div
+                      class="absolute left-[-5px] top-1 w-[9px] h-[9px] rounded-full bg-[var(--color-primary,#9A5B32)]"
+                      aria-hidden="true"
+                    />
+                    <p class={`text-base leading-relaxed ${bodyColor}`}>{para.trim()}</p>
+                  </div>
+                ))
+              : (
+                  <div class="relative pl-8 pb-10">
+                    <div class="absolute left-[-5px] top-1 w-[9px] h-[9px] rounded-full bg-[var(--color-primary,#9A5B32)]" aria-hidden="true" />
+                    <p class={`text-base ${bodyColor}`}>Studio founded — work begins.</p>
+                  </div>
+                )
+          }
         </div>
       </div>
     )}
