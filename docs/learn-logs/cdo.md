@@ -89,6 +89,13 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **후속(open)**: 6 커맨드(layout/colorize/typeset/bolder/delight/polish) 검토 완료 — gtm-landing 에 layout(동일카드 격파)+polish 패스 후보. vision-QA 안티패턴 편입 미시행.
 - Cost: CDO 검토(이 인격).
 
+### Growth-72 (2026-06-15) — typeface 결정: Bricolage Grotesque + Epilogue (de-slop)
+
+- **결정**: gtm-landing 폰트를 reflex-reject 4종(Plus Jakarta/Inter/DM Sans/DM Serif)에서 **Bricolage Grotesque(display)+Epilogue(body)** 로 교체. contrast-axis(구성적 그로테스크 + 기하-휴머니스트), 둘 다 off-reflex·MIT·self-host. "실물 craft" 브랜드에 캐릭터 부여, editorial/Stripe-minimal 포화 레인 회피. aurora theme.yaml 토큰 갱신 → 전 consumer 상속.
+- **hero accent**: 그래디언트 텍스트(Absolute Ban) → 솔리드 바이올렛 #C4B5FD(aurora glow 톤 유지하며 ban 해소).
+- **후속(open)**: hero glow 톤다운(/quieter, 유저 승인됨) → 다음. carousel /login 이미지 교체(/polish). em-dash(/clarify). critique 재실행해 27→상승 확인 권장.
+- Cost: CDO 폰트 결정(이 인격) + engineer 위임.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
