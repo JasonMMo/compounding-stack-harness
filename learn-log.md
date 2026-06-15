@@ -423,3 +423,11 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **잔여(open)**: 스탯 강조를 manifest `highlight` 플래그로(휴리스틱 대체), carousel 전용 목업, 연락폼 실엔드포인트.
 - **상세**: [cdo ledger](docs/learn-logs/cdo.md) · [engineer ledger](docs/learn-logs/engineer.md)
 - **결정 메모리**: [[impeccable-design-skill]] · [[marketing-site-track]]
+
+### Growth-75 (2026-06-15) — 2번째 테마 데모: HOPWELL 맥주 런칭 (harvest 테마) LIVE
+
+- **인격/Axis/Milestone**: CTO(방향·배포·검증) + CDO(harvest 테마 craft) + Engineer(어댑터 멀티테마 픽스) + DevOps(배포) / **theme/section(8축)**·frontend·infra / M1(웹에이전시 데모 다양화)
+- **1줄 rollup**: gtm(차가운 indigo-glow)과 **정반대 질감**의 맥주 런칭 랜딩 신설 — 신규 **harvest 테마**(앰버-카퍼 drench + 홉그린 + 포말, OKLCH; Big Shoulders Display + Hanken Grotesk off-reflex; 그레인 텍스처 + 탄산 버블, canvas 아님) + **hopwell 프로파일**(hero `brew` variant + 3 pillar=roasted malt/fresh hops/crisp finish + faq + cta). **https://hopwell.n9n.co.kr** LIVE + landing 포털에 카드 추가(2번째 라이브 테마). detector CLEAN, no-JS 가시, 전 섹션 AA. theme 축이 진짜 복리로 도는 것 2번째 증명.
+- **함정/교훈**: ① **빌드 파이프라인이 aurora 하드코딩**이라 harvest 토큰이 덮여 carousel/FAQ가 indigo로 렌더 → `build-tokens-auto.mjs`(manifest의 theme 자동 읽기)로 **theme-aware 빌드** 픽스(전 미래 테마의 전제조건, Docker 무변경). ② **build green·detector CLEAN ≠ 비주얼 정상** — 풀페이지 스크린샷이 3차례 결함 적발(aurora 색 클로버, 거대 셰브론, below-fold 모션 blank). 시각검증 불가결 재확인. ③ 모션 reveal가 headless/below-fold에서 blank → threshold 0 + rootMargin 200px + 800ms fallback(Growth-69 계열 재발). ④ **배포 함정 2종**: `deploy_static_site.py --domain`은 **https:// 스킴 필수**(없으면 422 Invalid URL); docker_compose_domains PATCH 포맷은 `[{"name":svc,"domain":url}]` 배열. ⑤ SSH 터널(8000) 드롭+좀비소켓 점유 시 **다른 로컬 포트(8010)로 재수립** 후 직접 API 호출로 우회.
+- **상세**: [devops ledger](docs/learn-logs/devops.md) · [cdo ledger](docs/learn-logs/cdo.md) · [engineer ledger](docs/learn-logs/engineer.md)
+- **결정 메모리**: [[marketing-site-track]] · [[infra-stack]]
