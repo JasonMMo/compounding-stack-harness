@@ -37,6 +37,8 @@ export interface Section {
   stats?: StatItem[]
   /** Optional image paths (used by logos/marquee-3d variant — proof wall). */
   images?: string[]
+  /** Optional company name strings for asset-free text wordmark rendering (logos/horizontal-scroll). */
+  companies?: string[]
 }
 
 export interface PageSeo {
