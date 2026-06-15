@@ -472,3 +472,273 @@ class TestDogfoodAgencyDemo:
         section_types = [s["type"] for s in home["sections"]]
         assert "hero" in section_types
         assert "footer" in section_types
+
+
+# ---------------------------------------------------------------------------
+# items threading: build_site_manifest passes items through
+# ---------------------------------------------------------------------------
+
+class TestItemsThreading:
+    """(a) items thread through build_site_manifest into the manifest output."""
+
+    def test_items_present_in_manifest_output(self):
+        """items[] from profile section appear verbatim in manifest section output."""
+        profile = {
+            "customer": {"slug": "test-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "aurora",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "features",
+                                "copy": {"headline": "Our Features"},
+                                "items": [
+                                    {"title": "Fast", "description": "Ships in seconds."},
+                                    {"title": "Reliable", "description": "99.9% uptime."},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        home = manifest["pages"][0]
+        features_sec = home["sections"][0]
+        assert "items" in features_sec
+        assert len(features_sec["items"]) == 2
+        assert features_sec["items"][0]["title"] == "Fast"
+        assert features_sec["items"][1]["description"] == "99.9% uptime."
+
+    def test_section_without_items_omits_key(self):
+        """A section with no items list must not include an 'items' key in the manifest."""
+        profile = {
+            "customer": {"slug": "test-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "aurora",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "features",
+                                "copy": {"headline": "Our Features"},
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        features_sec = manifest["pages"][0]["sections"][0]
+        assert "items" not in features_sec
+
+    def test_faq_items_thread_through(self):
+        """FAQ items thread through just as features items do."""
+        profile = {
+            "customer": {"slug": "test-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "aurora",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "faq",
+                                "copy": {"headline": "FAQ"},
+                                "items": [
+                                    {"question": "What is this?", "answer": "A great product."},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        faq_sec = manifest["pages"][0]["sections"][0]
+        assert "items" in faq_sec
+        assert faq_sec["items"][0]["question"] == "What is this?"
+
+
+# ---------------------------------------------------------------------------
+# items validation: validate_site checks item_slots.required
+# ---------------------------------------------------------------------------
+
+class TestItemSlotsValidation:
+    """(b) validate_site flags a features item missing required 'description'.
+    (c) validate_site passes when items are well-formed.
+    (d) a section with no items list still validates (no false error).
+    """
+
+    def test_features_item_missing_description_flagged(self, catalog):
+        """(b) item missing required 'description' produces a violation."""
+        site = {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [
+                        {
+                            "type": "features",
+                            "copy": {"headline": "Features"},
+                            "items": [
+                                {"title": "Fast"},  # description missing
+                            ],
+                        }
+                    ],
+                }
+            ]
+        }
+        errs = validate_site(site, catalog)
+        assert any("description" in e for e in errs), f"Expected violation for 'description', got: {errs}"
+        assert any("item[0]" in e for e in errs)
+
+    def test_features_item_missing_title_flagged(self, catalog):
+        """item missing required 'title' produces a violation."""
+        site = {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [
+                        {
+                            "type": "features",
+                            "copy": {"headline": "Features"},
+                            "items": [
+                                {"description": "Some text"},  # title missing
+                            ],
+                        }
+                    ],
+                }
+            ]
+        }
+        errs = validate_site(site, catalog)
+        assert any("title" in e for e in errs), f"Expected violation for 'title', got: {errs}"
+
+    def test_faq_item_missing_answer_flagged(self, catalog):
+        """FAQ item missing required 'answer' produces a violation."""
+        site = {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [
+                        {
+                            "type": "faq",
+                            "copy": {"headline": "FAQ"},
+                            "items": [
+                                {"question": "What is this?"},  # answer missing
+                            ],
+                        }
+                    ],
+                }
+            ]
+        }
+        errs = validate_site(site, catalog)
+        assert any("answer" in e for e in errs), f"Expected violation for 'answer', got: {errs}"
+
+    def test_well_formed_features_items_pass(self, catalog):
+        """(c) validate_site passes when all required item slots are present."""
+        site = {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [
+                        {
+                            "type": "features",
+                            "copy": {"headline": "Features"},
+                            "items": [
+                                {"title": "Fast", "description": "Ships in seconds."},
+                                {"title": "Reliable", "description": "99.9% uptime.", "icon": "shield"},
+                            ],
+                        }
+                    ],
+                }
+            ]
+        }
+        errs = validate_site(site, catalog)
+        assert errs == [], f"Expected no violations for well-formed items, got: {errs}"
+
+    def test_well_formed_faq_items_pass(self, catalog):
+        """(c) well-formed FAQ items pass validation."""
+        site = {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [
+                        {
+                            "type": "faq",
+                            "copy": {"headline": "FAQ"},
+                            "items": [
+                                {"question": "How much?", "answer": "Free tier available."},
+                            ],
+                        }
+                    ],
+                }
+            ]
+        }
+        errs = validate_site(site, catalog)
+        assert errs == [], f"Expected no violations for well-formed FAQ items, got: {errs}"
+
+    def test_section_without_items_no_error(self, catalog):
+        """(d) a features/faq section with no items list must not produce a violation."""
+        site = {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [
+                        {
+                            "type": "features",
+                            "copy": {"headline": "Features"},
+                            # no items key at all — fallback to demo items in component
+                        },
+                        {
+                            "type": "faq",
+                            "copy": {"headline": "FAQ"},
+                            # no items key at all
+                        },
+                    ],
+                }
+            ]
+        }
+        errs = validate_site(site, catalog)
+        assert errs == [], f"Expected no violations when items omitted, got: {errs}"
+
+    def test_violation_message_includes_page_section_and_index(self, catalog):
+        """Violation message includes page slug, section type, and item index."""
+        site = {
+            "pages": [
+                {
+                    "slug": "services",
+                    "title": "Services",
+                    "sections": [
+                        {
+                            "type": "features",
+                            "copy": {"headline": "Features"},
+                            "items": [
+                                {"title": "OK", "description": "Fine"},      # item[0] good
+                                {"title": "Missing desc"},                    # item[1] bad
+                            ],
+                        }
+                    ],
+                }
+            ]
+        }
+        errs = validate_site(site, catalog)
+        assert len(errs) == 1
+        assert "services" in errs[0]
+        assert "features" in errs[0]
+        assert "item[1]" in errs[0]
+        assert "description" in errs[0]
