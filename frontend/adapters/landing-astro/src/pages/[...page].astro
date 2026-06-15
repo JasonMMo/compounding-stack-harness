@@ -16,6 +16,7 @@ import type { GetStaticPaths } from 'astro'
 
 import BaseLayout from '../layouts/BaseLayout.astro'
 import Hero from '../sections/Hero.astro'
+import { HeroGlowyWaves } from '../sections/HeroGlowyWaves'
 import Logos from '../sections/Logos.astro'
 import Features from '../sections/Features.astro'
 import Pricing from '../sections/Pricing.astro'
@@ -77,6 +78,23 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
     const motionPreset = getMotionPreset(theme, section.type)
 
     if (section.type === 'hero') {
+      // glowy-waves variant: render the React island (client:visible hydration).
+      if (section.variant === 'glowy-waves') {
+        const headline = section.copy?.headline ?? ''
+        const subhead = section.copy?.subhead ?? ''
+        const heroCta = section.cta ?? { label: 'Learn more', href: '#' }
+        return (
+          <HeroGlowyWaves
+            client:visible
+            headline={headline}
+            subhead={subhead}
+            cta={heroCta}
+            pills={section.pills}
+            stats={section.stats}
+          />
+        )
+      }
+      // Default: static Astro hero (all other variants).
       return (
         <Hero
           copy={section.copy ?? {}}
