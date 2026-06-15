@@ -45,6 +45,31 @@ const { title, description, ogImage, siteSlug = '' } = Astro.props
       // is immediately visible (accessibility — no content ever lost).
       const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 
+      function revealEl(el, observer) {
+        const preset = el.dataset.motion
+        // Always reveal the container first, regardless of preset.
+        el.classList.remove('motion-hidden')
+
+        if (preset === 'stagger-children') {
+          // Stagger: animate each direct child with delay offset
+          const staggerDelay = Number(el.dataset.staggerDelay ?? 80)
+          Array.from(el.children).forEach((child, i) => {
+            child.style.animationDelay = `${i * staggerDelay}ms`
+            child.classList.remove('motion-hidden')
+            child.classList.add('motion-stagger-child', 'motion-visible')
+          })
+        } else if (preset === 'fade-up' || preset === 'reveal-on-scroll') {
+          el.classList.add('motion-fade-up')
+        } else if (preset === 'scale-in') {
+          el.classList.add('motion-scale-in')
+        } else {
+          // fade-simple fallback for unknown presets
+          el.classList.add('motion-fade-simple')
+        }
+
+        if (observer) observer.unobserve(el)
+      }
+
       function initMotion() {
         const targets = document.querySelectorAll('[data-motion]')
         if (!targets.length) return
@@ -53,43 +78,32 @@ const { title, description, ogImage, siteSlug = '' } = Astro.props
         // Content stays visible immediately — no scroll-reveal behaviour.
         if (motionQuery.matches) return
 
+        // Hide targets before observing so they can be revealed on scroll.
+        targets.forEach((el) => el.classList.add('motion-hidden'))
+
         const observer = new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
               if (!entry.isIntersecting) return
-              const el = entry.target
-              const preset = el.dataset.motion
-
-              // Always reveal the container first, regardless of preset.
-              el.classList.remove('motion-hidden')
-
-              if (preset === 'stagger-children') {
-                // Stagger: animate each direct child with delay offset
-                const staggerDelay = Number(el.dataset.staggerDelay ?? 80)
-                Array.from(el.children).forEach((child, i) => {
-                  child.style.animationDelay = `${i * staggerDelay}ms`
-                  child.classList.remove('motion-hidden')
-                  child.classList.add('motion-stagger-child', 'motion-visible')
-                })
-              } else if (preset === 'fade-up' || preset === 'reveal-on-scroll') {
-                el.classList.add('motion-fade-up')
-              } else if (preset === 'scale-in') {
-                el.classList.add('motion-scale-in')
-              } else {
-                // fade-simple fallback for unknown presets
-                el.classList.add('motion-fade-simple')
-              }
-
-              observer.unobserve(el)
+              revealEl(entry.target, observer)
             })
           },
-          { threshold: 0.15, rootMargin: '0px 0px -64px 0px' }
+          // threshold:0 fires as soon as any pixel enters viewport.
+          // rootMargin top 200px pre-triggers elements just below fold.
+          // No negative bottom margin — avoids hiding sections in full-page
+          // screenshot contexts (headless, Playwright fullPage:true).
+          { threshold: 0, rootMargin: '200px 0px 200px 0px' }
         )
 
-        targets.forEach((el) => {
-          el.classList.add('motion-hidden')
-          observer.observe(el)
-        })
+        targets.forEach((el) => observer.observe(el))
+
+        // Safety fallback: reveal all remaining hidden elements after 800ms
+        // in case IntersectionObserver never fires (e.g. hidden iframe, print).
+        setTimeout(() => {
+          document.querySelectorAll('[data-motion].motion-hidden').forEach((el) => {
+            revealEl(el, null)
+          })
+        }, 800)
       }
 
       if (document.readyState === 'loading') {
