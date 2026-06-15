@@ -580,6 +580,22 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 
 - Cost: engineer subagent 다회 / envelope 반환.
 
+### Growth-78 (2026-06-16) — Process + Team + Logos quote-band (A6 B2B 섹션 3종, 전부 Astro-native)
+
+- Files touched:
+  - `frontend/adapters/landing-astro/src/sections/Process.astro` (신규 — process/numbered-stack: bold display 넘버럴 left-rail + title/description, ghost 카드, thin divider, 위치 기반 넘버링·step_label override)
+  - `frontend/adapters/landing-astro/src/sections/Team.astro` (신규 — team/headshot-grid: 반응형 avatar 그리드, **monogram-initials 폴백** — photo 없으면 forest-green 원에 이니셜 흰 글씨, 사진 0)
+  - `frontend/adapters/landing-astro/src/sections/Logos.astro` (수정 — quote-band variant: 다크 밴드 단일 고객 인용+author 어트리뷰션, copy.quote/author_name/author_title/company, 기존 horizontal-scroll·grid 분기 무변경)
+  - `frontend/adapters/landing-astro/src/pages/[...page].astro` (수정 — process·team section type 라우팅 추가; logos quote-band 는 기존 Logos 경로 재사용)
+  - `frontend/adapters/landing-astro/package.json`·`package-lock.json`·`src/styles/global.css` (수정 — @fontsource-variable/syne + dm-sans 추가·import)
+- Implementation choices:
+  - **전부 Astro-native(React 아일랜드 0)**: quote-band/numbered-stack/headshot-grid 모두 정적 렌더, JS 는 IntersectionObserver entrance 모션만. Growth-77 parallax 와 대조 — A6 는 scroll-cinematic 불필요, 무JS 완전 렌더가 B2B 신뢰 레지스터에 더 적합.
+  - **monogram 폴백**: `item.photo` 부재 시 이니셜(이름 첫 두 단어 첫 글자) forest-green 원 흰 글씨 — 조작된 stock face 0, asset-free 패턴(parallax texture: sentinel 과 동일 철학).
+  - **numbered-stack 넘버링 합법성**: process 는 진짜 순차(impeccable — 순서가 정보를 담는 경우 넘버 허용). eyebrow-reflex 아님.
+- Tests/verify: npm install(syne+dm-sans 2 pkg), scaffold → out/meridian/site-manifest.json(process·team·quote-band·contact.enabled), theme-aware build SUCCESS(tokens.gen.css --color-primary #1A5C3A — aurora purple 아님), impeccable detector CLEAN([]), desktop+mobile+no-JS 풀페이지 PASS(Growth-69 — motion-hidden 은 런타임 JS 만 추가, SSR HTML 미포함).
+- Catches surfaced: Playwright `fullPage:true` 가 뷰포트 스크롤 안 해 IntersectionObserver 미발화 → 중간 섹션 blank 캡처. screenshot 스크립트에 scroll_and_wait() 추가로 해소(컴포넌트 결함 아님).
+- Cost: engineer subagent 1회 / envelope 반환.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
