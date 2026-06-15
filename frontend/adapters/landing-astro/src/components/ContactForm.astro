@@ -8,6 +8,11 @@
  *
  * G-1: endpoint path derived from ENDPOINT_MAP["entity_create"] in contract.gen.ts.
  * No hardcoded paths in this component.
+ *
+ * DEMO MODE: set env var PUBLIC_DEMO_MODE=1 (or "true") at build time.
+ * When enabled, the form short-circuits on submit — shows the success message and
+ * resets without any network call. Useful for static showcases with no backend.
+ * Indicated by data-demo="true" on the <form> element.
  */
 
 interface Props {
@@ -24,6 +29,10 @@ const {
 // We substitute :entity_type at build/runtime — no hardcode of /api/entities/lead
 const endpointPath = `/api/entities/${entityType}`
 const actionUrl = apiBase ? `${apiBase.replace(/\/$/, '')}${endpointPath}` : endpointPath
+
+// Demo mode: treat "1" or "true" (case-insensitive) as enabled
+const rawDemoMode = import.meta.env.PUBLIC_DEMO_MODE ?? ''
+const isDemoMode = rawDemoMode === '1' || rawDemoMode.toLowerCase() === 'true'
 ---
 
 <section class="w-full py-[var(--space-section-y,112px)] px-[var(--space-container-gutter,24px)] bg-[var(--color-section-alt-bg,var(--color-surface-2,#F9FAFB))]" id="contact">
@@ -36,10 +45,12 @@ const actionUrl = apiBase ? `${apiBase.replace(/\/$/, '')}${endpointPath}` : end
     </p>
 
     <!-- Progressive enhancement: works as plain HTML form; JS enhances for JSON POST -->
+    <!-- data-demo="true" is emitted when PUBLIC_DEMO_MODE is set — JS short-circuits fetch -->
     <form
       id="contact-form"
       data-action={actionUrl}
       data-entity-type={entityType}
+      data-demo={isDemoMode ? 'true' : undefined}
       class="flex flex-col gap-5"
       novalidate
     >
@@ -118,6 +129,15 @@ const actionUrl = apiBase ? `${apiBase.replace(/\/$/, '')}${endpointPath}` : end
       statusEl.className = 'text-sm text-[var(--color-text-3)]'
       statusEl.classList.remove('hidden')
       statusEl.textContent = 'Sending…'
+
+      // DEMO MODE: short-circuit — no network call, show success immediately.
+      if (form.dataset.demo === 'true') {
+        statusEl.className = 'text-sm text-green-600'
+        statusEl.textContent = 'Message sent! We\'ll be in touch soon.'
+        form.reset()
+        btn.disabled = false
+        return
+      }
 
       const name = (form.querySelector('#cf-name') as HTMLInputElement).value.trim()
       const email = (form.querySelector('#cf-email') as HTMLInputElement).value.trim()
