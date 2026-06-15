@@ -123,6 +123,12 @@ sections:
       required: [headline]
       optional: [body, pull_quote, subhead]
     asset_slots: [image]
+    # item_slots: timeline-year variant uses items[] with year + milestone per entry.
+    # detail is optional context text below the milestone. founder-split ignores items.
+    # Omitting items[] entirely is valid (timeline-year falls back to copy.body).
+    item_slots:
+      required: [year, milestone]
+      optional: [detail]
     # founder-split: two-column — heading + prose left, typographic/quote block or
     #   single image right. No fabricated founder photo required; type fills the split.
     # timeline-year: vertical timeline with year markers and short milestone text.
