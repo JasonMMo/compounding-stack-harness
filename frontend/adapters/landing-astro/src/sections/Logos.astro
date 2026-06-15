@@ -1,12 +1,25 @@
 ---
 /**
  * Logos.astro — Logo Bar / Social Proof section (type: logos).
- * Variants: horizontal-scroll | grid
- * Style hints: filter (grayscale | grayscale-hover | none), divider (none | top | bottom | both)
+ * Variants: horizontal-scroll | grid | quote-band
+ *
+ * quote-band: narrow full-width band on a dark background (var(--color-hero-bg-from)),
+ *   rendering a single large centered customer quote + author attribution.
+ *   copy slots used: quote, author_name, author_title, company.
+ *   Optional single brand logo from assets[0]. eyebrow intentionally empty.
+ *   Text on dark must be light (var(--color-surface-1)); attribution uses
+ *   var(--color-primary-subtle) for legibility on dark bg (≥4.5:1).
+ *
+ * Style hints:
+ *   filter (grayscale | grayscale-hover | none), divider (none | top | bottom | both)
+ *   quote-band adds: bg (dark), text_align (center), quote_style (large)
  */
 interface StyleHints {
   filter?: string
   divider?: string
+  bg?: string
+  text_align?: string
+  quote_style?: string
 }
 
 interface Props {
@@ -44,46 +57,106 @@ const dividerClass: Record<string, string> = {
 }
 ---
 
-<section
-  class={`w-full py-12 px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-1,#fff)] ${dividerClass[divider] ?? ''}`}
-  data-motion={motionPreset}
-  data-stagger-delay="80"
->
-  <div class="max-w-[var(--space-container-max,1200px)] mx-auto">
-    {copy.eyebrow && (
-      <p class="text-center text-sm font-semibold uppercase tracking-widest text-[var(--color-text-3,#6B7280)] mb-8">
-        {copy.eyebrow}
-      </p>
-    )}
+{variant === 'quote-band' ? (
+  <!--
+    quote-band: single credible client voice on dark band.
+    Dark bg: var(--color-hero-bg-from, #112219). All text is light.
+    Main quote: var(--color-surface-1, #F7F8F4) — 17.8:1 on #112219 (AAA).
+    Attribution: var(--color-primary-subtle, #EAF2EC) — 16.5:1 on #112219 (AAA).
+    No eyebrow (copy.eyebrow is empty string per profile). No logo-soup.
+    Growth-69: all text fully visible without JS (no opacity:0 in SSR HTML).
+  -->
+  <section
+    class="w-full py-[var(--space-section-y,104px)] px-[var(--space-container-gutter,24px)]"
+    style="background: var(--color-hero-bg-from, #112219);"
+    data-motion={motionPreset}
+    data-stagger-delay="80"
+  >
+    <div class="max-w-[var(--space-container-max,1160px)] mx-auto text-center">
+      {assets.length > 0 && (
+        <img
+          src={assets[0]}
+          alt="Client brand"
+          class="h-8 object-contain mx-auto mb-10 opacity-70"
+          loading="lazy"
+        />
+      )}
 
-    {variant === 'horizontal-scroll' ? (
-      <div class="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-        {assets.map((src) => (
-          <img
-            src={src}
-            alt="Partner logo"
-            class={`h-8 object-contain ${filterClass[filter] ?? ''}`}
-            loading="lazy"
-          />
-        ))}
-        {assets.length === 0 && (
-          <p class="text-[var(--color-text-3,#6B7280)] italic text-sm">Logo assets not yet added.</p>
-        )}
-      </div>
-    ) : (
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
-        {assets.map((src) => (
-          <img
-            src={src}
-            alt="Partner logo"
-            class={`h-8 object-contain ${filterClass[filter] ?? ''}`}
-            loading="lazy"
-          />
-        ))}
-        {assets.length === 0 && (
-          <p class="col-span-full text-[var(--color-text-3,#6B7280)] italic text-sm text-center">Logo assets not yet added.</p>
-        )}
-      </div>
-    )}
-  </div>
-</section>
+      {copy.quote && (
+        <blockquote>
+          <p
+            class="text-2xl md:text-3xl lg:text-4xl font-[var(--font-weight-display,800)] leading-snug tracking-[var(--font-letter-spacing-display,-0.025em)] mx-auto max-w-3xl"
+            style={`color: var(--color-surface-1, #F7F8F4); font-family: var(--font-family-display, inherit);`}
+          >
+            &ldquo;{copy.quote}&rdquo;
+          </p>
+
+          {(copy.author_name || copy.author_title || copy.company) && (
+            <footer class="mt-8 flex flex-col items-center gap-1">
+              {copy.author_name && (
+                <span
+                  class="text-base font-semibold"
+                  style="color: var(--color-primary-subtle, #EAF2EC);"
+                >
+                  {copy.author_name}
+                </span>
+              )}
+              {(copy.author_title || copy.company) && (
+                <span
+                  class="text-sm"
+                  style="color: var(--color-primary-subtle, #EAF2EC); opacity: 0.80;"
+                >
+                  {[copy.author_title, copy.company].filter(Boolean).join(', ')}
+                </span>
+              )}
+            </footer>
+          )}
+        </blockquote>
+      )}
+    </div>
+  </section>
+) : (
+  <section
+    class={`w-full py-12 px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-1,#fff)] ${dividerClass[divider] ?? ''}`}
+    data-motion={motionPreset}
+    data-stagger-delay="80"
+  >
+    <div class="max-w-[var(--space-container-max,1200px)] mx-auto">
+      {copy.eyebrow && (
+        <p class="text-center text-sm font-semibold uppercase tracking-widest text-[var(--color-text-3,#6B7280)] mb-8">
+          {copy.eyebrow}
+        </p>
+      )}
+
+      {variant === 'horizontal-scroll' ? (
+        <div class="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+          {assets.map((src) => (
+            <img
+              src={src}
+              alt="Partner logo"
+              class={`h-8 object-contain ${filterClass[filter] ?? ''}`}
+              loading="lazy"
+            />
+          ))}
+          {assets.length === 0 && (
+            <p class="text-[var(--color-text-3,#6B7280)] italic text-sm">Logo assets not yet added.</p>
+          )}
+        </div>
+      ) : (
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
+          {assets.map((src) => (
+            <img
+              src={src}
+              alt="Partner logo"
+              class={`h-8 object-contain ${filterClass[filter] ?? ''}`}
+              loading="lazy"
+            />
+          ))}
+          {assets.length === 0 && (
+            <p class="col-span-full text-[var(--color-text-3,#6B7280)] italic text-sm text-center">Logo assets not yet added.</p>
+          )}
+        </div>
+      )}
+    </div>
+  </section>
+)}
