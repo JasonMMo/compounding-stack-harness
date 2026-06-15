@@ -265,6 +265,16 @@ def build_site_manifest(profile: dict[str, Any]) -> dict[str, Any]:
             if items_val:
                 sec_out["items"] = [dict(it) for it in items_val]
 
+            # pills: optional list[str] — used by glowy-waves hero variant.
+            pills_val = section.get("pills")
+            if pills_val:
+                sec_out["pills"] = list(pills_val)
+
+            # stats: optional list[{label, value}] — used by glowy-waves hero variant.
+            stats_val = section.get("stats")
+            if stats_val:
+                sec_out["stats"] = [dict(s) for s in stats_val]
+
             sections_out.append(sec_out)
 
         page_out: dict[str, Any] = {
