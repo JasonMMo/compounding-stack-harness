@@ -28,6 +28,8 @@ interface Props {
   variant?: string
   styleHints?: StyleHints
   motionPreset?: string
+  /** Optional company name list for asset-free wordmark rendering (horizontal-scroll). */
+  companies?: string[]
 }
 
 const {
@@ -36,6 +38,7 @@ const {
   variant = 'horizontal-scroll',
   styleHints = {},
   motionPreset = 'stagger-children',
+  companies = [],
 } = Astro.props
 
 const filter = styleHints.filter ?? 'grayscale'
@@ -129,8 +132,9 @@ const dividerClass: Record<string, string> = {
       )}
 
       {variant === 'horizontal-scroll' ? (
-        <div class="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-          {assets.map((src) => (
+        <div class="flex flex-wrap justify-center items-center gap-6 md:gap-10">
+          {/* Asset path present: render image logos */}
+          {assets.length > 0 && assets.map((src) => (
             <img
               src={src}
               alt="Partner logo"
@@ -138,7 +142,18 @@ const dividerClass: Record<string, string> = {
               loading="lazy"
             />
           ))}
-          {assets.length === 0 && (
+          {/* No assets + companies list: render text wordmarks (zero-file, stock-asset-free) */}
+          {assets.length === 0 && companies.length > 0 && companies.map((name) => (
+            <span
+              class="text-sm font-semibold tracking-[0.04em] uppercase opacity-50 select-none"
+              style="font-family: var(--font-family-display, inherit); color: var(--color-text-2);"
+              aria-label={name}
+            >
+              {name}
+            </span>
+          ))}
+          {/* No assets, no companies: generic placeholder (keeps section non-empty) */}
+          {assets.length === 0 && companies.length === 0 && (
             <p class="text-[var(--color-text-3,#6B7280)] italic text-sm">Logo assets not yet added.</p>
           )}
         </div>
