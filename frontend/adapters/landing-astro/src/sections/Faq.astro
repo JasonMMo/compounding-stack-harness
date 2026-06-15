@@ -70,7 +70,7 @@ const displayItems: FaqItem[] = items.length > 0 ? items : [
         <details
           class={`group py-5 ${dividerClass[divider] ?? ''} ${i === 0 && divider === 'line' ? 'border-t border-[var(--color-border,#E5E7EB)]' : ''}`}
         >
-          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-[var(--color-text-1,#111827)] hover:text-[var(--color-primary,#6D28D9)] transition-colors">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-[var(--color-text-1,#111827)] hover:text-[var(--color-primary,#6D28D9)] group-open:text-[var(--color-accent-warm,#AB5527)] transition-colors">
             <span>{item.question}</span>
             {iconType === 'chevron' && (
               <svg class="w-5 h-5 flex-shrink-0 ml-4 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
