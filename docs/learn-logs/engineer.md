@@ -530,6 +530,13 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - **caveat**: 스탯 강조가 "0 으로 시작" 휴리스틱 — gtm-landing 엔 정확하나 재사용성 위해 manifest `highlight:true` 플래그가 더 견고(open loop).
 - **Cost**: engineer subagent 1회(86K tok) / envelope.
 
+### Growth-75 (2026-06-15) — 어댑터 멀티테마 픽스 + harvest 섹션
+
+- **theme-aware 빌드(핵심)**: `npm run build`가 `build-tokens.mjs aurora` 하드코딩 → harvest 프로파일도 aurora 토큰으로 빌드돼 carousel/FAQ가 indigo. 신규 `scripts/build-tokens-auto.mjs`(PUBLIC_SITE_MANIFEST 의 `.theme` 읽어 build-tokens 호출, fallback aurora)로 교체. Dockerfile 무변경(이미 PUBLIC_SITE_MANIFEST 설정). 전 미래 테마의 전제조건.
+- **harvest 섹션/픽스**: `HeroBrewBubbles.astro`(grain SVG noise + CSS 탄산 버블, no canvas, no-JS 가시), carousel 색 토큰화(harvest amber/aurora indigo 양립)+크래프트 아이콘(wheat/leaf/droplets)+레이아웃, FAQ 셰브론 명시 20px, BaseLayout 모션 reveal 견고화(threshold 0+rootMargin 200px+800ms fallback).
+- **교훈**: build green·detector CLEAN ≠ 비주얼 정상 — 풀페이지 스샷이 토큰 클로버·거대 셰브론·below-fold blank 3차 적발. 멀티테마는 빌드 파이프라인의 테마 가정을 의심.
+- **Cost**: engineer subagent 3회(67+67+103K tok) / envelope.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
