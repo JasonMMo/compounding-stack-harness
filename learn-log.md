@@ -405,3 +405,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **함정/교훈**: ① **도구가 우리 craft drift 를 사전/사후 정확히 적발** — 우리가 의도 적응한 glowy hero 의 그래디언트·제네릭폰트를 dogfood 가 잡음(도구 가치 입증). ② impeccable reflex-reject 폰트 목록에 우리 @fontsource 기본 4종 전부 포함 → 디폴트 폰트=AI 모노컬처 tell. ③ critique 의 결정론 detector 는 grep 사각(em-dash cadence)도 잡음 — vision-QA 보완재.
 - **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
 - **결정 메모리**: [[impeccable-design-skill]] · [[marketing-site-track]]
+
+### Growth-73 (2026-06-15) — critique 백로그 청산: quieter+clarify+polish → 27→30 (Good)
+
+- **인격/Axis/Milestone**: CTO(검증·배포·재critique) + Engineer(3패스) + CDO(이미지 큐레이션) / tooling(design)·theme/section / M1
+- **1줄 rollup**: gtm-landing critique 백로그 3건 순차(1→3→2) 단일 빌드·배포로 청산 — `/quieter`(웨이브 opacity/진폭/blur ~절반, radial blob 축소 → indigo-glow 카테고리 반사 완화), `/clarify`(body em-dash 9→0, 콜론/괄호/마침표로), `/polish`(carousel feature 이미지 → non-login richer 샷 edu-program/gtm-landing/construction). 라이브 재critique: **detector CLEAN(0 antipattern)**, Design Health **27→30(Acceptable→Good)**, 트렌드 영구화.
+- **함정/교훈**: ① 무충돌 리파인 다건은 **단일 빌드·배포로 배치**가 효율(3패스를 각각 배포하면 오버헤드 3배). ② carousel proof 이미지의 근본 한계: 우리 business-system 데모가 auth-gated라 도메인 충실 dashboard 캡처 불가 — 공개 캡처 중 richest 선택이 최선(목업은 후속). ③ critique→fix→re-critique 트렌드(27→30)가 도구의 복리 루프를 수치로 증명.
+- **잔여(open)**: carousel 전용 목업(P2), 연락폼 demo-stub→실엔드포인트(실고객 시), indigo 단색에 보조 accent(/colorize, 선택).
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
+- **결정 메모리**: [[impeccable-design-skill]] · [[marketing-site-track]]
