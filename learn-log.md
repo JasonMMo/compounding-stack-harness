@@ -373,3 +373,11 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **함정/교훈**: ① 21st.dev 소스는 로그인/버튼 불필요 — Next.js SSR `__next_f.push` 페이로드에 전체 코드 인라인, curl+파싱으로 추출 가능(WebFetch는 SPA 셸만 반환). ② 외부 컴포넌트는 "한 장에 붙이기"(§3 안티패턴)가 아니라 **section variant로 카탈로그 등록**해야 복리. ③ IDE TS "Cannot find module" 진단은 npm install 전 stale LSP — `astro build`(vite 타입인지) 통과가 출고 기준. ④ headline 그래디언트 split이 첫 마침표 의존 → `headline_accent` 슬롯화는 open-loop.
 - **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
 - **결정 메모리**: [[marketing-site-track]]
+
+### Growth-69 (2026-06-15) — glowy-waves hero no-JS 가시성 보강 (dogfood #3 계열 재발 차단)
+
+- **인격/Axis/Milestone**: CTO(진단·검증) + Engineer(수정) / theme/section·frontend / M1 GTM
+- **1줄 rollup**: framer-motion `initial="hidden"`(opacity:0)이 `client:visible` SSR HTML 에 baked → **JS 비활성/hydration 실패 시 hero(`<h1>` 포함) opacity:0 불가시**(Growth-66 dogfood #3 와 동일 계열). 수정: hidden variant opacity 0→1, **y/scale 이동만 진입 애니메이션으로 유지**(approach A, transform-only) → no-JS 에서도 콘텐츠 보임. 라이브 검증 no-JS h1 opacity `0→1`, JS-on canvas·demo 정상.
+- **함정/교훈**: ① **대소문자 일치 grep false-negative** — 정적 HTML 을 대문자(CSS `uppercase` 결과)로 grep 해 "client-only 렌더, SEO 결함" 으로 오진했으나, 대소문자 무시 재검 결과 pills/stats 텍스트는 **처음부터 전부 SSR**됨(`client:visible`는 hydration만 지연, HTML SSR 유지). 진짜 결함은 SEO 가 아니라 opacity:0 no-JS 가시성이었다 → 정적 산출물 검증은 **case-insensitive + JS-off 렌더(java_script_enabled=False)** 둘 다 필수. ② 모션 진입효과는 opacity 페이드보다 **transform-only** 가 no-JS-safe.
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md)
+- **결정 메모리**: [[marketing-site-track]]
