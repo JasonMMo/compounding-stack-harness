@@ -389,3 +389,11 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **함정/교훈**: ① **innerText case-transform 재확인** — Chromium `innerText`가 CSS `uppercase`를 반영해, mixed-case 부분일치 검증이 false-negative(Growth-69 grep 교훈의 런타임판). DOM 검증은 case-insensitive 또는 `textContent` 사용. ② Astro island가 prop을 **escaped-slash JSON**으로 직렬화 → 정적 HTML 리터럴 `/proof/` grep 0건이나 no-JS 렌더엔 12 img 존재 → island 검증은 **렌더(Playwright) ground truth**가 grep보다 신뢰. ③ 외부 컴포넌트 적응 표준화: 새 아이콘/모션 의존은 **기존 설치분 재사용**(lucide/framer-motion)으로 치환.
 - **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
 - **결정 메모리**: [[marketing-site-track]]
+
+### Growth-71 (2026-06-15) — impeccable 디자인 SKILL vendoring (CDO craft 엔진 도입)
+
+- **인격/Axis/Milestone**: CTO(검토·결정·중화·배선·커밋) + Engineer(vendoring·감사) + CDO(craft 법규 흡수) / tooling(design 품질)·theme/section / M1(디자인 품질 상향)
+- **1줄 rollup**: 디자인 품질 상향 위해 `pbakaus/impeccable`(★38k, Apache-2.0, design language SKILL) 코어를 repo 에 **vendoring**(`.claude/skills/impeccable/` @3.6.0 SHA fff712c, 93파일, LICENSE+NOTICE.vendored.md). 라이브러리 아닌 지식 레이어 — 우리 skill/agent 포맷 그대로. 23 커맨드(craft/audit/critique/layout/colorize/typeset/bolder/delight/polish…). **register Brand/Product = 우리 deliverable_kind marketing-site/business-system 와 동형**. CDO design-agent 에 craft 엔진으로 명문화([design-agent.md](.claude/agents/design-agent.md) "Craft 엔진" 절).
+- **함정/교훈**: ① **감사가 실네트워크 1건 적발** — `context.mjs` 가 매 세션 `impeccable.style/api/version` 폴링(UPDATE_AVAILABLE) → no-network auto-path 위반. `.impeccable/config.json {updateCheck:false}` 로 중화(커밋되어 전 운영자·headless 적용, env 보다 견고). 서드파티 vendoring 은 **반드시 네트워크/telemetry/API 감사 후 도입**. ② vendored-pin 규율: 업스트림 재동기화는 `npx` 자동 아닌 수동. ③ **도구가 우리 craft drift 를 사전 차단** — impeccable anti-slop 이 우리 glowy hero(보라 그래디언트+글로우)를 slop 으로 깜 → reconcile 거리(첫 실전 = gtm-landing critique 패스). motion 규칙은 Growth-69 교훈과 글자그대로 동일.
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
+- **결정 메모리**: [[marketing-site-track]] · [[impeccable-design-skill]]
