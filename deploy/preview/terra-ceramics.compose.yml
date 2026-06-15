@@ -1,0 +1,18 @@
+# deploy/preview/terra-ceramics.compose.yml
+# Coolify dockercompose -- marketing-site static preview at terra-ceramics.n9n.co.kr
+# Multi-stage build (scaffold + astro SSG -> nginx). Build context = repo root.
+# profile: terra-ceramics  |  theme: kiln  |  DEMO_MODE=1 (lead form stubbed)
+# A4 archetype (Artisan / F&B) -- gallery/parallax-scroll signature section.
+# theme-aware build: build-tokens-auto.mjs reads theme from the generated manifest.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: frontend/adapters/landing-astro/Dockerfile
+      args:
+        PROFILE_SLUG: terra-ceramics
+        DEMO_MODE: "1"
+    ports:
+      - "80"
+    restart: unless-stopped
