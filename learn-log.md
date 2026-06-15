@@ -414,3 +414,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **잔여(open)**: carousel 전용 목업(P2), 연락폼 demo-stub→실엔드포인트(실고객 시), indigo 단색에 보조 accent(/colorize, 선택).
 - **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [cdo ledger](docs/learn-logs/cdo.md)
 - **결정 메모리**: [[impeccable-design-skill]] · [[marketing-site-track]]
+
+### Growth-74 (2026-06-15) — /colorize: indigo 단색 → 전략적 warm 보조 accent
+
+- **인격/Axis/Milestone**: CTO(색 방향·검증·배포) + CDO(팔레트 전략) + Engineer(토큰·적용) / theme/section·tooling(design) / M1
+- **1줄 rollup**: impeccable `/colorize` 로 indigo-monochrome aurora 에 보조 accent 1색 추가 — **`#AB5527` terracotta/burnt-coral**(oklch 52% .135 42, indigo 보색·비-네온·AA). 재사용 토큰 `accent-warm`(aurora theme.yaml) 으로 3곳 절제 적용: ① 차별화 스탯 "0 bits"(시선 유도, 나머지 화이트) ② carousel 활성 인디케이터 ③ FAQ open-state. navy+gold 클리셰·cyan+purple 슬롭·glow 트랩 회피. detector CLEAN 유지, 라이브 "0 bits"=rgb(171,85,39) 확인, contrast AA(5.17:1 FAQ / 3.09:1 대형스탯).
+- **함정/교훈**: ① 보조색은 "rainbow vomit" 아니라 **의미/위계 지점만 ≲15% 도징** — 차별화 1포인트에 집중하면 단색 절제 유지하며 시선 유도. ② accent-warm 을 semantic 토큰화 → 전 landing 재사용(복리). ③ 현재 "0 으로 시작하는 스탯값" 휴리스틱으로 강조 — manifest `highlight:true` 플래그가 더 견고(open loop).
+- **잔여(open)**: 스탯 강조를 manifest `highlight` 플래그로(휴리스틱 대체), carousel 전용 목업, 연락폼 실엔드포인트.
+- **상세**: [cdo ledger](docs/learn-logs/cdo.md) · [engineer ledger](docs/learn-logs/engineer.md)
+- **결정 메모리**: [[impeccable-design-skill]] · [[marketing-site-track]]
