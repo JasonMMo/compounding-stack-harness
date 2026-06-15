@@ -36,8 +36,11 @@ export interface HeroGlowyWavesProps {
 
 // ── Framer-motion variant defs ────────────────────────────────────────────────
 
+// Approach (A): opacity is always 1 in both hidden and visible variants.
+// This ensures SSR/no-JS render never carries opacity:0 — content is always
+// visible. JS users see a slide/scale-in entrance. Zero hydration-mismatch risk.
 const containerVariants: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 1, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
@@ -46,7 +49,7 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 1, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
@@ -55,7 +58,7 @@ const itemVariants: Variants = {
 };
 
 const statsVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.95 },
+  hidden: { opacity: 1, scale: 0.95 },
   visible: {
     opacity: 1,
     scale: 1,
