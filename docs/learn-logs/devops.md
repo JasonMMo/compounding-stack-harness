@@ -179,6 +179,13 @@
 - **함정 ② SSH 터널 드롭 + 좀비 소켓**: 대량 배포/폴링 중 `localhost:8000` 터널 드롭. 재수립 시 죽은 PID가 8000을 Listen 점유("Address already in use", taskkill 불가 — OS 지연 해제). 해소: **다른 로컬 포트로 재수립**(`-L 8010:localhost:8000`) 후 직접 API 호출로 진행(deploy_static_site.py는 8000 하드코딩이라 우회).
 - **교훈**: API 자동화 장시간 작업은 터널 안정성(ServerAliveInterval)과 포트 재사용 실패를 전제로 폴백 포트를 준비하라.
 
+### Growth-78 (2026-06-16) — meridian 배포 + 포털 재배포 (A6 MERIDIAN, 5번째 라이브 데모)
+
+- **배포**: meridian.n9n.co.kr (Coolify project=jrum1rdwq1oa53bmsb6awhvr, app=b17ccvgfsqqhieucir9ymbnu, meridian 테마, DEMO_MODE=1). `deploy_static_site.py --slug meridian --domain https://meridian.n9n.co.kr --compose /deploy/preview/meridian.compose.yml --service web` (COOLIFY_API_BASE=8010, MSYS_NO_PATHCONV=1). status=finished, HTTPS 200, 콘텐츠+forest 토큰(#1A5C3A) 검증 PASS.
+- **포털 재배포 필수 확인**: landing 포털은 git push 로 **자동 재배포되지 않음** — push 후 라이브 포털에 terra 카드만 있고 meridian 카드 부재 확인 → `deploy_static_site.py --slug landing-portal --service portal` 명시 재배포해야 신규 카드 반영(HTTP 200 재확인). 카드 커밋만으론 라이브 미반영 (Growth-77 도 동일 패턴이었음 — 이번에 명문화).
+- **레지스트리**: `infra/registry/meridian.yaml` (status=live, project/app UUID·theme=meridian·archetype=A6 기록).
+- **교훈 (1줄)**: 포털은 별도 Coolify 앱이라 데모 카드 커밋·푸시 후 **반드시 포털을 명시 재배포**해야 라이브 반영 — push=auto-deploy 가정 금지(Coolify webhook 미설정). Growth-77 의 COOLIFY_API_BASE env-var·leading-slash --compose 함정은 그대로 재사용(재발 0).
+
 ### Growth-77 (2026-06-16) — terra-ceramics 배포 + COOLIFY_API_BASE 오픈루프 종결 + leading-slash 422 함정
 
 - **배포**: terra-ceramics.n9n.co.kr (Coolify project=itw5euifm5shu8vt84axxz8p, app=q9hq2xlr3cjzh47smq7z0xe8, kiln 테마, DEMO_MODE=1). `deploy_static_site.py` + `deploy/preview/terra-ceramics.compose.yml`. landing 포털에 공예/로컬 카드(🏺) 추가 후 재배포. 둘 다 HTTPS 200, 콘텐츠 검증 PASS.
