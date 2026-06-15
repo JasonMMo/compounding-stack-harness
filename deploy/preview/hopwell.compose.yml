@@ -1,0 +1,17 @@
+# deploy/preview/hopwell.compose.yml
+# Coolify dockercompose -- marketing-site static preview at hopwell.n9n.co.kr
+# Multi-stage build (scaffold + astro SSG -> nginx). Build context = repo root.
+# profile: hopwell  |  theme: harvest  |  DEMO_MODE=1 (contact form stubbed)
+# theme-aware build: build-tokens-auto.mjs reads theme from the generated manifest.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: frontend/adapters/landing-astro/Dockerfile
+      args:
+        PROFILE_SLUG: hopwell
+        DEMO_MODE: "1"
+    ports:
+      - "80"
+    restart: unless-stopped
