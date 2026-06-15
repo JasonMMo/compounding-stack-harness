@@ -5,6 +5,7 @@ version: "1.0"
 #
 # copy_slots:  content slots the CMO/author must fill (headline, subhead, etc.)
 # asset_slots: image/video asset refs expected per section instance
+# item_slots:  schema for the section's repeated items[] entries (distinct from copy_slots, which are singular)
 # variants:    visual layout variants a theme may implement
 
 sections:
@@ -31,6 +32,9 @@ sections:
       required: [headline]
       optional: [subhead]
     asset_slots: [feature_image]
+    item_slots:
+      required: [title, description]
+      optional: [icon, image]
     variants: [three-col-icon, two-col-alternating, single-col-list]
 
   pricing:
@@ -55,6 +59,8 @@ sections:
       required: [headline]
       optional: [subhead]
     asset_slots: []
+    item_slots:
+      required: [question, answer]
     variants: [single-col, two-col]
 
   cta:
