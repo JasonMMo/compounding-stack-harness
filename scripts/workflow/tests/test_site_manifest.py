@@ -747,3 +747,296 @@ class TestItemSlotsValidation:
         assert "features" in errs[0]
         assert "item[1]" in errs[0]
         assert "description" in errs[0]
+
+
+# ---------------------------------------------------------------------------
+# A4 artisan: gallery/parallax-scroll + lead section type (Growth-65+)
+# ---------------------------------------------------------------------------
+
+class TestCatalogA4Artisan:
+    """Catalog structure tests for A4 archetype additions."""
+
+    def test_catalog_has_lead_and_original_types(self, catalog):
+        """Catalog must contain lead (new) plus all original section types."""
+        sections = catalog["sections"]
+        required = {"hero", "logos", "features", "pricing", "testimonial",
+                    "faq", "cta", "gallery", "story", "footer", "lead"}
+        assert required.issubset(set(sections.keys())), (
+            f"Expected section types missing: {required - set(sections.keys())}"
+        )
+
+    def test_lead_section_present(self, catalog):
+        assert "lead" in catalog["sections"], "lead section type must be in catalog"
+
+    def test_lead_required_copy_slot(self, catalog):
+        lead = catalog["sections"]["lead"]
+        assert "headline" in lead["copy_slots"]["required"]
+
+    def test_lead_variants(self, catalog):
+        lead = catalog["sections"]["lead"]
+        variants = lead.get("variants", [])
+        assert "minimal-field" in variants
+        assert "multi-field-card" in variants
+
+    def test_gallery_parallax_scroll_variant(self, catalog):
+        gallery = catalog["sections"]["gallery"]
+        assert "parallax-scroll" in gallery.get("variants", [])
+
+    def test_gallery_new_optional_item_slots(self, catalog):
+        gallery = catalog["sections"]["gallery"]
+        optional_slots = gallery["item_slots"].get("optional", [])
+        for field in ["heading", "subheading", "body", "cta_label", "cta_href"]:
+            assert field in optional_slots, f"gallery item_slots.optional missing '{field}'"
+
+    def test_gallery_required_item_slots_unchanged(self, catalog):
+        """Existing required slots must not have changed (backward compat)."""
+        gallery = catalog["sections"]["gallery"]
+        required = gallery["item_slots"]["required"]
+        assert "src" in required
+        assert "alt" in required
+
+
+class TestGalleryParallaxScroll:
+    """Validation + manifest threading for gallery/parallax-scroll (A4)."""
+
+    def _parallax_site(self, items):
+        return {
+            "pages": [
+                {
+                    "slug": "work",
+                    "title": "Work",
+                    "sections": [
+                        {
+                            "type": "gallery",
+                            "variant": "parallax-scroll",
+                            "copy": {"headline": "Our Work"},
+                            "items": items,
+                        }
+                    ],
+                }
+            ]
+        }
+
+    def test_parallax_scroll_variant_valid(self, catalog):
+        site = self._parallax_site([{"src": "img/ch1.jpg", "alt": "Chapter 1"}])
+        errs = validate_site(site, catalog)
+        assert errs == [], f"parallax-scroll should be valid: {errs}"
+
+    def test_parallax_scroll_enriched_items_valid(self, catalog):
+        """Items with all new optional fields pass validation."""
+        items = [
+            {
+                "src": "img/ch1.jpg",
+                "alt": "Chapter 1",
+                "heading": "The Craft",
+                "subheading": "Made by hand",
+                "body": "Every piece is shaped with intention.",
+                "cta_label": "See the process",
+                "cta_href": "/process",
+            }
+        ]
+        site = self._parallax_site(items)
+        errs = validate_site(site, catalog)
+        assert errs == [], f"enriched parallax-scroll items should be valid: {errs}"
+
+    def test_parallax_scroll_no_src_valid(self, catalog):
+        """src is optional for parallax-scroll (renders theme material-texture when absent).
+        NOTE: catalog requires src in item_slots.required, so omitting src will fail
+        validation for gallery type — this test documents the current catalog constraint.
+        When the component renders, it may treat absent src as theme-texture mode; the
+        catalog constraint is intentionally kept for now (CTO may relax required later).
+        This test verifies missing src is caught as a violation (not silently ignored)."""
+        items = [{"alt": "Chapter 1", "heading": "The Craft"}]  # src absent
+        site = self._parallax_site(items)
+        errs = validate_site(site, catalog)
+        # src is in required — violation is expected and correct catalog behavior
+        assert any("src" in e for e in errs), (
+            "Missing required 'src' slot must be flagged even for parallax-scroll"
+        )
+
+    def test_parallax_scroll_items_thread_through(self):
+        """New optional fields thread through build_site_manifest verbatim."""
+        profile = {
+            "customer": {"slug": "artisan-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "artisan",
+                "pages": [
+                    {
+                        "slug": "work",
+                        "title": "Work",
+                        "sections": [
+                            {
+                                "type": "gallery",
+                                "variant": "parallax-scroll",
+                                "copy": {"headline": "Our Work"},
+                                "items": [
+                                    {
+                                        "src": "img/ch1.jpg",
+                                        "alt": "Chapter 1",
+                                        "heading": "The Craft",
+                                        "subheading": "Made by hand",
+                                        "body": "Every piece is shaped with intention.",
+                                        "cta_label": "See the process",
+                                        "cta_href": "/process",
+                                    },
+                                    {
+                                        "src": "img/ch2.jpg",
+                                        "alt": "Chapter 2",
+                                        "caption": "Studio",  # old optional field preserved
+                                    },
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        work = manifest["pages"][0]
+        gallery_sec = work["sections"][0]
+        assert gallery_sec["variant"] == "parallax-scroll"
+        assert "items" in gallery_sec
+        item0 = gallery_sec["items"][0]
+        assert item0["heading"] == "The Craft"
+        assert item0["subheading"] == "Made by hand"
+        assert item0["body"] == "Every piece is shaped with intention."
+        assert item0["cta_label"] == "See the process"
+        assert item0["cta_href"] == "/process"
+        # Old optional field still threads through
+        assert gallery_sec["items"][1].get("caption") == "Studio"
+
+    def test_existing_gallery_variants_still_valid(self, catalog):
+        """Existing gallery variants are not broken by the parallax-scroll addition."""
+        for variant in ["masonry-3col", "full-bleed-strip", "grid-2x2"]:
+            site = {
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "gallery",
+                                "variant": variant,
+                                "copy": {"headline": "Gallery"},
+                                "items": [{"src": "img/a.jpg", "alt": "A"}],
+                            }
+                        ],
+                    }
+                ]
+            }
+            errs = validate_site(site, catalog)
+            assert errs == [], f"variant '{variant}' should still be valid: {errs}"
+
+
+class TestLeadSection:
+    """Validation + manifest threading for lead section type (A4 / Growth-65+)."""
+
+    def _lead_site(self, copy, variant=None):
+        section = {"type": "lead", "copy": copy}
+        if variant:
+            section["variant"] = variant
+        return {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [section],
+                }
+            ]
+        }
+
+    def test_lead_minimal_field_valid(self, catalog):
+        errs = validate_site(self._lead_site({"headline": "Stay in touch"}, "minimal-field"), catalog)
+        assert errs == [], f"lead/minimal-field should be valid: {errs}"
+
+    def test_lead_multi_field_card_valid(self, catalog):
+        errs = validate_site(self._lead_site({"headline": "Get in touch"}, "multi-field-card"), catalog)
+        assert errs == [], f"lead/multi-field-card should be valid: {errs}"
+
+    def test_lead_missing_headline_rejected(self, catalog):
+        site = self._lead_site({"subhead": "No headline here"})
+        errs = validate_site(site, catalog)
+        assert any("headline" in e for e in errs), f"Missing headline must be flagged: {errs}"
+
+    def test_lead_invalid_variant_rejected(self, catalog):
+        site = self._lead_site({"headline": "Subscribe"}, variant="does-not-exist")
+        errs = validate_site(site, catalog)
+        assert any("does-not-exist" in e for e in errs)
+
+    def test_lead_no_variant_valid(self, catalog):
+        errs = validate_site(self._lead_site({"headline": "Subscribe"}), catalog)
+        assert errs == [], f"lead with no variant should be valid: {errs}"
+
+    def test_lead_with_all_optional_slots_valid(self, catalog):
+        copy = {
+            "headline": "Stay in the loop",
+            "subhead": "News and updates, monthly.",
+            "button_label": "Subscribe",
+            "success_message": "You're in!",
+            "placeholder": "your@email.com",
+        }
+        errs = validate_site(self._lead_site(copy, "minimal-field"), catalog)
+        assert errs == [], f"lead with all optional slots should be valid: {errs}"
+
+    def test_lead_emits_in_manifest(self):
+        """lead section emits correctly through build_site_manifest."""
+        profile = {
+            "customer": {"slug": "artisan-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "artisan",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "lead",
+                                "variant": "minimal-field",
+                                "copy": {
+                                    "headline": "Stay in touch",
+                                    "button_label": "Subscribe",
+                                    "placeholder": "your@email.com",
+                                },
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        home = manifest["pages"][0]
+        lead_sec = home["sections"][0]
+        assert lead_sec["type"] == "lead"
+        assert lead_sec["variant"] == "minimal-field"
+        assert lead_sec["copy"]["headline"] == "Stay in touch"
+        assert lead_sec["copy"]["button_label"] == "Subscribe"
+        assert lead_sec["copy"]["placeholder"] == "your@email.com"
+        # lead has no items (no item_slots in catalog)
+        assert "items" not in lead_sec
+
+    def test_lead_no_items_key_emitted(self):
+        """lead section must not emit an items key (no item_slots)."""
+        profile = {
+            "customer": {"slug": "artisan-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "artisan",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "lead",
+                                "copy": {"headline": "Subscribe"},
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        lead_sec = manifest["pages"][0]["sections"][0]
+        assert "items" not in lead_sec
