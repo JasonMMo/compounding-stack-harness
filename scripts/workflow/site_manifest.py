@@ -326,10 +326,16 @@ def build_site_manifest(profile: dict[str, Any]) -> dict[str, Any]:
 
         pages_out.append(page_out)
 
+    # locale: BCP-47 tag from profile defaults.locale. Falls back to "en-US".
+    # Used by frontend adapter to set <html lang="..."> (language subtag only).
+    defaults_block: dict[str, Any] = profile.get("defaults") or {}
+    locale: str = defaults_block.get("locale") or "en-US"
+
     manifest: dict[str, Any] = {
         "slug": slug,
         "deliverable_kind": "marketing-site",
         "theme": theme,
+        "locale": locale,
         "pages": pages_out,
     }
 
