@@ -193,6 +193,21 @@ export function FeatureCarousel({ items, heading, subhead }: FeatureCarouselProp
 
       <div className="w-full max-w-7xl mx-auto md:px-8">
         {/*
+          Growth-69 SSR completeness: all feature titles + descriptions must be
+          present as real DOM text regardless of JS. The animated carousel puts
+          descriptions 2+ only inside AnimatePresence (JS-only). This sr-only
+          <ul> ensures every item's text is in the SSR HTML for crawlers and
+          screen-reader users. Visually hidden via the Tailwind sr-only pattern.
+        */}
+        <ul className="sr-only" aria-label="All features">
+          {features.map((feature, i) => (
+            <li key={`ssr-feature-${i}`}>
+              <strong>{feature.title}</strong>: {feature.description}
+            </li>
+          ))}
+        </ul>
+
+        {/*
           No-JS fallback: render the first feature fully visible outside the
           animated container. Hidden from JS users via the `no-js-only` approach:
           we use a <noscript> block so it is invisible when JS runs, but visible
