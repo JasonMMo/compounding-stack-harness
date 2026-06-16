@@ -3,7 +3,23 @@
  * Footer.astro — Footer section (type: footer).
  * Variants: minimal | full-links | newsletter
  * Style hints: cols (1|4|2), show_social (bool), show_newsletter_form (bool), divider
+ *
+ * full-links DATA-DRIVEN columns (FIX-B, Growth-84):
+ *   items[] carries link columns: { heading: string, links: { label: string, href: string }[] }[]
+ *   If items[] is absent or empty, falls back to hardcoded Product/Support defaults
+ *   (backward-compat with existing profiles that don't provide items[]).
+ *   GUARD: columns with zero links are not rendered (no header-only empty column).
  */
+interface FooterLink {
+  label: string
+  href: string
+}
+
+interface FooterColumn {
+  heading: string
+  links: FooterLink[]
+}
+
 interface StyleHints {
   cols?: number
   show_social?: boolean
@@ -16,8 +32,10 @@ interface Props {
   assets?: string[]
   variant?: string
   styleHints?: StyleHints
-  // contact: used to render contact link if enabled
+  // contact: used to render contact link if enabled (minimal variant)
   contactHref?: string
+  // items[]: data-driven link columns for full-links variant
+  items?: FooterColumn[]
 }
 
 const {
@@ -26,6 +44,7 @@ const {
   variant = 'minimal',
   styleHints = {},
   contactHref,
+  items = [],
 } = Astro.props
 
 const showSocial = styleHints.show_social ?? false
@@ -38,6 +57,32 @@ const dividerClass: Record<string, string> = {
   both: 'border-y border-[var(--color-border,#E5E7EB)]',
   none: '',
 }
+
+// full-links columns resolution.
+// 1. Profile provides items[]: use those, filtering out any column with 0 links (empty-col guard).
+// 2. No items[]: fallback to the legacy hardcoded defaults.
+//    The Support column is omitted if contactHref is absent (avoids empty-col bug).
+const profileColumns: FooterColumn[] = items.filter(
+  (col) => col.links && col.links.length > 0
+)
+
+// Default fallback columns (backward-compat for profiles without items[]).
+// Support only shown if contactHref is set (fixes empty-column bug from FIX-B).
+const defaultColumns: FooterColumn[] = [
+  {
+    heading: 'Product',
+    links: [
+      { label: 'Home', href: '/' },
+      { label: 'About', href: '/about' },
+    ],
+  },
+  ...(contactHref ? [{
+    heading: 'Support',
+    links: [{ label: 'Contact', href: contactHref }],
+  }] : []),
+]
+
+const linkColumns: FooterColumn[] = profileColumns.length > 0 ? profileColumns : defaultColumns
 ---
 
 <footer class={`w-full py-12 px-[var(--space-container-gutter,24px)] bg-[var(--color-surface-1,#fff)] ${dividerClass[divider] ?? ''}`}>
@@ -63,7 +108,13 @@ const dividerClass: Record<string, string> = {
       </div>
     ) : variant === 'full-links' ? (
       <div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+        {/*
+          Grid: brand column (col 1) + data-driven link columns.
+          Col count = 1 (brand) + linkColumns.length.
+          Max 4 on desktop (md+), 2 on mobile. Items[] guard: only cols with links render.
+        */}
+        <div class={`grid grid-cols-2 md:grid-cols-${Math.min(4, 1 + linkColumns.length)} gap-8 mb-12`}>
+          {/* Brand / tagline column — always first */}
           <div>
             <div class="flex items-center gap-2 mb-4">
               {assets.length > 0 && (
@@ -77,19 +128,26 @@ const dividerClass: Record<string, string> = {
               <p class="text-sm text-[var(--color-text-3,#6B7280)]">{copy.tagline}</p>
             )}
           </div>
-          <div>
-            <h4 class="font-semibold text-[var(--color-text-1,#111827)] mb-3 text-sm uppercase tracking-wide">Product</h4>
-            <ul class="space-y-2 text-sm text-[var(--color-text-3,#6B7280)]">
-              <li><a href="/" class="hover:text-[var(--color-primary,#6D28D9)] transition-colors">Home</a></li>
-              <li><a href="/about" class="hover:text-[var(--color-primary,#6D28D9)] transition-colors">About</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 class="font-semibold text-[var(--color-text-1,#111827)] mb-3 text-sm uppercase tracking-wide">Support</h4>
-            <ul class="space-y-2 text-sm text-[var(--color-text-3,#6B7280)]">
-              {contactHref && <li><a href={contactHref} class="hover:text-[var(--color-primary,#6D28D9)] transition-colors">Contact</a></li>}
-            </ul>
-          </div>
+          {/* Data-driven link columns — empty-col guard applied at profileColumns filter */}
+          {linkColumns.map((col) => (
+            <div>
+              <h4 class="font-semibold text-[var(--color-text-1,#111827)] mb-3 text-sm uppercase tracking-wide">
+                {col.heading}
+              </h4>
+              <ul class="space-y-2 text-sm text-[var(--color-text-3,#6B7280)]">
+                {col.links.map((link) => (
+                  <li>
+                    <a
+                      href={link.href}
+                      class="hover:text-[var(--color-primary,#6D28D9)] transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-[var(--color-border,#E5E7EB)]">
           {copy.legal_notice && (
