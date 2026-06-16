@@ -179,6 +179,14 @@
 - **함정 ② SSH 터널 드롭 + 좀비 소켓**: 대량 배포/폴링 중 `localhost:8000` 터널 드롭. 재수립 시 죽은 PID가 8000을 Listen 점유("Address already in use", taskkill 불가 — OS 지연 해제). 해소: **다른 로컬 포트로 재수립**(`-L 8010:localhost:8000`) 후 직접 API 호출로 진행(deploy_static_site.py는 8000 하드코딩이라 우회).
 - **교훈**: API 자동화 장시간 작업은 터널 안정성(ServerAliveInterval)과 포트 재사용 실패를 전제로 폴백 포트를 준비하라.
 
+### Growth-82 (2026-06-16) — summit-horizon 배포 + 포털 7번째 카드 (A3 Event, 7번째 라이브 데모)
+
+- **배포**: summit-horizon.n9n.co.kr (Coolify project=k105u8soe4fergofhdje2nkt, app=jvo3hnfmf2bv8ce10mcj96l0, ignite 테마, PROFILE_SLUG=event-demo, DEMO_MODE=1). `deploy_static_site.py --slug summit-horizon --domain https://summit-horizon.n9n.co.kr --compose /deploy/preview/summit-horizon.compose.yml --service web`. status=finished, HTTPS 200. **서빙 마크업 검증**(공개 HTTPS): SUMMIT HORIZON·스폰서 워드마크·horizontal-steps·waitlist 전부 present, 오타픽스(summithorizon) 반영, aurora 누수 0.
+- **포털 재배포**(Growth-78/81 패턴): 🎟️ 이벤트 카드 추가 커밋·push 후 `deploy_static_site.py --slug landing-portal --service portal` 명시 재배포 → landing.n9n.co.kr 200, summit-horizon·flux 카드 동시 present 확인.
+- **레지스트리**: `infra/registry/summit-horizon.yaml` (status=live, project/app UUID·theme=ignite·archetype=A3·profile_slug=event-demo 기록).
+- **터널**: Growth-81 의 detached `Start-Process` SSH 터널(ServerAliveInterval=30)이 세션 내내 안정 유지 — 재드롭 0. SIGHUP 분리 기동 패턴 유효성 재확인.
+- **교훈 (1줄)**: slug(브랜드, summit-horizon) 와 PROFILE_SLUG(profile 파일명, event-demo) 분리 — flux(slug=flux/PROFILE_SLUG=flux-demo) 선례 재사용. Coolify --slug 는 브랜드 네이밍, Docker build arg 는 profile 파일명.
+
 ### Growth-81 (2026-06-16) — flux 배포 + 포털 6번째 카드 (A1 FLUX, 6번째 라이브 데모, Growth-80 P0 종결)
 
 - **배포**: flux.n9n.co.kr (Coolify project=jq25nyzfirch3flp7no2wg3u, app=oyemv0mttkn8eo05xflvc4x2, flux 테마, DEMO_MODE=1). `deploy_static_site.py --slug flux --domain https://flux.n9n.co.kr --compose /deploy/preview/flux.compose.yml --service web`. status=finished, HTTPS 200. **서빙 마크업 검증**(공개 HTTPS, 터널 무관): stats/bento/pull-quote 섹션 전부 present + aurora 누수 0 — 스테일 빌드 아님 확인.
