@@ -1,0 +1,19 @@
+# deploy/preview/flux.compose.yml
+# Coolify dockercompose -- marketing-site static preview at flux.n9n.co.kr
+# Multi-stage build (scaffold + astro SSG -> nginx). Build context = repo root.
+# profile: flux-demo  |  theme: flux  |  DEMO_MODE=1 (contact form stubbed)
+# A1 archetype (SaaS Product Launch, infra/observability) --
+#   stats/ticker-band + features/bento-mosaic + testimonial/pull-quote-wall (Growth-80).
+# theme-aware build: build-tokens-auto.mjs reads theme "flux" from the generated manifest.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: frontend/adapters/landing-astro/Dockerfile
+      args:
+        PROFILE_SLUG: flux-demo
+        DEMO_MODE: "1"
+    ports:
+      - "80"
+    restart: unless-stopped
