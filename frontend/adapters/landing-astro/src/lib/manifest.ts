@@ -65,6 +65,9 @@ export interface SiteManifest {
   slug: string
   deliverable_kind: string
   theme: string
+  /** BCP-47 locale string from profile defaults.locale (e.g. "ko-KR", "en-US").
+   *  Absent in manifests built before Growth-86; treated as "en-US" by adapter. */
+  locale?: string
   pages: Page[]
   contact?: ContactBlock
 }
