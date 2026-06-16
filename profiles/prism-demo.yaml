@@ -1,0 +1,246 @@
+# profiles/prism-demo.yaml -- A7 API Platform / Developer Tool demo (prism theme)
+# Archetype: Prism -- API observability layer for platform engineering teams.
+# Demonstrates the full A7 composition:
+#   hero/bento-grid (light canvas; stat+marquee bento cluster) *
+#   -> logos/horizontal-scroll (text wordmarks, grayscale)
+#   -> features/bento-mosaic (5 capability cards, irregular grid)
+#   -> stats/ticker-band (quantitative proof band, surface-2 bg)
+#   -> testimonial/pull-quote-wall (3 large typographic quotes)
+#   -> pricing/three-tier (middle tier highlighted)
+#   -> faq/single-col (6 objection-handling Q&As)
+#   -> cta/left-aligned (surface-2 band, azure CTA)
+#   -> footer/full-links
+# * hero/bento-grid is a new variant -- only prism-demo uses it.
+# Stock photos: 0 -- bento cluster uses text wordmarks and stat values only.
+# 9th marketing-site theme (prism: deep-azure #1B4FA8 on white, IBM Plex Sans + DM Sans + DM Mono).
+# deliverable_kind=marketing-site -> bypasses entity/DDL; site: block drives output.
+
+version: 1
+
+customer:
+  slug: prism-demo
+  display: "Prism -- API Platform Demo"
+  status: active
+  contact: hello@prism.dev
+  industry: api-platform
+
+# -- Pluggable Stack ----------------------------------------------------------
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# -- Site Block (marketing-site schema) --------------------------------------
+site:
+  theme: prism
+
+  pages:
+    - slug: home
+      title: "Prism -- API observability that compounds with your platform team"
+      seo:
+        title: "Prism -- API observability for platform engineers"
+        description: "Prism gives platform engineers real-time visibility into every route, consumer, and error budget -- with zero instrumentation overhead. Connect your gateway in 60 seconds."
+        og_image: ""
+      sections:
+
+        # -- 1. hero/bento-grid -----------------------------------------------
+        # Light canvas hero: text left (7-col), stat+marquee bento cluster right (5-col).
+        # bento_items[0]: stat card (primary metric + progress bar + mini-stats + tags).
+        # bento_items[1]: marquee card (trusted-by wordmark scroll).
+        # Zero image assets. All bento content is text-only (SSR-visible, Growth-69).
+        - type: hero
+          variant: bento-grid
+          copy:
+            badge: "API Observability, rebuilt for platform teams"
+            headline: "Know your API. Before your customers do."
+            subhead: "Prism gives platform engineers real-time visibility into every route, consumer, and error budget -- with zero instrumentation overhead. Connect your gateway in 60 seconds."
+          cta:
+            label: "Start free -- no card required"
+            href: "#contact"
+          cta_secondary:
+            label: "Read the docs"
+            href: "#docs"
+          bento_items:
+            - type: stat
+              icon_label: "API requests tracked"
+              primary_value: "847M"
+              primary_label: "Requests monitored today"
+              progress_label: "Error budget consumed (demo data)"
+              progress_value: 4
+              progress_max: 100
+              mini_stats:
+                - value: "99.97%"
+                  label: "Uptime"
+                - value: "12ms"
+                  label: "P50"
+                - value: "38ms"
+                  label: "P99"
+              tags:
+                - label: "All systems operational"
+                  status: ok
+                - label: "3 consumers active"
+                  status: neutral
+            - type: marquee
+              eyebrow: "Used by platform teams at"
+              companies:
+                - "Acme Platform"
+                - "Vortex Systems"
+                - "Redline API"
+                - "Crestline IO"
+                - "Pinnacle Dev"
+                - "Orbital Cloud"
+
+        # -- 2. logos/horizontal-scroll ----------------------------------------
+        # Text wordmarks only, grayscale -- zero image files, no 404s.
+        - type: logos
+          variant: horizontal-scroll
+          copy:
+            eyebrow: "Trusted by engineering teams building on top of their APIs"
+          companies:
+            - "Acme Platform"
+            - "Vortex Systems"
+            - "Redline API"
+            - "Crestline IO"
+            - "Pinnacle Dev"
+            - "Orbital Cloud"
+
+        # -- 3. features/bento-mosaic ------------------------------------------
+        # 5 capability cards in irregular CSS grid. No icons (prism theme icon_style: none).
+        # Index 0 = hero card (spans 2 rows), index 4 = wide card (spans 2 cols).
+        - type: features
+          variant: bento-mosaic
+          copy:
+            headline: "Five layers of API clarity. One platform."
+            subhead: "Prism instruments at the gateway layer -- no SDK, no agent, no code change required."
+          items:
+            - title: "Route-level observability"
+              description: "Latency distributions, error rates, and volume trends per route -- updated every 5 seconds. Drill from the fleet view to a single route in two clicks. (demo: fictitious data)"
+            - title: "Consumer attribution"
+              description: "Every API consumer gets its own traffic fingerprint. Know which client drives your P99 spike before you page the on-call."
+            - title: "Error budget tracking"
+              description: "Define SLOs per route or per consumer group. Prism computes burn rate continuously and fires a page at fast-burn threshold -- 60-second delivery P99."
+            - title: "Breaking change detection"
+              description: "Schema drift and deprecation warnings surface in the Prism console before consumers notice. Flag, notify, and track acknowledgment -- all in one view."
+            - title: "One-line gateway connect -- any vendor"
+              description: "Kong, AWS API Gateway, Nginx, Envoy, or your own proxy. Prism reads the access log format you already emit. No sidecar, no SDK, no custom plugin required."
+
+        # -- 4. stats/ticker-band ----------------------------------------------
+        # Quantitative proof band. surface-2 bg (prism theme -- not dark band like flux).
+        # The "(demo)" qualifier on first value signals fictional data per policy.
+        - type: stats
+          variant: ticker-band
+          items:
+            - value: "847M"
+              label: "Requests / day (demo)"
+            - value: "99.97%"
+              label: "Uptime SLA"
+            - value: "38ms"
+              label: "P99 latency"
+            - value: "< 60s"
+              label: "Alert delivery P99"
+            - value: "5k+"
+              label: "Teams using Prism"
+
+        # -- 5. testimonial/pull-quote-wall ------------------------------------
+        # 3 large typographic pull-quotes. Asymmetric column layout. No author photos.
+        # Fictional testimonials declared as such per policy.
+        - type: testimonial
+          variant: pull-quote-wall
+          copy:
+            quote: "We replaced three dashboards with Prism. Alert noise down 80% in week one."
+            author_name: "Kenji Watanabe"
+          items:
+            - quote: "We replaced three dashboards with Prism. Alert noise dropped 80% in the first week. The consumer attribution view alone saved us a post-mortem."
+              author_name: "Kenji Watanabe"
+              author_title: "Senior Platform Engineer, Acme Platform (fictional)"
+            - quote: "Error budget burn-rate alerts changed how we do on-call. We catch fast-burn events before they reach SLO breach. On-call is back to being a safety net, not a fire drill."
+              author_name: "Ana Ferreiro"
+              author_title: "Staff SRE, Vortex Systems (fictional)"
+            - quote: "Connecting our Kong gateway took 12 minutes. We had route-level latency distributions in the Prism console before our standup ended."
+              author_name: "Dmitri Okafor"
+              author_title: "Principal Engineer, Redline API (fictional)"
+
+        # -- 6. pricing/three-tier ----------------------------------------------
+        - type: pricing
+          variant: three-tier
+          copy:
+            headline: "Pricing that scales with your API traffic, not your headcount."
+            subhead: "Flat tiers. No per-seat fees. No event volume overages at starter and growth tiers."
+            disclaimer: "All prices USD. Annual billing. Self-host available at any tier -- same binary."
+
+        # -- 7. faq/single-col -------------------------------------------------
+        - type: faq
+          variant: single-col
+          copy:
+            headline: "What platform engineers ask before connecting"
+            subhead: "Straight answers. No marketing hedging."
+          items:
+            - question: "Does Prism see the contents of our API requests?"
+              answer: "No. Prism reads access log metadata: method, route, status code, latency, consumer ID. Request and response bodies never leave your network. For self-host deployments, all data stays inside your VPC. For managed deployments, only structured metadata is transmitted -- no payload content."
+            - question: "What gateways does Prism support?"
+              answer: "Kong, AWS API Gateway (ALB/APIGW v2), Nginx (via access_log), Envoy (via access_log_format), and any proxy that emits a standard access log. Custom log formats are supported via a declarative field mapping file. No sidecar, no SDK, no plugin required."
+            - question: "How long does it take to get to first insight?"
+              answer: "Median time from signup to first route-level latency chart: 14 minutes. The 60-second setup guide covers: create workspace, paste your gateway's log stream endpoint, configure access log forwarding. That is the entire integration."
+            - question: "Can we self-host Prism in an air-gapped environment?"
+              answer: "Yes. The self-host binary is distributed as a Docker image and a Helm chart. No outbound internet connection required. Air-gapped license keys are available for regulated environments. Telemetry is opt-in; the default is off."
+            - question: "How does error budget tracking work?"
+              answer: "You define an SLO per route (e.g. P99 latency < 100ms, 99.9% of requests). Prism computes rolling error budget consumption every 30 seconds. When burn rate crosses a fast-burn threshold (4x over 1 hour), Prism fires an alert to your PagerDuty, OpsGenie, or Slack integration. Slow-burn (2x over 6 hours) fires a lower-priority digest."
+
+        # -- 8. cta/left-aligned ------------------------------------------------
+        - type: cta
+          variant: left-aligned
+          copy:
+            headline: "Your API deserves better visibility."
+            subhead: "Start a free 14-day trial -- full feature access, no credit card, no instrumentation work. Connect your gateway today."
+          cta:
+            label: "Start free trial"
+            href: "#contact"
+
+        # -- 9. footer/full-links -----------------------------------------------
+        - type: footer
+          variant: full-links
+          copy:
+            brand_name: "Prism"
+            tagline: "API observability that compounds with your platform team."
+            legal_notice: "2026 Prism Platform, Inc. All rights reserved. Demo product -- all data and testimonials are fictional."
+          # items[]: 3 link columns rendered by Footer.astro data-driven path (FIX-B).
+          # Empty-col guard in Footer.astro prevents header-only columns.
+          items:
+            - heading: "Product"
+              links:
+                - label: "Features"
+                  href: "#features"
+                - label: "Pricing"
+                  href: "#pricing"
+                - label: "Changelog"
+                  href: "#changelog"
+                - label: "Roadmap"
+                  href: "#roadmap"
+            - heading: "Resources"
+              links:
+                - label: "Documentation"
+                  href: "#docs"
+                - label: "Guides"
+                  href: "#guides"
+                - label: "API Reference"
+                  href: "#api-reference"
+                - label: "Status"
+                  href: "#status"
+            - heading: "Company"
+              links:
+                - label: "About"
+                  href: "#about"
+                - label: "Blog"
+                  href: "#blog"
+                - label: "Contact"
+                  href: "#contact"
+
+# -- Defaults ----------------------------------------------------------------
+defaults:
+  locale: en-US
+  timezone: Asia/Seoul
+
+# -- Cost tracking -----------------------------------------------------------
+billing:
+  llm_budget_usd_per_month: 0        # static SSG landing -- no runtime LLM
+  prepaid_credits_usd: 0
