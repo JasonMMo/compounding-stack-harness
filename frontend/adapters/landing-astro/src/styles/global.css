@@ -37,6 +37,15 @@
 @import "@fontsource-variable/space-grotesk";
 @import "@fontsource-variable/inter";
 
+/* Ignite theme: Barlow Condensed (display) + Lato (body)
+   Static fonts — no variable version available for Barlow Condensed or Lato.
+   700 weight for body hierarchy; 800 weight for display headings and stats.
+   Barlow Condensed at 64–80px fills the split-hero dark column (CDO spec). */
+@import "@fontsource/barlow-condensed/700.css";
+@import "@fontsource/barlow-condensed/800.css";
+@import "@fontsource/lato/400.css";
+@import "@fontsource/lato/700.css";
+
 /* font-display: swap is set per @fontsource package default */
 
 /* ── Generated token CSS (injected by build-tokens.mjs) ───────────────────── */
@@ -97,6 +106,67 @@ body {
 .hover-lift:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px -4px rgba(0,0,0,0.15);
+}
+
+/* ── cta/newsletter-inline: form row responsive layout ─────────────────────── */
+/* Desktop (≥640px): flex row — input flex:1, button fixed width.             */
+/* Mobile (<640px): column stack — both full width.                            */
+/* No inline grid/flex-template to avoid @media override failure.              */
+.cta-newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+@media (min-width: 640px) {
+  .cta-newsletter-form {
+    flex-direction: row;
+    gap: 12px;
+    align-items: stretch;
+  }
+}
+.cta-newsletter-form input:focus {
+  outline: 2px solid var(--color-primary-border, #E87070);
+  outline-offset: 2px;
+}
+
+/* ── stats/four-up: responsive grid + vertical separator ───────────────────── */
+/* Mobile: 2×2. Desktop (≥640px): 4-column with separator between cells.      */
+/* Separator: 1px rgba(250,250,248,0.20) right border on non-last cells.       */
+/* No card boxing — stats are direct text on the crimson band.                 */
+.stats-four-up-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px 0;
+}
+@media (min-width: 640px) {
+  .stats-four-up-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .stats-four-up-sep {
+    border-left: 1px solid rgba(250, 250, 248, 0.20);
+  }
+}
+
+/* ── process/horizontal-steps: desktop connector rule ──────────────────────── */
+/* CSS ::after horizontal connector between steps. Pure CSS — zero JS.         */
+/* Connector: 1px rule in var(--color-primary-border), positioned absolute.    */
+/* Active only on md+ (≥768px); hidden on mobile via .process-hsteps flex-col. */
+@media (min-width: 768px) {
+  .process-hstep--connector {
+    position: relative;
+  }
+  .process-hstep--connector::after {
+    content: '';
+    position: absolute;
+    top: 14px; /* half of 28px circle height */
+    left: calc(28px + 10px);  /* right edge of circle + gap */
+    right: -10px;             /* extends toward next step */
+    height: 1px;
+    background: var(--color-primary-border, #E87070);
+    pointer-events: none;
+  }
 }
 
 /* ── Harvest theme: effervescence (rising bubbles) ─────────────────────────── */
