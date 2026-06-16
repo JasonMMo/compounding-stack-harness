@@ -1,0 +1,20 @@
+# deploy/preview/summit-horizon.compose.yml
+# Coolify dockercompose -- marketing-site static preview at summit-horizon.n9n.co.kr
+# Multi-stage build (scaffold + astro SSG -> nginx). Build context = repo root.
+# profile: event-demo  |  theme: ignite  |  DEMO_MODE=1 (waitlist form stubbed)
+# A3 archetype (Event / Conference) -- hero/split-left + logos/grid (tiered sponsor
+#   wordmarks) + process/horizontal-steps + features/three-col-icon + stats/four-up
+#   (full-bleed crimson) + testimonial/carousel + cta/newsletter-inline + faq + footer.
+# theme-aware build: build-tokens-auto.mjs reads theme "ignite" from the generated manifest.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: frontend/adapters/landing-astro/Dockerfile
+      args:
+        PROFILE_SLUG: event-demo
+        DEMO_MODE: "1"
+    ports:
+      - "80"
+    restart: unless-stopped
