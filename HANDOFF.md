@@ -2,15 +2,15 @@
 
 ## 이번 세션 범위 (최신)
 
-**마케팅사이트 8축(theme/section) 트랙 — 페이지-구조 아키타입 확장 (Growth-75 → 80)**.
+**마케팅사이트 8축(theme/section) 트랙 — 페이지-구조 아키타입 확장 (Growth-75 → 82)**.
 웹에이전시형 랜딩 데모를 "테마(색·폰트)" 다양성에서 **페이지 구조 아키타입(A1~A6)** 다양성으로 확장 중. CEO 가 "색·텍스트만 다른 같은 패턴"을 지적(Growth-76) → 진짜 차별은 **섹션 variant × 페이지 아키타입 × 테마의 곱**이라는 결론. 블루프린트: [`docs/architecture/landing-pattern-matrix.md`](docs/architecture/landing-pattern-matrix.md).
 
-> ✅ **Growth-80 빌드·검증 완료** + **Growth-81 LIVE 배포 완료**. A1 FLUX(인프라 SaaS) — flux 테마 + 신규 섹션 3종, 로컬 ui_check **7/7 PASS**.
-> ✅ **FLUX LIVE** — https://flux.n9n.co.kr (HTTPS 200, 서빙 마크업 stats/bento/pull-quote 검증). 6번째 마케팅 데모 카드 + 레지스트리 등록 완료. **P0 종결**.
+> ✅ **Growth-81 A1 FLUX LIVE** — https://flux.n9n.co.kr (6번째 데모, flux 테마). **P0 종결**.
+> ✅ **Growth-82 A3 Event LIVE** — https://summit-horizon.n9n.co.kr (7번째 데모, ignite 테마, SUMMIT Horizon 2026). 신규 variant 3종(horizontal-steps/newsletter-inline/four-up) + logos/grid 워드마크 폴백 결함 픽스. 풀페이지 9/9 섹션 비주얼 검증, ui_check 7/7. **P2(A3) 종결**.
 
 ---
 
-## 완료 항목 (마케팅사이트 트랙, Growth-75~80)
+## 완료 항목 (마케팅사이트 트랙, Growth-75~82)
 
 | Growth | 아키타입 / 산출 | 테마 | LIVE URL | 상태 |
 |---|---|---|---|---|
@@ -21,10 +21,11 @@
 | 79 | (툴링) 공식 Anthropic 스킬 5종 검토 → webapp-testing 1종 채택 | — | — | ✅ |
 | 80 | **A1** SaaS Product Launch — FLUX (인프라/관측성) | flux | https://flux.n9n.co.kr | ✅ LIVE |
 | 81 | (배포) A1 FLUX LIVE + 포털 6번째 카드 + 레지스트리 | flux | https://flux.n9n.co.kr | ✅ LIVE |
+| 82 | **A3** Event/Conference — SUMMIT Horizon 2026 (신규 variant 3종) | ignite | https://summit-horizon.n9n.co.kr | ✅ LIVE |
 
-- **라이브 마케팅 데모 6종**: gtm-landing(indigo aurora) · hopwell · studio-north · terra-ceramics · meridian · **flux**. 포털에 카드 6장. (※ 별도로 Growth-57 business-system 데모 7종은 `*-demo.n9n.co.kr` — 아래 참조표.)
-- **테마 6종**: aurora(gtm) · harvest · atelier · kiln · meridian · **flux**(신규). 누적 위치 `presets/themes/<slug>/`.
-- **섹션 카탈로그**: Growth-80 으로 **14/14 type 완성**(stats type 추가), HAVE variant 30. 단일진실 `presets/site-sections/catalog.yaml`.
+- **라이브 마케팅 데모 7종**: gtm-landing(indigo aurora) · hopwell · studio-north · terra-ceramics · meridian · flux · **summit-horizon**. 포털에 카드 7장. (※ 별도로 Growth-57 business-system 데모 7종은 `*-demo.n9n.co.kr` — 아래 참조표.)
+- **테마 7종**: aurora(gtm) · harvest · atelier · kiln · meridian · flux · **ignite**(신규, crimson-red). 누적 위치 `presets/themes/<slug>/`.
+- **섹션 카탈로그**: **14/14 type 완성**, HAVE variant 33(Growth-82 로 horizontal-steps/four-up/newsletter-inline 추가). 단일진실 `presets/site-sections/catalog.yaml`.
 
 ### Growth-80 (A1 FLUX) 세부 — 다음 세션 직접 관련
 - **flux 테마**: amber-gold `#8B5E10` 단일 액센트(OKLCH H72 미점유) + charcoal flat hero, Space Grotesk + Inter. aurora violet/Bricolage 와 hue·폰트·레지스터 3축 분리. 네온/터미널그린 반사 회피.
@@ -65,14 +66,15 @@
 
 ## 오픈 루프 (우선순위 순)
 
-### ✅ P0 — FLUX LIVE 배포 (Growth-81 종결)
-- A1 FLUX 라이브: https://flux.n9n.co.kr (Coolify project=jq25nyzfirch3flp7no2wg3u, app=oyemv0mttkn8eo05xflvc4x2). 포털 6번째 카드 + `infra/registry/flux.yaml` 등록 완료. 풀테스트 329 PASS(스테일 테스트 1건 동반 수정).
+### ✅ P0 — FLUX LIVE 배포 (Growth-81 종결) · ✅ A3 Event (Growth-82 종결)
+- A1 FLUX: https://flux.n9n.co.kr (project=jq25nyzfirch3flp7no2wg3u, app=oyemv0mttkn8eo05xflvc4x2). 6번째 카드 + `infra/registry/flux.yaml`.
+- A3 Event: https://summit-horizon.n9n.co.kr (project=k105u8soe4fergofhdje2nkt, app=jvo3hnfmf2bv8ce10mcj96l0, ignite 테마). 7번째 카드 + `infra/registry/summit-horizon.yaml`. 신규 variant 3종 + logos/grid 폴백 결함 픽스, 풀페이지 9/9 검증.
 
-### P1 — catalog copy_slots variant-aware 완화 (Growth-80 발견)
+### P1 — 매트릭스 잔여: A5(Mobile App) 아키타입
+- **A5 Mobile App** 미산출 — 매트릭스 §3 A5 컴포지션 참조. 신규 NEED 는 **`gallery/grid-2x2` 1종만**(four-up 은 Growth-82 에서 구현돼 재사용). 신규 8번째 테마(consumer-app 레지스터) 필요. A3 와 동일 루프(CDO 설계→Engineer 구현→비주얼검증→배포)로 1세션 완주 가능.
+
+### P2 — catalog copy_slots variant-aware 완화 (Growth-80 발견, 미해결)
 - `pull-quote-wall` 등 items[] 기반 variant 가 catalog testimonial `copy_slots.required(quote/author_name)` 를 강제당해 profile 에 중복 기입 발생. copy_slots 를 **variant-aware optional** 로 완화 검토.
-
-### P2 — 매트릭스 잔여 아키타입
-- **A3(Event)** · **A5(Mobile App)** 아키타입 미산출. 잔여 variant(매트릭스 참조). 블루프린트 `docs/architecture/landing-pattern-matrix.md`.
 
 ### P3 — 콘텐츠/마무리 (실고객 전 보류)
 - carousel 전용 목업(business-system 데모 auth-gated 라 dashboard 캡처 불가).
@@ -104,14 +106,23 @@
 ## 최신 git (master)
 
 ```
-<this-commit> log(growth-81): A1 FLUX LIVE 배포 종결 (devops/learn-log/HANDOFF)  ← HEAD
-35863bd feat(portal): add FLUX (A1 SaaS) demo card — 6th marketing demo
-4b19b1b chore(registry): flux digital-asset record — A1 marketing demo LIVE
-28026ce build(preview): flux.compose.yml — A1 FLUX marketing-site deploy unit
-55777ce test(site-manifest): A1 stats type -> 14 section types (was stale 13)
-2836594 log(growth-80): A1 FLUX 인프라SaaS 빌드 + flux 테마 + 섹션3종, ui_check 7/7 PASS
+<this-commit> log(growth-82): A3 Event LIVE 종결 (matrix/devops/learn-log/HANDOFF)  ← HEAD
+1ab5f8a feat(portal): add Summit Horizon (A3 Event) demo card — 7th marketing demo
+7551bad chore(registry): summit-horizon digital-asset record (A3 Event)
+d2ecff7 build(preview): summit-horizon.compose.yml — A3 Event deploy unit
+459d0ba fix(profile): event-demo — correct contact domain summary->summit
+6e85403 fix(logos): grid variant wordmark fallback + company shape normalization
+43068ad docs(themes): _INDEX.md — add ignite row
+70f243a feat(themes): ignite theme — crimson-red event/conference register (A3)
+0be2516 profile(event-demo): A3 Event/Conference demo — SUMMIT Horizon 2026 (ignite)
+3e705ae catalog(cta): register newsletter-inline variant
+c4e54d0 deps(landing-astro): add @fontsource/barlow-condensed + @fontsource/lato
+ce86fc1 feat(styles): CSS for horizontal-steps connector, four-up grid, newsletter form
+797ec08 feat(sections): add cta/newsletter-inline variant
+2143684 feat(sections): polish stats/four-up for ignite theme (full crimson band)
+f3ee196 feat(sections): implement process/horizontal-steps variant
 ```
-HEAD = origin/master(push 완료). flux.compose/registry/portal/test 커밋은 push 됨, ledger 커밋이 이번 마무리.
+HEAD = origin/master(push 완료). 코드/compose/registry/portal 커밋은 push 됨, ledger 커밋이 이번 마무리.
 
 ### 미커밋 / untracked (의도적 보류)
 - `M .claude/settings.json` — 로컬 하네스 설정(worktree override 포함, 커밋 보류).
@@ -123,5 +134,5 @@ HEAD = origin/master(push 완료). flux.compose/registry/portal/test 커밋은 p
 
 1. **풀테스트**: `PYTHONUTF8=1 python -m pytest scripts/workflow/tests -q` + `PYTHONUTF8=1 python scripts/diagnose.py`(0 FAIL 기대).
 2. **landing-astro 빌드 확인**: `cd frontend/adapters/landing-astro && npm run build`(BUILD SUCCESS).
-3. **FLUX 로컬 확인**: ui_check 또는 webapp-testing 으로 flux-demo manifest 렌더 점검(7/7 PASS 기대).
-4. 파운더 지시에 따라 오픈 루프 선택 — 기본 다음 수: **P0(FLUX LIVE 배포)** → P1/P2.
+3. **비주얼 검증 회수**: ui_check `--base-url <serve> --slug <s> --entry-path /` (7/7 기대) + **풀페이지 스크롤 세그먼트 캡처**(`out/shot_seg.py`, large-file-guard 회피용 뷰포트 분할) 로 below-fold 전 섹션 육안 확인 — Growth-82 에서 logos 플레이스홀더·footer 오타가 ui_check PASS 에도 풀페이지로만 적발됨.
+4. 파운더 지시에 따라 오픈 루프 선택 — 기본 다음 수: **P1(A5 Mobile App 아키타입)**, A3 와 동일 루프(CDO→Engineer→비주얼검증→배포). 신규 NEED 는 `gallery/grid-2x2` 1종 + 8번째 테마.
