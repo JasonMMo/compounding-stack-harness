@@ -1971,3 +1971,343 @@ class TestHeroBentoGrid:
         assert stat["primary_value"] == "847M"
         assert marquee is not None, "marquee card must be in bento_items"
         assert "Acme Platform" in marquee["companies"]
+
+
+# ---------------------------------------------------------------------------
+# Growth-85: process/split-animation — validation + manifest threading
+# ---------------------------------------------------------------------------
+
+class TestProcessSplitAnimation:
+    """validate_site + build_site_manifest for process/split-animation variant.
+
+    Covers:
+      (a) Catalog: split-animation variant registered.
+      (b) Validation: valid split-animation section passes.
+      (c) Validation: status enum values accepted (completed/active/upcoming).
+      (d) Validation: subtasks with required title pass; missing title fails.
+      (e) Manifest threading: subtasks + status + tools pass through verbatim.
+      (f) SSR contract: section emits items[] in manifest (component handles display).
+      (g) flux-demo.yaml profile validates cleanly (contains split-animation).
+      (h) flux-demo manifest contains split-animation process section.
+    """
+
+    def _split_site(self, copy, items=None):
+        section = {"type": "process", "variant": "split-animation", "copy": copy}
+        if items is not None:
+            section["items"] = items
+        return {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [section],
+                }
+            ]
+        }
+
+    # ── (a) Catalog: variant registered ─────────────────────────────────────
+
+    def test_split_animation_in_process_variants(self, catalog):
+        """split-animation must appear in process.variants."""
+        process = catalog["sections"]["process"]
+        assert "split-animation" in process.get("variants", []), (
+            "process.variants must contain 'split-animation'"
+        )
+
+    def test_catalog_process_item_slots_has_status_and_subtasks(self, catalog):
+        """item_slots.optional must include status and subtasks (Growth-85 extension)."""
+        process = catalog["sections"]["process"]
+        optional = process["item_slots"].get("optional", [])
+        assert "status" in optional, "item_slots.optional must contain 'status'"
+        assert "subtasks" in optional, "item_slots.optional must contain 'subtasks'"
+
+    # ── (b) Validation: valid split-animation passes ─────────────────────────
+
+    def test_split_animation_minimal_valid(self, catalog):
+        """process/split-animation with headline and items[title] passes."""
+        items = [
+            {"title": "소스 연결", "status": "completed"},
+            {"title": "SLO 정의", "status": "active"},
+            {"title": "배포", "status": "upcoming"},
+        ]
+        errs = validate_site(
+            self._split_site({"headline": "도입 단계"}, items), catalog
+        )
+        assert errs == [], f"split-animation minimal should be valid: {errs}"
+
+    def test_split_animation_no_items_valid(self, catalog):
+        """process/split-animation without items[] is valid (component uses demo fallback)."""
+        errs = validate_site(
+            self._split_site({"headline": "도입 단계"}), catalog
+        )
+        assert errs == [], f"split-animation without items must be valid: {errs}"
+
+    def test_split_animation_missing_headline_rejected(self, catalog):
+        """process/split-animation missing headline → violation."""
+        errs = validate_site(self._split_site({}), catalog)
+        assert any("headline" in e for e in errs), (
+            f"Missing headline must be flagged: {errs}"
+        )
+
+    # ── (c) Status enum accepted ─────────────────────────────────────────────
+
+    def test_split_animation_all_status_values_valid(self, catalog):
+        """All three status values (completed/active/upcoming) pass item_slots validation."""
+        items = [
+            {"title": "완료된 단계", "status": "completed"},
+            {"title": "진행 중 단계", "status": "active"},
+            {"title": "예정 단계", "status": "upcoming"},
+        ]
+        errs = validate_site(
+            self._split_site({"headline": "단계"}, items), catalog
+        )
+        assert errs == [], f"All status values must be accepted: {errs}"
+
+    # ── (d) Subtasks: required title; missing title fails ────────────────────
+
+    def test_split_animation_with_subtasks_valid(self, catalog):
+        """Items with subtasks[] pass when subtask has title (required)."""
+        items = [
+            {
+                "title": "소스 연결",
+                "status": "completed",
+                "subtasks": [
+                    {"title": "커넥터 설정", "status": "completed"},
+                    {
+                        "title": "스키마 검증",
+                        "description": "스키마 트리가 올바르게 매핑됐는지 확인합니다.",
+                        "status": "completed",
+                        "tools": ["schema-explorer", "cli"],
+                    },
+                ],
+            }
+        ]
+        errs = validate_site(
+            self._split_site({"headline": "단계"}, items), catalog
+        )
+        assert errs == [], f"Items with valid subtasks must pass: {errs}"
+
+    def test_split_animation_item_missing_title_flagged(self, catalog):
+        """process/split-animation item missing required 'title' → violation."""
+        items = [{"description": "설명만 있고 title 없음", "status": "active"}]
+        errs = validate_site(
+            self._split_site({"headline": "단계"}, items), catalog
+        )
+        assert any("title" in e for e in errs), (
+            f"Missing item title must be flagged: {errs}"
+        )
+
+    # ── (e) Manifest threading: subtasks + status + tools ───────────────────
+
+    def test_split_animation_subtasks_thread_through_manifest(self):
+        """subtasks[], status, tools thread verbatim through build_site_manifest."""
+        profile = {
+            "customer": {"slug": "flux-test"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "flux",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "process",
+                                "variant": "split-animation",
+                                "copy": {
+                                    "headline": "도입 단계",
+                                    "subhead": "4단계로 완성합니다.",
+                                },
+                                "items": [
+                                    {
+                                        "title": "소스 연결",
+                                        "description": "Kafka, S3 등을 연결합니다.",
+                                        "status": "completed",
+                                        "subtasks": [
+                                            {
+                                                "title": "커넥터 설정",
+                                                "description": "YAML 작성.",
+                                                "status": "completed",
+                                                "tools": ["flux-connector", "cli"],
+                                            },
+                                            {
+                                                "title": "스키마 검증",
+                                                "status": "completed",
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "title": "SLO 정의",
+                                        "status": "active",
+                                        "subtasks": [
+                                            {"title": "SLO 기준값 수집", "status": "completed"},
+                                            {"title": "규칙 작성", "status": "active", "tools": ["flux-slo-editor"]},
+                                        ],
+                                    },
+                                    {
+                                        "title": "배포",
+                                        "status": "upcoming",
+                                    },
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        sec = manifest["pages"][0]["sections"][0]
+        assert sec["type"] == "process"
+        assert sec["variant"] == "split-animation"
+        assert "items" in sec
+        items = sec["items"]
+        assert len(items) == 3
+
+        # Item 0: completed with subtasks + tools
+        item0 = items[0]
+        assert item0["title"] == "소스 연결"
+        assert item0["status"] == "completed"
+        assert "subtasks" in item0
+        assert len(item0["subtasks"]) == 2
+        sub0 = item0["subtasks"][0]
+        assert sub0["title"] == "커넥터 설정"
+        assert sub0["status"] == "completed"
+        assert "tools" in sub0
+        assert "flux-connector" in sub0["tools"]
+        assert "cli" in sub0["tools"]
+        sub1 = item0["subtasks"][1]
+        assert sub1["title"] == "스키마 검증"
+        assert "tools" not in sub1  # tools absent in input → absent in output
+
+        # Item 1: active with mixed subtask statuses
+        item1 = items[1]
+        assert item1["status"] == "active"
+        assert item1["subtasks"][1]["status"] == "active"
+        assert "flux-slo-editor" in item1["subtasks"][1]["tools"]
+
+        # Item 2: upcoming, no subtasks
+        item2 = items[2]
+        assert item2["title"] == "배포"
+        assert item2["status"] == "upcoming"
+        assert "subtasks" not in item2
+
+    def test_split_animation_copy_threads_through_manifest(self):
+        """copy.subhead for split-animation threads into manifest."""
+        profile = {
+            "customer": {"slug": "flux-test"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "flux",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "process",
+                                "variant": "split-animation",
+                                "copy": {
+                                    "headline": "4단계",
+                                    "subhead": "간단한 도입 절차입니다.",
+                                },
+                                "items": [{"title": "시작"}],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        sec = manifest["pages"][0]["sections"][0]
+        assert sec["copy"]["headline"] == "4단계"
+        assert sec["copy"]["subhead"] == "간단한 도입 절차입니다."
+
+    # ── (f) SSR contract: items emitted ──────────────────────────────────────
+
+    def test_split_animation_items_key_present_in_manifest(self):
+        """process/split-animation section must emit items[] key when items are provided."""
+        profile = {
+            "customer": {"slug": "flux-test"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "flux",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "process",
+                                "variant": "split-animation",
+                                "copy": {"headline": "단계"},
+                                "items": [{"title": "Step 1"}],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        sec = manifest["pages"][0]["sections"][0]
+        assert "items" in sec, "items[] must be present in manifest when provided"
+        assert len(sec["items"]) == 1
+        assert sec["items"][0]["title"] == "Step 1"
+
+    # ── (g) flux-demo.yaml validates cleanly ─────────────────────────────────
+
+    def test_flux_demo_profile_validates(self, catalog):
+        """flux-demo.yaml (with split-animation process section) must validate cleanly."""
+        try:
+            import yaml as _yaml
+        except ImportError:
+            pytest.skip("PyYAML not available")
+        path = PROFILES_DIR / "flux-demo.yaml"
+        if not path.exists():
+            pytest.skip("flux-demo.yaml not found")
+        with open(path, encoding="utf-8") as f:
+            profile = _yaml.safe_load(f)
+        site = profile.get("site", {})
+        errs = validate_site(site, catalog)
+        assert errs == [], f"flux-demo.yaml site block has violations: {errs}"
+
+    # ── (h) flux-demo manifest contains split-animation process section ──────
+
+    def test_flux_demo_manifest_has_split_animation_process(self):
+        """flux-demo build_site_manifest output must include process/split-animation."""
+        try:
+            import yaml as _yaml
+        except ImportError:
+            pytest.skip("PyYAML not available")
+        path = PROFILES_DIR / "flux-demo.yaml"
+        if not path.exists():
+            pytest.skip("flux-demo.yaml not found")
+        with open(path, encoding="utf-8") as f:
+            profile = _yaml.safe_load(f)
+        manifest = build_site_manifest(profile)
+        home = next((p for p in manifest["pages"] if p["slug"] == "home"), None)
+        assert home is not None
+        process_sec = next(
+            (s for s in home["sections"]
+             if s["type"] == "process" and s.get("variant") == "split-animation"),
+            None,
+        )
+        assert process_sec is not None, (
+            "home page must have process/split-animation section in manifest"
+        )
+        assert "items" in process_sec
+        assert len(process_sec["items"]) >= 3
+        # First item: completed
+        item0 = process_sec["items"][0]
+        assert item0.get("status") == "completed"
+        assert "subtasks" in item0
+        assert len(item0["subtasks"]) >= 2
+        # Second item: active
+        item1 = process_sec["items"][1]
+        assert item1.get("status") == "active"
+        # Tools present in subtasks
+        tools_found = any(
+            "tools" in sub
+            for item in process_sec["items"]
+            for sub in item.get("subtasks", [])
+        )
+        assert tools_found, "At least one subtask must have tools[] in flux-demo"
