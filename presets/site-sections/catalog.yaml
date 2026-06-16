@@ -198,12 +198,32 @@ sections:
     asset_slots: []
     item_slots:
       required: [title]
-      optional: [description, step_label]
+      optional: [description, step_label, status, subtasks]
     # step_label optional: numbering is positional by default (step 1, 2, 3…).
+    # status enum (split-animation): completed | active | upcoming. Color is secondary;
+    #   icon shape + aria-label is the primary distinction (WCAG AA, no color-only rule).
+    # subtasks[]: optional per-item list. Each subtask: { title (required), description (optional),
+    #   status (optional, same enum), tools (optional, string[]) }.
+    # tools[]: optional per-subtask list of tool/service names (string labels, display only).
     # numbered-stack: vertical numbered steps; each step headline + one-line description.
     # horizontal-steps: left-to-right steps with connectors; collapses to stack on mobile.
-    # split-animation: step number locks left, right column scrolls through step content (React island).
+    # split-animation: 2-column split — sticky headline+step-number left, task-tree cards right.
+    #   SSR fallback (Growth-69): all subtasks expanded (<details open> equivalent — full
+    #   content visible without JS). Progressive enhancement only — JS adds collapse toggle.
+    #   Marketing read-only: no status mutation, no Math.random. Status fixed from profile data.
+    #   Accessibility: <ol> ordered list, icon shape + aria-label (not color alone), WCAG AA.
+    #   prefers-reduced-motion: respected via CSS @media.
+    #   Token mapping: uses only existing theme tokens (no new status color tokens added).
+    #     completed = var(--color-text-2) + check-circle icon (muted, task done)
+    #     active    = var(--color-primary) + circle-dot icon (accent, current step)
+    #     upcoming  = var(--color-text-3) + circle icon (tertiary, not yet)
     variants: [numbered-stack, horizontal-steps, split-animation]
+    variant_overrides:
+      split-animation:
+        # subtasks/status/tools are split-animation-specific optional extensions.
+        # Validation already allows them (item_slots.optional); this entry documents
+        # the variant-scoped schema extension for catalog readers.
+        item_optional: []
 
   stats:
     label: "Stats / Metrics Band"
