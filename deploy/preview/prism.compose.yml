@@ -1,0 +1,20 @@
+# deploy/preview/prism.compose.yml
+# Coolify dockercompose -- marketing-site static preview at prism.n9n.co.kr
+# Multi-stage build (scaffold + astro SSG -> nginx). Build context = repo root.
+# profile: prism-demo  |  theme: prism  |  DEMO_MODE=1
+# A7 archetype (API Platform / Developer Tool) -- hero/bento-grid + logos/horizontal-scroll
+#   + features/bento-mosaic + stats/ticker-band + testimonial/pull-quote-wall
+#   + pricing/three-tier + faq/single-col + cta/left-aligned + footer/full-links.
+# theme-aware build: build-tokens-auto.mjs reads theme "prism" from the generated manifest.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: frontend/adapters/landing-astro/Dockerfile
+      args:
+        PROFILE_SLUG: prism-demo
+        DEMO_MODE: "1"
+    ports:
+      - "80"
+    restart: unless-stopped
