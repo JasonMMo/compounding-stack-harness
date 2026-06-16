@@ -2311,3 +2311,86 @@ class TestProcessSplitAnimation:
             for sub in item.get("subtasks", [])
         )
         assert tools_found, "At least one subtask must have tools[] in flux-demo"
+
+
+# ---------------------------------------------------------------------------
+# Growth-86: locale field — build_site_manifest emits manifest['locale']
+# ---------------------------------------------------------------------------
+
+class TestLocaleEmit:
+    """(a) profile with defaults.locale=ko-KR → manifest['locale']=='ko-KR'.
+    (b) profile without defaults block → manifest['locale']=='en-US' (default).
+    (c) profile with defaults block but no locale key → 'en-US' default.
+    """
+
+    def _minimal_profile(self, defaults=None):
+        profile: dict = {
+            "customer": {"slug": "test-locale"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "aurora",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "hero",
+                                "copy": {"headline": "Hello", "subhead": "World"},
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        if defaults is not None:
+            profile["defaults"] = defaults
+        return profile
+
+    def test_locale_ko_kr_emitted(self):
+        """(a) defaults.locale=ko-KR → manifest['locale']=='ko-KR'."""
+        profile = self._minimal_profile(defaults={"locale": "ko-KR", "timezone": "Asia/Seoul"})
+        manifest = build_site_manifest(profile)
+        assert "locale" in manifest, "manifest must contain 'locale' key"
+        assert manifest["locale"] == "ko-KR", (
+            f"Expected 'ko-KR', got '{manifest['locale']}'"
+        )
+
+    def test_locale_default_when_no_defaults_block(self):
+        """(b) profile without defaults block → manifest['locale']=='en-US'."""
+        profile = self._minimal_profile(defaults=None)
+        manifest = build_site_manifest(profile)
+        assert "locale" in manifest, "manifest must contain 'locale' key"
+        assert manifest["locale"] == "en-US", (
+            f"Expected 'en-US' default, got '{manifest['locale']}'"
+        )
+
+    def test_locale_default_when_locale_key_absent(self):
+        """(c) defaults block present but no locale key → 'en-US' default."""
+        profile = self._minimal_profile(defaults={"timezone": "UTC"})
+        manifest = build_site_manifest(profile)
+        assert manifest["locale"] == "en-US", (
+            f"Expected 'en-US' when locale key absent, got '{manifest['locale']}'"
+        )
+
+    def test_locale_en_us_explicit(self):
+        """Explicit en-US passes through unchanged."""
+        profile = self._minimal_profile(defaults={"locale": "en-US"})
+        manifest = build_site_manifest(profile)
+        assert manifest["locale"] == "en-US"
+
+    def test_gtm_landing_locale_ko_kr(self):
+        """gtm-landing.yaml (defaults.locale=ko-KR) → manifest locale is ko-KR."""
+        try:
+            import yaml as _yaml
+        except ImportError:
+            pytest.skip("PyYAML not available")
+        path = PROFILES_DIR / "gtm-landing.yaml"
+        if not path.exists():
+            pytest.skip("gtm-landing.yaml not found")
+        with open(path, encoding="utf-8") as f:
+            profile = _yaml.safe_load(f)
+        manifest = build_site_manifest(profile)
+        assert manifest.get("locale") == "ko-KR", (
+            f"gtm-landing manifest locale must be 'ko-KR', got '{manifest.get('locale')}'"
+        )
