@@ -16,6 +16,7 @@ interface StyleHints {
   bg?: string
   text_align?: string
   cta_style?: string
+  cta_secondary_style?: string
   media_position?: string
 }
 
@@ -44,20 +45,35 @@ const isDemoMode = rawDemoMode === '1' || rawDemoMode.toLowerCase() === 'true'
 const bg = styleHints.bg ?? 'primary'
 const textAlign = styleHints.text_align ?? 'center'
 const ctaStyle = styleHints.cta_style ?? 'inverse-lg'
+const ctaSecondaryStyle = styleHints.cta_secondary_style
 
+// CHANGE 1: extend bgClass to support surface-* keys from theme styleHints.
+// Themes like nova set bg: surface-2 (pale violet whisper band) on the cta section.
+// Without these entries bgClass['surface-2'] would be undefined → falls back to
+// bgClass.primary (violet band) — wrong intent. All existing keys preserved.
 const bgClass: Record<string, string> = {
   primary: 'bg-[var(--color-primary,#6D28D9)]',
   gradient: 'bg-gradient-to-r from-[var(--color-hero-bg-from,#1E1B4B)] to-[var(--color-hero-bg-to,#4C1D95)]',
   dark: 'bg-[var(--color-text-1,#111827)]',
   light: 'bg-[var(--color-surface-2,#F9FAFB)]',
+  'surface-1': 'bg-[var(--color-surface-1,#FFFFFF)]',
+  'surface-2': 'bg-[var(--color-surface-2,#F9FAFB)]',
+  'surface-3': 'bg-[var(--color-surface-3,#F3F4F6)]',
 }
 
+// CHANGE 2: textColor — pale (surface-* / light) bands use dark text.
+// surface-* keys are not in (primary|gradient|dark), so they automatically get
+// dark text. Confirmed: no change to the ternary needed.
 const textColor = (bg === 'primary' || bg === 'gradient' || bg === 'dark') ? 'text-white' : 'text-[var(--color-text-1,#111827)]'
 
+// CHANGE 3: add secondary-lg — outline button for pale bands.
+// Violet border + violet text on pale bg: primary (#8B2BE2) on surface-2 (#F6F4F9)
+// ≈ 5.89:1 → PASS AA. transparent bg → clearly distinct from primary-lg filled pill.
 const ctaClass: Record<string, string> = {
   'inverse-lg': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] bg-white text-[var(--color-primary,#6D28D9)] font-bold text-lg hover:bg-[var(--color-primary-subtle,#F5F3FF)] transition-colors',
   'primary-lg': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] bg-[var(--color-primary,#6D28D9)] text-white font-bold text-lg hover:bg-[var(--color-primary-hover,#5B21B6)] transition-colors',
   'primary-outline': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] border-2 border-white text-white font-bold text-lg hover:bg-white/10 transition-colors',
+  'secondary-lg': 'inline-block px-8 py-3 rounded-[var(--radius-button,8px)] border-2 border-[var(--color-primary,#6D28D9)] text-[var(--color-primary,#6D28D9)] font-bold text-lg hover:bg-[var(--color-primary-subtle,#F5F3FF)] transition-colors',
   'ghost': 'inline-block px-8 py-3 text-white font-bold text-lg underline hover:no-underline',
 }
 
@@ -175,10 +191,34 @@ const isSplit = variant === 'with-image'
             {copy.subhead}
           </p>
         )}
-        {cta && (
-          <a href={cta.href} class={ctaClass[ctaStyle] ?? ctaClass['inverse-lg']}>
-            {cta.label}
-          </a>
+        {(cta || copy.secondary_label) && (
+          <!-- Button pair: primary CTA + optional secondary CTA.
+               Inline-flex row with gap, wraps on mobile (flex-wrap).
+               Centered when textAlign is center; left-aligned otherwise.
+               Both visible in SSR — no JS (Growth-69 invariant). -->
+          <div class={`flex flex-wrap gap-4 ${textAlign === 'left' ? 'justify-start' : 'justify-center'}`}>
+            {cta && (
+              <a href={cta.href} class={ctaClass[ctaStyle] ?? ctaClass['inverse-lg']}>
+                {cta.label}
+              </a>
+            )}
+            {copy.secondary_label && (
+              <!-- Secondary style resolution (CHANGE 3c):
+                   1. Prefer explicit theme cta_secondary_style (e.g. nova sets secondary-lg).
+                   2. Fallback: outline-on-color for dark bands; secondary-lg for pale bands
+                      (secondary-lg = violet outline on pale bg → distinct from primary-lg filled). -->
+              <a
+                href={copy.secondary_href ?? '#'}
+                class={ctaSecondaryStyle
+                  ? (ctaClass[ctaSecondaryStyle] ?? ctaClass['primary-outline'])
+                  : (bg === 'primary' || bg === 'gradient' || bg === 'dark')
+                    ? ctaClass['primary-outline']
+                    : ctaClass['secondary-lg']}
+              >
+                {copy.secondary_label}
+              </a>
+            )}
+          </div>
         )}
       </div>
 
