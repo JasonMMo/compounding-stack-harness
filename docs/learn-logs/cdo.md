@@ -148,6 +148,17 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **Cross-agent dependency**: Engineer — Process.astro·Team.astro(monogram)·Logos quote-band·라우팅·Syne/DM Sans 폰트. DevOps — meridian 배포 + 포털 재배포. CTO — profile B2B 카피 직접 작성.
 - **Cost**: design 토큰 CTO 직접(design-agent 미spawn) + engineer 구현 위임.
 
+### Growth-84 (2026-06-16) — prism 테마(9번째) + hero/bento-grid + A7 API Platform archetype
+
+- **Deliverable**: `out/bento-hero/cdo-spec.md` — (1) prism theme.yaml 전체 토큰(deep-azure #1B4FA8, OKLCH H≈228 미점유 hue, white canvas, IBM Plex Sans+DM Sans+DM Mono, `accent-glow: 0.00` 글로우 완전차단), (2) hero/bento-grid 변형 스펙(GlassmorphismTrust 21st.dev 레퍼런스의 **구조**(text-7col/stat+marquee-bento-5col)만 차용·dark-neon 팔레트·백드롭글로우·스톡이미지 전량 제거·흰 캔버스+은은한 surface-2 카드로 중화), (3) props/item_slots/catalog 항목 제안, (4) A7 API Platform archetype 신설(8 sections, light hero, process 섹션 없음, stats ticker surface-2 배경), (5) Prism 전 섹션 카피 전문, (6) impeccable 4-reflex-reject 자가검사 1줄씩.
+- **Hue 선정 근거**: H≈220-240 대역 전 9테마 미점유 확인(기존 hue 시계 재검토). aurora(H≈280)와 52도 간격, neon-cyan(H≈200) 금지구역 이탈. primary(#1B4FA8) on white = 7.6:1 AAA — 전 토큰 쌍 AAA 목표 충족.
+- **Growth-69 준수**: bento 카드 콘텐츠 전량 SSR baked; `backdrop-filter: blur` 은 progressive enhancement만. 마키 정적 fallback 구현(`prefers-reduced-motion` 가드).
+- **CTO 비주얼 검증 FIX-FIRST 2건**: ticker-band 라이트밴드 대비 부족(surface-2 배경 시 토큰 미적용) + footer 빈컬럼 — 엔지니어가 컴포넌트 일반화(조건부 bg 토큰 주입 + 컬럼 필 guard)로 해결.
+- **Persona served**: IT-담당자 / ops (API platform 타겟 buyer)
+- **Accessibility checks**: text-1 (#141C28) on white 17.7:1 AAA; primary (#1B4FA8) on white 7.6:1 AAA; bento 카드 내부 (surface-2) 16.4:1 AAA; text-3 4.6:1 AA(캡션 전용). focus ring = primary, non-text 7.6:1 >> 3:1.
+- **Cross-agent dependency**: Engineer — IBM Plex Sans + DM Sans + DM Mono fontsource 패키지 추가, HeroBentoGrid.astro 구현, catalog.yaml bento-grid variant 추가, landing-pattern-matrix §2·§3 갱신. QA — 비주얼 게이트 + no-JS 검증.
+- **Cost**: CDO 디자인 패스 1 turn (design-agent, out/ 파일 산출).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
