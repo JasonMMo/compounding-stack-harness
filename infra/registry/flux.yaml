@@ -13,7 +13,8 @@ preview:
   coolify_project: jq25nyzfirch3flp7no2wg3u
   coolify_app: oyemv0mttkn8eo05xflvc4x2
   status: live
-  deployed_at: "2026-06-16"
+  deployed_at: "2026-06-17"   # Growth-85 재배포: process/split-animation 섹션 교체 (commit 69482e4)
+  last_deployment_uuid: cnzdm72caqx680wcptyrrkmn
   deliverable_kind: marketing-site     # static SSG (no backend) — deploy_static_site.py lane
   theme: flux
   archetype: A1                        # SaaS Product Launch (landing-pattern-matrix)
