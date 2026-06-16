@@ -1179,17 +1179,18 @@ class TestCatalogA6B2BServices:
         assert "process" in sections, "process section type must be in catalog"
         assert "team" in sections, "team section type must be in catalog"
 
-    def test_catalog_has_process_team_and_thirteen_total(self, catalog):
-        """Catalog must contain process + team (A6 additions) for a total of 13 section types.
+    def test_catalog_has_process_team_and_fourteen_total(self, catalog):
+        """Catalog must contain process + team (A6) + stats (A1/Growth-80) section types.
         Pre-A6 count: 11 (8 original + gallery + story + lead from Growth-77).
-        Post-A6 count: 13 (+process +team). Header comment in catalog.yaml says 15 for
-        forward reference (stats type is backlog #2); actual YAML key count is 13.
+        Post-A6 count: 13 (+process +team).
+        Post-A1 count: 14 (+stats — Growth-80 ticker-band, was backlog #2).
         """
         sections = catalog["sections"]
         assert "process" in sections, "process must be in catalog after A6 additions"
         assert "team" in sections, "team must be in catalog after A6 additions"
-        assert len(sections) == 13, (
-            f"Expected 13 section types after A6 additions, got {len(sections)}: "
+        assert "stats" in sections, "stats must be in catalog after Growth-80 (A1 FLUX)"
+        assert len(sections) == 14, (
+            f"Expected 14 section types after A1 stats addition, got {len(sections)}: "
             f"{sorted(sections.keys())}"
         )
 
