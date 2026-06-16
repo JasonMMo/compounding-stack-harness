@@ -11,13 +11,17 @@ interface Props {
   description?: string
   ogImage?: string
   siteSlug?: string
+  /** BCP-47 locale string (e.g. "ko-KR", "en-US"). Only the language subtag is
+   *  written to <html lang>: "ko-KR" → "ko", "en-US" → "en". Default: "en". */
+  locale?: string
 }
 
-const { title, description, ogImage, siteSlug = '' } = Astro.props
+const { title, description, ogImage, siteSlug = '', locale } = Astro.props
+const htmlLang = (locale ?? 'en-US').split('-')[0]
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={htmlLang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
