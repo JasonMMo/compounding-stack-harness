@@ -1,0 +1,21 @@
+# deploy/preview/lumi.compose.yml
+# Coolify dockercompose -- marketing-site static preview at lumi.n9n.co.kr
+# Multi-stage build (scaffold + astro SSG -> nginx). Build context = repo root.
+# profile: mobile-demo  |  theme: nova  |  DEMO_MODE=1
+# A5 archetype (Mobile App) -- hero/split-right + logos/marquee-3d (harness proof wall)
+#   + features/carousel (swipeable) + gallery/grid-2x2 (CSS app-screen mockups, photo-free)
+#   + stats/four-up + testimonial/grid (review aesthetic) + cta/centered (iOS/Android
+#   button pair) + footer/minimal.
+# theme-aware build: build-tokens-auto.mjs reads theme "nova" from the generated manifest.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: frontend/adapters/landing-astro/Dockerfile
+      args:
+        PROFILE_SLUG: mobile-demo
+        DEMO_MODE: "1"
+    ports:
+      - "80"
+    restart: unless-stopped
