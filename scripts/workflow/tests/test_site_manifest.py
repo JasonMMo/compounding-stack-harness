@@ -840,18 +840,15 @@ class TestGalleryParallaxScroll:
         assert errs == [], f"enriched parallax-scroll items should be valid: {errs}"
 
     def test_parallax_scroll_no_src_valid(self, catalog):
-        """src is optional for parallax-scroll (renders theme material-texture when absent).
-        NOTE: catalog requires src in item_slots.required, so omitting src will fail
-        validation for gallery type — this test documents the current catalog constraint.
-        When the component renders, it may treat absent src as theme-texture mode; the
-        catalog constraint is intentionally kept for now (CTO may relax required later).
-        This test verifies missing src is caught as a violation (not silently ignored)."""
+        """src is optional for parallax-scroll via variant_overrides (Growth-83).
+        When src is absent the component renders a theme material-texture field.
+        validate_site must NOT raise a violation for missing src on parallax-scroll."""
         items = [{"alt": "Chapter 1", "heading": "The Craft"}]  # src absent
         site = self._parallax_site(items)
         errs = validate_site(site, catalog)
-        # src is in required — violation is expected and correct catalog behavior
-        assert any("src" in e for e in errs), (
-            "Missing required 'src' slot must be flagged even for parallax-scroll"
+        assert errs == [], (
+            "parallax-scroll with no src must pass (variant_overrides relaxes src): "
+            f"{errs}"
         )
 
     def test_parallax_scroll_items_thread_through(self):
@@ -1608,3 +1605,139 @@ class TestLogosQuoteBand:
         assert copy["author_title"] == "CTO"
         assert copy["company"] == "Acme Corp"
         assert "items" not in sec  # logos has no item_slots
+
+
+# ---------------------------------------------------------------------------
+# A5 Mobile App: variant_overrides slot relaxation (Growth-83, closes P2)
+# ---------------------------------------------------------------------------
+
+class TestVariantOverrides:
+    """validate_site respects catalog variant_overrides for item_optional and copy_optional.
+
+    Rules:
+      1. gallery/grid-2x2 with items lacking src → NO violation (src relaxed for this variant).
+      2. gallery/masonry-3col with items lacking src → violation (relaxation is variant-scoped).
+      3. testimonial/pull-quote-wall with copy missing quote/author_name → NO violation.
+      4. testimonial/single-card missing quote → violation (relaxation is variant-scoped).
+    """
+
+    def _gallery_site(self, variant, items):
+        return {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [
+                        {
+                            "type": "gallery",
+                            "variant": variant,
+                            "copy": {"headline": "Gallery"},
+                            "items": items,
+                        }
+                    ],
+                }
+            ]
+        }
+
+    def _testimonial_site(self, variant, copy):
+        return {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [
+                        {
+                            "type": "testimonial",
+                            "variant": variant,
+                            "copy": copy,
+                        }
+                    ],
+                }
+            ]
+        }
+
+    # ── Rule 1: gallery/grid-2x2 src-absent items pass ──────────────────────
+
+    def test_grid_2x2_items_without_src_no_violation(self, catalog):
+        """gallery/grid-2x2 with items that have only alt → no violation.
+        src is relaxed for grid-2x2 via variant_overrides.item_optional."""
+        items = [
+            {"alt": "Today screen"},
+            {"alt": "Insights screen"},
+            {"alt": "Focus screen"},
+            {"alt": "Profile screen"},
+        ]
+        errs = validate_site(self._gallery_site("grid-2x2", items), catalog)
+        assert errs == [], (
+            f"gallery/grid-2x2 items without src must pass (variant_overrides): {errs}"
+        )
+
+    def test_grid_2x2_items_with_src_still_valid(self, catalog):
+        """gallery/grid-2x2 with src present must also pass (src is optional, not forbidden)."""
+        items = [{"src": "img/a.jpg", "alt": "Screen A"}]
+        errs = validate_site(self._gallery_site("grid-2x2", items), catalog)
+        assert errs == [], f"grid-2x2 with src should still be valid: {errs}"
+
+    def test_grid_2x2_items_without_alt_still_violation(self, catalog):
+        """gallery/grid-2x2 items missing alt (not relaxed) must still be flagged."""
+        items = [{"caption": "Today"}]  # neither src nor alt
+        errs = validate_site(self._gallery_site("grid-2x2", items), catalog)
+        assert any("alt" in e for e in errs), (
+            f"alt is not relaxed for grid-2x2 — must still be flagged: {errs}"
+        )
+
+    # ── Rule 2: gallery/masonry-3col src-absent items fail ───────────────────
+
+    def test_masonry_3col_items_without_src_violation(self, catalog):
+        """gallery/masonry-3col with items lacking src → violation.
+        Relaxation is variant-scoped to grid-2x2 and parallax-scroll only."""
+        items = [{"alt": "Image A"}]  # src absent, variant is masonry-3col
+        errs = validate_site(self._gallery_site("masonry-3col", items), catalog)
+        assert any("src" in e for e in errs), (
+            f"gallery/masonry-3col must still require src (no variant_override): {errs}"
+        )
+
+    def test_full_bleed_strip_items_without_src_violation(self, catalog):
+        """gallery/full-bleed-strip with items lacking src → violation (not relaxed)."""
+        items = [{"alt": "Hero image"}]  # src absent
+        errs = validate_site(self._gallery_site("full-bleed-strip", items), catalog)
+        assert any("src" in e for e in errs), (
+            f"gallery/full-bleed-strip must still require src: {errs}"
+        )
+
+    # ── Rule 3: testimonial/pull-quote-wall missing quote/author_name pass ───
+
+    def test_pull_quote_wall_missing_copy_no_violation(self, catalog):
+        """testimonial/pull-quote-wall with copy missing quote and author_name → no violation.
+        These slots are relaxed via variant_overrides.copy_optional for pull-quote-wall
+        (quotes live in items[], not section-level copy)."""
+        copy = {}  # both quote and author_name absent
+        errs = validate_site(self._testimonial_site("pull-quote-wall", copy), catalog)
+        assert errs == [], (
+            f"testimonial/pull-quote-wall must pass without quote/author_name: {errs}"
+        )
+
+    def test_pull_quote_wall_with_copy_still_valid(self, catalog):
+        """testimonial/pull-quote-wall with quote/author_name present must also pass."""
+        copy = {"quote": "Transformative.", "author_name": "Jane D."}
+        errs = validate_site(self._testimonial_site("pull-quote-wall", copy), catalog)
+        assert errs == [], f"pull-quote-wall with copy should still pass: {errs}"
+
+    # ── Rule 4: testimonial/single-card missing quote is a violation ─────────
+
+    def test_single_card_missing_quote_violation(self, catalog):
+        """testimonial/single-card with copy missing quote → violation.
+        Relaxation is variant-scoped to pull-quote-wall; single-card is unchanged."""
+        copy = {"author_name": "Jane D."}  # quote missing
+        errs = validate_site(self._testimonial_site("single-card", copy), catalog)
+        assert any("quote" in e for e in errs), (
+            f"testimonial/single-card must still require quote: {errs}"
+        )
+
+    def test_single_card_missing_author_name_violation(self, catalog):
+        """testimonial/single-card missing author_name → violation (not relaxed)."""
+        copy = {"quote": "Great product."}  # author_name missing
+        errs = validate_site(self._testimonial_site("single-card", copy), catalog)
+        assert any("author_name" in e for e in errs), (
+            f"testimonial/single-card must still require author_name: {errs}"
+        )
