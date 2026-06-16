@@ -1,0 +1,186 @@
+# profiles/event-demo.yaml — A3 Event/Conference demo (ignite theme)
+# Archetype: SUMMIT Horizon 2026 — event / conference landing page
+# Demonstrates the full A3 composition with NEW variants:
+#   process/horizontal-steps, stats/four-up (polished), cta/newsletter-inline
+# Stock photos: 0 (text wordmarks + monogram sentinel only)
+# deliverable_kind=marketing-site → bypasses entity/DDL; site: block drives output
+
+version: 1
+
+customer:
+  slug: event-demo
+  display: "SUMMIT Horizon 2026 — Event Demo"
+  status: active
+  contact: events@summaryhorizon.kr
+  industry: event
+
+# ── Pluggable Stack ──────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# ── Site Block (marketing-site schema) ──────────────────────────────────────
+site:
+  theme: ignite
+
+  pages:
+    - slug: home
+      title: "SUMMIT Horizon 2026 — Where technology meets its next chapter"
+      seo:
+        title: "SUMMIT Horizon 2026 — Where technology meets its next chapter"
+        description: "SUMMIT Horizon 2026: October 16–17 at COEX Convention Center, Seoul. 2,400+ practitioners. 48 speakers. 3 tracks: Infrastructure, AI, Product. Save your seat."
+        og_image: ""
+      sections:
+
+        # ── 1. hero/split-left ──────────────────────────────────────────────
+        # Left column: dark bg (#161210), event name + date + venue + CTA.
+        # Right column: monogram sentinel "SH" — no stock photo.
+        - type: hero
+          variant: split-left
+          copy:
+            headline: "SUMMIT HORIZON 2026"
+            subhead: "OCT 16–17 · SEOUL · COEX Convention Center"
+            supporting_text: "Where technology meets its next chapter."
+          cta:
+            label: "Save Your Seat"
+            href: "#register"
+          visual_sentinel: "monogram-SH"
+
+        # ── 2. logos/grid — Sponsors ────────────────────────────────────────
+        # Text wordmarks only. filter: none (color identity preserved).
+        # heading omitted — let logos speak (CDO spec: heading optional on sponsor grid).
+        - type: logos
+          variant: grid
+          copy:
+            eyebrow: ""
+          companies:
+            - { name: "NEXUS Corp", tier: gold }
+            - { name: "DataPlex", tier: gold }
+            - { name: "InfraOne", tier: gold }
+            - { name: "Veridian", tier: silver }
+            - { name: "OpenStack KR", tier: silver }
+            - { name: "CloudMesh", tier: silver }
+            - { name: "ByteRoute", tier: silver }
+            - { name: "devKOREA", tier: community }
+            - { name: "Seoul AI Club", tier: community }
+            - { name: "TechWomen Korea", tier: community }
+
+        # ── 3. process/horizontal-steps — Event Flow ────────────────────────
+        # NEW variant (first use). Left-to-right steps with crimson-circle numbers
+        # and primary-border connector rules. Collapses to vertical stack mobile.
+        - type: process
+          variant: horizontal-steps
+          copy:
+            headline: "How the summit works"
+          items:
+            - title: "Register"
+              description: "Secure your spot and choose your track (Infra / AI / Product)."
+            - title: "Prepare"
+              description: "Access the pre-event resource hub and schedule builder two weeks before."
+            - title: "Attend"
+              description: "Two full days of keynotes, workshops, and live demos at COEX Hall A + B."
+            - title: "Connect"
+              description: "Join the closed alumni network and year-round async community."
+
+        # ── 4. features/three-col-icon — Session Tracks ─────────────────────
+        # card_style: elevated. icon_style: filled. layout: grid-3.
+        - type: features
+          variant: three-col-icon
+          copy:
+            headline: "Three tracks. One stage."
+          items:
+            - title: "Infrastructure & Platform"
+              description: "Kubernetes at scale, FinOps, edge compute, and the operators who keep production running."
+              icon: infra
+            - title: "AI & Machine Learning"
+              description: "From LLM deployment to MLOps pipelines — real production architectures from teams who have done it."
+              icon: ai
+            - title: "Product & Growth"
+              description: "Zero-to-one playbooks, pricing experiments, and the metrics that actually moved the needle."
+              icon: product
+
+        # ── 5. stats/four-up — Numbers ──────────────────────────────────────
+        # Full-bleed crimson band. White Barlow Condensed numerals on #C41E22.
+        - type: stats
+          variant: four-up
+          items:
+            - value: "2,400+"
+              label: "Seats"
+            - value: "48"
+              label: "Speakers"
+            - value: "6"
+              label: "Workshops"
+            - value: "5th"
+              label: "Year"
+
+        # ── 6. testimonial/carousel — Past Attendees ────────────────────────
+        # autoplay: false (WCAG 2.2.2). Avatar: initials circle (monogram fallback).
+        - type: testimonial
+          variant: carousel
+          copy:
+            heading: "From previous summits"
+            quote: "Horizon was the first conference where I left with implementation-ready ideas, not just slides to read later."
+            author_name: "Minji Yoon"
+            author_title: "Platform Lead, NexusCorp"
+          items:
+            - quote: "Horizon was the first conference where I left with implementation-ready ideas, not just slides to read later."
+              author_name: "Minji Yoon"
+              author_title: "Platform Lead, NexusCorp"
+              avatar: "MY"
+            - quote: "The networking density here is unlike any other Korean tech event. I hired two engineers from the hallway track alone."
+              author_name: "Daehun Park"
+              author_title: "CTO, ByteRoute"
+              avatar: "DP"
+            - quote: "The AI track covered things I haven't seen in any other conference in the region. Coming back for year five."
+              author_name: "Soyeon Lim"
+              author_title: "ML Engineer, DataPlex"
+              avatar: "SL"
+
+        # ── 7. cta/newsletter-inline — Join Waitlist ────────────────────────
+        # NEW variant (first use). Dark band (#161210). Email input + crimson submit.
+        # DEMO_MODE stub: shows demo_stub_message on submit without POST.
+        - type: cta
+          variant: newsletter-inline
+          copy:
+            headline: "Get early access."
+            sub_copy: "Horizon 2026 early registration opens August 1st. Join the waitlist and be first to secure your track."
+            placeholder: "your@email.com"
+            button_label: "Join the Waitlist"
+            legal_copy: "No spam. Unsubscribe anytime. Built for practitioners."
+            demo_stub_message: "[DEMO] You're on the list. This connects to your email platform in production."
+
+        # ── 8. faq/single-col — Common Questions ────────────────────────────
+        - type: faq
+          variant: single-col
+          copy:
+            headline: "Common questions"
+          items:
+            - question: "Where is SUMMIT Horizon 2026 held?"
+              answer: "COEX Convention Center, Seoul — Hall A and B. Walking distance from Samseong Station (Line 2)."
+            - question: "What tracks are available?"
+              answer: "Three tracks run in parallel: Infrastructure & Platform, AI & Machine Learning, and Product & Growth. Multi-track access is included in all ticket tiers."
+            - question: "Is there a virtual / livestream option?"
+              answer: "Yes. A full livestream package is available for remote attendees, including async Q&A and access to session recordings for 90 days."
+            - question: "Are team group discounts available?"
+              answer: "Groups of 5+ receive 20% off. Contact events@summaryhorizon.kr for enterprise packages."
+            - question: "What is the refund policy?"
+              answer: "Full refund up to 30 days before the event. 50% refund within 30 days. No refund within 7 days, but seat transfer is allowed."
+
+        # ── 9. footer/minimal ────────────────────────────────────────────────
+        - type: footer
+          variant: minimal
+          copy:
+            brand_name: "SUMMIT Horizon 2026"
+            legal_notice: "© 2026 Horizon Events Inc."
+            tagline: "events@summaryhorizon.kr"
+
+# ── Defaults ────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: Asia/Seoul
+
+# ── Cost tracking ────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 0        # static SSG landing — no runtime LLM
+  prepaid_credits_usd: 0
