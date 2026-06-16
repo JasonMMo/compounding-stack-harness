@@ -29,6 +29,7 @@
 | preview VPS — TLS 파이프라인 | 2026-06-11 | provision (2차) | **검증 PASS** — `<slug>.n9n.co.kr` 자동 HTTPS | LE 무료 |
 | preview VPS — CI/CD (Coolify API) | 2026-06-11 | deploy (스모크) | **검증 PASS** — API 로 프로젝트→앱→배포→외부 HTTPS 200, 정리 후 잔여 0 | LLM 0, infra 0 (기존 VPS) |
 | lumi.n9n.co.kr (Growth-83) | 2026-06-16 | deploy (A5 Mobile App, nova 테마) | **검증 PASS** — build finished, HTTPS 200, "Build better days" 서빙 확인. portal 8번째 카드 반영 | $0 (shared VPS) |
+| prism.n9n.co.kr (Growth-84) | 2026-06-16 | deploy (A7 API Platform, prism 테마) | **검증 PASS** — build finished, HTTPS 200, "Know your API. Before your customers do." 서빙 확인. portal 9번째 카드 반영 | $0 (shared VPS) |
 | preview VPS — 8000 노출 차단 | 2026-06-11 | harden (3차) | **검증 PASS** — 클라우드 방화벽 allow-list, 8000/8080/6001/6002 외부 차단 실측, 22/80/443 유지. CISO 잔여 0 | $0 |
 | 로컬 (preview 패키징) | 2026-06-11 | package (scaffold 결선) | **검증 PASS** — profile→2-container compose, lawfirm-demo /login·/health 200, manifest 14 entities. Coolify 배포는 Phase 2 | $0 |
 | lawfirm-demo.n9n.co.kr (Coolify Phase 2) | 2026-06-11 | deploy (첫 영속 preview) | **검증 PASS** — build_pack=dockercompose, LE TLS 자동, /login 200, /login HTML 정상. 앱 UUID opryb94j9k5cjdv8bienenv0 | LLM ~$0.5, infra $0 (기존 VPS) |
@@ -227,3 +228,14 @@
 - **터널**: Growth-81 detached Start-Process SSH 터널(ServerAliveInterval=30) 안정 유지 — 재드롭 0.
 - **신규 함정 0건**: Growth-82(summit-horizon A3) 동일 경로 재사용, 트랩 없음.
 - **교훈 (1줄)**: A5 Mobile App archetype이 같은 deploy_static_site.py 레인으로 무수정 배포됨 — slug(lumi)/PROFILE_SLUG(mobile-demo) 분리 패턴(Growth-82 선례)이 안정적으로 재현됨.
+
+### Growth-84 (2026-06-16) — prism 배포 + 포털 9번째 카드 (A7 API Platform, 9번째 라이브 데모)
+
+- **배포**: prism.n9n.co.kr (Coolify project=qfbgsfa42ep757lxx88amwje, app=z13nexbnkj2651flq82bfy0u, prism 테마, PROFILE_SLUG=prism-demo, DEMO_MODE=1). `MSYS_NO_PATHCONV=1 deploy_static_site.py --slug prism --domain https://prism.n9n.co.kr --compose /deploy/preview/prism.compose.yml --service web`. status=finished, HTTPS 200.
+- **서빙 마크업 검증**: title="Prism -- API observability for platform engineers", H1="Know your API. Before your customers do.", deep-azure 토큰(#1B4FA8) 확인 — prism 테마 정상 서빙.
+- **포털 재배포** (Growth-83 패턴 재사용): push-before-deploy 필수 확인(첫 포털 재배포가 구버전 빌드 — prism 카드 없음) → `git push origin master` 후 `deploy_static_site.py --slug landing-portal --service portal` 재실행 → landing.n9n.co.kr 200, 9개 데모 href 전부 present (prism.n9n.co.kr 신규 9번째 확인). 포털 카드: 🔭 "Prism", 부제 "API observability SaaS · A7 bento-grid hero", href https://prism.n9n.co.kr.
+- **레지스트리**: `infra/registry/prism.yaml` (status=live, project=qfbgsfa42ep757lxx88amwje, app=z13nexbnkj2651flq82bfy0u, theme=prism, archetype=A7, profile_slug=prism-demo 기록). 커밋 `c10f295`.
+- **터널**: 포트 8000 기존 터널 안정 유지 (PID 51464, Coolify API `/version` 200 확인).
+- **신규 함정 0건**: Growth-83(lumi A5) 동일 경로 무수정 재사용. push-before-deploy는 기존 알려진 패턴.
+- **비용노트**: 공유 VPS 귀속, 정적 SSG 런타임 LLM 0.
+- **교훈 (1줄)**: A7 API Platform archetype이 동일 deploy_static_site.py 레인으로 무수정 배포됨 — push-before-deploy 없이 포털 재배포 시 구버전 이미지가 빌드됨을 재확인(Growth-78 패턴 반복).
