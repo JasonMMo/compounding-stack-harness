@@ -1,0 +1,547 @@
+---
+/**
+ * ProcessSplitAnimation.astro — Process section, split-animation variant.
+ * type: process | variant: split-animation
+ *
+ * Layout: 2-column split. Left column: sticky headline + step-number.
+ *         Right column: task-tree card list (ordered steps + subtasks).
+ * Mobile: single-column stack (left col first, then right col).
+ *
+ * SSR fallback (Growth-69 invariant):
+ *   All subtasks expanded without JS (<details open>).
+ *   Native <details> progressive enhancement — JS not required.
+ *
+ * Status 3-state (marketing read-only — no mutation, no Math.random):
+ *   completed : var(--color-text-2)  + check-circle SVG icon
+ *   active    : var(--color-primary) + circle-dot SVG icon
+ *   upcoming  : var(--color-text-3)  + circle SVG icon (default)
+ *   Color is SECONDARY — icon shape + aria-label is primary distinction (WCAG AA).
+ *   No new theme tokens added.
+ *
+ * Token usage: all var(--color-*)/var(--space-*)/var(--radius-*)/var(--font-*).
+ * Accessibility: <ol> ordered list, aria-label on status icons, WCAG AA.
+ * prefers-reduced-motion: CSS animation disabled via @media.
+ *
+ * Archetype: A1 SaaS (flux-demo), A7 API Platform.
+ */
+
+type SubtaskStatus = 'completed' | 'active' | 'upcoming'
+
+interface Subtask {
+  title: string
+  description?: string
+  status?: SubtaskStatus
+  tools?: string[]
+}
+
+type ItemStatus = 'completed' | 'active' | 'upcoming'
+
+interface ProcessItem {
+  title: string
+  description?: string
+  step_label?: string
+  status?: ItemStatus
+  subtasks?: Subtask[]
+}
+
+interface Props {
+  copy: Record<string, string>
+  motionPreset?: string
+  items?: ProcessItem[]
+}
+
+const {
+  copy = {},
+  motionPreset = 'stagger-children',
+  items = [],
+} = Astro.props
+
+// Default demo items if no items provided.
+const displayItems: ProcessItem[] = items.length > 0 ? items : [
+  {
+    title: '요구사항 분석',
+    description: '현재 상태를 파악하고 목표를 정의합니다.',
+    status: 'completed',
+    subtasks: [
+      { title: '이해관계자 인터뷰', status: 'completed' },
+      { title: '기존 문서 검토', status: 'completed' },
+    ],
+  },
+  {
+    title: '설계 및 계획',
+    description: '우선순위가 명확한 로드맵을 작성합니다.',
+    status: 'active',
+    subtasks: [
+      { title: '아키텍처 다이어그램', status: 'active' },
+      { title: '타임라인 수립', status: 'upcoming' },
+    ],
+  },
+  {
+    title: '실행 및 검증',
+    description: '주 단위로 진행 상황을 보고합니다.',
+    status: 'upcoming',
+    subtasks: [
+      { title: '핵심 기능 구현', status: 'upcoming' },
+      { title: '단위 테스트', status: 'upcoming' },
+    ],
+  },
+]
+
+// Resolve status — default = 'upcoming'
+function resolveStatus(status?: string): 'completed' | 'active' | 'upcoming' {
+  if (status === 'completed' || status === 'active') return status
+  return 'upcoming'
+}
+
+// Step count display (zero-padded)
+const stepCountDisplay = displayItems.length.toString().padStart(2, '0')
+---
+
+<section
+  class="psa-section"
+  data-motion={motionPreset}
+  data-stagger-delay="80"
+>
+  <div class="psa-container">
+
+    <div class="psa-grid">
+
+      {/* ── Left: sticky headline + step counter ── */}
+      <div class="psa-left">
+        {copy.headline && (
+          <h2 class="psa-headline">
+            {copy.headline}
+          </h2>
+        )}
+        {copy.subhead && (
+          <p class="psa-subhead">
+            {copy.subhead}
+          </p>
+        )}
+        {/* Decorative step counter — aria-hidden */}
+        <div class="psa-step-counter" aria-hidden="true">
+          {stepCountDisplay}
+        </div>
+        <p class="psa-step-label" aria-hidden="true">단계</p>
+      </div>
+
+      {/* ── Right: task-tree card list ── */}
+      <div>
+        <ol class="psa-steps-list" aria-label={copy.headline ?? '프로세스 단계'}>
+          {displayItems.map((item, i) => {
+            const stepNum = item.step_label ?? String(i + 1).padStart(2, '0')
+            const itemStatus = resolveStatus(item.status)
+            const cardClass = `psa-card${itemStatus === 'active' ? ' psa-card--active' : ''}`
+
+            return (
+              <li class={cardClass}>
+                <div class="psa-card-header">
+
+                  {/* Status icon + step number */}
+                  <div
+                    class={`psa-step-icon psa-status--${itemStatus}`}
+                    aria-label={
+                      itemStatus === 'completed' ? '완료' :
+                      itemStatus === 'active' ? '진행 중' :
+                      '예정'
+                    }
+                  >
+                    {itemStatus === 'completed' ? (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                        <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M6 10l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    ) : itemStatus === 'active' ? (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                        <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                        <circle cx="10" cy="10" r="4" fill="currentColor"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                        <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                      </svg>
+                    )}
+                    <span class="psa-step-num" aria-hidden="true">{stepNum}</span>
+                  </div>
+
+                  {/* Title + description + status label */}
+                  <div class="psa-card-body">
+                    <div class="psa-card-title-row">
+                      <h3 class="psa-item-title">{item.title}</h3>
+                      <span
+                        class={`psa-status-label psa-status-label--${itemStatus}`}
+                        aria-label={
+                          itemStatus === 'completed' ? '완료' :
+                          itemStatus === 'active' ? '진행 중' :
+                          '예정'
+                        }
+                      >
+                        {itemStatus === 'completed' ? '완료' :
+                         itemStatus === 'active' ? '진행 중' :
+                         '예정'}
+                      </span>
+                    </div>
+
+                    {item.description && (
+                      <p class="psa-item-desc">{item.description}</p>
+                    )}
+
+                    {/* Subtask tree */}
+                    {item.subtasks && item.subtasks.length > 0 && (
+                      <div class="psa-subtask-tree">
+                        <ol class="psa-subtask-list" aria-label={`${item.title} 세부 작업`}>
+                          {item.subtasks.map((subtask) => {
+                            const subStatus = resolveStatus(subtask.status)
+                            const hasDetail = !!(subtask.description || (subtask.tools && subtask.tools.length > 0))
+
+                            return (
+                              <li class="psa-subtask-item">
+                                {hasDetail ? (
+                                  <details open class="psa-subtask-details">
+                                    <summary class="psa-summary">
+                                      <span
+                                        class={`psa-sub-icon psa-status--${subStatus}`}
+                                        aria-label={
+                                          subStatus === 'completed' ? '완료' :
+                                          subStatus === 'active' ? '진행 중' :
+                                          '예정'
+                                        }
+                                      >
+                                        {subStatus === 'completed' ? (
+                                          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                                            <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                                            <path d="M6 10l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                          </svg>
+                                        ) : subStatus === 'active' ? (
+                                          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                                            <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                                            <circle cx="10" cy="10" r="4" fill="currentColor"/>
+                                          </svg>
+                                        ) : (
+                                          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                                            <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                                          </svg>
+                                        )}
+                                      </span>
+                                      <span class="psa-sub-title">{subtask.title}</span>
+                                      <svg class="psa-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false">
+                                        <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                      </svg>
+                                    </summary>
+                                    <div class="psa-sub-detail">
+                                      {subtask.description && (
+                                        <p class="psa-sub-desc">{subtask.description}</p>
+                                      )}
+                                      {subtask.tools && subtask.tools.length > 0 && (
+                                        <div class="psa-tools" role="list" aria-label="사용 도구">
+                                          {subtask.tools.map((tool) => (
+                                            <span class="psa-tool-badge" role="listitem">{tool}</span>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </details>
+                                ) : (
+                                  <div class="psa-subtask-simple">
+                                    <span
+                                      class={`psa-sub-icon psa-status--${subStatus}`}
+                                      aria-label={
+                                        subStatus === 'completed' ? '완료' :
+                                        subStatus === 'active' ? '진행 중' :
+                                        '예정'
+                                      }
+                                    >
+                                      {subStatus === 'completed' ? (
+                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                                          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                                          <path d="M6 10l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                      ) : subStatus === 'active' ? (
+                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                                          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                                          <circle cx="10" cy="10" r="4" fill="currentColor"/>
+                                        </svg>
+                                      ) : (
+                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                                          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
+                                        </svg>
+                                      )}
+                                    </span>
+                                    <span class="psa-sub-title">{subtask.title}</span>
+                                  </div>
+                                )}
+                              </li>
+                            )
+                          })}
+                        </ol>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Section wrapper ───────────────────────────────────────────────────── */
+  .psa-section {
+    width: 100%;
+    padding-top: var(--space-section-y, 104px);
+    padding-bottom: var(--space-section-y, 104px);
+    padding-left: var(--space-container-gutter, 24px);
+    padding-right: var(--space-container-gutter, 24px);
+    background: var(--color-surface-1, #F8F7F4);
+  }
+  .psa-container {
+    max-width: var(--space-container-max, 1180px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ── 2-column split grid ──────────────────────────────────────────────── */
+  .psa-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  @media (min-width: 768px) {
+    .psa-grid {
+      grid-template-columns: 1fr 2fr;
+      gap: 64px;
+    }
+    .psa-left {
+      position: sticky;
+      top: 80px;
+      align-self: start;
+    }
+  }
+
+  /* ── Left column typography ───────────────────────────────────────────── */
+  .psa-headline {
+    font-family: var(--font-family-display, inherit);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: var(--font-weight-display, 700);
+    color: var(--color-text-1, #1C1810);
+    letter-spacing: var(--font-letter-spacing-display, -0.022em);
+    margin-bottom: 16px;
+    line-height: 1.15;
+  }
+  .psa-subhead {
+    font-size: 1rem;
+    color: var(--color-text-2, #4A3E28);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .psa-step-counter {
+    font-family: var(--font-family-display, inherit);
+    font-size: clamp(4rem, 10vw, 6rem);
+    font-weight: var(--font-weight-display, 700);
+    line-height: 1;
+    color: var(--color-surface-3, #DDDBD7);
+    user-select: none;
+  }
+  .psa-step-label {
+    font-size: 0.75rem;
+    color: var(--color-text-3, #736250);
+    margin-top: 4px;
+  }
+
+  /* ── Step list ────────────────────────────────────────────────────────── */
+  .psa-steps-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ── Step card ────────────────────────────────────────────────────────── */
+  .psa-card {
+    border: 1px solid var(--color-surface-3, #DDDBD7);
+    border-radius: var(--radius-card, 8px);
+    background: var(--color-surface-2, #EDECEA);
+    padding: 20px 24px;
+    margin-bottom: 12px;
+  }
+  .psa-card:last-child {
+    margin-bottom: 0;
+  }
+  .psa-card--active {
+    border-color: var(--color-primary-border, #C99430);
+    background: var(--color-surface-1, #F8F7F4);
+    box-shadow: 0 2px 8px -2px rgba(28, 24, 16, 0.08);
+  }
+
+  .psa-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  /* ── Step icon + number ───────────────────────────────────────────────── */
+  .psa-step-icon {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .psa-step-num {
+    font-family: var(--font-family-display, inherit);
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* ── Status color tokens (icon shape is primary, color is secondary) ──── */
+  .psa-status--completed { color: var(--color-text-2, #4A3E28); }
+  .psa-status--active    { color: var(--color-primary, #8B5E10); }
+  .psa-status--upcoming  { color: var(--color-text-3, #736250); }
+
+  /* ── Card body ────────────────────────────────────────────────────────── */
+  .psa-card-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .psa-card-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .psa-item-title {
+    font-family: var(--font-family-body, inherit);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-1, #1C1810);
+    margin: 0;
+  }
+  .psa-item-desc {
+    font-size: 0.875rem;
+    color: var(--color-text-2, #4A3E28);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  /* ── Status label badge ───────────────────────────────────────────────── */
+  .psa-status-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: var(--radius-badge, 9999px);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .psa-status-label--completed {
+    background: var(--color-surface-3, #DDDBD7);
+    color: var(--color-text-2, #4A3E28);
+  }
+  .psa-status-label--active {
+    background: var(--color-primary-subtle, #F5F0E6);
+    color: var(--color-primary, #8B5E10);
+    border: 1px solid var(--color-primary-border, #C99430);
+  }
+  .psa-status-label--upcoming {
+    background: transparent;
+    color: var(--color-text-3, #736250);
+    border: 1px solid var(--color-surface-3, #DDDBD7);
+  }
+
+  /* ── Subtask tree ─────────────────────────────────────────────────────── */
+  .psa-subtask-tree {
+    border-left: 1px dashed var(--color-surface-3, #DDDBD7);
+    margin-left: 10px;
+    padding-left: 20px;
+    margin-top: 12px;
+  }
+  .psa-subtask-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .psa-subtask-item {
+    margin-bottom: 8px;
+  }
+  .psa-subtask-item:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ── Subtask details/summary ──────────────────────────────────────────── */
+  .psa-subtask-details {
+    /* No extra style needed; details is block by default */
+  }
+  .psa-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  .psa-summary::-webkit-details-marker {
+    display: none;
+  }
+  .psa-subtask-simple {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .psa-sub-icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+  }
+  .psa-sub-title {
+    font-size: 0.875rem;
+    color: var(--color-text-1, #1C1810);
+  }
+  .psa-chevron {
+    flex-shrink: 0;
+    color: var(--color-text-3, #736250);
+    margin-left: auto;
+    transition: transform 0.2s ease;
+  }
+  details[open] .psa-chevron {
+    transform: rotate(90deg);
+  }
+
+  /* ── Subtask detail (description + tools) ────────────────────────────── */
+  .psa-sub-detail {
+    margin-top: 6px;
+    margin-left: 20px;
+  }
+  .psa-sub-desc {
+    font-size: 0.75rem;
+    color: var(--color-text-2, #4A3E28);
+    line-height: 1.6;
+    margin-bottom: 6px;
+  }
+  .psa-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .psa-tool-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-badge, 9999px);
+    background: var(--color-primary-subtle, #F5F0E6);
+    color: var(--color-text-2, #4A3E28);
+    font-size: 0.6875rem;
+    font-family: var(--font-family-mono, monospace);
+    border: 1px solid var(--color-primary-border, #C99430);
+  }
+
+  /* ── prefers-reduced-motion ───────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .psa-chevron {
+      transition: none;
+    }
+  }
+</style>
