@@ -12,10 +12,10 @@ contact:
   handle: "compounding-stack (own demo asset)"
 preview:
   subdomain: lumi.n9n.co.kr
-  coolify_project: null                 # filled at deploy
-  coolify_app: null                     # filled at deploy
-  status: pending                       # → live after deploy_static_site.py
-  deployed_at: null
+  coolify_project: x7be9f2b7nr1zhykxubn6wwt
+  coolify_app: j10swdnw5tyndidudjnsr04r
+  status: live
+  deployed_at: "2026-06-16"
   deliverable_kind: marketing-site      # static SSG (no backend) — deploy_static_site.py lane
   theme: nova
   archetype: A5                         # Mobile App (landing-pattern-matrix)
