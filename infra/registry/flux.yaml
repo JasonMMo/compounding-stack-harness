@@ -1,0 +1,27 @@
+# Digital asset record — flux (SaaS Product Launch / infra-observability landing demo, A1 archetype).
+# Demo/시안: first A1 SaaS-Product-Launch archetype — stats/ticker-band (inline metrics,
+# no card boxing) + features/bento-mosaic (irregular grid, hero card 2-row span) +
+# testimonial/pull-quote-wall (full-bleed asymmetric quote). 6th marketing-site theme
+# (flux: amber-gold #8B5E10 single accent on charcoal flat hero, Space Grotesk + Inter).
+# Growth-80.
+slug: flux
+contact:
+  channel: internal
+  handle: "compounding-stack (own demo asset)"
+preview:
+  subdomain: flux.n9n.co.kr
+  coolify_project: jq25nyzfirch3flp7no2wg3u
+  coolify_app: oyemv0mttkn8eo05xflvc4x2
+  status: live
+  deployed_at: "2026-06-16"
+  deliverable_kind: marketing-site     # static SSG (no backend) — deploy_static_site.py lane
+  theme: flux
+  archetype: A1                        # SaaS Product Launch (landing-pattern-matrix)
+production:
+  install_method: remote
+  installed_at: null                   # preview/demo asset — no customer install
+  stack:
+    frontend: landing-astro
+    backend: none
+secret_ref: []                         # static site, no secrets
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5). 정적 SSG — 런타임 LLM 0. stats/bento/pull-quote 전 섹션 Astro-native, JS는 entrance 모션만."
