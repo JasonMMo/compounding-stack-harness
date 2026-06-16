@@ -91,9 +91,12 @@ sections:
     label: "Call-to-Action Band"
     copy_slots:
       required: [headline]
-      optional: [subhead]
+      optional: [subhead, sub_copy, button_label, placeholder, legal_copy, demo_stub_message]
     asset_slots: []
-    variants: [centered, left-aligned, with-image]
+    # newsletter-inline: email input + submit inline in dark band. A3 Event archetype.
+    # copy_slots for newsletter-inline: headline, sub_copy, button_label, placeholder,
+    #   legal_copy, demo_stub_message. No asset_slots required.
+    variants: [centered, left-aligned, with-image, newsletter-inline]
 
   lead:
     label: "Lead / Newsletter Capture"
