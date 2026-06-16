@@ -3,7 +3,7 @@
 > CDO doc. Decision-oriented map for the multi-session buildout of diverse landing-page patterns.
 > Canonical positions: section-type taxonomy (§1), variant table (§2), page archetypes (§3),
 > buildout backlog (§4), invariants (§5).
-> Last updated: 2026-06-16 (CTO, Growth-83 — A5 Mobile App archetype + nova theme; A1~A6 전부 BUILT, 매트릭스 1차 완성)
+> Last updated: 2026-06-16 (CTO, Growth-84 — A7 API Platform archetype + prism theme(9th) + hero/bento-grid; A1~A7 전부 BUILT; §2 stale NEED→HAVE 정정)
 
 ---
 
@@ -63,8 +63,8 @@ Status: HAVE (existing variant name) or NEED.
 | fullscreen-video | Background video fills viewport, text overlaid at center                    | HAVE           |
 | glowy-waves      | Dark canvas + animated React island; pills + stats strip below CTA          | HAVE           |
 | brew             | Warm full-bleed image + grain texture overlay; no JS required               | HAVE           |
-| bento-grid       | Text left column, 2×2 or 3×2 product screenshot bento grid right            | NEED           |
-| headline-only    | Single massive display heading, one sub-line, no imagery — type as design   | NEED           |
+| bento-grid       | Text left (7col) + stat/proof bento cluster right (5col); light canvas, no-JS | HAVE           |
+| headline-only    | Single massive display heading, one sub-line, no imagery — type as design   | HAVE           |
 | scroll-reveal    | Two-panel: headline locks, right panel scrolls product scenes               | NEED           |
 
 ### features (currently: three-col-icon, two-col-alternating, single-col-list, carousel)
@@ -75,7 +75,7 @@ Status: HAVE (existing variant name) or NEED.
 | two-col-alternating | Alternating image-left / image-right rows with text                      | HAVE           |
 | single-col-list     | Vertical list, no grid; tight typographic rhythm                         | HAVE           |
 | carousel            | Horizontal scroll with image, heading, description per slide             | HAVE           |
-| bento-mosaic        | Irregular CSS grid — one large feature card spans 2 rows, rest smaller   | NEED           |
+| bento-mosaic        | Irregular CSS grid — one large feature card spans 2 rows, rest smaller   | HAVE           |
 | timeline-horizontal | Horizontal numbered steps with connecting line; doubles as process       | NEED           |
 
 ### logos (currently: horizontal-scroll, grid, marquee-3d)
@@ -94,7 +94,7 @@ Status: HAVE (existing variant name) or NEED.
 | single-card      | One quote, large display, centered; author photo + attribution              | HAVE           |
 | carousel         | Swipeable cards; one visible at a time                                      | HAVE           |
 | grid             | 2-3 column card grid                                                        | HAVE           |
-| pull-quote-wall  | Full-bleed section; 2-3 large pull quotes in an asymmetric column layout    | NEED           |
+| pull-quote-wall  | Full-bleed section; 2-3 large pull quotes in an asymmetric column layout    | HAVE           |
 
 ### process (currently: numbered-stack, horizontal-steps)
 
@@ -178,12 +178,13 @@ Status: HAVE (existing variant name) or NEED.
 ---
 
 **Variant count summary**:
-14 section types · 52 total variants · 34 HAVE · 18 NEED
+14 section types · 52 total variants · 38 HAVE · 14 NEED
 (Growth-77 additions: gallery/parallax-scroll HAVE + story/timeline-year HAVE + lead/minimal-field HAVE; gallery/full-bleed-strip added as NEED)
 (Growth-78 additions: logos/quote-band HAVE + process/numbered-stack HAVE + team/headshot-grid HAVE — A6 B2B-services archetype shipped)
 (Growth-79 additions: stats section type NEW + features/bento-mosaic HAVE + stats/ticker-band HAVE + testimonial/pull-quote-wall HAVE — A1 SaaS Product Launch CDO spec shipped; flux theme added)
 (Growth-80 follow-on: process/horizontal-steps HAVE + stats/four-up HAVE + cta/newsletter-inline HAVE — A3 Event/Conference archetype shipped; ignite theme added)
 (Growth-83: gallery/grid-2x2 HAVE (src-optional 무사진 CSS 목업) — A5 Mobile App archetype shipped; nova theme added; site_manifest `variant_overrides` 신설로 A1~A6 매트릭스 1차 완성)
+(Growth-84: hero/bento-grid HAVE (텍스트 좌 + stat/proof bento 우, 라이트 캔버스, 무사진) — A7 API Platform archetype + prism 테마(9th) shipped. stale 정정: headline-only(A2 studio-north live)·features/bento-mosaic·testimonial/pull-quote-wall 가 §2 에서 NEED 로 잘못 남아있던 것을 HAVE 로 환류. hero `item_slots` 신설 + ticker-band/full-links 일반화)
 
 ---
 
@@ -213,7 +214,10 @@ DNA: Dark hero → tight social proof → irregular feature grid → process →
 
 ---
 
-### A2 — Creative Agency / Portfolio
+### A2 — Creative Agency / Portfolio — **BUILT** (Growth-76, 2026-06-15)
+
+Live: **https://studio-north.n9n.co.kr** (atelier 테마, Studio North — brand design consultancy)
+Theme: atelier — ink + warm paper + copper; Raleway + Karla. hero/headline-only (type-as-design) shipped here.
 
 Target: design studio, brand consultancy, architecture firm. Sparse, image-led, typographic.
 
@@ -336,6 +340,32 @@ All sections Astro-native (zero React islands) — entire archetype renders with
 
 ---
 
+### A7 — API Platform / Developer Tool — **BUILT** (Growth-84, 2026-06-16)
+
+Live: **https://prism.n9n.co.kr** (prism 테마, Prism — 가상 API observability SaaS)
+Theme: prism — deep-azure #1B4FA8 (OKLCH H≈228 미점유 hue) on white canvas; IBM Plex Sans + DM Sans + DM Mono(스탯 숫자 전용). AAA 전역.
+New variant shipped: **hero/bento-grid** (텍스트 좌 7col + stat/proof bento 클러스터 우 5col; 라이트 캔버스; GlassmorphismTrust 레퍼런스 구조 차용 + 다크네온/글래스 미감 중화; 무사진·무JS-가시).
+
+Target: API platform, observability/monitoring SaaS, developer tool, infra product. Product-first(약속보다 제품 UI 먼저).
+
+Shipped composition (hero 외 전부 HAVE):
+```
+hero           / bento-grid     (NEW — 텍스트 좌, stat+marquee bento 우; 라이트 캔버스)
+logos          / horizontal-scroll (회사 trust row)
+features       / bento-mosaic   (capability 그리드)
+stats          / ticker-band    (라이트 밴드 — ticker-band 가 styleHints.bg honor 하도록 일반화)
+testimonial    / pull-quote-wall (대형 pull-quote)
+pricing        / three-tier     (Growth tier 강조)
+faq            / single-col     (개발자 objection handling)
+cta            / left-aligned   (free trial 클로즈)
+footer         / full-links     (데이터주도 컬럼 — full-links 일반화)
+```
+
+DNA: Light product-first hero(bento-grid 가 약속보다 제품을 먼저 보여줌) → trust row → feature 그리드 → 숫자 → pull-quote → pricing → close.
+신규/일반화 메커니즘: hero `item_slots`(stat/marquee) 신설 · `Stats.astro` ticker-band 의 styleHints.bg honor(라이트/다크 분기, flux 다크 회귀 없음) · `Footer.astro` full-links 데이터주도 컬럼 + 빈컬럼 가드(meridian/flux 등 잠재 결함 동시 수정).
+
+---
+
 ## §4 Prioritized Buildout Backlog
 
 Ordered by: (visible differentiation delivered / implementation cost). First 10.
@@ -344,7 +374,7 @@ Ordered by: (visible differentiation delivered / implementation cost). First 10.
 |---|----------------------------------------|----------|------------------|------------------------------------------------------------|----------------------|
 | ~~1~~ | ✅ `process` + numbered-stack (DONE Growth-78) | NEW TYPE | numbered-stack | Built; shipped in A6 MERIDIAN                       | done                 |
 | ~~2~~ | ✅ `stats` section type + ticker-band (DONE Growth-79) | NEW TYPE | ticker-band | Built; CDO spec in out/a1-saas/; catalog registered | done |
-| 3 | hero / bento-grid                      | NEW VAR  | bento-grid       | Breaks the centered/split duopoly; screenshotable for SaaS | 21st.dev bento       |
+| ~~3~~ | ✅ hero / bento-grid (DONE Growth-84)   | NEW VAR  | bento-grid       | Built; A7 API Platform (prism) shipped; GlassmorphismTrust ref 차용·중화 | done                 |
 | 4 | hero / headline-only                   | NEW VAR  | headline-only    | Maximum visual contrast to all 3 existing heroes; type-led | build from scratch   |
 | ~~5~~ | ✅ features / bento-mosaic (DONE Growth-79) | NEW VAR | bento-mosaic | Built; CDO spec in out/a1-saas/; catalog registered | done |
 | 6 | `gallery` section type + full-bleed-strip | NEW TYPE | full-bleed-strip | A4 archetype requires it; single image > card grids      | build from scratch   |
