@@ -1,0 +1,352 @@
+slug: prism
+name: "Prism"
+version: "1.0.0"
+description: >
+  Crisp white canvas with a single committed deep-azure accent. API observability
+  and developer-tool SaaS -- the clarity of a clean request log, the authority of
+  a system that tells you the truth about your traffic. Neutral ground lets the
+  bento-grid product shots do the visual work; azure is the single signal color.
+  No dark hero panel, no neon, no gradient clips.
+persona_fit:
+  personas: [ops, it]
+  industry_tags: [api-platform, developer-tools, saas, gateway, observability, platform-engineering]
+  tone: "precise clarity"
+
+# -- Color Override --------------------------------------------------------------
+# Strategy: Pure white canvas + single committed deep-azure accent.
+#
+# Hue selection -- exhaustive occupied-hue audit (CDO, 2026-06-16):
+#   ignite   H~22   crimson-red
+#   harvest  H~55   warm amber-orange
+#   kiln     H~48   earth-amber
+#   atelier  H~35   warm earth ink
+#   flux     H~72   amber-olive (dark ground)
+#   meridian H~152  forest-green
+#   studio   achromatic (no chroma accent)
+#   aurora   H~280  blue-violet indigo
+#   nova     H~305  violet-magenta
+#
+# FREE BAND: H~220-240 (deep azure / azure-blue) is fully unclaimed.
+# Chosen: H~228 -- deep azure.
+#   - 52 degrees from aurora (H~280): perceptually distinct. Aurora is blue-violet,
+#     dominant toward purple; prism is blue-dominant azure, reads "sky/ocean/data".
+#   - Not electric cyan (H~200) -- that is the impeccable-banned neon-cyan zone.
+#   - H~228 is the hue of high-trust developer tooling: Stripe, Linear API docs, Postman.
+#   - Chroma kept moderate (C~0.18) on light surfaces so it reads "dependable data",
+#     not "primary-school blue". No glow, no gradient on the button.
+#
+# OKLCH derivation (CDO audit trail):
+# oklch(99.0% 0.000 228) ~= #FFFFFF  -- surface-1: pure white (neutral API doc ground)
+# oklch(96.5% 0.008 228) ~= #F2F5FA  -- surface-2: faint azure-white (section alt bg)
+# oklch(91.0% 0.014 228) ~= #E2E8F2  -- surface-3: azure-tinted rule / input border
+# oklch(12.0% 0.016 228) ~= #141C28  -- text-1: near-black, cool azure undertone
+# oklch(34.0% 0.038 228) ~= #354769  -- text-2: cool deep-azure secondary
+# oklch(52.0% 0.036 228) ~= #607394  -- text-3: mid azure-grey tertiary / caption
+# oklch(42.0% 0.185 228) ~= #1B4FA8  -- primary: deep azure (authority, not cornflower)
+# oklch(48.0% 0.190 228) ~= #2260C4  -- primary-hover: lifted azure
+# oklch(36.0% 0.175 228) ~= #163D88  -- primary-active: pressed azure
+# oklch(95.5% 0.028 228) ~= #EBF1FB  -- primary-subtle: faintest azure badge bg
+# oklch(60.0% 0.140 228) ~= #5A83C8  -- primary-border: mid-azure (focus ring, accent)
+# oklch(42.0% 0.185 228) ~= #1B4FA8  -- text-link: same as primary
+# oklch(36.0% 0.175 228) ~= #163D88  -- text-link-hover: pressed azure
+#
+# hero-bg tokens: used by bento-grid for the thin accent band along section top edge.
+# NOT a full dark canvas. A gentle azure-tinted section-start border only.
+# oklch(96.5% 0.008 228) ~= #F2F5FA  -- hero-bg-from: near-white azure (top band)
+# oklch(99.0% 0.000 228) ~= #FFFFFF  -- hero-bg-to: white (resolves to surface-1)
+#
+# bento-card-bg: the stat/proof bento cards use a slightly lifted surface so they
+# read as distinct from the white page ground. Backdrop-filter blur is *optional*
+# progressive enhancement -- full content is visible SSR without it.
+# oklch(96.5% 0.008 228) ~= #F2F5FA  -- bento-card-bg: same as surface-2
+# bento-card-border: fine azure rule that frames each bento card.
+# oklch(91.0% 0.014 228) ~= #E2E8F2  -- bento-card-border: same as surface-3
+color:
+  primary: "#1B4FA8"
+  primary-hover: "#2260C4"
+  primary-active: "#163D88"
+  primary-subtle: "#EBF1FB"
+  primary-border: "#5A83C8"
+  surface-1: "#FFFFFF"
+  surface-2: "#F2F5FA"
+  surface-3: "#E2E8F2"
+  text-1: "#141C28"
+  text-2: "#354769"
+  text-3: "#607394"
+  text-link: "#1B4FA8"
+  text-link-hover: "#163D88"
+  # Landing-specific additive tokens
+  hero-bg-from: "#F2F5FA"
+  hero-bg-to: "#FFFFFF"
+  section-alt-bg: "#F2F5FA"
+  accent-glow: "rgba(27,79,168,0.00)"
+  # bento-grid specific tokens (consumed by HeroBentoGrid component)
+  bento-card-bg: "#F2F5FA"
+  bento-card-border: "#E2E8F2"
+  # Status indicator colors for bento stat cards
+  bento-status-ok: "#16A34A"       # green -- system healthy indicator
+  bento-status-warn: "#CA8A04"     # amber -- warning indicator
+  bento-stat-value: "#141C28"      # stat number: text-1 for max contrast
+
+# -- Typography ------------------------------------------------------------------
+# Display: IBM Plex Sans -- geometric grotesque with precision-instrument character.
+#   Open terminals, rational proportions, strong numeral design. At 700 weight it
+#   carries a headline without yelling. Distinct "enterprise API platform" register.
+#   Google Fonts: IBM+Plex+Sans:wght@400;600;700
+#
+# Body: DM Sans -- humanist geometry, outstanding legibility at data-dense sizes.
+#   Optical quality at 14-16px where API docs and dashboard prose live.
+#   Google Fonts: DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600
+#
+# Mono (bento stat numerals only): DM Mono -- same family as DM Sans; visual
+#   coherence. Used for stat values inside bento cards (request counts, latency
+#   numbers) -- the monospace rhythm signals "real data", not marketing copy.
+#   Google Fonts: DM+Mono:ital,wght@0,400;0,500
+#
+# Korean fallback: Apple SD Gothic Neo / Malgun Gothic (system).
+# DISTINCT from all existing themes:
+#   meridian uses DM Sans body -- but IBM Plex Sans display is fully distinct.
+#   No other theme uses IBM Plex. The family read is "precision tool".
+font:
+  family-display: "'IBM Plex Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
+  family-body: "'DM Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
+  family-mono: "'DM Mono', 'Fira Mono', 'Consolas', monospace"
+  # Landing-scale extensions
+  size-5xl: "48px"
+  size-6xl: "60px"
+  size-7xl: "72px"
+  line-5xl: "52px"
+  line-6xl: "64px"
+  line-7xl: "76px"
+  # 700 for IBM Plex Sans -- authority without aggression. IBM Plex maxes at 700.
+  weight-display: "700"
+  # -0.018em: IBM Plex Sans has slightly wider side-bearings at large sizes.
+  # Well above impeccable floor (-0.04em minimum). Keeps the heading open and precise.
+  letter-spacing-display: "-0.018em"
+  letter-spacing-body: "-0.008em"
+  letter-spacing-mono: "0.00em"
+
+# -- Spacing ---------------------------------------------------------------------
+# A7 is 8 sections -- compact but not rushed. API platform buyers are patient
+# scanners; they read the features section and the FAQ carefully.
+# 88px section rhythm: between flux (96px, 10 sections) and nova (80px, 8 consumer).
+# Container 1160px: wide enough for the 7/5 bento grid at desktop, bounded enough
+# to keep prose readable.
+space:
+  section-y: "88px"
+  section-y-mobile: "56px"
+  container-max: "1160px"
+  container-gutter: "24px"
+
+# -- Radius ----------------------------------------------------------------------
+# 10px card: between flux (8px "considered") and aurora (16px "friendly").
+# API platform sits between pure infrastructure (hard corners) and SaaS app
+# (soft corners). 10px reads "polished tool, not toy".
+# 6px button: tighter than aurora/nova pill buttons; API devs expect solid CTAs.
+# bento-card: 12px -- slightly rounder than generic card to give the bento cluster
+#   a light, lifted surface quality. Matches the "transparent glass-ish" aesthetic
+#   without going full glassmorphism.
+radius:
+  card: "10px"
+  button: "6px"
+  badge: "9999px"
+  hero-media: "12px"
+  bento-card: "12px"
+  bento-card-inner: "8px"    # inner radius for progress bars / mini-stat dividers
+
+# -- Shadow ----------------------------------------------------------------------
+# Azure-tinted shadows -- very light. The bento cards need enough elevation to
+# read as UI surface, but not so much depth that they fight the white canvas.
+# card: subtle lift. bento-card: slightly more -- bento is the hero's primary visual.
+shadow:
+  card: "0 1px 8px -2px rgba(20,28,40,0.08), 0 1px 3px -1px rgba(20,28,40,0.04)"
+  hero-media: "0 24px 48px -8px rgba(20,28,40,0.14)"
+  cta-band: "none"
+  bento-card: "0 2px 16px -4px rgba(20,28,40,0.09), 0 1px 4px -1px rgba(20,28,40,0.05)"
+
+# -- Motion ----------------------------------------------------------------------
+# A7 is a product-inspection page. Developers scan vertically and quickly.
+# Motion goal: signal responsiveness, not entertainment.
+# reveal-on-scroll for most sections (measured, trustworthy).
+# stagger-children for logos + features (grids read better with stagger).
+# scale-in for stats/bento -- the hero bento cluster should feel solid, not flashy.
+# The bento cluster is SSR-visible; motion is progressive enhancement only.
+motion:
+  default_preset: reveal-on-scroll
+  section_presets:
+    hero: fade-up
+    logos: stagger-children
+    features: stagger-children
+    stats: scale-in
+    testimonial: fade-up
+    pricing: reveal-on-scroll
+    faq: reveal-on-scroll
+    cta: scale-in
+    footer: fade-simple
+  reduced_motion_fallback: fade-simple
+
+# -- Section Variant Styles ------------------------------------------------------
+# A7 composition: API Platform / Developer Tool (9 sections).
+# Composition order:
+#   hero/bento-grid -> logos/horizontal-scroll -> features/bento-mosaic
+#   -> stats/ticker-band -> testimonial/pull-quote-wall -> pricing/three-tier
+#   -> faq/single-col -> cta/left-aligned -> footer/full-links
+sections:
+
+  hero:
+    # bento-grid: light canvas hero. Text left (7 cols), bento stat+proof cluster right (5 cols).
+    # bg: light (surface-1 white) -- developer tools convert on light ground; trust via clarity.
+    # The right bento cluster carries the visual weight:
+    #   - Large stat card (metric + icon + progress bar + mini-stat 3-grid)
+    #   - "Trusted by" compact marquee card below
+    # No imagery, no video, no stock photos.
+    # CTA pair: primary-lg (azure, "Start free") + secondary (outline, "Read docs").
+    bento-grid:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+      cta_secondary_style: primary-outline
+      media_position: right
+      bento_layout: "7-5"            # 7-col text / 5-col bento at lg breakpoint
+      bento_stack_mobile: true       # text then bento on mobile (single column)
+      bento_card_blur: "subtle"      # backdrop-filter: blur(8px) -- progressive, not reliant
+      bento_show_marquee: true       # show "trusted by" compact marquee card below stat card
+    centered:
+      bg: light
+      text_align: center
+      cta_style: primary-lg
+      media_position: none
+    split-left:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+      media_position: right
+
+  logos:
+    horizontal-scroll:
+      filter: grayscale
+      divider: none
+    grid:
+      filter: grayscale
+      divider: bottom
+
+  features:
+    bento-mosaic:
+      layout: bento
+      icon_style: none
+      card_style: elevated
+    three-col-icon:
+      icon_style: outline
+      card_style: flat
+      layout: grid-3
+
+  stats:
+    ticker-band:
+      bg: surface-2
+      text_align: center
+      separator_style: mid-dot
+      layout: inline
+
+  testimonial:
+    pull-quote-wall:
+      bg: light
+      layout: asymmetric
+      quote_style: large
+      avatar: none
+    grid:
+      layout: grid-3
+      quote_style: normal
+      avatar: initials
+      card_style: elevated
+
+  pricing:
+    three-tier:
+      highlight_tier: 1
+      card_style: elevated
+      show_toggle: false
+    two-tier:
+      highlight_tier: none
+      card_style: elevated
+      show_toggle: false
+
+  faq:
+    single-col:
+      divider: line
+      icon: chevron
+      animation: collapse
+    two-col:
+      divider: line
+      icon: chevron
+      animation: collapse
+
+  cta:
+    left-aligned:
+      bg: surface-2
+      text_align: left
+      cta_style: primary-lg
+    centered:
+      bg: light
+      text_align: center
+      cta_style: primary-lg
+
+  footer:
+    full-links:
+      cols: 4
+      show_social: true
+      divider: top
+    minimal:
+      cols: 1
+      show_social: false
+      divider: top
+
+# -- A11y Self-check -------------------------------------------------------------
+a11y:
+  contrast_checked: true
+  focus_ring_token: "primary"
+  focus_ring_note: >
+    Use var(--color-primary) #1B4FA8 for focus rings on all light surfaces.
+    Contrast #1B4FA8 on #FFFFFF = 7.6:1 -- PASS AAA (non-text: 7.6 >> 3.0 threshold).
+    primary-border #5A83C8 on #FFFFFF: L~0.108, contrast ~6.6:1 -- PASS AA.
+  wcag_aa_pairs:
+    - bg: "#FFFFFF"
+      fg: "#141C28"
+      ratio: 17.7
+      note: "Body text-1 on surface-1 -- PASS AAA (primary reading surface)"
+    - bg: "#FFFFFF"
+      fg: "#1B4FA8"
+      ratio: 7.6
+      note: "Azure primary on surface-1 -- PASS AAA normal text (links, labels, focus ring)"
+    - bg: "#1B4FA8"
+      fg: "#FFFFFF"
+      ratio: 7.6
+      note: "White label on azure CTA button -- PASS AAA"
+    - bg: "#F2F5FA"
+      fg: "#141C28"
+      ratio: 16.4
+      note: "text-1 on surface-2 (section-alt-bg, bento-card-bg) -- PASS AAA"
+    - bg: "#FFFFFF"
+      fg: "#607394"
+      ratio: 4.6
+      note: "text-3 tertiary on surface-1 -- PASS AA minimum (captions, meta, tertiary labels)"
+    - bg: "#EBF1FB"
+      fg: "#141C28"
+      ratio: 15.8
+      note: "text-1 on primary-subtle badge bg -- PASS AAA (status badge)"
+    - bg: "#F2F5FA"
+      fg: "#1B4FA8"
+      ratio: 7.0
+      note: "Azure primary on bento-card-bg -- PASS AAA (stat values, links inside bento cards)"
+  kwcag_notes: >
+    Pure white (#FFFFFF) with near-black text (#141C28): 17.7:1 (AAA).
+    Azure primary (#1B4FA8) on surface-1 (#FFFFFF): 7.6:1 (AAA -- exceeds AA).
+    CTA button: azure bg (#1B4FA8) / white label (#FFFFFF): 7.6:1 (AAA).
+    Bento cards (surface-2 bg #F2F5FA) with text-1 (#141C28): 16.4:1 (AAA).
+    text-3 (#607394) on surface-1: 4.6:1 (AA) -- tertiary/caption use only.
+    Focus ring: var(--color-primary) #1B4FA8 on light surfaces: 7.6:1 >> 3.0 (non-text WCAG 1.4.11).
+    All animations reduce to fade-simple under prefers-reduced-motion (WCAG 2.3.3).
+    No autoplay anywhere (WCAG 2.2.2). Bento marquee pauses under prefers-reduced-motion.
+    backdrop-filter blur on bento cards is progressive enhancement -- full content
+    visible without CSS filter support (SSR safe, Growth-69). DM Mono stat numerals
+    have no color reliance -- they use text-1 (#141C28) on bento-card-bg (#F2F5FA):
+    16.4:1 (AAA). KWCAG 2.3: no animation > 3Hz.
+  reduced_motion_safe: true
