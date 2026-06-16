@@ -52,6 +52,15 @@
 @import "@fontsource/lato/400.css";
 @import "@fontsource/lato/700.css";
 
+/* Prism theme: IBM Plex Sans (display) + DM Sans (body) + DM Mono (mono/stat)
+   IBM Plex Sans: precision-instrument grotesque. DM Sans: humanist geometry.
+   DM Mono: monospace stat numerals in bento cards (signals "real data").
+   Loaded via Google Fonts CDN @import url -- matching the no-npm-package pattern
+   used here for fonts without @fontsource-variable builds already in package.json.
+   DM Sans shared with Meridian theme body; IBM Plex Sans is Prism-unique.
+   Google Fonts &display=swap handles font-display:swap at the CDN level. */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:ital,wght@0,400;0,500&display=swap");
+
 /* font-display: swap is set per @fontsource package default */
 
 /* ── Generated token CSS (injected by build-tokens.mjs) ───────────────────── */
