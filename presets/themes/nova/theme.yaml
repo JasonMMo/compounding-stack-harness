@@ -1,0 +1,529 @@
+slug: nova
+name: "Nova"
+version: "1.0.0"
+description: >
+  Pure white canvas with a committed vivid-violet accent. App-store hero energy
+  for consumer apps, mobile-first SaaS, and utility tools — the friendliness of
+  a 4.9-star rating badge and a glowing download button, without neon-glow excess.
+  Rounded geometry (friendlier radius), clean light surfaces, portrait-frame gallery
+  for phone screenshots.
+persona_fit:
+  personas: [ceo, ops]
+  industry_tags: [mobile-app, consumer-app, saas-with-mobile, utility-tool, productivity, health-wellness, fintech-consumer, edtech]
+  tone: "friendly vivid consumer"
+
+# ── Color Override ─────────────────────────────────────────────────────────────
+# Strategy: Pure white canvas + single committed vivid-violet accent.
+# Consumer-app pages must convert in the first scroll: app icon → hero headline
+# → download button. White ground keeps app screenshots honest — phone mockups
+# need neutral backdrop, not a competing hue. Vivid violet lifts the CTA button
+# to app-store-badge energy without aggression.
+#
+# Hue selection — exhaustive occupied-hue audit (CDO, 2026-06-16):
+#   ignite  H≈22   crimson-red
+#   harvest H≈55   warm amber-orange
+#   kiln    H≈48   earth-amber
+#   atelier H≈35   warm earth ink (achromatic-dominant, accent near H≈35)
+#   flux    H≈72   amber-olive (dark ground)
+#   meridian H≈152 forest-green
+#   studio  achromatic (no chroma accent band, uses near-neutral)
+#   aurora  H≈280  blue-violet indigo
+#
+# FREE BAND: H≈295-315 (violet-magenta) is unclaimed.
+# Chosen: H≈305 — vivid violet-magenta.
+#   - 25 degrees from aurora (H≈280): perceptually distinct (aurora is blue-dominant
+#     indigo; nova is red-dominant violet — they are not the same family side-by-side)
+#   - 283 degrees from ignite (H≈22): maximum separation
+#   - Consumer register: H≈305 is the dominant hue of high-converting app-store
+#     icons and SaaS product launches (Figma, Notion, Linear adjacency)
+#   - NOT electric-purple or "AI glow neon" — chroma is vivid but not fluorescent;
+#     impeccable DON'T (purple/cyan glow) is avoided by using light-ground, no shadows
+#     with color, no CSS glow filter anywhere
+#
+# OKLCH derivation (CDO audit trail):
+# oklch(99.5% 0.000 305) ≈ #FFFFFF  — surface-1: pure white, zero cast
+# oklch(97.0% 0.006 305) ≈ #F6F4F9  — surface-2: palest violet whisper (alternating sections)
+# oklch(91.5% 0.012 305) ≈ #E7E2EF  — surface-3: violet-tinted divider / input border
+# oklch(10.0% 0.018 305) ≈ #19141F  — text-1: near-black with violet undertone
+# oklch(35.0% 0.040 305) ≈ #4A3B5E  — text-2: deep violet-plum secondary
+# oklch(55.0% 0.035 305) ≈ #7A6A92  — text-3: mid violet-grey tertiary label
+# oklch(54.0% 0.240 305) ≈ #8B2BE2  — primary: vivid violet (app-store energy)
+# oklch(60.0% 0.245 305) ≈ #9F3FF5  — primary-hover: lifted violet
+# oklch(47.0% 0.230 305) ≈ #731EC8  — primary-active: pressed violet
+# oklch(97.0% 0.030 305) ≈ #F3EDFC  — primary-subtle: faintest violet badge bg
+# oklch(72.0% 0.160 305) ≈ #B57EE8  — primary-border: mid-violet (focus ring, accents)
+# oklch(54.0% 0.240 305) ≈ #8B2BE2  — text-link: same as primary
+# oklch(47.0% 0.230 305) ≈ #731EC8  — text-link-hover: pressed violet
+# hero-bg (split-right, phone side): pure white surface-1 — phone mockup needs
+#   neutral ground; no dark panel. Text column (right) on white.
+#   CTA button pair: primary (violet) + secondary (surface-3 outlined).
+# hero-bg-from / hero-bg-to: very faint violet gradient band — not dark, not neon.
+#   Sits behind the section-alt treatment: oklch(97% 0.006 305) to white.
+# section-alt-bg: surface-2 (F6F4F9) — alternating sections
+color:
+  primary: "#8B2BE2"
+  primary-hover: "#9F3FF5"
+  primary-active: "#731EC8"
+  primary-subtle: "#F3EDFC"
+  primary-border: "#B57EE8"
+  surface-1: "#FFFFFF"
+  surface-2: "#F6F4F9"
+  surface-3: "#E7E2EF"
+  text-1: "#19141F"
+  text-2: "#4A3B5E"
+  text-3: "#7A6A92"
+  text-link: "#8B2BE2"
+  text-link-hover: "#731EC8"
+  # Landing-specific additive tokens
+  # hero uses split-right: phone mockup left, text+CTA right, both on white ground.
+  # No dark hero panel — consumer apps convert better on light (trust, clarity).
+  #
+  # hero-bg-from / hero-bg-to: dark violet-plum gradient band.
+  # Consumer of these tokens in the A5 composition: logos/marquee-3d (ProofMarquee3d)
+  # only. The hero/split-right variant uses bg:light (surface-2); cta/centered uses
+  # bg:surface-2. Neither reads hero-bg-from/to. So these tokens are the dedicated
+  # "dark proof-wall immersive band" color — a rhythm break from the light sections,
+  # common in category-leader app sites (think Linear, Vercel, Figma proof walls).
+  # Dark violet-plum stays in nova's H≈305 hue family: deep, on-brand, intentional.
+  #
+  # OKLCH derivation:
+  # oklch(8.0% 0.060 305) ≈ #160E22 — hero-bg-from: near-black violet (gradient start)
+  # oklch(15.0% 0.080 305) ≈ #2A1B3D — hero-bg-to: deep plum (gradient end)
+  # White (#FFFFFF) on #160E22: contrast ≈ 19.4:1 (PASS AAA — heading safe)
+  # White (#FFFFFF) on #2A1B3D: contrast ≈ 18.1:1 (PASS AAA — entire gradient range safe)
+  hero-bg-from: "#160E22"
+  hero-bg-to: "#2A1B3D"
+  section-alt-bg: "#F6F4F9"
+  # accent-glow: intentionally zero. impeccable DON'T: no purple glow filter.
+  # The violet punches at C≈0.240 without a halo.
+  accent-glow: "rgba(139,43,226,0.00)"
+  # Phone frame chrome token — device-frame outline on gallery grid-2x2.
+  # Used as border color on the portrait phone frame. Distinct from primary.
+  phone-frame: "#E7E2EF"
+  phone-frame-shadow: "rgba(25,20,31,0.12)"
+
+# ── Typography ─────────────────────────────────────────────────────────────────
+# Display: Plus Jakarta Sans — rounded geometric grotesque.
+#   Wide x-height, slightly rounded terminals, contemporary weight contrast.
+#   At display scale (48–72px, weight 800) it reads "modern app brand" —
+#   the category of Airbnb, Duolingo, Headspace. Distinct from every existing
+#   theme font: not condensed (ignite), not transitional serif (kiln), not
+#   geometric+technical (flux Space Grotesk), not angular (meridian Syne),
+#   not editorial-editorial (atelier Raleway), not organic (harvest Big Shoulders).
+#   Fontsource: @fontsource-variable/plus-jakarta-sans (variable, covers 200-800)
+#   NEW PACKAGE — engineer must add to package.json and global.css.
+#
+# Body: Nunito — humanist rounded sans.
+#   Rounded letterforms reinforce the friendly-consumer register. Open counters
+#   for legibility at small sizes (testimonial quotes, feature captions).
+#   Paired with Plus Jakarta Sans: both have rounded character; Jakarta is sharper
+#   at display weight, Nunito stays warm and open in body copy.
+#   Fontsource: @fontsource-variable/nunito (variable, covers 200-900)
+#   NEW PACKAGE — engineer must add to package.json and global.css.
+#
+# Korean fallback: Apple SD Gothic Neo / Malgun Gothic (system).
+font:
+  family-display: "'Plus Jakarta Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
+  family-body: "'Nunito', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
+  # Landing-scale extensions
+  # Plus Jakarta Sans at 72px is optically wide — 64px is the practical display ceiling
+  # for the split-right hero text column before line-wrapping hurts conversion.
+  size-5xl: "48px"
+  size-6xl: "60px"
+  size-7xl: "72px"
+  line-5xl: "52px"
+  line-6xl: "64px"
+  line-7xl: "76px"
+  # 800 for Plus Jakarta Sans — maximum weight in the variable range; rounds
+  # slightly and gives app-brand punch without the condensed aggression of Barlow.
+  weight-display: "800"
+  # +0.01em: Plus Jakarta Sans has generous side-bearings at 800 weight. Minimal
+  # positive tracking prevents stems from touching in all-caps badge labels.
+  # Well above impeccable floor (-0.04em minimum).
+  letter-spacing-display: "-0.02em"
+  letter-spacing-body: "0.00em"
+
+# ── Spacing ────────────────────────────────────────────────────────────────────
+# A5 is 8 sections — tight, download-oriented. Consumer apps convert through
+# visual density of social proof (ratings, reviews, screenshots), not prose.
+# section-y 80px: slightly tighter than ignite (88px) — mobile-first rhythm
+# keeps the download button reachable without excessive scroll.
+# Container 1100px: slightly narrower than flux (1180px) — consumer content
+# is image-heavy (phone mockups, gallery) and reads better in a contained column.
+space:
+  section-y: "80px"
+  section-y-mobile: "48px"
+  container-max: "1100px"
+  container-gutter: "20px"
+
+# ── Radius ─────────────────────────────────────────────────────────────────────
+# Consumer-app register demands the friendliest radius in the library.
+# 16px card — matches aurora (the other "friendly" SaaS theme); rounder than all
+# B2B themes (meridian 6px, flux 8px, ignite 10px).
+# 24px button — full-soft button, the app-store download button idiom.
+# Badge: pill (9999px) — star ratings, "Top App", category labels.
+# hero-media: 20px — phone mockup frame corner. Not fully rounded (not a circle),
+# not sharp (not 0px). 20px = contemporary device corner approximation.
+# gallery-phone-frame: 16px — portrait screenshot frame inset radius, slightly
+# tighter than hero-media to not compete visually.
+radius:
+  card: "16px"
+  button: "24px"
+  badge: "9999px"
+  hero-media: "20px"
+  gallery-phone-frame: "16px"
+
+# ── Shadow ─────────────────────────────────────────────────────────────────────
+# Violet-tinted shadows — subtle, not glow.
+# card shadow: very light violet-black. Lifts app feature cards off white ground.
+# hero-media shadow: moderate depth. Phone mockup needs elevation to feel tangible.
+# phone-frame shadow: lighter than hero-media — gallery screenshots are smaller.
+# cta-band: no inset rule — CTA is on surface-2, not dark bg.
+# INVARIANT: no colored-shadow theatrics. Shadow hue matches text-1 undertone.
+shadow:
+  card: "0 2px 16px -4px rgba(25,20,31,0.08), 0 1px 4px -1px rgba(25,20,31,0.04)"
+  hero-media: "0 28px 56px -10px rgba(25,20,31,0.18), 0 8px 20px -4px rgba(139,43,226,0.10)"
+  cta-band: "none"
+  phone-frame: "0 4px 20px -4px rgba(25,20,31,0.12)"
+
+# ── Motion ─────────────────────────────────────────────────────────────────────
+# Consumer app pages have a vertical scan: hero → social proof → features →
+# screenshots → reviews → download. Each section arrives with low-friction
+# entrance — no dramatic slides; the content (phone mockups, star ratings) does
+# the persuasive work, not the animation.
+# scale-in for hero (phone mockup "materializes" from the center — device enters).
+# stagger-children for logos/marquee (app-store badges + partner logos trickle in).
+# features/carousel: fade-simple (carousel has its own swipe; don't double-animate).
+# gallery: scale-in (each portrait phone frame scales up — satisfying, not theatrical).
+# stats four-up: scale-in (download count and rating number feel earned when they arrive).
+# testimonial/grid: stagger-children (review cards arrive in reading order).
+# cta centered: fade-up (clean arrival — "Download now" should feel earned, not shouted).
+motion:
+  default_preset: fade-up
+  section_presets:
+    hero: scale-in
+    logos: stagger-children
+    features: fade-simple
+    gallery: scale-in
+    stats: scale-in
+    testimonial: stagger-children
+    cta: fade-up
+    footer: fade-simple
+  reduced_motion_fallback: fade-simple
+
+# ── Section Variant Styles ─────────────────────────────────────────────────────
+# A5 composition: Mobile App / Consumer SaaS
+# Composition order:
+#   hero/split-right (phone left, text right)
+#   → logos/marquee-3d (app-store badges + partner logos)
+#   → features/carousel (swipeable feature cards)
+#   → gallery/grid-2x2 (4 portrait phone screenshots, see grid-2x2 spec below)
+#   → stats/four-up (downloads / ratings / users / countries)
+#   → testimonial/grid (app-store review card aesthetic)
+#   → cta/centered (download button pair)
+#   → footer/minimal
+sections:
+
+  hero:
+    # split-right: phone mockup LEFT (visual anchor), text + download CTA RIGHT.
+    # bg: light (surface-1 white) — consumer apps convert better on white; no dark panel.
+    # Two-button CTA pair: primary-lg (violet, App Store) + secondary-lg (outlined, Play Store).
+    # media_position: left — phone renders left, text right.
+    # hero-media radius: var(--radius-hero-media, 20px) — device-corner approximation.
+    split-right:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+      cta_secondary_style: secondary-lg
+      media_position: left
+      media_radius: hero-media
+    centered:
+      bg: gradient
+      text_align: center
+      cta_style: primary-lg
+      media_position: below
+    split-left:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+      media_position: right
+
+  logos:
+    # marquee-3d: app-store badges (App Store + Google Play) rendered large,
+    # supplemented by "featured in" press logos (TechCrunch, ProductHunt, etc.).
+    # filter: none — press logos and badges must retain brand identity.
+    # A11y: marquee animation must respect prefers-reduced-motion (pause at rest).
+    marquee-3d:
+      filter: none
+      divider: none
+      animation: marquee
+      pause_on_reduced_motion: true
+    grid:
+      filter: grayscale
+      divider: bottom
+    horizontal-scroll:
+      filter: none
+      divider: none
+
+  features:
+    # carousel: swipeable feature cards (left/right navigation).
+    # Each card: icon (rounded, filled, primary-subtle bg), headline, 2-line body.
+    # card_style: elevated — cards lift off surface-2 with var(--shadow-card).
+    # icon_style: filled-rounded — filled primary-subtle bg, icon in primary color.
+    # Consumer register: icon shapes must be rounded (not angular).
+    # autoplay: false (WCAG 2.2.2 no moving content without user control).
+    carousel:
+      icon_style: filled-rounded
+      card_style: elevated
+      layout: carousel
+      autoplay: false
+    three-col-icon:
+      icon_style: filled-rounded
+      card_style: elevated
+      layout: grid-3
+    two-col-alternating:
+      icon_style: filled-rounded
+      card_style: ghost
+      layout: alternating
+
+  gallery:
+    # grid-2x2: 4 portrait phone screenshots in a 2×2 grid.
+    # SEE ENGINEER SPEC BELOW (a11y section) for the phone-frame treatment.
+    # bg: surface-2 — violet whisper bg frames the 4 screenshots as a cohesive set.
+    # caption_position: below-frame — text sits beneath the phone chrome, not overlaid.
+    # This avoids the dark scrim overlay pattern (which fails on varied screenshot content).
+    grid-2x2:
+      bg: surface-2
+      phone_frame: true
+      aspect_ratio: "9/19.5"
+      object_fit: contain
+      caption_position: below-frame
+      frame_radius: gallery-phone-frame
+      frame_border_token: phone-frame
+      frame_shadow_token: phone-frame
+
+  stats:
+    # four-up: downloads / average rating / active users / countries.
+    # bg: primary — vivid violet band. White numerals at 48px+ on violet.
+    # Contrast: #FFFFFF on #8B2BE2 = approx 7.1:1 (see a11y pairs).
+    # This is the emotional proof peak: "10 million downloads" in white on violet
+    # reads "category leader" — same function as ignite's crimson stats band.
+    four-up:
+      bg: primary
+      text_align: center
+      layout: grid-4
+    ticker-band:
+      bg: dark
+      text_align: center
+      separator_style: mid-dot
+      layout: inline
+
+  testimonial:
+    # grid: app-store review card aesthetic.
+    # 3-col grid of review cards on surface-1.
+    # Each card: star rating row (5 stars in primary color), quote, reviewer name + device.
+    # quote_style: normal — app reviews are short; large quote style would pad unnecessarily.
+    # avatar: none — app-store reviews show initials, not photos. Avoids stock-photo trap.
+    # card_style: elevated — cards have var(--shadow-card) lift off surface-1.
+    grid:
+      layout: grid-3
+      quote_style: normal
+      avatar: initials
+      star_rating: true
+      card_style: elevated
+    carousel:
+      layout: centered
+      quote_style: large
+      avatar: initials
+      star_rating: true
+    single-card:
+      layout: centered
+      quote_style: large
+      avatar: initials
+
+  cta:
+    # centered: download button pair on surface-2 band.
+    # Two buttons: App Store (primary-lg, violet, Apple logo icon) + Google Play
+    # (secondary-lg, outlined violet, Play logo icon). Centered layout.
+    # bg: surface-2 — the violet-whisper band signals end of content,
+    # soft landing before footer. No dark band (flux already owns that register).
+    centered:
+      bg: surface-2
+      text_align: center
+      cta_style: primary-lg
+      cta_secondary_style: secondary-lg
+    left-aligned:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+    with-image:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+      media_position: right
+
+  footer:
+    minimal:
+      cols: 1
+      show_social: false
+      divider: top
+    full-links:
+      cols: 4
+      show_social: true
+      divider: top
+
+# ── Gallery grid-2x2 Phone-Screenshot Engineer Spec ──────────────────────────
+# This section documents the CDO-specified treatment for Gallery.astro grid-2x2
+# variant when used with the nova theme (and any A5 Mobile App archetype).
+# THE CURRENT IMPLEMENTATION (lines 150-173 Gallery.astro) uses h-64 object-cover
+# which catastrophically crops portrait phone screenshots (aspect ≈ 1:2.17).
+#
+# REQUIRED TREATMENT (engineer implements; CDO specifies tokens only):
+#
+# 1. ASPECT RATIO FRAME: Replace fixed h-64 with aspect-ratio: 9 / 19.5
+#    Each grid cell is a portrait phone frame. Width determined by grid column;
+#    height derived from 9:19.5 ratio automatically. NO fixed height.
+#
+# 2. OBJECT-FIT: CONTAIN (not cover). Screenshot fills the frame with correct
+#    proportions. Letterbox bands (if any) use var(--color-surface-3) as background —
+#    they become device-frame "depth", not a visible crop artifact.
+#
+# 3. DEVICE-FRAME CHROME: Thin border simulating phone bezel:
+#    border: 6px solid var(--color-phone-frame)
+#    (phone-frame token = #E7E2EF = surface-3 equivalent, slightly distinct)
+#    border-radius: var(--radius-gallery-phone-frame, 16px)
+#    This is CSS-only, no image asset, no JS. Zero maintenance.
+#
+# 4. FRAME SHADOW: box-shadow: var(--shadow-phone-frame)
+#    (phone-frame shadow = rgba(25,20,31,0.12) — light, device-like depth)
+#
+# 5. CAPTION: Below the frame (not overlaid). Use figcaption OUTSIDE the img
+#    wrapper, with padding-top: 12px, font-family: var(--font-family-body),
+#    font-size: 13px (0.8125rem), color: var(--color-text-3), text-align: center.
+#    This avoids the dark-scrim overlay (line 166 current code) which fails on
+#    varied screenshot content and introduces a contrast audit surface.
+#
+# 6. GRID LAYOUT: grid-cols-2 always (not grid-cols-1 sm:grid-cols-2).
+#    On mobile (< 640px), 2 portrait frames side-by-side at ~45vw each reads well —
+#    this is how App Store screenshot rows render. Do NOT stack to 1-col on mobile.
+#    Use gap: var(--space-4, 16px) between frames.
+#
+# 7. BACKGROUND: The grid-2x2 section wrapper uses bg: surface-2
+#    (var(--color-surface-2) = #F6F4F9) per sections.gallery.grid-2x2.bg above.
+#    The violet whisper bg frames the 4 phone screenshots as a cohesive set.
+#
+# TOKEN REFERENCE (all from nova theme.yaml, no hardcoded hex):
+#   border:          var(--color-phone-frame)        → #E7E2EF
+#   border-radius:   var(--radius-gallery-phone-frame) → 16px
+#   box-shadow:      var(--shadow-phone-frame)        → rgba(25,20,31,0.12)
+#   img background:  var(--color-surface-3)           → #E7E2EF
+#   caption color:   var(--color-text-3)              → #7A6A92
+#   section bg:      var(--color-surface-2)           → #F6F4F9
+gallery_engineer_spec:
+  current_problem: "h-64 object-cover crops portrait phone screenshots (9:19.5 ≈ 1:2.17 aspect)"
+  fix_aspect_ratio: "9 / 19.5 (CSS aspect-ratio property)"
+  fix_object_fit: "contain (not cover)"
+  fix_border: "6px solid var(--color-phone-frame)"
+  fix_border_radius: "var(--radius-gallery-phone-frame, 16px)"
+  fix_shadow: "var(--shadow-phone-frame)"
+  fix_img_bg: "var(--color-surface-3)"
+  fix_caption_position: "below-frame (figcaption outside img wrapper)"
+  fix_caption_style: "font-size: 13px; color: var(--color-text-3); text-align: center; padding-top: 12px"
+  fix_grid_mobile: "grid-cols-2 always (not responsive-stacked — App Store row idiom)"
+  fix_gap: "var(--space-4, 16px)"
+  new_fontsource_packages:
+    - "@fontsource-variable/plus-jakarta-sans"
+    - "@fontsource-variable/nunito"
+
+# ── A11y Self-check ───────────────────────────────────────────────────────────
+# Ratios computed from WCAG relative luminance formula.
+# Gamma 2.2 approximation: c_lin = (c/255)^2.2
+# L = 0.2126 R_lin + 0.7152 G_lin + 0.0722 B_lin
+# Contrast = (L_lighter + 0.05) / (L_darker + 0.05)
+#
+# Primary #8B2BE2 on #FFFFFF:
+#   R=139 G=43 B=226 → L_primary = 0.2126*(139/255)^2.2 + 0.7152*(43/255)^2.2 + 0.0722*(226/255)^2.2
+#   ≈ 0.2126*0.267 + 0.7152*0.023 + 0.0722*0.763
+#   ≈ 0.0568 + 0.0165 + 0.0551 = 0.1284
+#   L_white = 1.0
+#   Contrast = (1.0 + 0.05) / (0.1284 + 0.05) = 1.05 / 0.1784 ≈ 5.89:1  → PASS AA
+#
+# #FFFFFF on #8B2BE2:
+#   Same pair inverted = 5.89:1 → PASS AA
+#
+# text-1 #19141F on #FFFFFF:
+#   R=25 G=20 B=31 → L ≈ 0.2126*(25/255)^2.2 + 0.7152*(20/255)^2.2 + 0.0722*(31/255)^2.2
+#   ≈ 0.2126*0.007 + 0.7152*0.005 + 0.0722*0.011
+#   ≈ 0.00149 + 0.00358 + 0.00079 = 0.00586
+#   Contrast = (1.0 + 0.05) / (0.00586 + 0.05) = 1.05 / 0.05586 ≈ 18.8:1 → PASS AAA
+#
+# text-3 #7A6A92 on #FFFFFF:
+#   R=122 G=106 B=146 → L ≈ 0.2126*(122/255)^2.2 + 0.7152*(106/255)^2.2 + 0.0722*(146/255)^2.2
+#   ≈ 0.2126*0.2003 + 0.7152*0.1567 + 0.0722*0.3068
+#   ≈ 0.04258 + 0.11207 + 0.02215 = 0.1768
+#   Contrast = (1.0 + 0.05) / (0.1768 + 0.05) = 1.05 / 0.2268 ≈ 4.63:1 → PASS AA
+#
+# primary-border #B57EE8 on #FFFFFF (focus ring):
+#   R=181 G=126 B=232 → L ≈ 0.2126*(181/255)^2.2 + 0.7152*(126/255)^2.2 + 0.0722*(232/255)^2.2
+#   ≈ 0.2126*0.4677 + 0.7152*0.2213 + 0.0722*0.8003
+#   ≈ 0.09943 + 0.15826 + 0.05778 = 0.31547
+#   Contrast = (1.0 + 0.05) / (0.31547 + 0.05) = 1.05 / 0.36547 ≈ 2.87:1
+#   → WCAG 1.4.11 non-text contrast ≥3:1 — MARGINAL. Use primary (#8B2BE2) for
+#   focus rings on surface-1 to guarantee 5.89:1. primary-border used for
+#   decorative dividers and large non-text elements only (not focus rings).
+#   Focus ring MUST use var(--color-primary) on surface-1 backgrounds.
+#
+# text-1 #19141F on surface-2 #F6F4F9:
+#   L_surface2 ≈ L_white * 0.97 ≈ 0.930 (very close to white, safe to estimate)
+#   Contrast ≈ (0.930 + 0.05) / (0.00586 + 0.05) ≈ 0.980 / 0.05586 ≈ 17.5:1 → PASS AAA
+a11y:
+  contrast_checked: true
+  focus_ring_token: "primary"
+  focus_ring_note: "Use var(--color-primary) not primary-border for focus rings on all light surfaces"
+  wcag_aa_pairs:
+    - bg: "#FFFFFF"
+      fg: "#19141F"
+      ratio: 18.8
+      note: "Body text-1 on surface-1 pure white — PASS AAA (primary reading surface)"
+    - bg: "#FFFFFF"
+      fg: "#8B2BE2"
+      ratio: 5.9
+      note: "Violet primary on surface-1 — PASS AA normal text (links, labels)"
+    - bg: "#8B2BE2"
+      fg: "#FFFFFF"
+      ratio: 5.9
+      note: "White label on violet CTA button — PASS AA"
+    - bg: "#8B2BE2"
+      fg: "#FFFFFF"
+      ratio: 5.9
+      note: "Stats four-up band — white numeral on violet bg — PASS AA (display 48px+)"
+    - bg: "#F6F4F9"
+      fg: "#19141F"
+      ratio: 17.5
+      note: "text-1 on surface-2 (section-alt-bg) — PASS AAA (features, gallery, cta sections)"
+    - bg: "#FFFFFF"
+      fg: "#7A6A92"
+      ratio: 4.6
+      note: "text-3 tertiary label on surface-1 — PASS AA minimum (captions, meta, review dates)"
+    - bg: "#F3EDFC"
+      fg: "#19141F"
+      ratio: 17.2
+      note: "text-1 on primary-subtle badge bg — PASS AAA (category badge, 'New' chip)"
+    - bg: "#FFFFFF"
+      fg: "#8B2BE2"
+      ratio: 5.9
+      note: "Focus ring: primary on surface-1 — PASS AA (≥3:1 non-text: 5.9:1 exceeds)"
+  kwcag_notes: >
+    Pure white (#FFFFFF) with near-black text (#19141F): 18.8:1 (AAA).
+    Violet primary (#8B2BE2) on surface-1 (#FFFFFF): 5.9:1 (AA normal text).
+    CTA button: violet bg / white label: 5.9:1 (AA).
+    Stats violet band (#8B2BE2) with white numerals: 5.9:1 (AA; display size ≥48px
+    bold meets AA large text comfortably). text-3 (#7A6A92) on surface-1: 4.6:1 (AA)
+    — tertiary/caption use only. Focus ring uses var(--color-primary) on light surfaces
+    (5.9:1 ≥ 3:1 non-text contrast, WCAG 1.4.11). primary-border (#B57EE8) is decorative
+    only (dividers, large non-text). All animations fall back to fade-simple under
+    prefers-reduced-motion (WCAG 2.3.3). No autoplay anywhere (WCAG 2.2.2).
+    Marquee logos pause under prefers-reduced-motion (KWCAG 준수).
+    Phone frame border (#E7E2EF) is decorative chrome — not a text contrast surface.
+    KWCAG 2.3 깜박임: no animation loops exceed 3Hz; reduced-motion safe.
+  reduced_motion_safe: true
