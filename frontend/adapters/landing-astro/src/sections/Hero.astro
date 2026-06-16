@@ -107,6 +107,56 @@ const bgImage = assets.length > 0 && (bg === 'image' || bg === 'video') ? assets
       </div>
     )}
 
+    {isSplit && assets.length === 0 && (
+      <!-- Photo-free split: render a CSS phone mockup sentinel (A5 Mobile App archetype).
+           Same token vocabulary as Gallery grid-2x2 src-absent mockup.
+           No JS, no image assets, theme-tokenized. Growth-69: visible without JS. -->
+      <div
+        class={`flex justify-center items-center ${mediaPosition === 'left' ? 'order-first' : ''}`}
+        aria-hidden="true"
+      >
+        <div
+          style={`
+            width: 260px;
+            aspect-ratio: 9 / 19.5;
+            background: var(--color-surface-3, #D8D0C4);
+            border: 6px solid var(--color-phone-frame, #1A1A2E);
+            border-radius: var(--radius-gallery-phone-frame, 16px);
+            box-shadow: var(--shadow-phone-frame, 0 8px 32px -4px rgba(0,0,0,0.35));
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+          `}
+        >
+          <!-- Status bar -->
+          <div style="height: 4%; background: var(--color-surface-3, #D8D0C4); flex-shrink: 0;" />
+          <!-- App header band -->
+          <div style="height: 14%; background: var(--color-primary, #4F46E5); flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 12px;">
+            <span style="color: var(--color-primary-contrast, #FFFFFF); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; font-family: var(--font-family-display, inherit); text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 100%;">
+              {copy.headline?.split(' ').slice(0, 3).join(' ') ?? 'App'}
+            </span>
+          </div>
+          <!-- Content area -->
+          <div style="flex: 1; padding: 10px 8px; display: flex; flex-direction: column; gap: 6px; background: var(--color-surface-1, #FAFAF8);">
+            <div style="height: 16%; background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+            <div style="height: 16%; background: var(--color-surface-3, #D8D0C4); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+            <div style="height: 16%; background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+            <div style="flex: 1;" />
+            <div style="height: 12%; background: var(--color-primary, #4F46E5); border-radius: var(--radius-card, 4px); flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+              <span style="color: var(--color-surface-1, #FAFAF8); font-size: 10px; font-weight: 700; letter-spacing: 0.04em;">Get Started</span>
+            </div>
+          </div>
+          <!-- Bottom tab bar -->
+          <div style="height: 8%; background: var(--color-surface-2, #EDEAE3); flex-shrink: 0; display: flex; align-items: center; justify-content: space-around; padding: 0 14px;">
+            <div style="width: 20%; height: 4px; background: var(--color-text-3, #797888); border-radius: 2px; opacity: 0.4;" />
+            <div style="width: 20%; height: 4px; background: var(--color-primary, #4F46E5); border-radius: 2px;" />
+            <div style="width: 20%; height: 4px; background: var(--color-text-3, #797888); border-radius: 2px; opacity: 0.4;" />
+            <div style="width: 20%; height: 4px; background: var(--color-text-3, #797888); border-radius: 2px; opacity: 0.4;" />
+          </div>
+        </div>
+      </div>
+    )}
+
     {!isSplit && mediaPosition === 'below' && assets.length > 0 && bg !== 'video' && (
       <div class="mt-12">
         <img
