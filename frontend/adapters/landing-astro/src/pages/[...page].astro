@@ -19,6 +19,7 @@ import Hero from '../sections/Hero.astro'
 import HeroHeadlineOnly from '../sections/HeroHeadlineOnly.astro'
 import { HeroGlowyWaves } from '../sections/HeroGlowyWaves'
 import HeroBrewBubbles from '../sections/HeroBrewBubbles.astro'
+import HeroBentoGrid from '../sections/HeroBentoGrid.astro'
 import { ProofMarquee3d } from '../sections/ProofMarquee3d'
 import { FeatureCarousel } from '../sections/FeatureCarousel'
 import Logos from '../sections/Logos.astro'
@@ -121,6 +122,21 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
           <HeroHeadlineOnly
             copy={section.copy ?? {}}
             cta={section.cta}
+            styleHints={styleHints}
+            motionPreset={motionPreset}
+          />
+        )
+      }
+      // bento-grid variant: light canvas hero, 7/5 grid, stat+marquee bento cluster.
+      // A7 archetype (API Platform / Developer Tool). Zero image assets.
+      if (section.variant === 'bento-grid') {
+        return (
+          <HeroBentoGrid
+            copy={section.copy ?? { headline: '', subhead: '' }}
+            cta={section.cta ?? { label: 'Get started', href: '#' }}
+            cta_secondary={(section as any).cta_secondary}
+            bento_items={(section as any).bento_items ?? []}
+            variant={section.variant}
             styleHints={styleHints}
             motionPreset={motionPreset}
           />
@@ -333,6 +349,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
           variant={section.variant}
           styleHints={styleHints}
           contactHref={manifest.contact?.enabled ? '/contact' : undefined}
+          items={(section.items ?? []) as any}
         />
       )
     }
