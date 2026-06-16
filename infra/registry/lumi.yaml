@@ -1,0 +1,30 @@
+# Digital asset record — lumi (Mobile App landing demo, A5 archetype).
+# Demo/시안: first A5 Mobile App archetype — hero/split-right (phone register) +
+# logos/marquee-3d (harness proof wall, self-aware framing) + features/carousel (swipeable) +
+# gallery/grid-2x2 (4 token-driven CSS app-screen mockups — photo-free, src omitted) +
+# stats/four-up + testimonial/grid (app-store review aesthetic) +
+# cta/centered (iOS/Android download button pair via copy.secondary_*) + footer/minimal.
+# 8th marketing-site theme (nova: violet-magenta #8B2BE2 on white, Plus Jakarta Sans + Nunito).
+# Growth-83.
+slug: lumi
+contact:
+  channel: internal
+  handle: "compounding-stack (own demo asset)"
+preview:
+  subdomain: lumi.n9n.co.kr
+  coolify_project: null                 # filled at deploy
+  coolify_app: null                     # filled at deploy
+  status: pending                       # → live after deploy_static_site.py
+  deployed_at: null
+  deliverable_kind: marketing-site      # static SSG (no backend) — deploy_static_site.py lane
+  theme: nova
+  archetype: A5                         # Mobile App (landing-pattern-matrix)
+  profile_slug: mobile-demo             # Docker PROFILE_SLUG (build arg)
+production:
+  install_method: remote
+  installed_at: null                    # preview/demo asset — no customer install
+  stack:
+    frontend: landing-astro
+    backend: none
+secret_ref: []                          # static site, no secrets
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5). 정적 SSG — 런타임 LLM 0. 신규: grid-2x2 src-optional CSS 앱스크린 목업(photo-free) + cta/centered secondary 버튼 + site_manifest variant-aware slot 완화(P2 종결). JS는 marquee-3d 3D 모션·carousel 스와이프뿐."
