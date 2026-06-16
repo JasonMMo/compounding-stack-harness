@@ -37,6 +37,12 @@
 @import "@fontsource-variable/space-grotesk";
 @import "@fontsource-variable/inter";
 
+/* Nova theme: Plus Jakarta Sans (display) + Nunito (body)
+   Variable fonts — single file covers all weights. font-display: swap.
+   Mobile-first geometric humanist pairing — A5 Mobile App archetype. */
+@import "@fontsource-variable/plus-jakarta-sans";
+@import "@fontsource-variable/nunito";
+
 /* Ignite theme: Barlow Condensed (display) + Lato (body)
    Static fonts — no variable version available for Barlow Condensed or Lato.
    700 weight for body hierarchy; 800 weight for display headings and stats.
