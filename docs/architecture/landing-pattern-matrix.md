@@ -3,7 +3,7 @@
 > CDO doc. Decision-oriented map for the multi-session buildout of diverse landing-page patterns.
 > Canonical positions: section-type taxonomy (§1), variant table (§2), page archetypes (§3),
 > buildout backlog (§4), invariants (§5).
-> Last updated: 2026-06-16 (CDO, Growth-79 — A1 SaaS archetype + flux theme + 3 new variants)
+> Last updated: 2026-06-16 (CTO, Growth-83 — A5 Mobile App archetype + nova theme; A1~A6 전부 BUILT, 매트릭스 1차 완성)
 
 ---
 
@@ -118,7 +118,7 @@ Status: HAVE (existing variant name) or NEED.
 | masonry-3col     | 3-column masonry of images; no equal heights                                | HAVE           |
 | parallax-scroll  | Sticky full-viewport chapters; scale+overlay on scroll; editorial body+CTA below each; scroll-driven (React island, framer-motion useScroll); texture: sentinel for photo-free demo | HAVE           |
 | full-bleed-strip | Single image fills full viewport width, tall aspect ratio                   | NEED           |
-| grid-2x2         | 2×2 product screenshot grid with optional caption per cell                  | NEED           |
+| grid-2x2         | 2×2 phone-frame 그리드; `src`-optional → 토큰 CSS 앱스크린 목업(무사진); 셀별 caption | HAVE           |
 
 ### story (currently: founder-split, timeline-year)
 
@@ -178,11 +178,12 @@ Status: HAVE (existing variant name) or NEED.
 ---
 
 **Variant count summary**:
-14 section types · 52 total variants · 33 HAVE · 19 NEED
+14 section types · 52 total variants · 34 HAVE · 18 NEED
 (Growth-77 additions: gallery/parallax-scroll HAVE + story/timeline-year HAVE + lead/minimal-field HAVE; gallery/full-bleed-strip added as NEED)
 (Growth-78 additions: logos/quote-band HAVE + process/numbered-stack HAVE + team/headshot-grid HAVE — A6 B2B-services archetype shipped)
 (Growth-79 additions: stats section type NEW + features/bento-mosaic HAVE + stats/ticker-band HAVE + testimonial/pull-quote-wall HAVE — A1 SaaS Product Launch CDO spec shipped; flux theme added)
 (Growth-80 follow-on: process/horizontal-steps HAVE + stats/four-up HAVE + cta/newsletter-inline HAVE — A3 Event/Conference archetype shipped; ignite theme added)
+(Growth-83: gallery/grid-2x2 HAVE (src-optional 무사진 CSS 목업) — A5 Mobile App archetype shipped; nova theme added; site_manifest `variant_overrides` 신설로 A1~A6 매트릭스 1차 완성)
 
 ---
 
@@ -282,23 +283,28 @@ Note: gallery variant changed from full-bleed-strip (NEED) to parallax-scroll (H
 
 ---
 
-### A5 — Mobile App
+### A5 — Mobile App — **BUILT** (Growth-83, 2026-06-16)
+
+Live: **https://lumi.n9n.co.kr** (nova 테마, Lumi — 가상 습관·집중 컨슈머 앱)
+Theme: nova — violet-magenta #8B2BE2 (OKLCH 미점유 hue) on white canvas; Plus Jakarta Sans + Nunito (모바일 geometric-humanist). marquee 밴드만 hero-bg 다크 violet(#160E22→#2A1B3D, 흰 헤딩 AAA).
 
 Target: consumer app, SaaS with a mobile product, utility tool.
 
+Shipped composition (전부 HAVE — **무사진 0 stock**):
 ```
-hero           / split-right    (phone mockup left, text right)
-logos          / marquee-3d     (press logos or app-store badges as proof wall)
-features       / carousel       (swipeable — mirrors mobile gesture vocabulary)
-gallery        / grid-2x2       (screenshots of 4 key app screens)
-stats          / four-up        (downloads, ratings, users, countries)
-testimonial    / grid           (app-store review grid aesthetic)
-cta            / centered       (app-store download button pair)
+hero           / split-right    (text 좌 · phone-mockup sentinel 우 — visual_sentinel, 무사진)
+logos          / marquee-3d     (harness 자체 /proof/*.jpg 자각적 프레이밍 proof wall)
+features       / carousel       (swipeable; sr-only 전항목 SSR — Growth-69)
+gallery        / grid-2x2       (phone-frame CSS 앱스크린 목업 4종 — src-optional, 무사진)
+stats          / four-up        (downloads, ratings, retention, countries)
+testimonial    / grid           (app-store 리뷰 그리드; initials 아바타)
+cta            / centered       (iOS/Android 다운로드 버튼쌍 — copy.secondary_*, primary fill + secondary outline)
 footer         / minimal
 ```
 
 DNA: Phone-first split hero → press wall → swipeable features → screenshot grid → reviews → download.
 Shares carousel/features with hopwell, but everything surrounding it is different.
+신규 메커니즘: gallery `grid-2x2` src-optional CSS 목업 + cta secondary 버튼쌍 + site_manifest `variant_overrides`(P2 종결).
 
 ---
 
