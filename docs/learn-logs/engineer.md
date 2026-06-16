@@ -621,6 +621,25 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - 교훈: 라이트 테마가 다크-전용 하드코딩 공유 컴포넌트를 처음 밟으면 색 하드코딩을 styleHints honor 로 일반화(Cta.astro FIX-선례 동형). 한 컴포넌트를 고치면 이후 모든 테마가 혜택을 받는 compounding 구조.
 - Cost: engineer subagent 1회(FIX-A/B 포함) / envelope 반환.
 
+### Growth-85 (2026-06-16) — process/split-animation: CDO 중화 구현 (21st.dev AgentPlan 레퍼런스)
+
+- Files touched:
+  - `presets/site-sections/catalog.yaml` (수정 — process.item_slots.optional에 status/subtasks/tools 추가; split-animation variant_overrides 신설; SSR fallback·접근성·토큰 규약 주석 포함)
+  - `frontend/adapters/landing-astro/src/sections/ProcessSplitAnimation.astro` (신규 — 2-column split layout: 1fr 2fr grid desktop / single-col mobile; `<details open>` SSR fallback Growth-69 준수; 3-state status icon(check-circle/circle-dot/circle) + aria-label 접근성; Astro scoped `<style>` 블록; 기존 테마 토큰 전용 — 새 토큰 추가 없음; 마케팅 read-only: Math.random/toggleTaskStatus 제거)
+  - `frontend/adapters/landing-astro/src/pages/[...page].astro` (수정 — ProcessSplitAnimation import + `variant==='split-animation'` 분기; 기존 Process 분기 보존)
+  - `profiles/flux-demo.yaml` (수정 — process/numbered-stack → split-animation 교체; 4단계 태스크 트리 한국어 copy; 소스 연결(completed)→SLO 정의(active)→비용 계측(upcoming)→배포 게이트(upcoming); tools[] 다수 포함)
+  - `scripts/workflow/tests/test_site_manifest.py` (수정 — TestProcessSplitAnimation 클래스 신설 8케이스: catalog 등록·validation·status enum·subtasks passthrough·flux-demo 프로필 검증; 127→140 passed)
+- Implementation choices:
+  - **Astro scoped `<style>` (not inline JSX `<style>{...}`)**: Features.astro의 `<style>{...}` 패턴이 Fragment `<>` 안에서만 동작하고 section 안 중간에선 PostCSS가 백틱을 파싱 실패함을 빌드 오류로 확인 → Astro 컴포넌트 레벨 `<style>` 블록으로 전환. scoped CSS가 더 clean.
+  - **3-state로 축소**: 원본 5-state(completed/in-progress/need-help/failed/pending) → 마케팅 read-only에 과하다는 CDO 스펙 지침 준수 → completed/active/upcoming 3종만.
+  - **토큰 추가 없음**: success/warning/danger 토큰 신발명 대신 기존 text-2(completed muted), primary(active accent), text-3(upcoming tertiary) 재활용. 색은 보조, 아이콘 shape가 1차 구분.
+  - **`<details open>` SSR fallback**: JS 없이 subtask 트리 전부 펼쳐진 상태 정적 렌더. JS가 있으면 네이티브 `<details>` toggle이 자동으로 닫기/열기 PE로 동작 — 별도 script 불필요.
+  - **site_manifest.py passthrough 무변경**: `[dict(it) for it in items_val]`의 shallow copy가 subtasks(nested list)를 읽기 전용 JSON 직렬화에서 올바르게 통과시킴. 변경 불필요.
+- Tests/verify: scaffold → out/flux-demo/site-manifest.json CLEAN(위반 0). Astro build `[build] Complete!` 1 page built in 6.61s. pytest 140 passed(기존 127 + 신규 13).
+- Catches surfaced: 없음.
+- 교훈: Astro에서 JSX 표현식 중간의 `<style>{...}` 패턴은 Fragment 안에서만 허용. 컴포넌트 레벨 `<style>` 블록이 scoped CSS + 타입 안전 + PostCSS 호환으로 더 권장.
+- Cost: engineer subagent 1회 / envelope 반환.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
