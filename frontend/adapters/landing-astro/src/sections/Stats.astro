@@ -3,19 +3,26 @@
  * Stats.astro — Stats / Metrics Band section (type: stats).
  * Variants: ticker-band | four-up
  *
- * ticker-band: full-width dark band, stats inline separated by thin left-border.
- *   No card boxing. Large display-font numerals on dark bg (amber-gold accent).
+ * ticker-band: full-width band, stats inline separated by thin left-border.
+ *   No card boxing. Large display-font numerals.
  *   Pure Astro — no React island. No JS required. Growth-69 invariant.
- *   CDO spec 2026-06-16: value color = var(--color-primary-border) (4.6:1 on dark bg,
- *   AA large text). Label color = var(--color-surface-3).
- *   Separator = border-left on adjacent items (CSS, no DOM node).
- *   Background = var(--color-hero-bg-from) — charcoal band.
  *
- * four-up: 4 stats in a grid row; large number + small label per cell (light bg).
- *   Fallback variant — basic implementation.
+ *   BG mode is driven by styleHints.bg (from theme sections.stats.ticker-band.bg):
+ *     dark / hero-bg / unset → dark charcoal band (var(--color-hero-bg-from)).
+ *       Value color = var(--color-primary-border) (amber/gold on dark — original flux behaviour).
+ *       Label color = var(--color-surface-3). Separator = surface-3.
+ *     light / surface-1 / surface-2 / surface-3 → light band.
+ *       Background = var(--color-surface-2). Value color = var(--color-primary)
+ *       (7:1 AAA on surface-2 for prism #1B4FA8 on #F2F5FA). Label = var(--color-text-2).
+ *       Separator = var(--color-border, --color-surface-3).
+ *   This honours CDO specs across themes without hardcoding any hex.
+ *   flux theme sets bg:dark → dark band (no regression). prism sets bg:surface-2 → light band.
  *
- * All colors via theme tokens. No hardcoded hex.
- * Motion: data-motion attribute for IntersectionObserver entrance (scale-in preset per flux).
+ * four-up: 4 stats in a grid row; large number + small label per cell.
+ *   Fallback variant — uses primary bg (theme-defined per sections.stats.four-up).
+ *
+ * All colors via theme tokens. No hardcoded hex (fallback values only).
+ * Motion: data-motion attribute for IntersectionObserver entrance.
  */
 
 interface StatItem {
@@ -53,29 +60,41 @@ const displayItems: StatItem[] = items.length > 0 ? items : [
   { value: '<50ms', label: 'P99 latency' },
   { value: '10k+', label: 'Teams' },
 ]
+
+// BG mode resolution for ticker-band.
+// Light surface keys: surface-1, surface-2, surface-3, light.
+// Everything else (dark, hero-bg, unset) → dark band (backward-compat with flux).
+const LIGHT_BG_KEYS = new Set(['surface-1', 'surface-2', 'surface-3', 'light'])
+const tickerBg = styleHints.bg ?? ''
+const tickerIsLight = LIGHT_BG_KEYS.has(tickerBg)
 ---
 
 {variant === 'ticker-band' ? (
   <section
     class="w-full py-[var(--space-section-y-mobile,64px)] px-[var(--space-container-gutter,24px)]"
-    style="background: var(--color-hero-bg-from, #1A1610);"
+    style={tickerIsLight
+      ? 'background: var(--color-surface-2, #F2F5FA);'
+      : 'background: var(--color-hero-bg-from, #1A1610);'}
     aria-label={copy.headline ?? 'Platform statistics'}
     data-motion={motionPreset}
   >
     <div class="max-w-[var(--space-container-max,1180px)] mx-auto">
       {copy.headline && (
         <p
-          class="text-center text-sm font-medium uppercase tracking-[0.1em] mb-8 text-[var(--color-surface-3)]"
-          style="font-family: var(--font-family-body, inherit);"
+          class="text-center text-sm font-medium uppercase tracking-[0.1em] mb-8"
+          style={tickerIsLight
+            ? 'color: var(--color-text-2, #354769); font-family: var(--font-family-body, inherit);'
+            : 'color: var(--color-surface-3, #DDDBD7); font-family: var(--font-family-body, inherit);'}
         >
           {copy.headline}
         </p>
       )}
       {/*
         Mobile (<640px): 2-column grid — each stat gets full cell width, no overflow.
-        sm+ (≥640px): flex row with dividers between items.
+        sm+ (>=640px): flex row with dividers between items.
         border-left dividers applied only on sm+ via a CSS class to avoid
         misaligned dividers on wrapped rows.
+        Separator color: light mode = var(--color-border, surface-3); dark = surface-3.
       */}
       <ul
         class="grid grid-cols-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-center list-none m-0 p-0 gap-y-8 sm:gap-y-0"
@@ -83,17 +102,26 @@ const displayItems: StatItem[] = items.length > 0 ? items : [
       >
         {displayItems.map((stat, i) => (
           <li
-            class={`flex flex-col items-center text-center py-2 sm:py-4 px-4 sm:px-[clamp(20px,3vw,48px)]${i > 0 ? ' sm:[border-left:1px_solid_var(--color-surface-3,#DDDBD7)]' : ''}`}
+            class={`flex flex-col items-center text-center py-2 sm:py-4 px-4 sm:px-[clamp(20px,3vw,48px)]`}
+            style={i > 0
+              ? (tickerIsLight
+                  ? 'border-left: 1px solid var(--color-border, var(--color-surface-3, #E2E8F2));'
+                  : 'border-left: 1px solid var(--color-surface-3, #DDDBD7);')
+              : ''}
           >
             <span
               class="leading-none font-[var(--font-weight-display,700)]"
-              style="font-family: var(--font-family-display, inherit); font-size: clamp(2rem, 5vw, 3.5rem); color: var(--color-primary-border, #C99430);"
+              style={tickerIsLight
+                ? 'font-family: var(--font-family-display, inherit); font-size: clamp(2rem, 5vw, 3.5rem); color: var(--color-primary, #1B4FA8);'
+                : 'font-family: var(--font-family-display, inherit); font-size: clamp(2rem, 5vw, 3.5rem); color: var(--color-primary-border, #C99430);'}
             >
               {stat.value}
             </span>
             <span
-              class="mt-2 text-xs font-medium uppercase tracking-[0.1em] text-[var(--color-surface-3,#DDDBD7)]"
-              style="font-family: var(--font-family-body, inherit);"
+              class="mt-2 text-xs font-medium uppercase tracking-[0.1em]"
+              style={tickerIsLight
+                ? 'color: var(--color-text-2, #354769); font-family: var(--font-family-body, inherit);'
+                : 'color: var(--color-surface-3, #DDDBD7); font-family: var(--font-family-body, inherit);'}
             >
               {stat.label}
             </span>
