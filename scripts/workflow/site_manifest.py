@@ -301,6 +301,19 @@ def build_site_manifest(profile: dict[str, Any]) -> dict[str, Any]:
             if companies_val:
                 sec_out["companies"] = list(companies_val)
 
+            # bento_items: optional list[dict] — used by hero/bento-grid variant.
+            # Carries BentoStatItem and BentoMarqueeItem dicts (CDO spec §3).
+            # Passed through as-is; no deep validation here (catalog validates shape).
+            bento_items_val = section.get("bento_items")
+            if bento_items_val:
+                sec_out["bento_items"] = [dict(it) for it in bento_items_val]
+
+            # cta_secondary: optional {label, href} — used by hero/bento-grid and
+            # other variants that support a second CTA button.
+            cta_secondary_val = section.get("cta_secondary")
+            if cta_secondary_val:
+                sec_out["cta_secondary"] = dict(cta_secondary_val)
+
             sections_out.append(sec_out)
 
         page_out: dict[str, Any] = {
