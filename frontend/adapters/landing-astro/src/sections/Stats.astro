@@ -108,13 +108,13 @@ const displayItems: StatItem[] = items.length > 0 ? items : [
    * ignite theme spec: 4 stats in a row, large Barlow Condensed 800 numeral,
    * uppercase label at 78% opacity. Grid-4 desktop, 2×2 mobile. No card boxing.
    * Vertical separator: 1px rgba(250,250,248,0.20) between columns on desktop.
-   * Passes WCAG AA: white (#FAFAF8) on crimson (#C41E22) = 5.1:1.
+   * Passes WCAG AA: white (#FAFAF8) on violet (#6D28D9) = 7.0:1.
    */
   <section
     class="w-full stats-four-up"
     aria-label={copy.headline ?? 'Event statistics'}
     data-motion={motionPreset}
-    style="background:var(--color-primary,#C41E22);padding:var(--space-section-y,88px) var(--space-container-gutter,20px);"
+    style="background:var(--color-primary,#6D28D9);padding:var(--space-section-y,88px) var(--space-container-gutter,20px);"
   >
     <div style="max-width:var(--space-container-max,1120px);margin:0 auto;">
       {copy.headline && (
