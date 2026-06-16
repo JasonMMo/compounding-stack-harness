@@ -596,6 +596,31 @@ guard 실행 후 3개 FAIL 발견 → 즉시 수정:
 - Catches surfaced: Playwright `fullPage:true` 가 뷰포트 스크롤 안 해 IntersectionObserver 미발화 → 중간 섹션 blank 캡처. screenshot 스크립트에 scroll_and_wait() 추가로 해소(컴포넌트 결함 아님).
 - Cost: engineer subagent 1회 / envelope 반환.
 
+### Growth-84 (2026-06-16) — A7 API Platform: hero/bento-grid + prism 테마 + FIX-A/B 2종
+
+- Files touched:
+  - `frontend/adapters/landing-astro/src/sections/HeroBentoGrid.astro` (신규 — hero/bento-grid 변형: 7/5 grid desktop / single-col mobile, stat 카드(monogram badge·대형 mono stat·progress bar·mini-stats 3-col·status tag pills) + marquee 카드(정적 DOM 전체 회사명 + CSS keyframe @prefers-reduced-motion 가드), 전부 semantic token var(--color-*), opacity:0 없음)
+  - `frontend/adapters/landing-astro/src/pages/[...page].astro` (수정 — HeroBentoGrid import + `variant==='bento-grid'` 분기, Footer items passthrough 추가)
+  - `frontend/adapters/landing-astro/src/styles/global.css` (수정 — IBM Plex Sans + DM Sans + DM Mono Google Fonts `@import url()` 추가; npm 패키지 무추가)
+  - `frontend/adapters/landing-astro/src/sections/Stats.astro` (수정 — FIX-A: ticker-band `tickerIsLight` 분기 — `styleHints.bg` surface-*/light → 라이트 밴드(surface-2 배경·primary 숫자·text-2 라벨); 그 외 → 기존 다크 밴드(hero-bg-from·primary-border·surface-3) — flux 회귀 0)
+  - `frontend/adapters/landing-astro/src/sections/Footer.astro` (수정 — FIX-B: full-links `items?: FooterColumn[]` prop 추가, 데이터 주도 컬럼 렌더; 빈 컬럼 가드(`links.length > 0` 필터); items 없으면 하드코딩 fallback(contactHref 없으면 Support 컬럼 자동 제거 — 기존 empty-col 버그 동시 수정))
+  - `presets/themes/prism/theme.yaml` (신규 — 9번째 테마; deep-azure #1B4FA8, IBM Plex Sans + DM Sans + DM Mono, bento-card-bg/border/status 전용 토큰, nova 형식 100% 일치)
+  - `presets/themes/prism/README.md` (신규 — nova 디렉터리 컨벤션 동형)
+  - `presets/site-sections/catalog.yaml` (수정 — hero.variants에 bento-grid 추가, hero item_slots + variant_overrides 신설; footer item_slots + variant_overrides(minimal/newsletter make items optional))
+  - `scripts/workflow/site_manifest.py` (수정 — bento_items + cta_secondary passthrough 추가)
+  - `profiles/prism-demo.yaml` (신규 — A7 9-섹션 구성, CDO spec §5 카피 전문, footer 3-컬럼 실데이터)
+  - `deploy/preview/prism.compose.yml` (신규 — lumi.compose.yml 미러, PROFILE_SLUG=prism-demo)
+  - `scripts/workflow/tests/test_site_manifest.py` (수정 — TestHeroBentoGrid 12케이스 추가; 115→127 passed)
+- Implementation choices:
+  - **Google Fonts `@import url()` (no npm pkg)**: CDO spec 이 fontsource 를 언급했으나 CTO 지시(lockfile churn 회피) + 기존 global.css 패턴 우선. 차이점을 spec 이탈이 아닌 허용 범위 내 선택으로 처리.
+  - **marquee 정적 DOM 전략**: 회사명 2-copy(`aria-hidden` 두 번째 복사) 를 SSR DOM 에 전부 출력 후 `@media (prefers-reduced-motion: no-preference)` 로만 CSS scroll 활성. JS 없이 모든 이름 가시 — Growth-69 완전 준수.
+  - **`tickerIsLight` Set 분기**: `new Set(['surface-1','surface-2','surface-3','light'])` — 신규 라이트 키가 생겨도 Set 확장만 하면 됨. `bg: dark` 미설정 → 다크 디폴트로 flux 하드코딩 그대로 유지.
+  - **Footer `profileColumns` 필터**: `items.filter(col => col.links?.length > 0)` — 헤더만 있는 컬럼 선렌더 금지. profileColumns 없으면 defaultColumns(contactHref 조건부 Support) 로 fallback — 기존 고객 profiles 무변경.
+- Tests/verify: scaffold → out/prism-demo/site-manifest.json CLEAN (위반 0). Astro build `[build-tokens-auto] resolved theme "prism"` 로그 확인. dist/index.html SSR 콘텐츠 21/21 PASS (headline·stat·marquee 6개 회사명·CTA pair·9섹션 copy 전부). FIX-A 15/15 PASS (prism light bg + flux dark 회귀 없음). test_site_manifest 127 passed.
+- Catches surfaced: 없음(FIX-A/B 는 CTO 비주얼 검증에서 발견해 engineer 가 해소 — 아키텍처 결함 아닌 다크-전용 공유 컴포넌트 첫 라이트 테마 노출 유형).
+- 교훈: 라이트 테마가 다크-전용 하드코딩 공유 컴포넌트를 처음 밟으면 색 하드코딩을 styleHints honor 로 일반화(Cta.astro FIX-선례 동형). 한 컴포넌트를 고치면 이후 모든 테마가 혜택을 받는 compounding 구조.
+- Cost: engineer subagent 1회(FIX-A/B 포함) / envelope 반환.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - ~~react frontend adapter (Growth-16)~~ ✅ 완료 (L1/L3/L4 fastapi green)
