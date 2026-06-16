@@ -96,20 +96,20 @@ Status: HAVE (existing variant name) or NEED.
 | grid             | 2-3 column card grid                                                        | HAVE           |
 | pull-quote-wall  | Full-bleed section; 2-3 large pull quotes in an asymmetric column layout    | NEED           |
 
-### process (currently: numbered-stack)
+### process (currently: numbered-stack, horizontal-steps)
 
 | Variant          | Structural description                                                      | Status         |
 |------------------|-----------------------------------------------------------------------------|----------------|
 | numbered-stack   | Vertical numbered steps, each with a headline and one-line description      | HAVE           |
-| horizontal-steps | Left-to-right numbered steps with connectors; collapses to stack mobile     | NEED           |
+| horizontal-steps | Left-to-right numbered steps with connectors; collapses to stack mobile     | HAVE           |
 | split-animation  | Step number locks left, right column scrolls through step content           | NEED           |
 
-### stats (NEW type — not yet in catalog)
+### stats (currently: ticker-band, four-up)
 
 | Variant          | Structural description                                                      | Status         |
 |------------------|-----------------------------------------------------------------------------|----------------|
-| four-up          | 4 stats in a row; large number, small label                                 | NEED           |
-| ticker-band      | Full-width band, stats inline, subtle separator; no card boxing             | NEED           |
+| four-up          | 4 stats in a row; large number, small label; full crimson band (ignite)     | HAVE           |
+| ticker-band      | Full-width band, stats inline, subtle separator; no card boxing             | HAVE           |
 
 ### gallery (currently: masonry-3col, parallax-scroll)
 
@@ -142,14 +142,14 @@ Status: HAVE (existing variant name) or NEED.
 | two-col          | Two-column accordion split                                                  | HAVE           |
 | categorized      | Tab or pill filter to switch FAQ category; accordion within                 | NEED           |
 
-### cta (currently: centered, left-aligned, with-image)
+### cta (currently: centered, left-aligned, with-image, newsletter-inline)
 
 | Variant          | Structural description                                                      | Status         |
 |------------------|-----------------------------------------------------------------------------|----------------|
 | centered         | Headline + subhead + button, centered on solid or gradient band             | HAVE           |
 | left-aligned     | Text left, button right — asymmetric, wider layouts                         | HAVE           |
 | with-image       | CTA copy left, product or scene image right                                 | HAVE           |
-| newsletter-inline| Email input + submit inline in the band; softer commitment than form       | NEED           |
+| newsletter-inline| Email input + submit inline in dark band; DEMO_MODE stub; A3 archetype     | HAVE           |
 
 ### lead (currently: minimal-field)
 
@@ -178,10 +178,11 @@ Status: HAVE (existing variant name) or NEED.
 ---
 
 **Variant count summary**:
-14 section types · 52 total variants · 30 HAVE · 22 NEED
+14 section types · 52 total variants · 33 HAVE · 19 NEED
 (Growth-77 additions: gallery/parallax-scroll HAVE + story/timeline-year HAVE + lead/minimal-field HAVE; gallery/full-bleed-strip added as NEED)
 (Growth-78 additions: logos/quote-band HAVE + process/numbered-stack HAVE + team/headshot-grid HAVE — A6 B2B-services archetype shipped)
 (Growth-79 additions: stats section type NEW + features/bento-mosaic HAVE + stats/ticker-band HAVE + testimonial/pull-quote-wall HAVE — A1 SaaS Product Launch CDO spec shipped; flux theme added)
+(Growth-80 follow-on: process/horizontal-steps HAVE + stats/four-up HAVE + cta/newsletter-inline HAVE — A3 Event/Conference archetype shipped; ignite theme added)
 
 ---
 
@@ -337,7 +338,7 @@ Ordered by: (visible differentiation delivered / implementation cost). First 10.
 | 6 | `gallery` section type + full-bleed-strip | NEW TYPE | full-bleed-strip | A4 archetype requires it; single image > card grids      | build from scratch   |
 | ~~7~~ | ✅ logos / quote-band (DONE Growth-78)  | NEW VAR  | quote-band       | Built; shipped in A6 MERIDIAN                              | done                 |
 | 8 | `story` section type + founder-split   | NEW TYPE | founder-split    | A2 and A4 archetypes; differentiates from faceless SaaS   | build from scratch   |
-| 9 | process / horizontal-steps             | NEW VAR  | horizontal-steps | A3 event archetype; visually distinct from numbered-stack  | 21st.dev timelines   |
+| ~~9~~ | ✅ process / horizontal-steps (DONE Growth-80 follow-on) | NEW VAR | horizontal-steps | Built; A3 Event archetype shipped; ignite theme | done |
 | ~~10~~ | ✅ testimonial / pull-quote-wall (DONE Growth-79) | NEW VAR | pull-quote-wall | Built; CDO spec in out/a1-saas/; catalog registered | done |
 
 **21st.dev notes**: Items 3, 5, 9 have strong analogs in 21st.dev component library (bento, timelines).
