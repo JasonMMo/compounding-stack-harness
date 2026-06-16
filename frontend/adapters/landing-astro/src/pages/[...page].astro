@@ -85,6 +85,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
   description={page.seo?.description}
   ogImage={page.seo?.og_image}
   siteSlug={manifest.slug}
+  locale={manifest.locale}
 >
   {page.sections.map((section: Section) => {
     const styleHints = getStyleHints(theme, section.type, section.variant)
