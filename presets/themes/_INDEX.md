@@ -21,6 +21,7 @@
 | [meridian](meridian/theme.yaml) | Meridian | Precise cool-stone / B2B advisory | Managed-IT, security advisory, consulting, professional services | CEO, ops, IT | PASS | 2026-06-16 |
 | [flux](flux/theme.yaml) | Flux | Engineered charcoal / data-infra SaaS | Developer tools, observability, API platform, data pipeline | CEO, ops, IT | PASS | 2026-06-16 |
 | [ignite](ignite/theme.yaml) | Ignite | Urgent anticipation / event poster | Summit, conference, hackathon, workshop, product launch event | CEO, ops | PASS | 2026-06-16 |
+| [nova](nova/theme.yaml) | Nova | Friendly vivid consumer / app-store hero | Mobile app, consumer SaaS, utility tool, productivity, health, edtech | CEO, ops | PASS | 2026-06-16 |
 
 ---
 
