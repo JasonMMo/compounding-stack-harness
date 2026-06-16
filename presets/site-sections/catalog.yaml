@@ -15,15 +15,43 @@ sections:
     label: "Hero Banner"
     copy_slots:
       required: [headline, subhead]
-      optional: [supporting_text]
+      optional: [supporting_text, badge]
     asset_slots: [bg_image]
     # glowy-waves: animated canvas hero with React island (framer-motion).
     # Required: headline, subhead, cta. Optional: pills (string[]), stats ({label,value}[]).
-    # brew: warm-organic hero — CSS grain noise + effervescence bubbles (harvest theme).
+    # brew: warm-organic hero -- CSS grain noise + effervescence bubbles (harvest theme).
     # No JS required. Reduced-motion safe (bubbles static). No dark canvas.
-    # headline-only: typographic display hero — no imagery, one massive heading,
+    # headline-only: typographic display hero -- no imagery, one massive heading,
     #   one sub-line, one CTA. Type IS the design. A2 archetype (creative agency/portfolio).
-    variants: [centered, split-left, split-right, fullscreen-video, glowy-waves, brew, headline-only]
+    # bento-grid: light canvas hero (A7 API Platform). Text left (7-col), bento stat+proof
+    #   cluster right (5-col). Zero image assets. bento_items[] carries exactly 2 entries:
+    #   type:"stat" (primary metric, progress bar, mini-stats, status tags) and
+    #   type:"marquee" (compact trusted-by wordmark card). cta_secondary optional.
+    #   All content SSR-visible without JS (Growth-69). Marquee wordmarks in static DOM.
+    variants: [centered, split-left, split-right, fullscreen-video, glowy-waves, brew, headline-only, bento-grid]
+    # item_slots: bento-grid variant introduces bento_items[] in the section data.
+    # These are variant-scoped (not used by other hero variants).
+    # Schema: stat card requires primary_value + primary_label + progress_label + progress_value.
+    #         marquee card requires eyebrow + companies[].
+    # Validation is variant_overrides-scoped -- site_manifest.py skips item_slots for
+    # non-bento-grid hero variants (item_slots key absent at catalog top level for hero).
+    # bento_items[] is passed through site_manifest.py as-is (key: bento_items).
+    item_slots:
+      required: []
+      optional: [primary_value, primary_label, progress_label, progress_value, eyebrow, companies]
+    # variant_overrides (CDO spec §3): bento-grid introduces bento_items[] and
+    #   cta_secondary; badge copy slot becomes optional for this variant.
+    #   copy_optional: badge is additive -- it is already in copy_slots.optional above,
+    #   so this variant_override entry documents the bento-grid-specific schema extension.
+    variant_overrides:
+      bento-grid:
+        copy_optional: [badge, supporting_text]
+        item_slots:
+          stat_card:
+            required: [primary_value, primary_label, progress_label, progress_value]
+            optional: [icon_label, mini_stats, tags]
+          marquee_card:
+            required: [eyebrow, companies]
 
   logos:
     label: "Logo Bar / Social Proof"
@@ -211,4 +239,16 @@ sections:
       required: [brand_name]
       optional: [tagline, legal_notice]
     asset_slots: [logo]
+    # item_slots: full-links variant accepts link columns via items[].
+    # Each item is a column: { heading (required), links (required, array of {label, href}) }.
+    # If items[] is absent or empty, Footer.astro falls back to hardcoded Product/Support defaults.
+    # Guard: columns with zero links are not rendered (empty-column bug prevention, FIX-B).
+    # Other variants (minimal, newsletter) ignore items[].
+    item_slots:
+      required: [heading, links]
+      optional: []
     variants: [minimal, full-links, newsletter]
+    # variant_overrides: item_slots only apply to full-links; other variants make items optional.
+    variant_overrides:
+      minimal:    { item_optional: [heading, links] }
+      newsletter: { item_optional: [heading, links] }
