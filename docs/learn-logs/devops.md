@@ -28,6 +28,7 @@
 | preview VPS (187.77.140.157, 싱가포르) | 2026-06-11 | provision (1차) | live — 접속·하드닝 일부 | KVM 2 \$8.99/월 가동 |
 | preview VPS — TLS 파이프라인 | 2026-06-11 | provision (2차) | **검증 PASS** — `<slug>.n9n.co.kr` 자동 HTTPS | LE 무료 |
 | preview VPS — CI/CD (Coolify API) | 2026-06-11 | deploy (스모크) | **검증 PASS** — API 로 프로젝트→앱→배포→외부 HTTPS 200, 정리 후 잔여 0 | LLM 0, infra 0 (기존 VPS) |
+| lumi.n9n.co.kr (Growth-83) | 2026-06-16 | deploy (A5 Mobile App, nova 테마) | **검증 PASS** — build finished, HTTPS 200, "Build better days" 서빙 확인. portal 8번째 카드 반영 | $0 (shared VPS) |
 | preview VPS — 8000 노출 차단 | 2026-06-11 | harden (3차) | **검증 PASS** — 클라우드 방화벽 allow-list, 8000/8080/6001/6002 외부 차단 실측, 22/80/443 유지. CISO 잔여 0 | $0 |
 | 로컬 (preview 패키징) | 2026-06-11 | package (scaffold 결선) | **검증 PASS** — profile→2-container compose, lawfirm-demo /login·/health 200, manifest 14 entities. Coolify 배포는 Phase 2 | $0 |
 | lawfirm-demo.n9n.co.kr (Coolify Phase 2) | 2026-06-11 | deploy (첫 영속 preview) | **검증 PASS** — build_pack=dockercompose, LE TLS 자동, /login 200, /login HTML 정상. 앱 UUID opryb94j9k5cjdv8bienenv0 | LLM ~$0.5, infra $0 (기존 VPS) |
@@ -217,3 +218,12 @@
 - **함정 (Growth-75 ② 후속, 악화)**: 8000 좀비소켓이 이번엔 **프로세스 자체 소멸**(PID 6356 존재하지 않으나 소켓 Listen 유지 — 커널 레벨 누수, taskkill 대상 없음). 8000 회복 불가 → 8010 터널만 정상(API `/version`→200, 8000→http=000). deploy_static_site.py가 `API_BASE=localhost:8000` 하드코딩이라 **임시로 8010 패치 후 실행, 완료 즉시 `git checkout`으로 복구**(커밋 오염 0).
 - **함정 (신규)**: 백그라운드 빌드 에이전트가 종료 후 **세션 cwd를 frontend/adapters/landing-astro에 고정** → 상대경로 PreToolUse/PostToolUse 훅(`scripts/hooks/*.py`)이 FileNotFound로 깨짐. `Set-Location <repo-root>`로 복구.
 - **교훈**: ① 좀비 소켓은 PID 부재 시 OS 재부팅 외 회복 불가 — 폴백 포트 상시 준비. ② 하드코딩 엔드포인트는 env-var 화(`COOLIFY_API_BASE`)가 운영 유연성 — deploy 스크립트 API_BASE 후보(open loop). ③ 백그라운드 에이전트 후엔 세션 cwd를 명시 복구.
+
+### Growth-83 (2026-06-16) — lumi 배포 + 포털 8번째 카드 (A5 Mobile App, 8번째 라이브 데모)
+
+- **배포**: lumi.n9n.co.kr (Coolify project=x7be9f2b7nr1zhykxubn6wwt, app=j10swdnw5tyndidudjnsr04r, nova 테마, PROFILE_SLUG=mobile-demo, DEMO_MODE=1). `deploy_static_site.py --slug lumi --domain https://lumi.n9n.co.kr --compose /deploy/preview/lumi.compose.yml --service web`. status=finished, HTTPS 200. **서빙 마크업 검증**: "Lumi — Build better days, one habit at a time" 타이틀, nova/mobile 키워드 전부 present.
+- **포털 재배포** (Growth-78/82 패턴 재사용): `deploy_static_site.py --slug landing-portal --service portal` 명시 재배포 → landing.n9n.co.kr 200, 8개 데모 href 전부 present (lumi.n9n.co.kr 신규 8번째 확인).
+- **레지스트리**: `infra/registry/lumi.yaml` (status=live, project/app UUID, theme=nova, archetype=A5, profile_slug=mobile-demo 기록). 커밋 `0fa3fb0`.
+- **터널**: Growth-81 detached Start-Process SSH 터널(ServerAliveInterval=30) 안정 유지 — 재드롭 0.
+- **신규 함정 0건**: Growth-82(summit-horizon A3) 동일 경로 재사용, 트랩 없음.
+- **교훈 (1줄)**: A5 Mobile App archetype이 같은 deploy_static_site.py 레인으로 무수정 배포됨 — slug(lumi)/PROFILE_SLUG(mobile-demo) 분리 패턴(Growth-82 선례)이 안정적으로 재현됨.
