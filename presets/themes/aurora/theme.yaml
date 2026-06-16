@@ -31,7 +31,7 @@ color:
 
 # ── Typography ─────────────────────────────────────────────────────────────────
 font:
-  family-display: "'Bricolage Grotesque Variable', 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, sans-serif"
+  family-display: "'Bricolage Grotesque Variable', 'Bricolage Grotesque', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
   family-body: "'Epilogue Variable', 'Epilogue', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
   # Landing-scale extensions
   size-5xl: "48px"
