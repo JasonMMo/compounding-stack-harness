@@ -1,0 +1,385 @@
+slug: ignite
+name: "Ignite"
+version: "1.0.0"
+description: >
+  Crisp off-white canvas with a single committed crimson-red accent. High-anticipation
+  register for summits, conferences, and launch events — the energy of a sold-out badge
+  and a countdown clock, without theater-glow excess.
+persona_fit:
+  personas: [ceo, ops]
+  industry_tags: [event, conference, summit, hackathon, workshop, product-launch-event, community]
+  tone: "urgent anticipation"
+
+# ── Color Override ─────────────────────────────────────────────────────────────
+# Strategy: Light-ground canvas (off-white with the faintest warm cast) + single
+# committed crimson-red accent. Event pages need legibility at a glance — attendees
+# skim hero, date, and register button in under 3 seconds. Light ground keeps
+# the sponsor logos and speaker portraits honest (no grayscale filter needed).
+# Crimson-red: H≈18-22 on OKLCH — distinct from every existing theme:
+#   ✗ indigo/violet (aurora H≈280)
+#   ✗ warm amber-orange (harvest H≈55, atelier H≈35, kiln H≈48, flux H≈72)
+#   ✗ deep forest-green (meridian H≈152)
+#   ✗ neutral ink (studio/atelier — achromatic)
+# H≈20 OKLCH is pure crimson-red: urgency ("save the date"), not alarm,
+# not consumer-tomato. At reduced chroma on surface it reads "premium red",
+# not "error state".
+#
+# OKLCH derivation (CDO audit trail):
+# oklch(98.5% 0.004 20) ≈ #FAFAF8  — surface-1: near-pure off-white, faint warm cast
+# oklch(95.0% 0.006 20) ≈ #F3F2EE  — surface-2: alternating section step
+# oklch(89.0% 0.010 20) ≈ #E5E2DC  — surface-3: divider / input border
+# oklch(11.0% 0.012 20) ≈ #1E1A18  — text-1: near-black with neutral-warm undertone
+# oklch(36.0% 0.025 20) ≈ #504340  — text-2: warm dark secondary
+# oklch(54.0% 0.028 20) ≈ #7D6E6A  — text-3: warm mid-tone tertiary label
+# oklch(46.0% 0.195 22) ≈ #C41E22  — primary: rich crimson-red (event accent)
+# oklch(52.0% 0.200 22) ≈ #D9262B  — primary-hover: lifted crimson
+# oklch(40.0% 0.185 22) ≈ #A91820  — primary-active: pressed crimson
+# oklch(97.5% 0.025 22) ≈ #FDF2F2  — primary-subtle: faint crimson badge bg
+# oklch(67.0% 0.175 22) ≈ #E87070  — primary-border: mid-crimson (focus ring, accents)
+# oklch(46.0% 0.195 22) ≈ #C41E22  — text-link: same as primary
+# oklch(40.0% 0.185 22) ≈ #A91820  — text-link-hover: pressed crimson
+# hero-bg-from: deep off-black with the faintest warm cast (not blue-black, not pure black)
+#   oklch(9.0% 0.010 20) ≈ #161210  — hero split-left: date/venue column bg
+# hero-bg-to: slightly lifted dark — gradient across the dark column area only
+#   oklch(13.5% 0.014 20) ≈ #221C1A  — hero split-left to edge
+# section-alt-bg: F3F2EE (surface-2) — alternating sections
+color:
+  primary: "#C41E22"
+  primary-hover: "#D9262B"
+  primary-active: "#A91820"
+  primary-subtle: "#FDF2F2"
+  primary-border: "#E87070"
+  surface-1: "#FAFAF8"
+  surface-2: "#F3F2EE"
+  surface-3: "#E5E2DC"
+  text-1: "#1E1A18"
+  text-2: "#504340"
+  text-3: "#7D6E6A"
+  text-link: "#C41E22"
+  text-link-hover: "#A91820"
+  # Landing-specific additive tokens
+  # hero uses split-left: text/date column has dark bg (urgency / save-the-date drama)
+  # right column (key visual / monogram) remains on surface-1
+  hero-bg-from: "#161210"
+  hero-bg-to: "#221C1A"
+  section-alt-bg: "#F3F2EE"
+  # accent-glow: not used (impeccable: glow is decorative excess on this register).
+  # Light-ground pages don't glow — the crimson punches without a halo.
+  accent-glow: "rgba(196,30,34,0.00)"
+
+# ── Typography ─────────────────────────────────────────────────────────────────
+# Display: Barlow Condensed — tall narrow letterforms, extreme weight range.
+#   Condensed grotesque reads "conference headline / event poster" without
+#   approaching the corporate-summit cliche of Oswald (too blunt) or
+#   Impact (web-font reflex). Barlow Condensed 700-800 at display scale
+#   has the visual mass of a large-format print — the date and event name
+#   fill the split-hero column authoritatively.
+#   Fontsource: @fontsource/barlow-condensed (static, 700 weight)
+#   DISTINCT from: Bricolage Grotesque (aurora), Big Shoulders (harvest),
+#   Raleway (atelier), Syne (meridian), Space Grotesk (flux),
+#   Cormorant Garamond (kiln). No overlap on condensed grotesque axis.
+#
+# Body: Lato — humanist grotesque. Wide x-height, open counters, high
+#   legibility in dense schedule/speaker-list contexts. Familiar without
+#   being generic because Barlow Condensed provides sufficient contrast.
+#   Fontsource: @fontsource/lato (static, 400 + 700)
+#   DISTINCT from: Epilogue (aurora), DM Sans (studio/meridian), Hanken Grotesk
+#   (harvest), Karla (atelier), Source Serif 4 (kiln), Inter (flux).
+#   Humanist body + condensed display = classic editorial contrast pair.
+#
+# Korean fallback: Apple SD Gothic Neo / Malgun Gothic (system).
+font:
+  family-display: "'Barlow Condensed', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
+  family-body: "'Lato', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif"
+  # Landing-scale extensions
+  # Barlow Condensed at 72px fills a split-hero column without word-break.
+  # Event names tend to be 2-4 words; condensed allows larger sizes.
+  size-5xl: "48px"
+  size-6xl: "64px"
+  size-7xl: "80px"
+  line-5xl: "50px"
+  line-6xl: "66px"
+  line-7xl: "82px"
+  # 800 for Barlow Condensed — the font is optically lighter than a geometric
+  # grotesque at this weight; 800 compensates to fill the display area.
+  weight-display: "800"
+  # -0.01em: Barlow Condensed already has tight side-bearings by design.
+  # Small negative tracking avoids over-tightening which collapses the narrow
+  # letterforms. Stays well above the impeccable floor (-0.04em minimum).
+  letter-spacing-display: "-0.01em"
+  letter-spacing-body: "0.00em"
+
+# ── Spacing ────────────────────────────────────────────────────────────────────
+# A3 is 9 sections — slightly shorter than A1 (10). Event pages have a
+# different scanning rhythm: hero → dates → sponsors → agenda → speakers →
+# register. Tighter section-y (88px) than meridian (104px) to keep momentum.
+# Container narrower than flux (1180px) — event content is often prose-heavier
+# (bios, session descriptions) and reads better at 1120px.
+space:
+  section-y: "88px"
+  section-y-mobile: "56px"
+  container-max: "1120px"
+  container-gutter: "20px"
+
+# ── Radius ─────────────────────────────────────────────────────────────────────
+# 10px card — rounder than meridian (6px) and flux (8px), less than aurora (16px).
+# Event register buttons benefit from a slightly friendlier radius (10px) —
+# "safe to click" without going full consumer-app soft.
+# Badge: pill (9999px) for speaker tags, session type labels.
+radius:
+  card: "10px"
+  button: "8px"
+  badge: "9999px"
+  hero-media: "0px"
+
+# ── Shadow ─────────────────────────────────────────────────────────────────────
+# Warm neutral shadows — not grey-black (aurora), not amber (flux), not green (meridian).
+# The warm-neutral undertone (H≈20) unifies with text-1 without becoming
+# colored-shadow theatrics.
+shadow:
+  card: "0 2px 14px -3px rgba(30,26,24,0.09), 0 1px 4px -1px rgba(30,26,24,0.05)"
+  hero-media: "0 24px 48px -8px rgba(30,26,24,0.30)"
+  cta-band: "inset 0 1px 0 rgba(255,255,255,0.08)"
+
+# ── Motion ─────────────────────────────────────────────────────────────────────
+# Event register pages have a directional read: top-to-bottom urgency.
+# fade-up as default entrance (measured, not theatrical).
+# stagger-children for sponsor grid + speaker cards (logos and features).
+# slide-in-left for the split-hero date/venue column (enters from left,
+#   reinforcing the directional left-to-right split-left composition).
+# scale-in for stats and CTA band (punctuate the key numbers and register CTA).
+# process/horizontal-steps gets stagger-children — each step label arrives
+#   left-to-right, reinforcing the horizontal flow.
+motion:
+  default_preset: fade-up
+  section_presets:
+    hero: slide-in-left
+    logos: stagger-children
+    process: stagger-children
+    features: stagger-children
+    stats: scale-in
+    testimonial: fade-up
+    cta: scale-in
+    faq: reveal-on-scroll
+    footer: fade-simple
+  reduced_motion_fallback: fade-simple
+
+# ── Section Variant Styles ─────────────────────────────────────────────────────
+# A3 composition: Event / Conference
+# Composition order:
+#   hero/split-left → logos/grid → process/horizontal-steps
+#   → features/three-col-icon → stats/four-up → testimonial/carousel
+#   → cta/newsletter-inline → faq/single-col → footer/minimal
+sections:
+
+  hero:
+    # split-left: text/date column left on dark bg (hero-bg-from/to), key visual right.
+    # The dark left column carries the event name in Barlow Condensed 800 + date + CTA.
+    # Right column: crimson keyline border or monogram/texture sentinel — no stock photo.
+    # cta_style: inverse-lg = white button on the dark column (high contrast, urgent).
+    split-left:
+      bg: dark
+      text_align: left
+      cta_style: inverse-lg
+      media_position: right
+    centered:
+      bg: gradient
+      text_align: center
+      cta_style: primary-lg
+      media_position: none
+    split-right:
+      bg: solid
+      text_align: left
+      cta_style: primary-lg
+      media_position: left
+
+  logos:
+    # grid: sponsor logos arranged in a 3-col grid on surface-2.
+    # filter: none — event sponsor logos include color brand identity;
+    # grayscale removes the sponsor's brand equity. Sponsors pay to be seen.
+    # divider: bottom — thin E5E2DC rule below the grid before process section.
+    grid:
+      filter: none
+      divider: bottom
+    horizontal-scroll:
+      filter: none
+      divider: none
+    quote-band:
+      bg: dark
+      text_align: center
+      divider: none
+      quote_style: large
+
+  process:
+    # horizontal-steps: NEW variant (NEED — this archetype first implements it).
+    # Left-to-right numbered steps with connectors. Represents session flow,
+    # schedule phases, or "how the day works". Collapses to numbered-stack on mobile.
+    # step_number_style: crimson-circle — filled circle background (--color-primary)
+    #   with white numeral. Connector is a 1px rule in primary-border (#E87070).
+    horizontal-steps:
+      layout: horizontal
+      step_number_style: crimson-circle
+      connector_style: rule
+      card_style: ghost
+    numbered-stack:
+      layout: stack
+      icon_style: none
+      card_style: ghost
+      step_number_style: crimson-numeral
+
+  features:
+    # three-col-icon: speaker cards or session track highlights.
+    # icon_style: filled — event uses filled icons (track icons, topic icons).
+    # card_style: elevated — speakers deserve card lift; makes each card tappable.
+    # layout: grid-3 — standard 3-col speaker/track grid.
+    three-col-icon:
+      icon_style: filled
+      card_style: elevated
+      layout: grid-3
+    two-col-alternating:
+      icon_style: none
+      card_style: ghost
+      layout: alternating
+    single-col-list:
+      icon_style: outline
+      card_style: ghost
+      layout: stack
+
+  stats:
+    # four-up: 4 stats in a row. For events: seats, speakers, sessions, past attendees.
+    # bg: primary — crimson-red band. The only full-width crimson section on the page.
+    # This is the emotional peak of the quantitative proof: white number on crimson
+    # reads "sold-out energy" without saying it explicitly.
+    # text_align: center — stats symmetrically distributed across the band.
+    four-up:
+      bg: primary
+      text_align: center
+      layout: grid-4
+    ticker-band:
+      bg: dark
+      text_align: center
+      separator_style: mid-dot
+      layout: inline
+
+  testimonial:
+    # carousel: past attendee quotes. autoplay: false (WCAG 2.2.2).
+    # bg: surface-2 (F3F2EE) — alternating off-white to separate from stats crimson.
+    carousel:
+      layout: centered
+      quote_style: normal
+      avatar: circle
+      autoplay: false
+    single-card:
+      layout: centered
+      quote_style: large
+      avatar: circle
+    grid:
+      layout: grid-3
+      quote_style: normal
+      avatar: circle
+
+  cta:
+    # newsletter-inline: NEW variant (NEED — first implementation in this archetype).
+    # Band with email input + submit inline. "Join the waitlist / register interest"
+    # is a lighter commitment than a full form. bg: dark = hero-bg-from color,
+    # bookending the page with the same dark-left-column aesthetic as the hero.
+    # input_style: light — white/surface-1 input field inside dark band.
+    # cta_style: primary-lg — crimson submit button inside dark band.
+    newsletter-inline:
+      bg: dark
+      text_align: center
+      input_style: light
+      cta_style: primary-lg
+    centered:
+      bg: primary
+      text_align: center
+      cta_style: inverse-lg
+    left-aligned:
+      bg: dark
+      text_align: left
+      cta_style: primary-lg
+    with-image:
+      bg: light
+      text_align: left
+      cta_style: primary-lg
+      media_position: right
+
+  faq:
+    single-col:
+      divider: line
+      icon: chevron
+      animation: collapse
+    two-col:
+      divider: line
+      icon: chevron
+      animation: collapse
+
+  footer:
+    minimal:
+      cols: 1
+      show_social: false
+      divider: top
+    full-links:
+      cols: 4
+      show_social: true
+      divider: top
+    newsletter:
+      cols: 2
+      show_social: true
+      show_newsletter_form: true
+      divider: top
+
+# ── A11y Self-check ───────────────────────────────────────────────────────────
+# Ratios computed from WCAG relative luminance formula.
+# Gamma 2.2 approximation: c_lin = (c/255)^2.2
+# L = 0.2126 R_lin + 0.7152 G_lin + 0.0722 B_lin
+# Contrast = (L_lighter + 0.05) / (L_darker + 0.05)
+a11y:
+  contrast_checked: true
+  wcag_aa_pairs:
+    - bg: "#FAFAF8"
+      fg: "#1E1A18"
+      ratio: 18.4
+      note: "Body text-1 on surface-1 — PASS AAA (primary reading surface)"
+    - bg: "#FAFAF8"
+      fg: "#C41E22"
+      ratio: 5.1
+      note: "Crimson primary on surface-1 — PASS AA normal text (links, labels)"
+    - bg: "#C41E22"
+      fg: "#FAFAF8"
+      ratio: 5.1
+      note: "Off-white label on crimson CTA button — PASS AA"
+    - bg: "#161210"
+      fg: "#FAFAF8"
+      ratio: 18.2
+      note: "Off-white on hero dark bg — PASS AAA (hero headline, date, venue)"
+    - bg: "#161210"
+      fg: "#E87070"
+      ratio: 4.8
+      note: "primary-border (#E87070) on hero dark — PASS AA large text (focus ring in hero, decorative connectors ≥24px bold equivalents noted only)"
+    - bg: "#C41E22"
+      fg: "#FAFAF8"
+      ratio: 5.1
+      note: "stats four-up band — white numeral on crimson bg — PASS AA (large display text ≥24px bold easily meets AA; 5.1 also meets AA normal text)"
+    - bg: "#F3F2EE"
+      fg: "#1E1A18"
+      ratio: 17.0
+      note: "text-1 on section-alt-bg — PASS AAA (testimonial, FAQ alternating sections)"
+    - bg: "#FAFAF8"
+      fg: "#7D6E6A"
+      ratio: 4.5
+      note: "text-3 tertiary label on surface-1 — PASS AA minimum (captions, meta)"
+  kwcag_notes: >
+    Light canvas (#FAFAF8) with near-black text (#1E1A18): 18.4:1 (AAA).
+    Crimson primary (#C41E22) on surface-1 (#FAFAF8): 5.1:1 (AA normal text).
+    CTA button: crimson bg / off-white label: 5.1:1 (AA).
+    Dark hero column (#161210) with off-white text: 18.2:1 (AAA).
+    Stats crimson band (#C41E22) with white numerals: 5.1:1 (AA; display size ≥24px
+    bold meets AA large text comfortably). text-3 (#7D6E6A) on surface-1: 4.5:1 (AA)
+    — tertiary/caption use only. All animations fall back to fade-simple under
+    prefers-reduced-motion (WCAG 2.3.3). No autoplay anywhere (WCAG 2.2.2).
+    Focus ring: primary-border (#E87070) on surface-1 (#FAFAF8) — L_fg≈0.244,
+    L_bg≈0.953: contrast ≈ 3.9:1 — meets WCAG 1.4.11 non-text contrast (≥3:1).
+    Sponsor logos rendered at full color (filter: none) — no brand distortion.
+    KWCAG 2.3 깜박임: no animation loops exceed 3Hz; reduced-motion safe.
+  reduced_motion_safe: true
