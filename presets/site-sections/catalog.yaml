@@ -76,6 +76,10 @@ sections:
     # Typographic — no card boxing. Distinct from carousel (one-at-a-time) and grid (equal cards).
     # A1 SaaS Product Launch archetype. No JS required. avatar: none by default.
     variants: [single-card, carousel, grid, pull-quote-wall]
+    # variant_overrides (Growth-83, closes P2): pull-quote-wall carries its quotes in items[],
+    #   so the section-level copy quote/author_name are redundant and become optional for it.
+    variant_overrides:
+      pull-quote-wall: { copy_optional: [quote, author_name] }
 
   faq:
     label: "FAQ Accordion"
@@ -91,8 +95,11 @@ sections:
     label: "Call-to-Action Band"
     copy_slots:
       required: [headline]
-      optional: [subhead, sub_copy, button_label, placeholder, legal_copy, demo_stub_message]
+      optional: [subhead, sub_copy, button_label, placeholder, legal_copy, demo_stub_message, secondary_label, secondary_href]
     asset_slots: []
+    # centered: primary cta (props.cta). Optional SECOND button via copy.secondary_label +
+    #   copy.secondary_href — renders a button pair (e.g. iOS / Android download). A5 Mobile App.
+    #   Text buttons, not trademarked store badges (photo-free + trademark-safe).
     # newsletter-inline: email input + submit inline in dark band. A3 Event archetype.
     # copy_slots for newsletter-inline: headline, sub_copy, button_label, placeholder,
     #   legal_copy, demo_stub_message. No asset_slots required.
@@ -120,6 +127,12 @@ sections:
     item_slots:
       required: [src, alt]
       optional: [caption, href, heading, subheading, body, cta_label, cta_href]
+    # variant_overrides: per-variant relaxation of normally-required slots (Growth-83, closes P2).
+    #   grid-2x2: src omitted → component renders a token-driven CSS app-screen mockup (photo-free).
+    #   parallax-scroll: src omitted → component renders a theme material-texture field.
+    variant_overrides:
+      grid-2x2:        { item_optional: [src] }
+      parallax-scroll: { item_optional: [src] }
     # masonry-3col: 3-column CSS masonry of images; heights vary by image AR.
     # full-bleed-strip: single decisive image fills full viewport width, tall aspect.
     # grid-2x2: 2x2 product screenshot grid with optional per-cell caption.
