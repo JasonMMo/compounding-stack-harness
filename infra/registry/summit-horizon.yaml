@@ -12,10 +12,10 @@ contact:
   handle: "compounding-stack (own demo asset)"
 preview:
   subdomain: summit-horizon.n9n.co.kr
-  coolify_project: null                 # filled at deploy time
-  coolify_app: null                     # filled at deploy time
-  status: pending                       # -> live after Coolify deploy
-  deployed_at: null
+  coolify_project: k105u8soe4fergofhdje2nkt
+  coolify_app: jvo3hnfmf2bv8ce10mcj96l0
+  status: live
+  deployed_at: "2026-06-16"
   deliverable_kind: marketing-site      # static SSG (no backend) — deploy_static_site.py lane
   theme: ignite
   archetype: A3                         # Event / Conference (landing-pattern-matrix)
