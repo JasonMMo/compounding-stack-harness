@@ -22,14 +22,18 @@ interface StyleHints {
   quote_style?: string
 }
 
+// companies[] items may be plain strings (flux/horizontal-scroll) or
+// objects with {name, tier} (event-demo/grid with sponsor tiers).
+type CompanyItem = string | { name: string; tier?: string }
+
 interface Props {
   copy: Record<string, string>
   assets?: string[]
   variant?: string
   styleHints?: StyleHints
   motionPreset?: string
-  /** Optional company name list for asset-free wordmark rendering (horizontal-scroll). */
-  companies?: string[]
+  /** Optional company list for asset-free wordmark rendering. Accepts string[] or {name,tier?}[]. */
+  companies?: CompanyItem[]
 }
 
 const {
@@ -40,6 +44,12 @@ const {
   motionPreset = 'stagger-children',
   companies = [],
 } = Astro.props
+
+// Normalize company items to {name, tier} shape regardless of input.
+// Preserves backward-compat with flux-demo which passes plain string[].
+const normalizedCompanies = companies.map((c) =>
+  typeof c === 'string' ? { name: c, tier: undefined } : c
+)
 
 const filter = styleHints.filter ?? 'grayscale'
 const divider = styleHints.divider ?? 'none'
@@ -142,24 +152,32 @@ const dividerClass: Record<string, string> = {
               loading="lazy"
             />
           ))}
-          {/* No assets + companies list: render text wordmarks (zero-file, stock-asset-free) */}
-          {assets.length === 0 && companies.length > 0 && companies.map((name) => (
+          {/* No assets + companies: text wordmarks (zero-file, stock-asset-free).
+              Normalized from string | {name,tier} — backward-compat with flux string[]. */}
+          {assets.length === 0 && normalizedCompanies.length > 0 && normalizedCompanies.map((c) => (
             <span
               class="text-sm font-semibold tracking-[0.04em] uppercase opacity-50 select-none"
               style="font-family: var(--font-family-display, inherit); color: var(--color-text-2);"
-              aria-label={name}
+              aria-label={c.name}
             >
-              {name}
+              {c.name}
             </span>
           ))}
-          {/* No assets, no companies: generic placeholder (keeps section non-empty) */}
-          {assets.length === 0 && companies.length === 0 && (
+          {/* No assets, no companies: generic placeholder */}
+          {assets.length === 0 && normalizedCompanies.length === 0 && (
             <p class="text-[var(--color-text-3,#6B7280)] italic text-sm">Logo assets not yet added.</p>
           )}
         </div>
       ) : (
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
-          {assets.map((src) => (
+        /*
+         * grid variant: sponsor/partner logos in a responsive grid.
+         * Priority: assets[] images → normalizedCompanies[] wordmarks → placeholder.
+         * filter: none for event sponsors (CDO: sponsor color identity preserved).
+         * Tier hierarchy (event-demo): gold (larger/full-opacity) > silver > community.
+         * No JS required — Growth-69 invariant.
+         */
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-6 items-center justify-items-center">
+          {assets.length > 0 && assets.map((src) => (
             <img
               src={src}
               alt="Partner logo"
@@ -167,7 +185,30 @@ const dividerClass: Record<string, string> = {
               loading="lazy"
             />
           ))}
-          {assets.length === 0 && (
+          {/* Wordmark grid: assets absent, companies present.
+              Tier-aware sizing: gold=full opacity/weight, silver=80%, community=60%+small. */}
+          {assets.length === 0 && normalizedCompanies.length > 0 && normalizedCompanies.map((c) => {
+            const tier = c.tier ?? 'default'
+            const tierStyle =
+              tier === 'gold'
+                ? 'font-size:15px;font-weight:700;opacity:1.0;letter-spacing:0.05em;'
+                : tier === 'silver'
+                  ? 'font-size:13px;font-weight:600;opacity:0.80;letter-spacing:0.05em;'
+                  : tier === 'community'
+                    ? 'font-size:12px;font-weight:500;opacity:0.60;letter-spacing:0.04em;'
+                    : 'font-size:13px;font-weight:600;opacity:0.70;letter-spacing:0.05em;'
+            return (
+              <span
+                class="uppercase select-none text-center"
+                style={`font-family:var(--font-family-display,inherit);color:var(--color-text-1);${tierStyle}`}
+                aria-label={c.name}
+              >
+                {c.name}
+              </span>
+            )
+          })}
+          {/* No assets, no companies: placeholder */}
+          {assets.length === 0 && normalizedCompanies.length === 0 && (
             <p class="col-span-full text-[var(--color-text-3,#6B7280)] italic text-sm text-center">Logo assets not yet added.</p>
           )}
         </div>
