@@ -1,0 +1,192 @@
+# profiles/mobile-demo.yaml — A5 Mobile App demo (nova theme)
+# Archetype: Lumi — a consumer habits & focus mobile app landing page.
+# Demonstrates the full A5 composition:
+#   hero/split-right (phone-mockup register) · logos/marquee-3d (proof wall) ·
+#   features/carousel (swipeable) · gallery/grid-2x2 (4 app-screen MOCKUPS — photo-free,
+#   src omitted → token-driven CSS app-screen mockups) · stats/four-up ·
+#   testimonial/grid (app-store review aesthetic) · cta/centered (download button pair) · footer/minimal
+# Stock photos: 0 — gallery uses CSS app-screen mockups (no fabricated screenshots),
+#   marquee-3d reuses the harness's own /proof/*.jpg with self-aware framing
+#   (this landing page is itself a harness deliverable — same honesty as gtm-landing).
+# 8th marketing-site theme (nova: violet-magenta #8B2BE2 on white, Plus Jakarta Sans + Nunito).
+# deliverable_kind=marketing-site → bypasses entity/DDL; site: block drives output. Growth-83.
+
+version: 1
+
+customer:
+  slug: mobile-demo
+  display: "Lumi — Mobile App Demo"
+  status: active
+  contact: hello@lumi.app
+  industry: consumer-app
+
+# ── Pluggable Stack ──────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# ── Site Block (marketing-site schema) ──────────────────────────────────────
+site:
+  theme: nova
+
+  pages:
+    - slug: home
+      title: "Lumi — Build better days, one habit at a time"
+      seo:
+        title: "Lumi — Build better days, one habit at a time"
+        description: "Lumi is the gentle habit & focus app that adapts to your life. Track habits, protect your focus time, and see how small days compound. Free on iPhone and Android."
+        og_image: ""
+      sections:
+
+        # ── 1. hero/split-right ─────────────────────────────────────────────
+        # Phone-first split: text left, app-screen mockup register right.
+        # visual_sentinel keeps it photo-free (no fabricated device photo).
+        - type: hero
+          variant: split-right
+          copy:
+            headline: "Build better days, one habit at a time."
+            subhead: "Lumi is the gentle habit & focus companion that adapts to your life — not the other way around."
+            supporting_text: "Free on iPhone and Android. No account required to start."
+          cta:
+            label: "Get Lumi free"
+            href: "#download"
+          visual_sentinel: "monogram-Lu"
+
+        # ── 2. logos/marquee-3d — Proof wall ────────────────────────────────
+        # Self-aware framing: this landing page IS a harness deliverable, and the
+        # proof wall shows other systems the same harness generated (honest, photo-free).
+        - type: logos
+          variant: marquee-3d
+          copy:
+            eyebrow: "Built on the compounding-stack harness"
+            heading: "This whole page was generated"
+            subhead: "Lumi's landing — and every system below — was produced by the compounding-stack harness. Real output, not mockups."
+          images:
+            - /proof/shop-demo.jpg
+            - /proof/lawfirm-demo.jpg
+            - /proof/construction-demo.jpg
+            - /proof/distribution-demo.jpg
+            - /proof/itservice-demo.jpg
+            - /proof/logistics-demo.jpg
+            - /proof/trading-demo.jpg
+            - /proof/edu-program.jpg
+            - /proof/example-corp.jpg
+            - /proof/landing.jpg
+            - /proof/gtm-landing.jpg
+            - /proof/intake.jpg
+
+        # ── 3. features/carousel — Swipeable feature reel ───────────────────
+        # Mirrors mobile gesture vocabulary. items[] use icon + description (no image → icon register).
+        - type: features
+          variant: carousel
+          copy:
+            headline: "Designed for how you actually live"
+            subhead: "Three ideas at the heart of Lumi — swipe through."
+          items:
+            - title: "Habits that bend, not break"
+              icon: "repeat"
+              description: "Miss a day? Lumi adjusts your streak math so one off-day never wipes out a month of progress. Consistency over perfection."
+            - title: "Focus time, protected"
+              icon: "focus"
+              description: "Start a focus session and Lumi quietly mutes the noise. When you finish, it logs the deep-work minutes against your goals automatically."
+            - title: "Small days compound"
+              icon: "trending-up"
+              description: "Lumi shows you the long arc — how five honest minutes a day stack into something you can actually see after a month."
+
+        # ── 4. gallery/grid-2x2 — App screens (CSS mockups, photo-free) ─────
+        # src OMITTED on every item → Gallery.astro grid-2x2 renders token-driven
+        # CSS app-screen mockups inside phone frames (same photo-free discipline as
+        # parallax-scroll's material-texture fallback). caption = the screen name.
+        - type: gallery
+          variant: grid-2x2
+          copy:
+            headline: "Four taps from your whole day"
+            subhead: "A look at the screens you'll live in."
+          items:
+            - alt: "Lumi Today screen — your habits for the day in a scrollable feed"
+              caption: "Today"
+            - alt: "Lumi Insights screen — charts of streaks and focus minutes over time"
+              caption: "Insights"
+            - alt: "Lumi Focus screen — an active focus session with a calm timer"
+              caption: "Focus"
+            - alt: "Lumi Profile screen — your goals, badges, and settings"
+              caption: "Profile"
+
+        # ── 5. stats/four-up — App metrics ──────────────────────────────────
+        - type: stats
+          variant: four-up
+          items:
+            - value: "250K+"
+              label: "Downloads"
+            - value: "4.8★"
+              label: "App Store rating"
+            - value: "92%"
+              label: "Day-7 retention"
+            - value: "40+"
+              label: "Countries"
+
+        # ── 6. testimonial/grid — App-store review aesthetic ────────────────
+        # grid variant = equal cards (review-grid look). Avatar: initials fallback.
+        - type: testimonial
+          variant: grid
+          copy:
+            quote: "The first habit app that didn't make me feel guilty for being human."
+            author_name: "Renee A."
+          items:
+            - quote: "The first habit app that didn't make me feel guilty for being human. The streak math is genius."
+              author_name: "Renee A."
+              author_title: "★★★★★ · App Store"
+              avatar: "RA"
+            - quote: "Focus mode alone is worth it. I've reclaimed maybe an hour a day I used to lose to my phone."
+              author_name: "Marcus T."
+              author_title: "★★★★★ · Google Play"
+              avatar: "MT"
+            - quote: "Beautiful, fast, and it never nags. Lumi just quietly helps. Been using it daily for four months."
+              author_name: "Priya N."
+              author_title: "★★★★★ · App Store"
+              avatar: "PN"
+            - quote: "Switched from a paid competitor. Lumi does more, costs nothing, and respects my data."
+              author_name: "Joon-ho K."
+              author_title: "★★★★★ · Google Play"
+              avatar: "JK"
+            - quote: "The insights screen actually changed my behaviour. Seeing the compound curve is motivating."
+              author_name: "Sara L."
+              author_title: "★★★★★ · App Store"
+              avatar: "SL"
+            - quote: "Minimal, kind, and genuinely useful. Rare combination. My whole study group uses it now."
+              author_name: "Diego R."
+              author_title: "★★★★★ · Google Play"
+              avatar: "DR"
+
+        # ── 7. cta/centered — Download button pair ──────────────────────────
+        # Primary cta (iOS) + secondary button (Android) via copy.secondary_*.
+        # Text buttons, not trademarked store badges (photo-free + trademark-safe).
+        - type: cta
+          variant: centered
+          copy:
+            headline: "Your better days start today."
+            subhead: "Download Lumi free. No account needed to begin — just open it and start."
+            secondary_label: "Download for Android"
+            secondary_href: "#android"
+          cta:
+            label: "Download for iPhone"
+            href: "#ios"
+
+        # ── 8. footer/minimal ────────────────────────────────────────────────
+        - type: footer
+          variant: minimal
+          copy:
+            brand_name: "Lumi"
+            legal_notice: "© 2026 Lumi Labs Inc."
+            tagline: "hello@lumi.app"
+
+# ── Defaults ────────────────────────────────────────────────────────────────
+defaults:
+  locale: en-US
+  timezone: Asia/Seoul
+
+# ── Cost tracking ────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 0        # static SSG landing — no runtime LLM
+  prepaid_credits_usd: 0
