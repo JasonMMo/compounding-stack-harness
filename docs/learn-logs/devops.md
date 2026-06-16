@@ -179,6 +179,15 @@
 - **함정 ② SSH 터널 드롭 + 좀비 소켓**: 대량 배포/폴링 중 `localhost:8000` 터널 드롭. 재수립 시 죽은 PID가 8000을 Listen 점유("Address already in use", taskkill 불가 — OS 지연 해제). 해소: **다른 로컬 포트로 재수립**(`-L 8010:localhost:8000`) 후 직접 API 호출로 진행(deploy_static_site.py는 8000 하드코딩이라 우회).
 - **교훈**: API 자동화 장시간 작업은 터널 안정성(ServerAliveInterval)과 포트 재사용 실패를 전제로 폴백 포트를 준비하라.
 
+### Growth-81 (2026-06-16) — flux 배포 + 포털 6번째 카드 (A1 FLUX, 6번째 라이브 데모, Growth-80 P0 종결)
+
+- **배포**: flux.n9n.co.kr (Coolify project=jq25nyzfirch3flp7no2wg3u, app=oyemv0mttkn8eo05xflvc4x2, flux 테마, DEMO_MODE=1). `deploy_static_site.py --slug flux --domain https://flux.n9n.co.kr --compose /deploy/preview/flux.compose.yml --service web`. status=finished, HTTPS 200. **서빙 마크업 검증**(공개 HTTPS, 터널 무관): stats/bento/pull-quote 섹션 전부 present + aurora 누수 0 — 스테일 빌드 아님 확인.
+- **포털 재배포**(Growth-78 교훈 적용): ⚡ SaaS 카드 추가 커밋·push 후 `deploy_static_site.py --slug landing-portal --service portal` 명시 재배포 → landing.n9n.co.kr 200, flux 카드·기존 meridian 카드 동시 present 확인.
+- **레지스트리**: `infra/registry/flux.yaml` (status=live, project/app UUID·theme=flux·archetype=A1 기록).
+- **함정 ① 터널 SIGHUP 드롭**: `ssh -fN` 를 툴 백그라운드로 띄우면 태스크 reaping 시 SIGHUP 으로 소멸 → 후속 배포가 `tunnel check failed: timed out`. 해소: PowerShell `Start-Process -WindowStyle Hidden -FilePath ssh -ArgumentList ... -N -L 8000:localhost:8000` + `ServerAliveInterval=30 ExitOnForwardFailure=yes` 로 셸 세션과 분리 기동(Growth-76/77 좀비소켓 계열 후속 — 이번엔 소켓 점유가 아니라 부모 셸 SIGHUP 이 원인). FLUX 라이브 검증 자체는 공개 HTTPS 라 터널 무관.
+- **함정 ② 스테일 테스트 동반 픽스**: Growth-80 이 stats(14번째 타입) 추가했으나 풀테스트가 13 을 단언(`test_catalog_has_..._thirteen_total`) → 배포 전 풀테스트 1 FAIL. 14 로 동기화 후 배포(빌드 산출이 단언보다 앞서면 같은 작업에서 테스트 갱신).
+- **교훈 (1줄)**: 장시간 API 자동화의 터널은 부모 셸과 **프로세스 분리 기동**(Start-Process detached + ServerAlive)으로 SIGHUP 드롭을 차단 — `ssh -fN` 백그라운드는 툴 reaping 에 취약.
+
 ### Growth-78 (2026-06-16) — meridian 배포 + 포털 재배포 (A6 MERIDIAN, 5번째 라이브 데모)
 
 - **배포**: meridian.n9n.co.kr (Coolify project=jrum1rdwq1oa53bmsb6awhvr, app=b17ccvgfsqqhieucir9ymbnu, meridian 테마, DEMO_MODE=1). `deploy_static_site.py --slug meridian --domain https://meridian.n9n.co.kr --compose /deploy/preview/meridian.compose.yml --service web` (COOLIFY_API_BASE=8010, MSYS_NO_PATHCONV=1). status=finished, HTTPS 200, 콘텐츠+forest 토큰(#1A5C3A) 검증 PASS.
