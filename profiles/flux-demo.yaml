@@ -92,21 +92,73 @@ site:
             - title: "One-line deployment — your infra or ours"
               description: "Docker Compose for air-gapped data centres. Managed cloud for teams who want SLAs without the ops overhead. Both run the same binary; your data stays where you put it."
 
-        # ── 4. process/numbered-stack ───────────────────────────────────────
+        # ── 4. process/split-animation ──────────────────────────────────────
+        # Growth-85: split-animation variant (CDO 중화 구현).
+        # 2-column split — sticky headline+step-num left, task-tree cards right.
+        # SSR fallback: all subtasks expanded without JS (Growth-69 invariant).
+        # status: completed | active | upcoming (3-state, marketing read-only).
+        # 한국어 copy + A1 SaaS(Flux) 맥락에 맞는 태스크 트리.
         - type: process
-          variant: numbered-stack
+          variant: split-animation
           copy:
-            headline: "From zero to production in four steps."
-            subhead: "No professional services, no six-week onboarding. Ship observability the week you sign."
+            headline: "도입부터 운영까지, 네 단계면 충분합니다."
+            subhead: "전문 서비스 계약도, 6주 온보딩도 필요 없습니다. 계약 첫 주에 파이프라인 가시성을 확보하세요."
           items:
-            - title: "Connect your sources"
-              description: "Point Flux at your Kafka topics, Postgres CDC, S3 buckets, or HTTP endpoints. Auto-discovery maps the schema tree."
-            - title: "Define your SLOs"
-              description: "Set latency, throughput, and freshness targets per pipeline. Flux calculates burn rate and sends you daily burn-rate digests."
-            - title: "Instrument your costs"
-              description: "Tag workloads by team, customer, or feature. Cost attribution runs automatically — no extra instrumentation code."
-            - title: "Ship with confidence"
-              description: "Promotion gates block deploys that would breach your SLO. Green gate means the pipeline is ready. Red gate means you caught it before your users did."
+            - title: "소스 연결"
+              description: "Kafka 토픽, Postgres CDC, S3, HTTP 엔드포인트를 Flux에 연결합니다. 자동 탐색이 스키마 트리를 매핑합니다."
+              status: completed
+              subtasks:
+                - title: "데이터 소스 인벤토리 작성"
+                  description: "현재 운영 중인 모든 데이터 소스(Kafka, DB, API)를 목록화합니다."
+                  status: completed
+                  tools: ["file-system", "schema-explorer"]
+                - title: "커넥터 설정"
+                  description: "Flux 커넥터 YAML을 작성하고 연결 테스트를 실행합니다."
+                  status: completed
+                  tools: ["flux-connector", "cli"]
+                - title: "스키마 자동 탐색 확인"
+                  description: "Auto-discovery가 스키마 트리를 올바르게 매핑했는지 검증합니다."
+                  status: completed
+
+            - title: "SLO 정의"
+              description: "파이프라인별 레이턴시·처리량·데이터 신선도 목표를 설정합니다. Flux가 번 레이트를 계산하고 일간 번 레이트 다이제스트를 발송합니다."
+              status: active
+              subtasks:
+                - title: "SLO 기준값 수집"
+                  description: "팀별 SLO 허용 기준(P99 레이턴시, 에러율, 신선도 SLA)을 수집합니다."
+                  status: completed
+                  tools: ["meeting-scheduler", "docs"]
+                - title: "Flux SLO 규칙 작성"
+                  description: "수집한 기준을 Flux SLO YAML 규칙으로 변환합니다."
+                  status: active
+                  tools: ["flux-slo-editor", "yaml-linter"]
+                - title: "번 레이트 알림 채널 설정"
+                  description: "PagerDuty 또는 Slack 알림 채널에 번 레이트 다이제스트를 연동합니다."
+                  status: upcoming
+                  tools: ["pagerduty-connector", "slack-connector"]
+
+            - title: "비용 계측"
+              description: "팀·고객·기능 단위로 워크로드에 태그를 붙입니다. 비용 귀속이 자동으로 실행됩니다 — 별도 계측 코드가 필요 없습니다."
+              status: upcoming
+              subtasks:
+                - title: "워크로드 태그 정책 수립"
+                  description: "태깅 네임스페이스(team/, customer/, feature/)를 설계하고 가이드를 작성합니다."
+                  status: upcoming
+                - title: "비용 대시보드 활성화"
+                  description: "Flux 비용 귀속 대시보드를 팀 공유 링크로 배포합니다."
+                  status: upcoming
+
+            - title: "자신 있게 배포"
+              description: "프로모션 게이트가 SLO를 위반할 배포를 차단합니다. 그린 게이트는 파이프라인이 준비됐다는 신호, 레드 게이트는 사용자보다 먼저 문제를 잡았다는 신호입니다."
+              status: upcoming
+              subtasks:
+                - title: "CI/CD 게이트 통합"
+                  description: "GitHub Actions 또는 GitLab CI 파이프라인에 Flux 프로모션 게이트 스텝을 추가합니다."
+                  status: upcoming
+                  tools: ["github-actions", "flux-gate"]
+                - title: "초기 배포 드라이런"
+                  description: "스테이징 환경에서 게이트 동작을 검증한 뒤 프로덕션에 적용합니다."
+                  status: upcoming
 
         # ── 5. stats/ticker-band ────────────────────────────────────────────
         - type: stats
