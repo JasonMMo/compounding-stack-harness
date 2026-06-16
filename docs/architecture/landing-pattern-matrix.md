@@ -232,7 +232,13 @@ Almost no overlap with A1 (shared: single-card testimonial only).
 
 ---
 
-### A3 — Event / Conference
+### A3 — Event / Conference — **BUILT** (Growth-82, 2026-06-16)
+
+Live: **https://summit-horizon.n9n.co.kr** (ignite 테마, SUMMIT Horizon 2026 — virtual dev summit)
+Theme: ignite — crimson-red #C41E22 on off-white #FAFAF8; Barlow Condensed 800 + Lato.
+New variants shipped: process/horizontal-steps (genuine L-to-R steps + CSS connector, mobile stack),
+cta/newsletter-inline (inline email waitlist, DEMO_MODE stub), stats/four-up (full-bleed crimson band).
+logos/grid gained the asset-free tiered sponsor wordmark fallback (gold/silver/community).
 
 Target: summit, hackathon, workshop series, product launch event.
 
