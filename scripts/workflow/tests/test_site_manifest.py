@@ -1741,3 +1741,233 @@ class TestVariantOverrides:
         assert any("author_name" in e for e in errs), (
             f"testimonial/single-card must still require author_name: {errs}"
         )
+
+
+# ---------------------------------------------------------------------------
+# A7 API Platform: hero/bento-grid variant (Growth-84+)
+# ---------------------------------------------------------------------------
+
+class TestHeroBentoGrid:
+    """Catalog and manifest threading tests for hero/bento-grid (A7 archetype)."""
+
+    def _bento_site(self, copy=None, variant="bento-grid", bento_items=None, cta_secondary=None):
+        section = {
+            "type": "hero",
+            "variant": variant,
+            "copy": copy or {"headline": "Know your API.", "subhead": "Real-time visibility."},
+        }
+        if bento_items is not None:
+            section["bento_items"] = bento_items
+        if cta_secondary is not None:
+            section["cta_secondary"] = cta_secondary
+        return {
+            "pages": [
+                {
+                    "slug": "home",
+                    "title": "Home",
+                    "sections": [section],
+                }
+            ]
+        }
+
+    # ── Catalog: variant registered ──────────────────────────────────────────
+
+    def test_bento_grid_in_hero_variants(self, catalog):
+        """bento-grid must appear in hero.variants (catalog registered)."""
+        hero = catalog["sections"]["hero"]
+        assert "bento-grid" in hero.get("variants", []), (
+            "hero.variants must contain 'bento-grid'"
+        )
+
+    def test_bento_grid_does_not_break_other_variants(self, catalog):
+        """All pre-existing hero variants must still be in the catalog."""
+        hero = catalog["sections"]["hero"]
+        original_variants = [
+            "centered", "split-left", "split-right",
+            "fullscreen-video", "glowy-waves", "brew", "headline-only",
+        ]
+        for v in original_variants:
+            assert v in hero.get("variants", []), (
+                f"Pre-existing hero variant '{v}' must still be in catalog"
+            )
+
+    def test_hero_catalog_has_variant_overrides(self, catalog):
+        """hero catalog entry must have variant_overrides for bento-grid."""
+        hero = catalog["sections"]["hero"]
+        assert "variant_overrides" in hero, "hero must have variant_overrides"
+        assert "bento-grid" in hero["variant_overrides"], (
+            "bento-grid must appear in hero.variant_overrides"
+        )
+
+    # ── Validation: bento-grid accepts valid section ─────────────────────────
+
+    def test_bento_grid_valid_with_required_copy(self, catalog):
+        """hero/bento-grid with headline + subhead must pass validation."""
+        errs = validate_site(self._bento_site(), catalog)
+        assert errs == [], f"hero/bento-grid with required copy must be valid: {errs}"
+
+    def test_bento_grid_with_badge_valid(self, catalog):
+        """Badge (optional copy slot) must not cause a violation."""
+        copy = {
+            "headline": "Know your API.",
+            "subhead": "Real-time visibility.",
+            "badge": "API Observability Platform",
+        }
+        errs = validate_site(self._bento_site(copy=copy), catalog)
+        assert errs == [], f"hero/bento-grid with badge should be valid: {errs}"
+
+    def test_bento_grid_missing_subhead_rejected(self, catalog):
+        """hero/bento-grid missing required subhead → violation."""
+        copy = {"headline": "Know your API."}
+        errs = validate_site(self._bento_site(copy=copy), catalog)
+        assert any("subhead" in e for e in errs), (
+            f"Missing subhead must be flagged for bento-grid: {errs}"
+        )
+
+    def test_bento_grid_missing_headline_rejected(self, catalog):
+        """hero/bento-grid missing required headline → violation."""
+        copy = {"subhead": "Real-time visibility."}
+        errs = validate_site(self._bento_site(copy=copy), catalog)
+        assert any("headline" in e for e in errs), (
+            f"Missing headline must be flagged for bento-grid: {errs}"
+        )
+
+    # ── Manifest threading: bento_items[] passthrough ────────────────────────
+
+    def test_bento_items_thread_through_manifest(self):
+        """bento_items[] from profile must appear in manifest section output."""
+        stat_card = {
+            "type": "stat",
+            "icon_label": "API requests tracked",
+            "primary_value": "847M",
+            "primary_label": "Requests monitored today",
+            "progress_label": "Error budget consumed",
+            "progress_value": 4,
+            "progress_max": 100,
+            "mini_stats": [
+                {"value": "99.97%", "label": "Uptime"},
+                {"value": "12ms", "label": "P50"},
+            ],
+            "tags": [{"label": "All systems operational", "status": "ok"}],
+        }
+        marquee_card = {
+            "type": "marquee",
+            "eyebrow": "Used by platform teams at",
+            "companies": ["Acme Platform", "Vortex Systems"],
+        }
+        profile = {
+            "customer": {"slug": "prism-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "prism",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "hero",
+                                "variant": "bento-grid",
+                                "copy": {
+                                    "headline": "Know your API.",
+                                    "subhead": "Real-time visibility.",
+                                    "badge": "API Observability Platform",
+                                },
+                                "cta": {"label": "Start free", "href": "#contact"},
+                                "cta_secondary": {"label": "Read the docs", "href": "#docs"},
+                                "bento_items": [stat_card, marquee_card],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        hero_sec = manifest["pages"][0]["sections"][0]
+        assert hero_sec["variant"] == "bento-grid"
+        assert "bento_items" in hero_sec, "bento_items must thread through manifest"
+        assert len(hero_sec["bento_items"]) == 2
+        assert hero_sec["bento_items"][0]["type"] == "stat"
+        assert hero_sec["bento_items"][0]["primary_value"] == "847M"
+        assert hero_sec["bento_items"][1]["type"] == "marquee"
+        assert "Acme Platform" in hero_sec["bento_items"][1]["companies"]
+
+    def test_cta_secondary_threads_through_manifest(self):
+        """cta_secondary from profile must appear in manifest section output."""
+        profile = {
+            "customer": {"slug": "prism-co"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": {
+                "theme": "prism",
+                "pages": [
+                    {
+                        "slug": "home",
+                        "title": "Home",
+                        "sections": [
+                            {
+                                "type": "hero",
+                                "variant": "bento-grid",
+                                "copy": {
+                                    "headline": "Know your API.",
+                                    "subhead": "Real-time visibility.",
+                                },
+                                "cta": {"label": "Start free", "href": "#contact"},
+                                "cta_secondary": {"label": "Read the docs", "href": "#docs"},
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        manifest = build_site_manifest(profile)
+        hero_sec = manifest["pages"][0]["sections"][0]
+        assert "cta_secondary" in hero_sec, "cta_secondary must thread through manifest"
+        assert hero_sec["cta_secondary"]["label"] == "Read the docs"
+        assert hero_sec["cta_secondary"]["href"] == "#docs"
+
+    def test_hero_bento_grid_no_bento_items_still_valid(self, catalog):
+        """hero/bento-grid with no bento_items[] must still validate (items are optional)."""
+        errs = validate_site(self._bento_site(), catalog)
+        assert errs == [], (
+            f"hero/bento-grid without bento_items must still be valid: {errs}"
+        )
+
+    def test_prism_demo_profile_validates(self, catalog):
+        """prism-demo.yaml must validate cleanly against the catalog."""
+        try:
+            import yaml
+        except ImportError:
+            pytest.skip("PyYAML not available")
+        profile_path = PROFILES_DIR / "prism-demo.yaml"
+        if not profile_path.exists():
+            pytest.skip("prism-demo.yaml not found")
+        with open(profile_path, encoding="utf-8") as f:
+            profile = yaml.safe_load(f)
+        site = profile.get("site", {})
+        errs = validate_site(site, catalog)
+        assert errs == [], f"prism-demo.yaml site block has violations: {errs}"
+
+    def test_prism_demo_manifest_has_bento_items(self):
+        """prism-demo build_site_manifest output must include bento_items in hero section."""
+        try:
+            import yaml
+        except ImportError:
+            pytest.skip("PyYAML not available")
+        profile_path = PROFILES_DIR / "prism-demo.yaml"
+        if not profile_path.exists():
+            pytest.skip("prism-demo.yaml not found")
+        with open(profile_path, encoding="utf-8") as f:
+            profile = yaml.safe_load(f)
+        manifest = build_site_manifest(profile)
+        home = next((p for p in manifest["pages"] if p["slug"] == "home"), None)
+        assert home is not None
+        hero = next((s for s in home["sections"] if s["type"] == "hero"), None)
+        assert hero is not None
+        assert hero.get("variant") == "bento-grid"
+        assert "bento_items" in hero, "hero bento-grid section must have bento_items in manifest"
+        stat = next((it for it in hero["bento_items"] if it.get("type") == "stat"), None)
+        marquee = next((it for it in hero["bento_items"] if it.get("type") == "marquee"), None)
+        assert stat is not None, "stat card must be in bento_items"
+        assert stat["primary_value"] == "847M"
+        assert marquee is not None, "marquee card must be in bento_items"
+        assert "Acme Platform" in marquee["companies"]
