@@ -11,7 +11,7 @@ customer:
   slug: event-demo
   display: "SUMMIT Horizon 2026 — Event Demo"
   status: active
-  contact: events@summaryhorizon.kr
+  contact: events@summithorizon.kr
   industry: event
 
 # ── Pluggable Stack ──────────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ site:
             - question: "Is there a virtual / livestream option?"
               answer: "Yes. A full livestream package is available for remote attendees, including async Q&A and access to session recordings for 90 days."
             - question: "Are team group discounts available?"
-              answer: "Groups of 5+ receive 20% off. Contact events@summaryhorizon.kr for enterprise packages."
+              answer: "Groups of 5+ receive 20% off. Contact events@summithorizon.kr for enterprise packages."
             - question: "What is the refund policy?"
               answer: "Full refund up to 30 days before the event. 50% refund within 30 days. No refund within 7 days, but seat transfer is allowed."
 
@@ -173,7 +173,7 @@ site:
           copy:
             brand_name: "SUMMIT Horizon 2026"
             legal_notice: "© 2026 Horizon Events Inc."
-            tagline: "events@summaryhorizon.kr"
+            tagline: "events@summithorizon.kr"
 
 # ── Defaults ────────────────────────────────────────────────────────────────
 defaults:
