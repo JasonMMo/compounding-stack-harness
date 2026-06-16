@@ -3,8 +3,8 @@
 > CDO doc. Decision-oriented map for the multi-session buildout of diverse landing-page patterns.
 > Canonical positions: section-type taxonomy (§1), variant table (§2), page archetypes (§3),
 > buildout backlog (§4), invariants (§5).
-> Last updated: 2026-06-17 (CTO, Growth-85 — process/split-animation HAVE; 21st.dev 레퍼런스 6종 CDO triage(§4) — AgentPlan 채택·구현, InkReveal/TableOfContents/Sparkles reject, PixelLogoGrid/PixelPerfectHero 백로그)
-> Prev: 2026-06-16 (Growth-84 — A7 API Platform archetype + prism theme(9th) + hero/bento-grid; A1~A7 전부 BUILT; §2 stale NEED→HAVE 정정)
+> Last updated: 2026-06-17 (CTO, Growth-86 — gtm-landing 한국어화 + **locale 전파 feature**(profile defaults.locale→manifest→`<html lang>`, cross-cutting·변형 카운트 불변) + aurora family-display 한국어 폴백. 타 테마 한국어 디스플레이 폴백 누락 3종 backlog: kiln·studio·harvest)
+> Prev: 2026-06-17 (Growth-85 — process/split-animation HAVE; 21st.dev 레퍼런스 6종 CDO triage(§4) — AgentPlan 채택·구현, InkReveal/TableOfContents/Sparkles reject, PixelLogoGrid/PixelPerfectHero 백로그)
 
 ---
 
@@ -187,6 +187,7 @@ Status: HAVE (existing variant name) or NEED.
 (Growth-83: gallery/grid-2x2 HAVE (src-optional 무사진 CSS 목업) — A5 Mobile App archetype shipped; nova theme added; site_manifest `variant_overrides` 신설로 A1~A6 매트릭스 1차 완성)
 (Growth-84: hero/bento-grid HAVE (텍스트 좌 + stat/proof bento 우, 라이트 캔버스, 무사진) — A7 API Platform archetype + prism 테마(9th) shipped. stale 정정: headline-only(A2 studio-north live)·features/bento-mosaic·testimonial/pull-quote-wall 가 §2 에서 NEED 로 잘못 남아있던 것을 HAVE 로 환류. hero `item_slots` 신설 + ticker-band/full-links 일반화)
 (Growth-85: process/split-animation HAVE (21st.dev AgentPlan 구조 차용 → 중화: 랜덤 상태 토글 제거, read-only 고정 status, `<details open>` SSR fallback). status 색 토큰 추가 0 — 기존 text-2/primary/text-3 3-state 재활용 + 아이콘 shape+aria-label 1차 구분. A1 flux 데모에 흡수(한국어 4단계 태스크 트리). NEED 14→13)
+(Growth-86: 변형 추가 없음 — cross-cutting **locale 전파 feature** 신설(`defaults.locale`→manifest top-level `locale`→BaseLayout `<html lang>` BCP-47 서브태그; 영문 프로필 en-US 기본 보존, open-closed). gtm-landing 한국어화·재배포 LIVE. aurora family-display 한국어 시스템폰트 폴백(zero egress). backlog: kiln·studio·harvest family-display 한국어 폴백 누락 + 모션 트랙(스크롤 스냅 풀스크린+IO 진입모션, "B급 상한 상향" 검토))
 
 ---
 
