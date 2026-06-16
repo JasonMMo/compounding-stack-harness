@@ -252,3 +252,40 @@ patch_schema.py disposition: KEEP as audit record -- see QA recommendation below
 - G-9 통과 기준 인수·재평가 (CTO 임시 박음 → QA 정식 검토)
 - ~~M1 진입 게이트 통과 기준 문서화 — L1~L4 각각의 PASS 정의~~ PARTIAL: L2 PASS 기준 Growth-10 에서 정의됨. L1/L3/L4 는 M1 진입 시 해소 예정.
 - regression 이력 섹션 초기화 (이 파일 §4 로 분리 예정)
+
+
+### Growth-84 (2026-06-16) — prism-demo QA 게이트: A7 API Platform 인도 전 검증
+
+- **Audit target**: prism-demo (A7 archetype, 9th theme) 인도 전 전체 감사
+  - 신규/변경: HeroBentoGrid.astro, Stats.astro, Footer.astro, [...page].astro,
+    global.css (prism 폰트 3종), presets/themes/prism/, profiles/prism-demo.yaml,
+    presets/site-sections/catalog.yaml (bento-grid variant + footer item_slots),
+    scripts/workflow/site_manifest.py, test_site_manifest.py, deploy/preview/prism.compose.yml
+- **Pass criteria (이번 게이트)**:
+  - G-1~G-15 전체 0 real FAIL (SPEC 허용)
+  - L1 pytest 350 passed (scripts/workflow/tests/ 포함 test_site_manifest.py 신규 케이스)
+  - L3 build: prism-demo Astro SSG 빌드 green + [build-tokens-auto] resolved theme "prism" 로그
+  - Growth-69 불변: dist/index.html SSR DOM 에 847M·"Know your API"·"Start free"·"Read the docs"·99.97%·"Acme Platform" 전부 존재. opacity:0 로 콘텐츠 숨김 없음.
+  - 불변식 5종: 하드코딩 hex 없음(var() fallback 만), 무JS 가시, impeccable(neon/glow/gradient-clip 0), catalog 등록, A7 archetype 귀속
+  - 무사진 0 stock: dist HTML 의 img 태그 0개
+  - flux-demo 회귀 없음: flux theme bg:dark → ticker-band 다크 유지 (Stats.astro 분기 검증)
+  - prism ticker-band: bg:surface-2 → var(--color-surface-2, #F2F5FA) light band (SSR 확인)
+- **결과 (2026-06-16 실행)**:
+  - G-1 PASS / G-2 SPEC / G-3 SPEC / G-4 PASS / G-5 PASS / G-6 PASS / G-7 PASS / G-8 PASS
+  - G-9 **FAIL** (pre-existing regression — §6 203→211 비-blank 행. 이 PR 이전에 이미 203행 초과 상태. 본 PR 이 8행 추가. 사유: Growth-80~84 누적 §6 엔트리.)
+  - G-10 PASS / G-11 PASS / G-12 PASS / G-13 PASS / G-14 SPEC / G-15 SPEC
+  - L1 pytest: **350 PASSED**, 0 FAILED (test_site_manifest.py TestHeroBentoGrid 신규 케이스 포함)
+  - L3 build: BUILD COMPLETE ("resolved theme prism" 확인, 1 page built in 6.02s)
+  - Growth-69: SSR 콘텐츠 전부 확인. opacity:0 없음 (opacity:0.7 = 워드마크 dimming, 가시)
+  - 불변식 5종: 하드코딩 hex(non-fallback) 0건, img 태그 0건, neon/glow/gradient-clip 0건, catalog 등록(bento-grid variant + footer item_slots), A7 archetype 귀속 확인
+  - flux-demo 회귀: flux theme.yaml bg:dark → Stats.astro LIGHT_BG_KEYS 분기에서 dark 처리 확인. 재빌드 없이 코드 경로 정적 검증 (충분 — 분기 로직은 LIGHT_BG_KEYS Set lookup, 결정론적)
+  - tokens.gen.css: prism override block 이 correctly cascades (--color-primary: #1B4FA8, bento tokens, IBM Plex/DM Sans/DM Mono 패밀리)
+  - footer items: Product/Resources/Company 3컬럼 SSR 렌더, 빈컬럼 가드 동작 확인
+- **False PASS / False FAIL risks**:
+  - opacity:0.7 이 "opacity: 0" regex 에 매칭되는 false positive 위험 — 실 검증에서 발생, 상세 컨텍스트 확인으로 해소 (true opacity:0 없음).
+  - tokens.gen.css 의 semantic base layer(aurora default) 가 prism override 보다 먼저 보여 오탐 가능 — cascade 순서(동일 :root, 마지막 write 우선) 이해 필요. 실제 렌더는 prism 값 사용 확인.
+- **Regression cases**:
+  - G-9 pre-existing: HEAD 에서 이미 203행 초과 (cap 200). 본 PR 이 8행 추가해 211행. 별도 trim 필요.
+- **Blocks issued**: 0 (G-9 FAIL 은 pre-existing, 이번 변경 범위 외. PASS 판정 근거: 인도 항목 전부 green, G-9 는 §6 엔트리 누적 문제로 별도 cleanup ticket 발행 권고.)
+- **Cost**: ~4 turns Sonnet (파일 정독 + 명령 실행 + 보고서)
+- **G-9 cleanup 권고**: learn-log.md §6 slim 을 역순 compact 또는 이전 Growth 엔트리를 단축해 200행 이하로 복귀. 별도 Growth 로 처리 권고 (이 PR 범위 아님).
