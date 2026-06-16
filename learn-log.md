@@ -468,3 +468,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [qa ledger](docs/learn-logs/qa.md) · [cdo triage](out/growth-85-triage/cdo-triage.md)(gitignored, 판정은 matrix §4 박제)
 - **잔여(open)**: NEED 13종(hero/scroll-reveal·features/timeline-horizontal·gallery/full-bleed-strip·team/headshot-list·faq/categorized·lead/multi-field-card·pricing/comparison-table 등). 21st.dev backlog 2종(pixel-canvas·pixel-hover-grid) — 차기 Growth 후보. 다음: 추가 NEED 커버리지 또는 신규 고객 needs 조합.
 - **결정 메모리**: [[marketing-site-track]] · [[official-skill-adoption-policy]] · [[feedback-pushback]]
+
+### Growth-86 (2026-06-17) — 자체 GTM 랜딩 한국어화 + locale 전파 feature + aurora 한국어 디스플레이 폴백
+
+- **인격/Axis/Milestone**: CTO(한글화 결정·CMO 카피 fold-in·locale 배선 설계·폰트 결함 발견·통합·per-file 커밋) + CMO(한국 B2B SaaS 보이스 한국어 카피 재작성·M1 게이팅 준수) + Engineer(site_manifest locale emit·BaseLayout html lang·dispatch 배선·TestLocaleEmit 5케이스) + CDO(aurora family-display 한국어 폴백·비주얼 검증·타 테마 갭 조사) + QA(4계층 게이트·회귀·규율 PASS) + DevOps(재배포·라이브 검증) / **frontend(locale feature)+theme(8축, 폰트)** / M1(리드젠 랜딩 한국 시장 정조준)
+- **1줄 rollup**: 우리 자체 플래그십 M1 리드젠 랜딩(gtm-landing, LIVE)이 영어였던 모순 해소 — 전 섹션 카피·SEO 한국어(CMO), `defaults.locale ko-KR`. 부수로 **locale→manifest→`<html lang>` 전파 feature**(하드코딩 `lang="en"` 제거, profile 기반, 영문 데모는 en-US 기본 유지 — open-closed)와 **aurora `family-display` 한국어 시스템폰트 폴백**(헤드라인 글리프 폴백 결함, zero egress). pytest 145(신규 5), `<html lang="ko">` 확인, 비주얼 전 섹션 PASS, diagnose 신규 FAIL 0.
+- **함정/교훈**: ① **"한글로 변경"은 카피 교체로 끝나지 않는다 — `<html lang>`·폰트 폴백까지가 진짜 한국어**: BaseLayout `lang="en"` 하드코딩 → 스크린리더 발음 오류·SEO 손실. 하드코딩 수정이 아니라 **profile→manifest→adapter locale 배선**으로 풀어 향후 한국 고객 전체에 누적(우리는 한국 회사 → 대부분 고객이 한국어). ② **빌드 green ≠ 시각적 정상(Growth-82 재확인)**: aurora `family-display`(Bricolage Grotesque)에 한국어 폴백 부재 → 한국어 헤드라인이 OS 임의 폰트로 폴백. body 스택의 한국어 폴백을 display 에 미러링(네트워크 폰트 ✗, self-host thesis 준수). ③ **CDN 폰트 유혹 거부**: 우리 랜딩이 "데이터 외부 반출 없음"을 파는데 한국 웹폰트 CDN @import 추가는 자가모순 → 시스템 폰트 폴백만.
+- **누적 자산**: **locale 전파 feature**(marketing-site 어댑터 i18n 기반 — `defaults.locale`→`<html lang>` BCP-47 서브태그, 전 고객 재사용) + aurora 한국어 디스플레이 폴백 + 한국어 GTM 카피(out/gtm-landing/cmo-copy-ko.yaml).
+- **상세**: [cdo visual verify](out/gtm-landing/cdo-visual-verify-ko.md) · [qa gate](out/gtm-landing/qa-gate-g86.md) · 커밋 bf0f1d9/9dea246/8797bb8/7a839fb/d4da06d(engineer) · 8d89ab1(cdo) · e623c2b(profile)
+- **잔여(open)**: **타 테마 한국어 디스플레이 폴백 누락 3종**(kiln·studio·harvest) — 한국 회사로서 전 테마 동일 수정 필요, backlog. font CDN→fontsource M1 마이그레이션 미완. **모션 트랙(차기, 파운더 승인 방향)**: sanggong식 스크롤 스냅 풀스크린+IO 진입 모션 변형 자산화(progressive enhancement, Growth-69 유지) + "B급 professional" 상한 상향 검토 — 별도 Growth 스코핑 대기.
+- **결정 메모리**: [[marketing-site-track]] · [[infra-stack]] · [[push-before-deploy]]
