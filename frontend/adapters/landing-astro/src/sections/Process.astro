@@ -116,7 +116,60 @@ const displayItems: ProcessItem[] = items.length > 0 ? items : [
       </ol>
     )}
 
-    {variant !== 'numbered-stack' && (
+    {variant === 'horizontal-steps' && (
+      /*
+       * horizontal-steps: left-to-right numbered steps with CSS ::after connectors.
+       * Desktop: flex row, justify-between. Mobile (<768px): vertical stack with
+       * circle-left / text-right item layout. Zero JS — Growth-69 invariant.
+       * Connector: absolute ::after rule on step wrapper except last, 1px primary-border.
+       * step_number_style: crimson-circle (filled bg var(--color-primary), white numeral).
+       */
+      <ol
+        class="process-hsteps list-none m-0 p-0 flex flex-col md:flex-row md:justify-between md:items-start gap-6 md:gap-8"
+        data-stagger-delay="100"
+      >
+        {displayItems.map((item, i) => {
+          const stepNum = item.step_label ?? String(i + 1)
+          const isLast = i === displayItems.length - 1
+          return (
+            <li
+              class={`process-hstep flex flex-row md:flex-col flex-1 gap-[14px] md:gap-0 items-start min-w-0 relative${isLast ? '' : ' process-hstep--connector'}`}
+            >
+              {/* Circle */}
+              <div
+                class="flex-shrink-0 flex items-center justify-center rounded-full select-none"
+                aria-hidden="true"
+                style="width:28px;height:28px;background:var(--color-primary,#C41E22);"
+              >
+                <span
+                  style="font-family:var(--font-family-display,inherit);font-size:14px;font-weight:700;color:var(--color-surface-1,#FAFAF8);line-height:1;"
+                >
+                  {stepNum}
+                </span>
+              </div>
+
+              {/* Text block */}
+              <div class="flex-1 min-w-0 md:mt-3">
+                <h3
+                  style="font-family:var(--font-family-display,inherit);font-size:18px;font-weight:700;color:var(--color-text-1,#1E1A18);margin:0 0 6px;"
+                >
+                  {item.title}
+                </h3>
+                {item.description && (
+                  <p
+                    style="font-family:var(--font-family-body,inherit);font-size:15px;line-height:1.6;color:var(--color-text-2,#504340);margin:0;"
+                  >
+                    {item.description}
+                  </p>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    )}
+
+    {variant !== 'numbered-stack' && variant !== 'horizontal-steps' && (
       /* Graceful fallback for unimplemented variants */
       <ol class="list-none m-0 p-0">
         {displayItems.map((item, i) => {
