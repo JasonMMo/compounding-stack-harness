@@ -15,7 +15,7 @@
  *          Passed from manifest; falls back to demo set if absent.
  */
 interface GalleryItem {
-  src: string
+  src?: string
   alt: string
   caption?: string
   href?: string
@@ -148,27 +148,143 @@ const gapClass = (styleHints.gap ?? 'tight') === 'tight' ? 'gap-3' : 'gap-6'
     )}
 
     {variant === 'grid-2x2' && (
-      <div class={`grid grid-cols-1 sm:grid-cols-2 ${gapClass}`} role="list">
-        {displayItems.slice(0, 4).map((item) => (
-          <figure
-            class="group relative overflow-hidden bg-[var(--color-surface-3,#D8D0C4)]"
-            style="border-radius: var(--radius-card, 4px);"
-            role="listitem"
-          >
-            <img
-              src={item.src}
-              alt={item.alt}
-              class="w-full h-64 object-cover block"
-              loading="lazy"
-              decoding="async"
-            />
-            {item.caption && (
-              <figcaption class="absolute bottom-0 left-0 right-0 px-4 py-3 bg-[var(--color-hero-bg-from,#141418)] bg-opacity-70 text-[var(--color-surface-1,#F5F2EC)] text-sm font-medium">
-                {item.caption}
-              </figcaption>
-            )}
-          </figure>
-        ))}
+      <!-- grid-2x2: phone-screenshot treatment (nova theme / A5 Mobile App archetype).
+           - aspect-ratio 9/19.5 on the phone frame wrapper letterboxes tall portraits.
+           - src present  → object-contain <img> inside the phone frame.
+           - src absent   → CSS app-screen mockup: pure markup, no JS, theme-tokenized.
+             Four layout variants by index (feed / grid-tiles / profile / detail) so the
+             four cells read as distinct app screens, not clones. Honest placeholder —
+             no fabricated photo (repo discipline: no stock photos).
+           - Phone frame: border + radius + shadow via nova tokens, graceful fallback.
+           - Caption: <figcaption> BELOW frame, always readable (a11y, Growth-69).
+           - No hardcoded hex — all values via var(--token, fallback). No JS (Growth-69). -->
+      <div
+        class="rounded-[var(--radius-card,4px)] p-[var(--space-4,16px)] bg-[var(--color-surface-2,#EDEAE3)]"
+      >
+        <div
+          class="grid grid-cols-2"
+          style="gap: var(--space-4, 16px);"
+          role="list"
+        >
+          {displayItems.slice(0, 4).map((item, idx) => (
+            <figure
+              class="flex flex-col items-stretch"
+              role="listitem"
+            >
+              <!-- Phone frame wrapper — carries the frame styling for both src and no-src paths -->
+              <div
+                style={`
+                  aspect-ratio: 9 / 19.5;
+                  background: var(--color-surface-3, #D8D0C4);
+                  border: 6px solid var(--color-phone-frame, #1A1A2E);
+                  border-radius: var(--radius-gallery-phone-frame, 16px);
+                  box-shadow: var(--shadow-phone-frame, 0 8px 32px -4px rgba(0,0,0,0.35));
+                  overflow: hidden;
+                  display: flex;
+                  flex-direction: column;
+                `}
+              >
+                {item.src ? (
+                  <!-- src present: real screenshot, object-contain preserves full portrait AR -->
+                  <img
+                    src={item.src}
+                    alt={item.alt}
+                    class="w-full h-full object-contain block"
+                    style="background: var(--color-surface-3, #D8D0C4);"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <!-- src absent: CSS app-screen mockup.
+                       aria-hidden on the decorative mockup — item.alt + figcaption carry the label. -->
+                  <div
+                    class="flex flex-col w-full h-full"
+                    style="background: var(--color-surface-1, #FAFAF8);"
+                    aria-hidden="true"
+                  >
+                    <!-- Status bar -->
+                    <div style="height: 4%; background: var(--color-surface-3, #D8D0C4); flex-shrink: 0;" />
+
+                    <!-- App header band (primary color, small centered title from caption/alt) -->
+                    <div style="height: 18%; background: var(--color-primary, #4F46E5); flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px;">
+                      <span style="color: var(--color-surface-1, #FAFAF8); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-align: center; font-family: var(--font-family-display, inherit); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 100%;">
+                        {item.caption ?? item.alt}
+                      </span>
+                    </div>
+
+                    <!-- Content area: 4 layout variants by idx -->
+                    <div style="flex: 1; padding: 8px 6px; display: flex; flex-direction: column; gap: 5px; overflow: hidden; background: var(--color-surface-1, #FAFAF8);">
+                      {idx === 0 && (
+                        <!-- Layout 0: Feed — stacked card rows with bottom accent CTA -->
+                        <>
+                          <div style="height: 18%; background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                          <div style="height: 18%; background: var(--color-surface-3, #D8D0C4); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                          <div style="height: 18%; background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                          <div style="flex: 1;" />
+                          <div style="height: 10%; background: var(--color-primary, #4F46E5); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                        </>
+                      )}
+                      {idx === 1 && (
+                        <!-- Layout 1: Grid tiles — 2x2 mini tile grid + accent chip -->
+                        <>
+                          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; flex: 1; min-height: 0;">
+                            <div style="background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px);" />
+                            <div style="background: var(--color-surface-3, #D8D0C4); border-radius: var(--radius-card, 4px);" />
+                            <div style="background: var(--color-surface-3, #D8D0C4); border-radius: var(--radius-card, 4px);" />
+                            <div style="background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px);" />
+                          </div>
+                          <div style="height: 10%; background: var(--color-primary, #4F46E5); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                        </>
+                      )}
+                      {idx === 2 && (
+                        <!-- Layout 2: Profile — avatar circle + list rows + bottom CTA -->
+                        <>
+                          <div style="height: 22%; background: var(--color-surface-3, #D8D0C4); border-radius: 50%; width: 36%; align-self: center; flex-shrink: 0;" />
+                          <div style="height: 12%; background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                          <div style="height: 12%; background: var(--color-surface-3, #D8D0C4); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                          <div style="height: 12%; background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                          <div style="flex: 1;" />
+                          <div style="height: 10%; background: var(--color-primary, #4F46E5); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                        </>
+                      )}
+                      {idx === 3 && (
+                        <!-- Layout 3: Detail — large image block + meta rows + prominent CTA button -->
+                        <>
+                          <div style="height: 38%; background: var(--color-surface-3, #D8D0C4); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                          <div style="height: 12%; background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                          <div style="height: 12%; background: var(--color-surface-2, #EDEAE3); border-radius: var(--radius-card, 4px); flex-shrink: 0;" />
+                          <div style="flex: 1;" />
+                          <div style="height: 14%; background: var(--color-primary, #4F46E5); border-radius: var(--radius-card, 4px); flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                            <span style="color: var(--color-surface-1, #FAFAF8); font-size: 9px; font-weight: 700; letter-spacing: 0.06em;">GET STARTED</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <!-- Bottom tab bar: solid surface-3 bg for clear contrast.
+                         Inactive dots: text-3 at 50% opacity (visible on light bg).
+                         Active dot: full primary (≥4.5:1 on surface-3 bg). -->
+                    <div style="height: 8%; background: var(--color-surface-3, #D8D0C4); flex-shrink: 0; display: flex; align-items: center; justify-content: space-around; padding: 0 12px;">
+                      <div style="width: 18%; height: 4px; background: var(--color-text-3, #797888); border-radius: 2px; opacity: 0.45;" />
+                      <div style="width: 18%; height: 4px; background: var(--color-primary, #4F46E5); border-radius: 2px;" />
+                      <div style="width: 18%; height: 4px; background: var(--color-text-3, #797888); border-radius: 2px; opacity: 0.45;" />
+                      <div style="width: 18%; height: 4px; background: var(--color-text-3, #797888); border-radius: 2px; opacity: 0.45;" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {item.caption && (
+                <figcaption
+                  class="w-full text-center"
+                  style="color: var(--color-text-3, #797888); font-size: 13px; padding-top: 12px; padding-bottom: 8px; line-height: 1.4;"
+                >
+                  {item.caption}
+                </figcaption>
+              )}
+            </figure>
+          ))}
+        </div>
       </div>
     )}
 
