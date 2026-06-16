@@ -1,0 +1,30 @@
+# Digital asset record — prism (API Platform SaaS demo, A7 archetype).
+# Demo/시안: A7 API Platform archetype — hero/bento-grid (bento-mosaic features) +
+# logos/horizontal-scroll + features/bento-mosaic + stats/ticker-band +
+# testimonial/pull-quote-wall + pricing/three-tier + faq/single-col +
+# cta/left-aligned + footer/full-links.
+# theme: prism (deep-azure #1B4FA8 on white — developer/platform tone).
+# "Know your API. Before your customers do."
+# Growth-84.
+slug: prism
+contact:
+  channel: internal
+  handle: "compounding-stack (own demo asset)"
+preview:
+  subdomain: prism.n9n.co.kr
+  coolify_project: qfbgsfa42ep757lxx88amwje
+  coolify_app: z13nexbnkj2651flq82bfy0u
+  status: live
+  deployed_at: "2026-06-16"
+  deliverable_kind: marketing-site      # static SSG (no backend) — deploy_static_site.py lane
+  theme: prism
+  archetype: A7                         # API Platform / Developer Tool (landing-pattern-matrix)
+  profile_slug: prism-demo             # Docker PROFILE_SLUG (build arg)
+production:
+  install_method: remote
+  installed_at: null                    # preview/demo asset — no customer install
+  stack:
+    frontend: landing-astro
+    backend: none
+secret_ref: []                          # static site, no secrets
+cost_note: "preview 티어 공유 VPS 귀속 (charter §5). 정적 SSG — 런타임 LLM 0."
