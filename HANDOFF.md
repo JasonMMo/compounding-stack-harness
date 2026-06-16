@@ -1,14 +1,15 @@
-# Session Handoff — 2026-06-16
+# Session Handoff — 2026-06-17
 
 ## 이번 세션 범위 (최신)
 
-**마케팅사이트 8축(theme/section) 트랙 — 페이지-구조 아키타입 확장 (Growth-75 → 84)**.
+**마케팅사이트 8축(theme/section) 트랙 — 페이지-구조 아키타입 확장 (Growth-75 → 85)**.
 웹에이전시형 랜딩 데모를 "테마(색·폰트)" 다양성에서 **페이지 구조 아키타입(A1~A7)** 다양성으로 확장 중. CEO 가 "색·텍스트만 다른 같은 패턴"을 지적(Growth-76) → 진짜 차별은 **섹션 variant × 페이지 아키타입 × 테마의 곱**이라는 결론. 블루프린트: [`docs/architecture/landing-pattern-matrix.md`](docs/architecture/landing-pattern-matrix.md).
 
 > ✅ **Growth-81 A1 FLUX LIVE** — https://flux.n9n.co.kr (6번째 데모, flux 테마). **P0 종결**.
 > ✅ **Growth-82 A3 Event LIVE** — https://summit-horizon.n9n.co.kr (7번째 데모, ignite 테마, SUMMIT Horizon 2026). 신규 variant 3종(horizontal-steps/newsletter-inline/four-up) + logos/grid 워드마크 폴백 결함 픽스. 풀페이지 9/9 섹션 비주얼 검증, ui_check 7/7. **P2(A3) 종결**.
 > ✅ **Growth-84 A7 API Platform LIVE** — https://prism.n9n.co.kr (9번째 데모, prism 테마(9th, deep-azure #1B4FA8)). **신규 hero/bento-grid 변형**(텍스트 좌 + stat/proof bento 우, 무사진·무JS; GlassmorphismTrust 21st.dev 레퍼런스 구조 차용·미감 중화). CTO 비주얼 검증서 **ticker-band 저대비·footer 빈컬럼** FIX-FIRST 적발 → `Stats.astro` styleHints.bg honor + `Footer.astro` 데이터주도 컬럼+빈컬럼 가드로 **일반화**(전 데모 재사용, flux 회귀 0). §2 stale 4건 HAVE 환류. **→ A1~A7 7개 아키타입 전부 BUILT**.
 > ✅ **Growth-83 A5 Mobile App LIVE** — https://lumi.n9n.co.kr (8번째 데모, nova 테마, Lumi 습관·집중 앱). **무사진(0 stock)**: gallery/grid-2x2 src-optional CSS 폰목업 4종 + marquee 자체 proof 재사용 + cta 다운로드 버튼쌍(copy.secondary_*). site_manifest `variant_overrides` 신설로 **P2(slot 완화)·P1(items[] copy_slots) 동시 종결**. FeatureCarousel sr-only SSR(Growth-69). 풀페이지 8/8 비주얼 검증. **→ A1~A6 6개 아키타입 전부 BUILT, 매트릭스 1차 완성**.
+> ✅ **Growth-85 21st.dev 6종 triage → process/split-animation 신규 변형** — 파운더 드롭 레퍼런스 6종(PixelLogoGrid/InkReveal/PixelPerfectHero/TableOfContents/Sparkles/AgentPlan)을 CDO 가 불변식 게이트로 triage: **AgentPlan 1종만 채택**(InkReveal=Growth-69위반·TableOfContents=섹션type없음·Sparkles=impeccable glow위반 reject, PixelPerfectHero/PixelLogoGrid backlog). `process/split-animation` 으로 중화 구현(랜덤상태 제거·read-only·`<details open>` SSR fallback). **A1 flux 데모에 흡수·재배포 LIVE**(한국어 4단계 태스크트리). status 토큰 추가 0(기존 3-state 재활용). NEED 14→13. triage 판정 matrix §4 박제. pytest 140·비주얼 PASS.
 
 ---
 
@@ -26,10 +27,11 @@
 | 82 | **A3** Event/Conference — SUMMIT Horizon 2026 (신규 variant 3종) | ignite | https://summit-horizon.n9n.co.kr | ✅ LIVE |
 | 83 | **A5** Mobile App — Lumi (무사진 grid-2x2 + variant_overrides, P1/P2 종결) | nova | https://lumi.n9n.co.kr | ✅ LIVE |
 | 84 | **A7** API Platform — Prism (hero/bento-grid 신규 + ticker-band/full-links 일반화) | prism | https://prism.n9n.co.kr | ✅ LIVE |
+| 85 | (변형) 21st.dev 6종 triage → process/split-animation 신규 (A1 flux 흡수·재배포) | flux | https://flux.n9n.co.kr | ✅ LIVE |
 
 - **라이브 마케팅 데모 9종**: gtm-landing(indigo aurora) · hopwell · studio-north · terra-ceramics · meridian · flux · summit-horizon · lumi · **prism**. 포털에 카드 9장. **→ A1~A7 7개 아키타입 전부 BUILT.** (※ 별도로 Growth-57 business-system 데모 7종은 `*-demo.n9n.co.kr` — 아래 참조표.)
 - **테마 9종**: aurora(gtm) · harvest · atelier · kiln · meridian · flux · ignite · nova · **prism**(신규, deep-azure #1B4FA8, OKLCH H≈228 미점유). 누적 위치 `presets/themes/<slug>/`.
-- **섹션 카탈로그**: **14/14 type 완성**, HAVE variant 38(Growth-84 로 hero/bento-grid 추가 + §2 stale 4건 HAVE 정정). 단일진실 `presets/site-sections/catalog.yaml`.
+- **섹션 카탈로그**: **14/14 type 완성**, HAVE variant 39(Growth-85 로 process/split-animation 추가; Growth-84 hero/bento-grid + §2 stale 4건 HAVE 정정). NEED 13. 단일진실 `presets/site-sections/catalog.yaml`.
 
 ### Growth-80 (A1 FLUX) 세부 — 다음 세션 직접 관련
 - **flux 테마**: amber-gold `#8B5E10` 단일 액센트(OKLCH H72 미점유) + charcoal flat hero, Space Grotesk + Inter. aurora violet/Bricolage 와 hue·폰트·레지스터 3축 분리. 네온/터미널그린 반사 회피.
