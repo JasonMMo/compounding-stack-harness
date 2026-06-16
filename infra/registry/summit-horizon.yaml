@@ -1,0 +1,30 @@
+# Digital asset record — summit-horizon (Event / Conference landing demo, A3 archetype).
+# Demo/시안: first A3 Event/Conference archetype — hero/split-left (date+venue) +
+# logos/grid (tiered sponsor text wordmarks: gold/silver/community) + process/horizontal-steps
+# (genuine L-to-R numbered steps w/ connectors, collapses to stack on mobile) +
+# features/three-col-icon + stats/four-up (full-bleed crimson band) + testimonial/carousel +
+# cta/newsletter-inline (inline email waitlist) + faq/single-col + footer/minimal.
+# 7th marketing-site theme (ignite: crimson-red #C41E22 on off-white, Barlow Condensed + Lato).
+# Growth-82.
+slug: summit-horizon
+contact:
+  channel: internal
+  handle: "compounding-stack (own demo asset)"
+preview:
+  subdomain: summit-horizon.n9n.co.kr
+  coolify_project: null                 # filled at deploy time
+  coolify_app: null                     # filled at deploy time
+  status: pending                       # -> live after Coolify deploy
+  deployed_at: null
+  deliverable_kind: marketing-site      # static SSG (no backend) — deploy_static_site.py lane
+  theme: ignite
+  archetype: A3                         # Event / Conference (landing-pattern-matrix)
+  profile_slug: event-demo              # Docker PROFILE_SLUG (build arg)
+production:
+  install_method: remote
+  installed_at: null                    # preview/demo asset — no customer install
+  stack:
+    frontend: landing-astro
+    backend: none
+secret_ref: []                          # static site, no secrets
+cost_note: "preview 티어 공유 VPS 귀속분 (charter §5). 정적 SSG — 런타임 LLM 0. 신규 variant 3종(horizontal-steps/four-up/newsletter-inline) Astro-native, JS는 entrance 모션·아코디언 토글만."
