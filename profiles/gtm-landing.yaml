@@ -29,35 +29,35 @@ site:
     - slug: home
       title: "compounding-stack-harness"
       seo:
-        title: "Self-Host Full-Stack Code Generation — compounding-stack-harness"
-        description: "An in-network AI code-generation harness that lets non-technical teams build and run their own business systems. No dev environment required. No data leaves your network."
+        title: "사내망 풀스택 시스템 자동 생성 — compounding-stack-harness"
+        description: "개발팀 없이 사내 업무 시스템을 만드세요. AI 도메인 전문가가 풀스택 앱을 생성하고, 데이터는 사내망 밖으로 한 비트도 나가지 않습니다."
         og_image: "assets/og-home.png"
       sections:
         - type: hero
           variant: glowy-waves
           copy:
-            headline: "Build business systems. Zero dev team."
-            subhead: "Self-hosted AI agents generate your full-stack app: inside your network, on your chosen stack."
+            headline: "개발팀 없이 사내 업무 시스템을."
+            subhead: "AI 도메인 전문가가 풀스택 앱을 자동 생성합니다 — 사내망 안에서, 여러분이 고른 기술 스택으로."
           cta:
-            label: "Book a free assessment"
+            label: "무료 사전 진단 신청"
             href: "#contact"
           pills:
-            - "Self-host, zero data egress"
-            - "Swap stack in one line"
-            - "Cost instrumented by design"
+            - "Self-host, 데이터 외부 반출 없음"
+            - "스택 교체는 설정 한 줄"
+            - "LLM 비용 계측 기본 탑재"
           stats:
-            - label: "Domain presets"
+            - label: "도메인 프리셋"
               value: "14+"
-            - label: "Stack adapters"
+            - label: "스택 어댑터"
               value: "5"
-            - label: "Data leaves network"
+            - label: "외부로 나간 데이터"
               value: "0 bits"
 
         - type: logos
           variant: marquee-3d
           copy:
-            eyebrow: "Proof wall"
-            heading: "Real systems this harness generated"
+            eyebrow: "실증 자료"
+            heading: "이 harness가 실제로 생성한 시스템들"
             subhead: "모든 스크린샷은 이 harness가 실제로 생성한 시스템입니다."
           images:
             - /proof/shop-demo.jpg
@@ -76,51 +76,51 @@ site:
         - type: features
           variant: carousel
           copy:
-            headline: "Three reasons SMBs switch to compounding-stack-harness"
-            subhead: "Domain expertise, architectural flexibility, and cost control: built in from day one."
+            headline: "중견·중소기업이 compounding-stack-harness로 전환하는 세 가지 이유"
+            subhead: "도메인 전문성, 아키텍처 유연성, 비용 통제 — 첫날부터 설계에 내장되어 있습니다."
           items:
-            - title: "AI domain experts included"
+            - title: "AI 도메인 전문가 포함"
               icon: "brain"
               image: "/proof/edu-program.jpg"
-              description: "Industry-specific AI agents curate presets for your business domain. No need to hire or brief a human domain expert before you can start."
-            - title: "Swap frontend or backend freely"
+              description: "산업별 AI 에이전트가 여러분의 업무 도메인에 맞는 프리셋을 큐레이션합니다. 사람 전문가를 채용하거나 별도로 교육하지 않아도 바로 시작할 수 있습니다."
+            - title: "프론트엔드·백엔드를 자유롭게 교체"
               icon: "layers"
               image: "/proof/gtm-landing.jpg"
-              description: "React, Vue, htmx on the front; Spring Boot, FastAPI, Node, or Go on the back. Change either with a one-line profile edit, no rewrites."
-            - title: "Every LLM call is measured"
+              description: "프론트엔드는 React·Vue·htmx, 백엔드는 Spring Boot·FastAPI·Node·Go 중 선택. 프로필 파일 한 줄을 바꾸면 교체 완료 — 코드 재작성 없이."
+            - title: "LLM 호출 전수 계측"
               icon: "gauge"
               image: "/proof/construction-demo.jpg"
-              description: "Built-in cost instrumentation and multi-provider hedging keep AI inference bills predictable; self-host means your data never leaves the building."
+              description: "모든 AI 호출에 토큰 수·비용이 기록되고, 고비용 호출은 자동으로 저렴한 공급자나 캐시 응답으로 전환됩니다. self-host이므로 데이터는 사내망을 벗어나지 않습니다."
 
         - type: faq
           variant: two-col
           copy:
-            headline: "Questions IT teams ask before the first call"
-            subhead: "Straight answers. No marketing gloss."
+            headline: "첫 미팅 전에 IT 담당자가 묻는 질문들"
+            subhead: "마케팅 포장 없이 직답합니다."
           items:
-            - question: "Does our data leave our network?"
-              answer: "No. The harness runs entirely inside your network on your own servers. LLM inference is routed through whichever provider you configure (including on-premise models); no telemetry is sent to us by default. You control every egress point."
-            - question: "Are we locked into a specific frontend or backend?"
-              answer: "No. The only stable layer is the wire-protocol contract in the middle. You can start with Spring Boot and React, then migrate the backend to FastAPI later (the profile change is one line and a rebuild). New adapters are addable without touching the contract."
-            - question: "How do you control LLM costs as usage grows?"
-              answer: "Every agent call is instrumented with token counts and cost estimates logged per request. Automatic fallback routes expensive calls to cheaper providers or cached responses. You see a cost report monthly, and you can cap spend per tenant or per workflow."
-            - question: "How much effort is the initial self-host setup?"
-              answer: "A single docker-compose bring-up with Vault Agent + Keycloak SSO sidecars included. One customer-profile YAML captures your conventions. Typical IT-staff setup time: under a day for the first domain. We run a free assessment call to scope your environment first."
+            - question: "데이터가 사내망 밖으로 나가지 않나요?"
+              answer: "나가지 않습니다. harness는 여러분의 서버에서 사내망 안에서만 동작합니다. LLM 추론은 여러분이 설정한 공급자(온프레미스 모델 포함)를 통해 처리되며, 기본적으로 외부에 어떤 원격 측정 데이터도 전송하지 않습니다. 데이터 외부 반출 경로는 여러분이 직접 제어합니다."
+            - question: "특정 프론트엔드나 백엔드에 종속되나요?"
+              answer: "아니요. 유일하게 고정된 레이어는 중간의 미들 계약(wire-protocol)입니다. Spring Boot + React로 시작해 나중에 백엔드를 FastAPI로 전환해도 프로필 한 줄 수정과 리빌드면 됩니다. 새 어댑터 추가 시 미들 계약을 건드리지 않아도 됩니다."
+            - question: "사용량이 늘어도 LLM 비용을 어떻게 통제하나요?"
+              answer: "모든 에이전트 호출에 토큰 수·비용 추정치가 요청 단위로 기록됩니다. 자동 폴백이 고비용 호출을 더 저렴한 공급자나 캐시 응답으로 전환하고, 월간 비용 리포트를 제공합니다. 테넌트 또는 워크플로우 단위로 지출 한도를 설정할 수 있습니다."
+            - question: "초기 self-host 구축에 얼마나 걸리나요?"
+              answer: "docker-compose 한 번 실행이면 Vault Agent + Keycloak SSO 사이드카까지 포함해 올라옵니다. 고객 프로필 YAML 한 장이 여러분 조직의 모든 관습을 담습니다. IT 담당자 기준 첫 도메인 구축은 하루 이내. 저희가 먼저 무료 진단 미팅으로 여러분 환경을 파악한 뒤 진행합니다."
 
         - type: cta
           variant: centered
           copy:
-            headline: "Get early access before general availability."
-            subhead: "We are accepting a small cohort of M1 design partners. Book a 30-minute assessment: no commitment, no sales pitch."
+            headline: "정식 출시 전 얼리 액세스를 신청하세요."
+            subhead: "M1 디자인 파트너 소수 코호트를 모집합니다. 부담 없는 30분 사전 진단 미팅 — 구매 약정이나 영업 피치 없습니다."
           cta:
-            label: "Get on the early-access list"
+            label: "얼리 액세스 신청하기"
             href: "#contact"
 
         - type: footer
           variant: minimal
           copy:
             brand_name: "compounding-stack-harness"
-            tagline: "Self-host AI codegen that compounds with every project."
+            tagline: "프로젝트가 쌓일수록 강해지는 self-host AI 코드젠."
             legal_notice: "© 2026 compounding-stack-harness."
 
   contact:
@@ -129,8 +129,8 @@ site:
 
 # ── Defaults ────────────────────────────────────────────────────────────────
 defaults:
-  locale: en-US
-  timezone: UTC
+  locale: ko-KR
+  timezone: Asia/Seoul
 
 # ── Cost tracking ────────────────────────────────────────────────────────────
 billing:
