@@ -144,12 +144,25 @@ def validate_site(site: dict[str, Any], catalog: dict[str, Any]) -> list[str]:
                 continue
 
             cat_entry: dict[str, Any] = sections_catalog[sec_type]
+
+            # Determine variant up front so variant_overrides can be applied to both loops.
+            variant: str = section.get("variant", "")
+
+            # variant_overrides: per-variant relaxation of normally-required slots.
+            # e.g. gallery/grid-2x2 makes src optional; testimonial/pull-quote-wall
+            # makes quote/author_name optional (they live in items[] instead).
+            variant_overrides: dict[str, Any] = cat_entry.get("variant_overrides", {})
+            vo: dict[str, Any] = variant_overrides.get(variant, {})
+
             copy_slots: dict[str, Any] = cat_entry.get("copy_slots", {})
             required_slots: list[str] = copy_slots.get("required", [])
+            # Subtract slots relaxed by this variant from the required set.
+            vo_copy_optional: set[str] = set(vo.get("copy_optional", []))
+            effective_required_slots = [s for s in required_slots if s not in vo_copy_optional]
             section_copy: dict[str, Any] = section.get("copy") or {}
 
-            # All required copy_slots must be present
-            for slot in required_slots:
+            # All effective required copy_slots must be present
+            for slot in effective_required_slots:
                 if slot not in section_copy:
                     violations.append(
                         f"page '{page_slug}' section '{sec_type}': "
@@ -157,7 +170,6 @@ def validate_site(site: dict[str, Any], catalog: dict[str, Any]) -> list[str]:
                     )
 
             # variant (if set) must be in catalog variants
-            variant: str = section.get("variant", "")
             if variant:
                 cat_variants: list[str] = cat_entry.get("variants", [])
                 if variant not in cat_variants:
@@ -166,13 +178,16 @@ def validate_site(site: dict[str, Any], catalog: dict[str, Any]) -> list[str]:
                         f"variant '{variant}' is not in catalog variants {cat_variants}"
                     )
 
-            # item_slots validation: only when catalog has item_slots AND section has items
+            # item_slots validation: only when catalog has item_slots AND section has items.
+            # variant_overrides.item_optional: slots normally required but relaxed for this variant.
             item_slots: dict[str, Any] = cat_entry.get("item_slots", {})
             if item_slots:
                 section_items: list[Any] = section.get("items") or []
                 required_item_slots: list[str] = item_slots.get("required", [])
+                vo_item_optional: set[str] = set(vo.get("item_optional", []))
+                effective_item_slots = [s for s in required_item_slots if s not in vo_item_optional]
                 for idx, item in enumerate(section_items):
-                    for slot in required_item_slots:
+                    for slot in effective_item_slots:
                         if slot not in item:
                             violations.append(
                                 f"page '{page_slug}' section '{sec_type}' item[{idx}]: "
