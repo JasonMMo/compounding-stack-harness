@@ -30,6 +30,8 @@
     "@fontsource-variable/source-serif-4": "^5.2.9",
     "@fontsource-variable/space-grotesk": "^5.2.10",
     "@fontsource-variable/syne": "^5.2.5",
+    "@fontsource/barlow-condensed": "^5.2.8",
+    "@fontsource/lato": "^5.2.7",
     "astro": "^4.16.18",
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.17",
