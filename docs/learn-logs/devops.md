@@ -30,6 +30,7 @@
 | preview VPS — CI/CD (Coolify API) | 2026-06-11 | deploy (스모크) | **검증 PASS** — API 로 프로젝트→앱→배포→외부 HTTPS 200, 정리 후 잔여 0 | LLM 0, infra 0 (기존 VPS) |
 | lumi.n9n.co.kr (Growth-83) | 2026-06-16 | deploy (A5 Mobile App, nova 테마) | **검증 PASS** — build finished, HTTPS 200, "Build better days" 서빙 확인. portal 8번째 카드 반영 | $0 (shared VPS) |
 | prism.n9n.co.kr (Growth-84) | 2026-06-16 | deploy (A7 API Platform, prism 테마) | **검증 PASS** — build finished, HTTPS 200, "Know your API. Before your customers do." 서빙 확인. portal 9번째 카드 반영 | $0 (shared VPS) |
+| flux.n9n.co.kr (Growth-85) | 2026-06-17 | redeploy (process/split-animation 섹션 교체) | **검증 PASS** — build finished (~15s), HTTPS 200, "도입부터 운영까지" + "스키마 자동 탐색 확인" grep=1 각각. deployment_uuid=cnzdm72caqx680wcptyrrkmn | $0 (shared VPS, rebuild only) |
 | preview VPS — 8000 노출 차단 | 2026-06-11 | harden (3차) | **검증 PASS** — 클라우드 방화벽 allow-list, 8000/8080/6001/6002 외부 차단 실측, 22/80/443 유지. CISO 잔여 0 | $0 |
 | 로컬 (preview 패키징) | 2026-06-11 | package (scaffold 결선) | **검증 PASS** — profile→2-container compose, lawfirm-demo /login·/health 200, manifest 14 entities. Coolify 배포는 Phase 2 | $0 |
 | lawfirm-demo.n9n.co.kr (Coolify Phase 2) | 2026-06-11 | deploy (첫 영속 preview) | **검증 PASS** — build_pack=dockercompose, LE TLS 자동, /login 200, /login HTML 정상. 앱 UUID opryb94j9k5cjdv8bienenv0 | LLM ~$0.5, infra $0 (기존 VPS) |
@@ -239,3 +240,14 @@
 - **신규 함정 0건**: Growth-83(lumi A5) 동일 경로 무수정 재사용. push-before-deploy는 기존 알려진 패턴.
 - **비용노트**: 공유 VPS 귀속, 정적 SSG 런타임 LLM 0.
 - **교훈 (1줄)**: A7 API Platform archetype이 동일 deploy_static_site.py 레인으로 무수정 배포됨 — push-before-deploy 없이 포털 재배포 시 구버전 이미지가 빌드됨을 재확인(Growth-78 패턴 반복).
+
+### Growth-85 (2026-06-17) — flux process/split-animation 섹션 재배포 (A1 FLUX 라이브 갱신)
+
+- **목적**: process/numbered-stack → split-animation 변형 교체(commit 69482e4, engineer 산출)를 라이브에 반영. git push 는 선행 세션에서 완료(미커밋 없음).
+- **배포**: flux.n9n.co.kr (app=oyemv0mttkn8eo05xflvc4x2). `GET /api/v1/applications/oyemv0mttkn8eo05xflvc4x2/start` → deployment_uuid=cnzdm72caqx680wcptyrrkmn. status=finished (첫 polling, ~15s).
+- **터널**: 포트 8000 기존 터널 alive 확인(`http://localhost:8000/api/v1/applications/{uuid}` 200) 후 SSH 재수립 생략.
+- **외부 검증**: https://flux.n9n.co.kr HTTP 200 + grep "도입부터 운영까지" = 1 (PRIMARY, split-animation copy) + grep "스키마 자동 탐색 확인" = 1 (nested subtask, SECONDARY) — 신규 섹션 라이브 반영 확인 PASS.
+- **레지스트리**: `infra/registry/flux.yaml` deployed_at=2026-06-17 + last_deployment_uuid=cnzdm72caqx680wcptyrrkmn 갱신.
+- **함정 0건**: 외부 HTTPS(coolify.n9n.co.kr) 503이었으나 localhost:8000 SSH 터널은 살아 있었음 — 공개 Coolify 도메인 접속 시도는 항상 실패(방화벽 8000 차단), localhost 터널이 단일 접점.
+- **비용 노트**: 재배포(이미지 rebuild) $0 추가 인프라 비용, 공유 VPS 귀속.
+- **교훈 (1줄)**: 이미 push 된 변경은 기존 app UUID 에 `GET /start` 한 번으로 rebuild+redeploy 가 완결됨 — compose/domain/env 재설정 불필요, 첫 배포와 달리 단순 재트리거만으로 충분.
