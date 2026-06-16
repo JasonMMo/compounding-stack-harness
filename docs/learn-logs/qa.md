@@ -289,3 +289,33 @@ patch_schema.py disposition: KEEP as audit record -- see QA recommendation below
 - **Blocks issued**: 0 (G-9 FAIL 은 pre-existing, 이번 변경 범위 외. PASS 판정 근거: 인도 항목 전부 green, G-9 는 §6 엔트리 누적 문제로 별도 cleanup ticket 발행 권고.)
 - **Cost**: ~4 turns Sonnet (파일 정독 + 명령 실행 + 보고서)
 - **G-9 cleanup 권고**: learn-log.md §6 slim 을 역순 compact 또는 이전 Growth 엔트리를 단축해 200행 이하로 복귀. 별도 Growth 로 처리 권고 (이 PR 범위 아님).
+
+### Growth-85 (2026-06-17) — ProcessSplitAnimation 머지 게이트: PASS
+
+- **Audit target**: process/split-animation variant 구현 (CDO triage ACCEPT 1순위 — 21st.dev AgentPlan 중화)
+  - 신규/변경: ProcessSplitAnimation.astro, [...page].astro (dispatch 분기), catalog.yaml (split-animation + item_slots.optional 확장), site_manifest.py (subtasks/status/tools passthrough), test_site_manifest.py (TestProcessSplitAnimation 8케이스), flux-demo.yaml (process 섹션 교체, 한국어 copy + 4단계 태스크 트리)
+- **Pass criteria (이번 게이트)**:
+  - L1 pytest: 전체 140 passed (TestProcessSplitAnimation 8케이스 포함)
+  - L3 build: flux-demo Astro SSG 빌드 green (1 page built)
+  - diagnose: G-1~G-15 전체 — real FAIL 없음 (G-9 pre-existing carry, G-2/G-3/G-14/G-15 SPEC)
+  - 불변식 5종 모두 OK
+- **결과 (2026-06-17 실행)**:
+  - G-1 PASS / G-2 SPEC / G-3 SPEC / G-4 PASS / G-5 PASS / G-6 PASS / G-7 PASS / G-8 PASS
+  - G-9 **FAIL** (pre-existing regression — 211 비-blank 행, cap 200. Growth-84 시점부터 이미 초과. 본 PR 기여분 없음: §6 에 Growth-85 엔트리 미추가 상태에서 211행임을 확인.)
+  - G-10 PASS / G-11 PASS / G-12 PASS / G-13 PASS / G-14 SPEC / G-15 SPEC
+  - L1 pytest: **140 PASSED**, 0 FAILED (TestProcessSplitAnimation 8케이스 포함 확인)
+  - L3 build: BUILD COMPLETE (1 page built in 6.41s — "✓ Completed" 확인)
+  - manifest 검증: flux-demo site-manifest.json 생성 확인. process/split-animation 섹션 — items 4개, item0.status=completed, item0.subtasks[0].tools=['file-system','schema-explorer'], item1.status=active 확인. 모든 subtasks/status/tools passthrough 정상.
+  - 회귀 검증: meridian/studio-north (process 섹션 보유) validate_site PASS. TestProcessSection 8케이스(numbered-stack/horizontal-steps 포함) 0 FAIL.
+- **불변식 5종 감사**:
+  - (a) theme-tokenized: 모든 색상이 var(--token, #fallback) 패턴. 독립 hex 하드코딩 0 (fallback 은 토큰 미정의 시 graceful degradation, 허용). OK.
+  - (b) Growth-69 SSR: `<details open>` 으로 subtasks 모두 정적 확장. JS 없이 전체 콘텐츠 DOM 가시. 컴포넌트 내 client-side JS 없음 (순수 Astro, React island 아님). OK.
+  - (c) impeccable: 다크 네온/glow/조작사진 0. 단순 경계선 + 표면색 조합. OK.
+  - (d) 접근성: `<ol>` 순서목록 사용. 상태 아이콘 shape 3종 차별화(check-circle/circle-dot/circle) + aria-label 텍스트("완료"/"진행 중"/"예정") 병용. 색 단독 의존 0. prefers-reduced-motion @media 블록 확인. OK.
+  - (e) catalog item_slots 문서화 일치: catalog.yaml `item_slots.optional: [description, step_label, status, subtasks]` → 컴포넌트 Props 인터페이스 (status?, subtasks?, description?, step_label?) 일치. site_manifest.py `items_val` passthrough 확인. test_site_manifest.py TestProcessSplitAnimation (g)flux-demo 검증/(h)manifest 내 split-animation 확인. OK.
+- **False PASS / False FAIL risks**:
+  - subtasks 의 items 중첩 구조가 validate_site 에서 검증되지 않음(flat item_slots 만 검사) — 의도된 미검증 (subtask 는 variant-scoped 스키마, 현재 catalog 는 top-level item_slots 만 enforce). 거짓 PASS 위험 낮음: test (d) 에서 명시적으로 subtask-with-title 통과 / subtask 스키마는 컴포넌트가 런타임에 방어적으로 처리.
+  - hex fallback 이 impeccable 감사에서 오탐 가능 — var() 패턴 전수 확인으로 해소.
+- **Regression cases**: 없음 (신규 variant, 기존 numbered-stack/horizontal-steps 회귀 0)
+- **Blocks issued**: 0. 모든 게이트 항목 green.
+- **Cost**: ~6 turns Sonnet
