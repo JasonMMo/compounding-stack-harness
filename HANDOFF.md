@@ -2,7 +2,7 @@
 
 ## 이번 세션 범위 (최신)
 
-**마케팅사이트 8축(theme/section) 트랙 — 페이지-구조 아키타입 확장 (Growth-75 → 85)**.
+**마케팅사이트 8축(theme/section) 트랙 — 페이지-구조 아키타입 확장 (Growth-75 → 86)**.
 웹에이전시형 랜딩 데모를 "테마(색·폰트)" 다양성에서 **페이지 구조 아키타입(A1~A7)** 다양성으로 확장 중. CEO 가 "색·텍스트만 다른 같은 패턴"을 지적(Growth-76) → 진짜 차별은 **섹션 variant × 페이지 아키타입 × 테마의 곱**이라는 결론. 블루프린트: [`docs/architecture/landing-pattern-matrix.md`](docs/architecture/landing-pattern-matrix.md).
 
 > ✅ **Growth-81 A1 FLUX LIVE** — https://flux.n9n.co.kr (6번째 데모, flux 테마). **P0 종결**.
@@ -10,6 +10,7 @@
 > ✅ **Growth-84 A7 API Platform LIVE** — https://prism.n9n.co.kr (9번째 데모, prism 테마(9th, deep-azure #1B4FA8)). **신규 hero/bento-grid 변형**(텍스트 좌 + stat/proof bento 우, 무사진·무JS; GlassmorphismTrust 21st.dev 레퍼런스 구조 차용·미감 중화). CTO 비주얼 검증서 **ticker-band 저대비·footer 빈컬럼** FIX-FIRST 적발 → `Stats.astro` styleHints.bg honor + `Footer.astro` 데이터주도 컬럼+빈컬럼 가드로 **일반화**(전 데모 재사용, flux 회귀 0). §2 stale 4건 HAVE 환류. **→ A1~A7 7개 아키타입 전부 BUILT**.
 > ✅ **Growth-83 A5 Mobile App LIVE** — https://lumi.n9n.co.kr (8번째 데모, nova 테마, Lumi 습관·집중 앱). **무사진(0 stock)**: gallery/grid-2x2 src-optional CSS 폰목업 4종 + marquee 자체 proof 재사용 + cta 다운로드 버튼쌍(copy.secondary_*). site_manifest `variant_overrides` 신설로 **P2(slot 완화)·P1(items[] copy_slots) 동시 종결**. FeatureCarousel sr-only SSR(Growth-69). 풀페이지 8/8 비주얼 검증. **→ A1~A6 6개 아키타입 전부 BUILT, 매트릭스 1차 완성**.
 > ✅ **Growth-85 21st.dev 6종 triage → process/split-animation 신규 변형** — 파운더 드롭 레퍼런스 6종(PixelLogoGrid/InkReveal/PixelPerfectHero/TableOfContents/Sparkles/AgentPlan)을 CDO 가 불변식 게이트로 triage: **AgentPlan 1종만 채택**(InkReveal=Growth-69위반·TableOfContents=섹션type없음·Sparkles=impeccable glow위반 reject, PixelPerfectHero/PixelLogoGrid backlog). `process/split-animation` 으로 중화 구현(랜덤상태 제거·read-only·`<details open>` SSR fallback). **A1 flux 데모에 흡수·재배포 LIVE**(한국어 4단계 태스크트리). status 토큰 추가 0(기존 3-state 재활용). NEED 14→13. triage 판정 matrix §4 박제. pytest 140·비주얼 PASS.
+> ✅ **Growth-86 자체 GTM 랜딩 한국어화 + locale 전파 feature** — 우리 플래그십 M1 리드젠 랜딩(gtm-landing, LIVE)이 영어였던 모순 해소: 전 섹션 카피·SEO 한국어(CMO), `defaults.locale ko-KR`. 부수 신설 **locale 전파 feature**(profile→manifest top-level `locale`→BaseLayout `<html lang>` BCP-47 서브태그; 하드코딩 `lang="en"` 제거, 영문 데모 en-US 기본 보존 — open-closed, 전 고객 재사용) + **aurora family-display 한국어 시스템폰트 폴백**(헤드라인 글리프 결함, zero egress — self-host thesis 준수). pytest 145(신규 5)·`<html lang="ko">`·비주얼 전 섹션 PASS. backlog: kiln·studio·harvest 동일 폰트 갭 + **모션 트랙**(sanggong식 스크롤 스냅 풀스크린+IO 진입모션 변형 자산화, "B급 상한 상향" 검토 — 파운더 승인 방향).
 
 ---
 
