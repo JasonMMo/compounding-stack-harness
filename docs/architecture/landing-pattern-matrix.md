@@ -3,7 +3,8 @@
 > CDO doc. Decision-oriented map for the multi-session buildout of diverse landing-page patterns.
 > Canonical positions: section-type taxonomy (§1), variant table (§2), page archetypes (§3),
 > buildout backlog (§4), invariants (§5).
-> Last updated: 2026-06-16 (CTO, Growth-84 — A7 API Platform archetype + prism theme(9th) + hero/bento-grid; A1~A7 전부 BUILT; §2 stale NEED→HAVE 정정)
+> Last updated: 2026-06-17 (CTO, Growth-85 — process/split-animation HAVE; 21st.dev 레퍼런스 6종 CDO triage(§4) — AgentPlan 채택·구현, InkReveal/TableOfContents/Sparkles reject, PixelLogoGrid/PixelPerfectHero 백로그)
+> Prev: 2026-06-16 (Growth-84 — A7 API Platform archetype + prism theme(9th) + hero/bento-grid; A1~A7 전부 BUILT; §2 stale NEED→HAVE 정정)
 
 ---
 
@@ -102,7 +103,7 @@ Status: HAVE (existing variant name) or NEED.
 |------------------|-----------------------------------------------------------------------------|----------------|
 | numbered-stack   | Vertical numbered steps, each with a headline and one-line description      | HAVE           |
 | horizontal-steps | Left-to-right numbered steps with connectors; collapses to stack mobile     | HAVE           |
-| split-animation  | Step number locks left, right column scrolls through step content           | NEED           |
+| split-animation  | Sticky step header left, task-tree cards right; status icon+label per step   | HAVE           |
 
 ### stats (currently: ticker-band, four-up)
 
@@ -178,13 +179,14 @@ Status: HAVE (existing variant name) or NEED.
 ---
 
 **Variant count summary**:
-14 section types · 52 total variants · 38 HAVE · 14 NEED
+14 section types · 52 total variants · 39 HAVE · 13 NEED
 (Growth-77 additions: gallery/parallax-scroll HAVE + story/timeline-year HAVE + lead/minimal-field HAVE; gallery/full-bleed-strip added as NEED)
 (Growth-78 additions: logos/quote-band HAVE + process/numbered-stack HAVE + team/headshot-grid HAVE — A6 B2B-services archetype shipped)
 (Growth-79 additions: stats section type NEW + features/bento-mosaic HAVE + stats/ticker-band HAVE + testimonial/pull-quote-wall HAVE — A1 SaaS Product Launch CDO spec shipped; flux theme added)
 (Growth-80 follow-on: process/horizontal-steps HAVE + stats/four-up HAVE + cta/newsletter-inline HAVE — A3 Event/Conference archetype shipped; ignite theme added)
 (Growth-83: gallery/grid-2x2 HAVE (src-optional 무사진 CSS 목업) — A5 Mobile App archetype shipped; nova theme added; site_manifest `variant_overrides` 신설로 A1~A6 매트릭스 1차 완성)
 (Growth-84: hero/bento-grid HAVE (텍스트 좌 + stat/proof bento 우, 라이트 캔버스, 무사진) — A7 API Platform archetype + prism 테마(9th) shipped. stale 정정: headline-only(A2 studio-north live)·features/bento-mosaic·testimonial/pull-quote-wall 가 §2 에서 NEED 로 잘못 남아있던 것을 HAVE 로 환류. hero `item_slots` 신설 + ticker-band/full-links 일반화)
+(Growth-85: process/split-animation HAVE (21st.dev AgentPlan 구조 차용 → 중화: 랜덤 상태 토글 제거, read-only 고정 status, `<details open>` SSR fallback). status 색 토큰 추가 0 — 기존 text-2/primary/text-3 3-state 재활용 + 아이콘 shape+aria-label 1차 구분. A1 flux 데모에 흡수(한국어 4단계 태스크 트리). NEED 14→13)
 
 ---
 
@@ -201,7 +203,7 @@ Target: B2B SaaS, dev tool, platform. Dense, trust-heavy, conversion-optimized.
 hero           / glowy-waves    (dark canvas; pills + stats strip)
 logos          / horizontal-scroll (trust fast; above features)
 features       / bento-mosaic   (irregular grid breaks card-sameness)
-process        / numbered-stack (shows the workflow)
+process        / split-animation (workflow as task-tree; sticky step header + status cards — Growth-85)
 stats          / ticker-band    (quantitative proof band)
 testimonial    / pull-quote-wall (qualitative proof, large format)
 pricing        / three-tier     (decision point)
@@ -386,6 +388,17 @@ Ordered by: (visible differentiation delivered / implementation cost). First 10.
 **21st.dev notes**: Items 3, 5, 9 have strong analogs in 21st.dev component library (bento, timelines).
 Items 1, 2, 4, 6, 7, 8, 10 are better built from scratch — simpler than adapting a component with
 its own design opinions.
+
+**Growth-85 — 21st.dev 레퍼런스 6종 CDO triage 판정** (원본: `design/reference/21st/4~9.txt`. 전부 React+framer-motion+shadcn → 구조만 차용, Astro+토큰으로 재구현·중화. 상세 스펙은 out/growth-85-triage/ — gitignored 소멸, 판정만 여기 박제):
+
+| # | 레퍼런스 | 판정 | 매핑 / 사유 |
+|---|----------|------|-------------|
+| 9 | AgentPlan | ✅ **ACCEPT-built** | → process/split-animation (HAVE). 랜덤 상태 제거·read-only 고정·`<details open>` fallback. A1 flux 흡수. |
+| 6 | PixelPerfectHero | 🔵 ACCEPT-backlog | → hero/pixel-canvas (신규 variant). `scroll-reveal` NEED 와 **별도 명칭 등록** 필요(CTO 확정 보류). canvas 픽셀 배경. |
+| 4 | PixelLogoGrid | 🔵 ACCEPT-backlog | → logos/pixel-hover-grid (신규 variant). 톤 검토 후 누적. |
+| 5 | InkReveal | ❌ REJECT | Growth-69 위반 — canvas 가 콘텐츠 전체를 덮어 JS 없으면 소멸(정적 fallback 불가). |
+| 7 | TableOfContents | ❌ REJECT | 대응 섹션 type 없음 — 문서 in-page nav 용도, 마케팅 랜딩 부적합. |
+| 8 | Sparkles | ❌ REJECT | impeccable 정면 위반 — dark-neon + glow 파티클 + opacity-0 headless blank. |
 
 ---
 
