@@ -9,7 +9,8 @@ preview:
   coolify_project: gtm-landing          # uuid: kt6fcno8hync4plaabxadtqj
   coolify_app: umyt8l38jv386mwfja5v3d2p
   status: live
-  deployed_at: "2026-06-15"
+  deployed_at: "2026-06-17"
+  last_deployment_uuid: tcd4hzhm4h0lvq6y9h6hcc60
   deliverable_kind: marketing-site       # static SSG (no backend) — deploy_static_site.py lane
   theme: aurora
 production:
