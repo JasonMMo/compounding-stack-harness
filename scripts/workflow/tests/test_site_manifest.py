@@ -2394,3 +2394,137 @@ class TestLocaleEmit:
         assert manifest.get("locale") == "ko-KR", (
             f"gtm-landing manifest locale must be 'ko-KR', got '{manifest.get('locale')}'"
         )
+
+
+# ---------------------------------------------------------------------------
+# Growth-87: scroll_mode + motion emit + validation + 3-variant dispatch
+# ---------------------------------------------------------------------------
+
+class TestScrollModeMotionEmit:
+    def _profile(self, scroll_mode=None, motion=None):
+        site = {
+            "theme": "aurora",
+            "pages": [{
+                "slug": "home",
+                "title": "Home",
+                "sections": [{
+                    "type": "hero",
+                    "copy": {"headline": "H", "subhead": "S"},
+                }],
+            }],
+        }
+        if scroll_mode is not None:
+            site["scroll_mode"] = scroll_mode
+        if motion is not None:
+            site["motion"] = motion
+        return {
+            "customer": {"slug": "test-motion"},
+            "stack": {"deliverable_kind": "marketing-site"},
+            "site": site,
+        }
+
+    def test_scroll_mode_snap_emitted(self, catalog):
+        profile = self._profile(scroll_mode="snap", motion="subtle")
+        manifest = build_site_manifest(profile)
+        assert manifest["scroll_mode"] == "snap"
+
+    def test_motion_subtle_emitted(self, catalog):
+        profile = self._profile(scroll_mode="snap", motion="subtle")
+        manifest = build_site_manifest(profile)
+        assert manifest["motion"] == "subtle"
+
+    def test_motion_rich_emitted(self, catalog):
+        profile = self._profile(motion="rich")
+        manifest = build_site_manifest(profile)
+        assert manifest["motion"] == "rich"
+
+    def test_defaults_normal_off_when_absent(self, catalog):
+        profile = self._profile()
+        manifest = build_site_manifest(profile)
+        assert manifest["scroll_mode"] == "normal", manifest.get("scroll_mode")
+        assert manifest["motion"] == "off", manifest.get("motion")
+
+    def test_invalid_scroll_mode_rejected(self, catalog):
+        profile = self._profile(scroll_mode="fullpage")
+        violations = validate_site(profile["site"], catalog)
+        assert any("scroll_mode" in v for v in violations), violations
+
+    def test_invalid_motion_rejected(self, catalog):
+        profile = self._profile(motion="max")
+        violations = validate_site(profile["site"], catalog)
+        assert any("motion" in v for v in violations), violations
+
+    def test_valid_scroll_motion_combinations(self, catalog):
+        for sm in ("normal", "snap"):
+            for m in ("off", "subtle", "rich"):
+                profile = self._profile(scroll_mode=sm, motion=m)
+                violations = validate_site(profile["site"], catalog)
+                assert not violations, f"scroll_mode={sm} motion={m}: {violations}"
+
+    def test_gtm_landing_snap_subtle(self, catalog):
+        try:
+            import yaml as _yaml
+        except ImportError:
+            import pytest
+            pytest.skip("PyYAML not available")
+        path = PROFILES_DIR / "gtm-landing.yaml"
+        if not path.exists():
+            import pytest
+            pytest.skip("gtm-landing.yaml not found")
+        with open(path, encoding="utf-8") as f:
+            profile = _yaml.safe_load(f)
+        manifest = build_site_manifest(profile)
+        assert manifest["scroll_mode"] == "snap", manifest.get("scroll_mode")
+        assert manifest["motion"] == "subtle", manifest.get("motion")
+
+
+class TestMotionVariantDispatch:
+    def _site(self, sec_type, variant, copy, items=None):
+        section = {"type": sec_type, "variant": variant, "copy": copy}
+        if items:
+            section["items"] = items
+        return {
+            "theme": "aurora",
+            "scroll_mode": "snap",
+            "motion": "subtle",
+            "pages": [{
+                "slug": "home",
+                "title": "Home",
+                "sections": [section],
+            }],
+        }
+
+    def test_hero_scroll_reveal_valid(self, catalog):
+        site = self._site("hero", "scroll-reveal",
+                          {"headline": "테스트", "subhead": "서브"})
+        violations = validate_site(site, catalog)
+        assert not violations, violations
+
+    def test_gallery_full_bleed_strip_valid(self, catalog):
+        site = self._site("gallery", "full-bleed-strip",
+                          {"headline": "갤러리"},
+                          items=[{"src": "/img.jpg", "alt": "설명"}])
+        violations = validate_site(site, catalog)
+        assert not violations, violations
+
+    def test_stats_pinned_staged_valid(self, catalog):
+        site = self._site("stats", "pinned-staged",
+                          {"headline": "지표"},
+                          items=[{"value": "14+", "label": "도메인"}])
+        violations = validate_site(site, catalog)
+        assert not violations, violations
+
+    def test_gtm_landing_profile_valid(self, catalog):
+        try:
+            import yaml as _yaml
+        except ImportError:
+            import pytest
+            pytest.skip("PyYAML not available")
+        path = PROFILES_DIR / "gtm-landing.yaml"
+        if not path.exists():
+            import pytest
+            pytest.skip("gtm-landing.yaml not found")
+        with open(path, encoding="utf-8") as f:
+            profile = _yaml.safe_load(f)
+        violations = validate_site(profile["site"], catalog)
+        assert not violations, violations
