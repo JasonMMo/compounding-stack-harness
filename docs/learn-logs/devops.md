@@ -31,6 +31,7 @@
 | lumi.n9n.co.kr (Growth-83) | 2026-06-16 | deploy (A5 Mobile App, nova 테마) | **검증 PASS** — build finished, HTTPS 200, "Build better days" 서빙 확인. portal 8번째 카드 반영 | $0 (shared VPS) |
 | prism.n9n.co.kr (Growth-84) | 2026-06-16 | deploy (A7 API Platform, prism 테마) | **검증 PASS** — build finished, HTTPS 200, "Know your API. Before your customers do." 서빙 확인. portal 9번째 카드 반영 | $0 (shared VPS) |
 | flux.n9n.co.kr (Growth-85) | 2026-06-17 | redeploy (process/split-animation 섹션 교체) | **검증 PASS** — build finished (~15s), HTTPS 200, "도입부터 운영까지" + "스키마 자동 탐색 확인" grep=1 각각. deployment_uuid=cnzdm72caqx680wcptyrrkmn | $0 (shared VPS, rebuild only) |
+| gtm-landing.n9n.co.kr (Growth-87) | 2026-06-17 | redeploy (scroll-snap+subtle motion 파일럿, aurora 테마) | **검증 PASS** — build finished, `<html lang="ko" data-motion="subtle">`, 한국어 헤드라인 present, CSS googleapis 0 hit(zero-egress), data-reveal 12개+snap- 마크업 확인. deployment_uuid=aawbeuyz2d5zcsaa69jdfbcb | $0 (shared VPS, rebuild only) |
 | preview VPS — 8000 노출 차단 | 2026-06-11 | harden (3차) | **검증 PASS** — 클라우드 방화벽 allow-list, 8000/8080/6001/6002 외부 차단 실측, 22/80/443 유지. CISO 잔여 0 | $0 |
 | 로컬 (preview 패키징) | 2026-06-11 | package (scaffold 결선) | **검증 PASS** — profile→2-container compose, lawfirm-demo /login·/health 200, manifest 14 entities. Coolify 배포는 Phase 2 | $0 |
 | lawfirm-demo.n9n.co.kr (Coolify Phase 2) | 2026-06-11 | deploy (첫 영속 preview) | **검증 PASS** — build_pack=dockercompose, LE TLS 자동, /login 200, /login HTML 정상. 앱 UUID opryb94j9k5cjdv8bienenv0 | LLM ~$0.5, infra $0 (기존 VPS) |
