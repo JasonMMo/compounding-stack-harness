@@ -23,6 +23,8 @@ stack:
 # ── Site Block (marketing-site schema) ──────────────────────────────────────
 site:
   theme: flux
+  scroll_mode: snap                  # Growth-87 파일럿: 100dvh 풀스크린 snap
+  motion: rich                       # Growth-87 파일럿: rich intensity dial
 
   pages:
     - slug: home
