@@ -1,0 +1,137 @@
+---
+/**
+ * StatsPinnedStaged.astro — stats/pinned-staged variant (Growth-87).
+ * CDO spec §4-3: 4 stat 카드 stagger reveal.
+ *
+ * G-69: data-reveal 요소들의 CSS 기본 상태 = 완전 가시.
+ *   html.motion-ready 없으면 모든 카드 opacity:1; transform:none.
+ *   JS off → 4개 카드 즉시 표시. stagger 안무만 없음.
+ *
+ * 라이브러리 0: vanilla IO reveal (BaseLayout IO 지시어 소비).
+ * prefers-reduced-motion: BaseLayout IO 스크립트가 skip → 전부 가시.
+ */
+
+interface StatItem {
+  value: string
+  label: string
+}
+
+interface Props {
+  copy?: Record<string, string>
+  items?: StatItem[]
+}
+
+const {
+  copy = {},
+  items = [],
+} = Astro.props
+
+const headline = copy.headline ?? ''
+const subhead = copy.subhead ?? ''
+
+// 기본 데모 stats (항목 없을 때)
+const displayItems: StatItem[] = items.length > 0 ? items : [
+  { value: '14+', label: '도메인 프리셋' },
+  { value: '5', label: '스택 어댑터' },
+  { value: '0 bits', label: '외부로 나간 데이터' },
+  { value: '< 1일', label: '첫 도메인 구축' },
+]
+---
+
+<section
+  class="stats-pinned"
+  data-section="stats"
+  style="
+    padding: var(--space-section-y, 112px) var(--space-container-gutter, 24px);
+    background: var(--color-section-alt-bg, #F5F3FF);
+  "
+>
+  <div
+    style="
+      max-width: var(--space-container-max, 1200px);
+      margin: 0 auto;
+    "
+  >
+    <!-- 섹션 헤드 — reveal delay 0 -->
+    <div
+      class="stats-pinned__head"
+      data-reveal
+      data-reveal-delay="0"
+      style="text-align: center; margin-bottom: 0;"
+    >
+      {headline && (
+        <h2
+          style="
+            font-family: var(--font-family-display, sans-serif);
+            font-size: clamp(1.75rem, 3.5vw, var(--font-size-5xl, 48px));
+            font-weight: var(--font-weight-display, 800);
+            color: var(--color-text-1, #111827);
+            margin: 0 0 16px;
+            letter-spacing: var(--letter-spacing-display, -0.03em);
+          "
+        >
+          {headline}
+        </h2>
+      )}
+      {subhead && (
+        <p
+          style="
+            font-family: var(--font-family-body, sans-serif);
+            font-size: clamp(0.9375rem, 1.25vw, 1.125rem);
+            color: var(--color-text-2, #6B7280);
+            margin: 0;
+            max-width: 560px;
+            margin-inline: auto;
+          "
+        >
+          {subhead}
+        </p>
+      )}
+    </div>
+
+    <!-- stat 카드 그리드 — 카드별 stagger reveal -->
+    <div class="stats-pinned-grid">
+      {displayItems.map((stat: StatItem, idx: number) => (
+        <div
+          class="stat-card"
+          data-reveal
+          data-reveal-delay={String(idx)}
+          style="
+            padding: 32px 24px;
+            border: 1px solid var(--color-primary-border, #C4B5FD);
+            border-radius: var(--radius-card, 16px);
+            background: var(--color-surface-1, #ffffff);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: var(--shadow-card, 0 4px 6px -1px rgba(0,0,0,0.07));
+          "
+        >
+          <span
+            class="stat-card__value"
+            style="
+              font-family: var(--font-family-display, sans-serif);
+              font-size: var(--font-size-5xl, 48px);
+              font-weight: 800;
+              color: var(--color-primary, #6D28D9);
+              line-height: 1;
+              letter-spacing: -0.03em;
+            "
+          >
+            {stat.value}
+          </span>
+          <span
+            class="stat-card__label"
+            style="
+              font-family: var(--font-family-body, sans-serif);
+              font-size: 0.875rem;
+              color: var(--color-text-2, #6B7280);
+            "
+          >
+            {stat.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
