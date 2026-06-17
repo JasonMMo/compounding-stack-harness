@@ -253,11 +253,15 @@ body {
 }
 
 /* ── site.motion=rich override ───────────────────────────────────────────── */
+/* Perceptibly bolder than subtle: larger distance, longer duration, wider stagger.
+   Impeccable floor: no glow/neon/opacity<0 tricks — scale only distance/duration/stagger/ease.
+   Legacy [data-motion] keyframes use CSS animation-duration vars where possible;
+   hardcoded keyframe values are NOT touched here (backlog: token-drive legacy keyframes). */
 :root[data-motion="rich"] {
-  --motion-duration: 600ms;
+  --motion-duration: 640ms;
   --motion-ease:     cubic-bezier(0.16, 1, 0.3, 1);
-  --motion-distance: -32px;
-  --motion-stagger:  100ms;
+  --motion-distance: -40px;
+  --motion-stagger:  110ms;
 }
 
 /* ── G-69: 기본 상태 = 완전 가시 ────────────────────────────────────────────
