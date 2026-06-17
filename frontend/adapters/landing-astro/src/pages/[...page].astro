@@ -20,15 +20,18 @@ import HeroHeadlineOnly from '../sections/HeroHeadlineOnly.astro'
 import { HeroGlowyWaves } from '../sections/HeroGlowyWaves'
 import HeroBrewBubbles from '../sections/HeroBrewBubbles.astro'
 import HeroBentoGrid from '../sections/HeroBentoGrid.astro'
+import HeroScrollReveal from '../sections/HeroScrollReveal.astro'
 import { ProofMarquee3d } from '../sections/ProofMarquee3d'
 import { FeatureCarousel } from '../sections/FeatureCarousel'
 import Logos from '../sections/Logos.astro'
 import Features from '../sections/Features.astro'
 import Gallery from '../sections/Gallery.astro'
+import GalleryFullBleedStrip from '../sections/GalleryFullBleedStrip.astro'
 import { GalleryParallaxScroll } from '../sections/GalleryParallaxScroll'
 import Process from '../sections/Process.astro'
 import ProcessSplitAnimation from '../sections/ProcessSplitAnimation.astro'
 import Stats from '../sections/Stats.astro'
+import StatsPinnedStaged from '../sections/StatsPinnedStaged.astro'
 import Team from '../sections/Team.astro'
 import Story from '../sections/Story.astro'
 import Lead from '../sections/Lead.astro'
@@ -78,6 +81,10 @@ const hasContactSection = manifest.contact?.enabled &&
     (manifest.pages.every((p: Page) => p.slug !== 'contact') && page.slug === 'home'))
 
 const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
+
+// Growth-87: motion dials from manifest (defaults: normal/off for open-closed)
+const scrollMode: string = (manifest as any).scroll_mode ?? 'normal'
+const motionDial: string = (manifest as any).motion ?? 'off'
 ---
 
 <BaseLayout
@@ -86,12 +93,25 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
   ogImage={page.seo?.og_image}
   siteSlug={manifest.slug}
   locale={manifest.locale}
+  scrollMode={scrollMode}
+  motion={motionDial}
 >
   {page.sections.map((section: Section) => {
     const styleHints = getStyleHints(theme, section.type, section.variant)
     const motionPreset = getMotionPreset(theme, section.type)
 
     if (section.type === 'hero') {
+      // scroll-reveal variant: Growth-87 staged stagger entrance (vanilla IO).
+      if (section.variant === 'scroll-reveal') {
+        return (
+          <HeroScrollReveal
+            copy={section.copy ?? {}}
+            cta={section.cta}
+            pills={section.pills as string[] | undefined}
+            stats={section.stats as any}
+          />
+        )
+      }
       // glowy-waves variant: render the React island (client:visible hydration).
       if (section.variant === 'glowy-waves') {
         const headline = section.copy?.headline ?? ''
@@ -211,6 +231,15 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
     }
 
     if (section.type === 'gallery') {
+      // full-bleed-strip variant: Growth-87 horizontal strip + CSS parallax (vanilla).
+      if (section.variant === 'full-bleed-strip') {
+        return (
+          <GalleryFullBleedStrip
+            copy={section.copy ?? {}}
+            items={(section.items ?? []) as any}
+          />
+        )
+      }
       // parallax-scroll variant: React island (framer-motion useScroll).
       // No-JS: full content rendered statically; island adds scroll transforms only.
       if (section.variant === 'parallax-scroll') {
@@ -258,6 +287,15 @@ const apiBase = import.meta.env.PUBLIC_API_BASE ?? ''
     }
 
     if (section.type === 'stats') {
+      // pinned-staged variant: Growth-87 4 stat cards stagger reveal (vanilla IO).
+      if (section.variant === 'pinned-staged') {
+        return (
+          <StatsPinnedStaged
+            copy={section.copy ?? {}}
+            items={(section.items ?? []) as any}
+          />
+        )
+      }
       return (
         <Stats
           copy={section.copy ?? {}}
