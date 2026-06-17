@@ -1,6 +1,6 @@
 # LLM Wiki 방법론 채택 제안 (Growth-18 리서치)
 
-> **상태: 채택 — CEO 승인 2026-06-11 ("진행하자", Growth-19).** CEO 가 제기한 두 문제 — ① 도메인·고객 요청을 지식으로 축적할 방법론, ② 대화·원장 누적에 따른 context 비대화 — 에 대한 GitHub "LLM Wiki" 생태계 조사와 채택안. 조사일: 2026-06-11 (GitHub API live). 도입 현황: §6.5 Phase 1 (wiki 골격) ✅ / Phase 2 (qmd 설치·3-collection 와이어링·BM25+시맨틱 embed 전부 완료, 2026-06-17 검증: 71 files·575 vectors·pending 0) ✅ / Phase 3 (graph.html + PM loop step 7 contribute-back wiring) — **유일한 잔여**, Growth-19 후속.
+> **상태: 채택 — CEO 승인 2026-06-11 ("진행하자", Growth-19).** CEO 가 제기한 두 문제 — ① 도메인·고객 요청을 지식으로 축적할 방법론, ② 대화·원장 누적에 따른 context 비대화 — 에 대한 GitHub "LLM Wiki" 생태계 조사와 채택안. 조사일: 2026-06-11 (GitHub API live). 도입 현황: §6.5 Phase 1 (wiki 골격) ✅ / Phase 2 (qmd 설치·3-collection 와이어링·BM25+시맨틱 embed 전부 완료, 2026-06-17 검증: 71 files·575 vectors·pending 0) ✅ / Phase 3 (graph.html + PM loop step 7 contribute-back wiring) — **보류 (파운더 결정 2026-06-17)**: 활성 고객 loop 가 없어 contribute-back 와이어링을 실검증할 트래픽 부재 + 마케팅 트랙이 라이브 우선순위. **첫 실제 intake loop 가동 시 재개.** Growth-19 는 Phase 2 까지로 종결.
 
 ## 1. 원전 — Karpathy llm-wiki 패턴
 
