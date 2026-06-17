@@ -64,19 +64,38 @@ shadow:
   hero-media: "0 32px 64px -12px rgba(109,40,217,0.30)"
   cta-band: "inset 0 1px 0 rgba(255,255,255,0.08)"
 
-# ── Motion ─────────────────────────────────────────────────────────────────────
+# ── Motion tokens (Growth-87) ─────────────────────────────────────────────────
+# site.motion 다이얼: off(default) | subtle | rich
+# off    → IO directive 미로드 → html.motion-ready 없음 → CSS 기본(fully visible)
+# subtle → conservative B2B reveal
+# rich   → promo landing staged choreography
 motion:
-  default_preset: reveal-on-scroll
-  section_presets:
-    hero: fade-up
-    logos: stagger-children
-    features: stagger-children
-    pricing: reveal-on-scroll
-    testimonial: stagger-children
-    faq: reveal-on-scroll
-    cta: scale-in
-    footer: fade-simple
-  reduced_motion_fallback: fade-simple
+  # Aurora 기준값 (site.motion=rich 대상)
+  duration: "520ms"
+  ease: "cubic-bezier(0.22, 1, 0.36, 1)"
+  distance: "-24px"
+  stagger: "80ms"
+  # 다이얼 스케일
+  scale:
+    subtle:
+      duration: "360ms"
+      ease: "cubic-bezier(0.22, 1, 0.36, 1)"
+      distance: "-16px"
+      stagger: "60ms"
+    rich:
+      duration: "600ms"
+      ease: "cubic-bezier(0.16, 1, 0.3, 1)"
+      distance: "-32px"
+      stagger: "100ms"
+  # 섹션별 변형 매핑 (Growth-87 신규)
+  section_variants:
+    hero: "scroll-reveal"
+    gallery: "full-bleed-strip"
+    stats: "pinned-staged"
+  # 감소 모션 폴백 (모든 모션 → none)
+  reduced_motion_fallback: "none"
+  # G-69 준수 선언
+  g69_default_visible: true
 
 # ── Section Variant Styles ─────────────────────────────────────────────────────
 sections:
