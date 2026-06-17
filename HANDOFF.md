@@ -2,9 +2,31 @@
 
 ## 이번 세션 범위 (최신)
 
-**마케팅사이트 8축(theme/section) 트랙 — 페이지-구조 아키타입 확장 (Growth-75 → 88)**.
-웹에이전시형 랜딩 데모를 "테마(색·폰트)" 다양성에서 **페이지 구조 아키타입(A1~A7)** 다양성으로 확장 중. CEO 가 "색·텍스트만 다른 같은 패턴"을 지적(Growth-76) → 진짜 차별은 **섹션 variant × 페이지 아키타입 × 테마의 곱**이라는 결론. 블루프린트: [`docs/architecture/landing-pattern-matrix.md`](docs/architecture/landing-pattern-matrix.md).
-Growth-88: **모션 다이얼 진짜 레버화** — flux-demo·meridian `motion:rich` 파일럿. 레거시 `[data-motion]` 옵저버 always-load 리팩터 + `html[data-motion="rich"]` 가 레거시 keyframe vars 스케일 → 기존 카탈로그 17개 섹션 전체 격상. snap+island 한계 문서화(`data-snap-panel` backlog).
+**Session close — 2026-06-17. HEAD = c3efb0e (pushed). Scope this session: Growth-86→88.**
+
+**DONE & PUSHED — Growth-88 (rich-motion pilot, founder menu item #1):**
+- flux-demo + meridian now `site.motion: rich` (both NORMAL scroll).
+- Motion dial unified into a TRUE intensity lever: BaseLayout legacy `[data-motion]` observer always-loads; new `[data-reveal]` IO loads additively for subtle|rich (superset). `html[data-motion="rich"]` scales legacy keyframe vars (`--animation-duration`, `--translate-y-from`, easing) too → rich visibly bolds the existing 17 sections, not just the 3 new variants.
+- Verified: rich>off CSS delta, G-69 (JS-off fully visible), impeccable floor, zero-egress (dist googleapis=0), pytest 380.
+
+**NOT DEPLOYED — founder decision pending:**
+- flux/meridian live deploy deferred (founder to choose).
+- LIVE-COUPLING WATCH: the BaseLayout superset refactor will ACTIVATE previously-dormant legacy `[data-motion]` entrance animations on gtm-landing (subtle) at its NEXT redeploy. Live gtm is currently the pre-refactor build (unaffected until redeployed). Before/at any gtm redeploy, run a CDO build-vs-LIVE settled-frame pixel diff to confirm additive-only (no layout shift).
+
+**PROCESS CATCH (reinforces Growth-82):** build-green + QA structural-PASS ≠ live-visual no-regression. CDO build-vs-live pixel diff caught an over-broad `.snap-root>astro-island{display:block;min-height:100dvh}` rule that QA passed — it force-stretched gtm's short islands (ProofMarquee3d/FeatureCarousel) ~1200px. Reverted. RULE: any CSS touching a live site requires a CDO build-vs-live pixel diff before merge.
+
+**gbrain (garrytan/gbrain): REJECTED** — full report `out/eval/gbrain-adoption.md`. Reasons: total duplication of qmd+ledger-index+context-mode+codegraph (retires nothing → net heavier), default cloud embedding egress (charter violation), derived-DB two-source-of-truth risk. Re-evaluate only at M5 (multi-tenant) or CRM-graph verticals.
+
+**REAL "heaviness" fix (not a new tool):** (a) clear/compact stale sessions; (b) finish Growth-19 Phase 2 backlog = qmd Windows install + collection wiring; (c) habituate scoped queries (`ledger-index.py --symbol`, `qmd search -c wiki|docs|presets`) instead of full ledger/wiki reads.
+
+**OPEN BACKLOG (do NOT start without founder direction):**
+- snap mode + island-hero: needs per-section opt-in marker (e.g. `data-snap-panel`) before snap works with island heroes; currently snap validated only for SSR-section profiles (gtm-landing).
+- Founder menu #2 (expose gallery/full-bleed-strip in a live pilot — built but never shown) and #3 (Korean promo archetype A8) still open.
+- G-9 §6 cap pre-existing FAIL (~242 lines; not worsened this session).
+
+---
+
+## 완료 항목 (마케팅사이트 트랙, Growth-75~88)
 
 > ✅ **Growth-81 A1 FLUX LIVE** — https://flux.n9n.co.kr (6번째 데모, flux 테마). **P0 종결**.
 > ✅ **Growth-82 A3 Event LIVE** — https://summit-horizon.n9n.co.kr (7번째 데모, ignite 테마, SUMMIT Horizon 2026). 신규 variant 3종(horizontal-steps/newsletter-inline/four-up) + logos/grid 워드마크 폴백 결함 픽스. 풀페이지 9/9 섹션 비주얼 검증, ui_check 7/7. **P2(A3) 종결**.
@@ -13,10 +35,9 @@ Growth-88: **모션 다이얼 진짜 레버화** — flux-demo·meridian `motion
 > ✅ **Growth-85 21st.dev 6종 triage → process/split-animation 신규 변형** — 파운더 드롭 레퍼런스 6종(PixelLogoGrid/InkReveal/PixelPerfectHero/TableOfContents/Sparkles/AgentPlan)을 CDO 가 불변식 게이트로 triage: **AgentPlan 1종만 채택**(InkReveal=Growth-69위반·TableOfContents=섹션type없음·Sparkles=impeccable glow위반 reject, PixelPerfectHero/PixelLogoGrid backlog). `process/split-animation` 으로 중화 구현(랜덤상태 제거·read-only·`<details open>` SSR fallback). **A1 flux 데모에 흡수·재배포 LIVE**(한국어 4단계 태스크트리). status 토큰 추가 0(기존 3-state 재활용). NEED 14→13. triage 판정 matrix §4 박제. pytest 140·비주얼 PASS.
 > ✅ **Growth-86 자체 GTM 랜딩 한국어화 + locale 전파 feature** — 우리 플래그십 M1 리드젠 랜딩(gtm-landing, LIVE)이 영어였던 모순 해소: 전 섹션 카피·SEO 한국어(CMO), `defaults.locale ko-KR`. 부수 신설 **locale 전파 feature**(profile→manifest top-level `locale`→BaseLayout `<html lang>` BCP-47 서브태그; 하드코딩 `lang="en"` 제거, 영문 데모 en-US 기본 보존 — open-closed, 전 고객 재사용) + **aurora family-display 한국어 시스템폰트 폴백**(헤드라인 글리프 결함, zero egress — self-host thesis 준수). pytest 145(신규 5)·`<html lang="ko">`·비주얼 전 섹션 PASS. backlog: kiln·studio·harvest 동일 폰트 갭 + **모션 트랙**(sanggong식 스크롤 스냅 풀스크린+IO 진입모션 변형 자산화, "B급 상한 상향" 검토 — 파운더 승인 방향).
 > ✅ **Growth-87 모션 시스템 + 신규 변형 3종 + zero-egress** — 파운더가 sanggong.co.kr(한국 랜딩 웹에이전시) 지목 → 효과를 클론 아닌 변형으로 누적. **scroll-snap 풀스크린 셸 + IO 진입-리빌 디렉티브(vanilla·라이브러리0) + 모션 토큰 + `site.scroll_mode`/`site.motion`(off/subtle/rich) 다이얼** 신설. 신규 변형 **hero/scroll-reveal·gallery/full-bleed-strip·stats/pinned-staged**. **G-69 유지**(`html.motion-ready [data-reveal]:not(.in-view){opacity:0}` — JS off시 전부 가시, 픽셀 mean_diff=0). gtm-landing 파일럿(snap+subtle). 부수로 **Google Fonts CDN egress 적발·제거**(우리 "0 bits egress" 랜딩이 fonts.googleapis 호출하던 자가모순 — IBM Plex/DM Mono @fontsource 이전 → 전 테마 zero-egress). pytest 380(신규12)·비주얼 JS-on/off PASS·dist googleapis 0 hit. B급→A급 상한 상향. 설계: [`docs/architecture/motion-system.md`](docs/architecture/motion-system.md).
+> ✅ **Growth-88 rich-motion 파일럿 + 모션 다이얼 레버화** — flux-demo·meridian `motion:rich`(normal scroll). 레거시 옵저버 always-load 리팩터 + `html[data-motion="rich"]` 레거시 keyframe vars 스케일. snap+island 한계 문서화. pytest 380.
 
----
-
-## 완료 항목 (마케팅사이트 트랙, Growth-75~83)
+## 완료 항목 (마케팅사이트 트랙, Growth-75~88)
 
 | Growth | 아키타입 / 산출 | 테마 | LIVE URL | 상태 |
 |---|---|---|---|---|
