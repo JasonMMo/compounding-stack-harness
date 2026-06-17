@@ -229,3 +229,137 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Growth-87 — IO Reveal System (G-69 default-visible invariant)
+   CDO spec §2 implementation. Engineer: do NOT alter selector structure.
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ── Motion token declarations (aurora baseline; theme overrides via data-motion) */
+:root {
+  --motion-duration: 520ms;
+  --motion-ease:     cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-distance: -24px;   /* 위에서 아래로 24px — 음수 = translateY 시작 위치 위쪽 */
+  --motion-stagger:  80ms;
+}
+
+/* ── site.motion=subtle override ─────────────────────────────────────────── */
+:root[data-motion="subtle"] {
+  --motion-duration: 360ms;
+  --motion-ease:     cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-distance: -16px;
+  --motion-stagger:  60ms;
+}
+
+/* ── site.motion=rich override ───────────────────────────────────────────── */
+:root[data-motion="rich"] {
+  --motion-duration: 600ms;
+  --motion-ease:     cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-distance: -32px;
+  --motion-stagger:  100ms;
+}
+
+/* ── G-69: 기본 상태 = 완전 가시 ────────────────────────────────────────────
+   [data-reveal] 에 아무 선언 없음 → opacity:1, transform:none (브라우저 기본).
+   html.motion-ready 없으면 아래 규칙 전부 비활성.
+   JS off → 모든 [data-reveal] 요소 즉시 가시. AOS 패턴(기본 숨김) 절대 금지.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ── 리빌 시작 상태 (JS + motion-ready 있을 때만) ───────────────────────── */
+html.motion-ready [data-reveal]:not(.in-view) {
+  opacity: 0;
+  transform: translateY(var(--motion-distance));
+}
+
+/* ── 리빌 진입 상태 ──────────────────────────────────────────────────────── */
+html.motion-ready [data-reveal].in-view {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity   var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease);
+}
+
+/* ── 스태거 delay (data-reveal-delay="N", N=0-based 정수) ───────────────── */
+html.motion-ready [data-reveal].in-view[data-reveal-delay="0"] { transition-delay: 0ms; }
+html.motion-ready [data-reveal].in-view[data-reveal-delay="1"] { transition-delay: calc(1 * var(--motion-stagger)); }
+html.motion-ready [data-reveal].in-view[data-reveal-delay="2"] { transition-delay: calc(2 * var(--motion-stagger)); }
+html.motion-ready [data-reveal].in-view[data-reveal-delay="3"] { transition-delay: calc(3 * var(--motion-stagger)); }
+html.motion-ready [data-reveal].in-view[data-reveal-delay="4"] { transition-delay: calc(4 * var(--motion-stagger)); }
+html.motion-ready [data-reveal].in-view[data-reveal-delay="5"] { transition-delay: calc(5 * var(--motion-stagger)); }
+html.motion-ready [data-reveal].in-view[data-reveal-delay="6"] { transition-delay: calc(6 * var(--motion-stagger)); }
+html.motion-ready [data-reveal].in-view[data-reveal-delay="7"] { transition-delay: calc(7 * var(--motion-stagger)); }
+/* 8개 이상: BaseLayout IO 스크립트가 inline style transitionDelay 로 주입 */
+
+/* ── prefers-reduced-motion: 모션 완전 제거 ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html.motion-ready [data-reveal]:not(.in-view),
+  html.motion-ready [data-reveal].in-view {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ── Scroll-snap 셸 (scroll_mode=snap 시 BaseLayout 이 .snap-root 클래스 부여) */
+.snap-root {
+  height: 100dvh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior-y: none;   /* macOS 바운스 방지 */
+}
+
+.snap-root > section,
+.snap-root > [data-section] {
+  min-height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;       /* 빠른 스크롤에도 섹션 건너뜀 방지 */
+}
+
+/* ── Stats/pinned-staged: 4-stat 그리드 레이아웃 ───────────────────────── */
+.stats-pinned-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+}
+
+/* ── Gallery/full-bleed-strip: 수평 strip 레이아웃 ─────────────────────── */
+.full-bleed-strip {
+  width: 100%;
+  overflow: hidden;
+}
+
+.strip__track {
+  display: flex;
+  gap: 24px;
+  padding-inline: var(--space-container-gutter, 24px);
+  overflow: visible;
+}
+
+.strip__item {
+  flex: 0 0 min(480px, 80vw);
+  border-radius: var(--radius-card, 16px);
+  overflow: hidden;
+}
+
+.strip__item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* CSS scroll-driven parallax (Chrome 115+, Firefox 110+) */
+@supports (animation-timeline: scroll()) {
+  html.motion-ready .strip__item {
+    animation: strip-parallax linear both;
+    animation-timeline: scroll(root block);
+    animation-range: entry 0% exit 100%;
+  }
+
+  @keyframes strip-parallax {
+    from { transform: translateY(calc(var(--motion-distance, -24px) * -1.5)); }
+    to   { transform: translateY(calc(var(--motion-distance, -24px) * 1.5)); }
+  }
+}
+/* 미지원: animation 속성 무시 → 정적 배치 (graceful degrade) */
