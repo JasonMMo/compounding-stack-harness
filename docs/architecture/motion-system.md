@@ -84,3 +84,25 @@ CDO (motion tokens, dial semantics, IO-reveal CSS spec with G-69-default-visible
 designs) → Engineer (scroll-snap shell, IO directive, token wiring, 3 variants, profile-schema
 keys, site_manifest passthrough, tests) → CTO (visual verify both JS states) → QA (G-69 JS-off gate
 + 4-layer) → DevOps (pilot redeploy + live verify).
+
+## 8. Motion dial — true intensity lever (Growth-88 addendum)
+
+As of Growth-88, the dial is a **real intensity lever**, not a system switch:
+
+| dial value | `[data-motion]` legacy observer | `[data-reveal]` IO directive | legacy keyframe vars scaled |
+|---|---|---|---|
+| `off` | always loads (unchanged) | not loaded | no (var() fallbacks) |
+| `subtle` | always loads | loads (additive) | no (var() fallbacks) |
+| `rich` | always loads | loads (additive) | yes (`html[data-motion="rich"]` overrides) |
+
+`rich` overrides on `html[data-motion="rich"]`: `--animation-duration: 640ms`, `--animation-easing: cubic-bezier(0.16,1,0.3,1)`, `--child-animation-duration: 580ms`, `--child-animation-easing`, `--translate-y-from: 40px`, `--motion-distance: -40px`, `--motion-stagger: 110ms`. `--scale-from` held at 0.96 (impeccable floor: no scale-jank).
+
+Subtle's legacy vars stay at var() fallback defaults — subtle gentleness lives in IO tokens only (per CTO intent).
+
+## Known limitation — snap + island sections (Growth-88)
+
+`astro-island` has `display:contents` by default (injected globally by the Astro runtime), which removes its layout box. CSS `scroll-snap-align` is ignored on box-less elements, so any `<section>` wrapped in an `<astro-island>` that is a direct child of `body.snap-root` is invisible to the snap engine.
+
+A blanket `.snap-root > astro-island { display:block; min-height:100dvh }` fix was attempted (Growth-88) but over-stretched short-content islands (`ProofMarquee3d`, `FeatureCarousel` on gtm-landing) to 100dvh, adding ~1200px whitespace and introducing unwanted snap stops on the live flagship. The rule was reverted.
+
+**Resolution deferred**: introduce a per-section snap opt-in marker (`data-snap-panel`) so only intended full-height sections become snap children. Until then, `scroll_mode: snap` is validated only for profiles whose top-level sections are pure SSR (non-island), e.g. `gtm-landing`. Island-wrapped hero sections (e.g. `HeroGlowyWaves`) require `scroll_mode: normal`.
