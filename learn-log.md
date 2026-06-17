@@ -488,3 +488,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **상세**: [cdo spec](out/motion/cdo-motion-spec.md) · [cdo visual g87](out/motion/cdo-visual-verify-g87.md) · [qa gate g87](out/motion/qa-gate-g87.md) · 커밋 548ebc6/67bc620/577cf44/e9dc77f/1046dd3/9186c8d/786c439/2e6759d/2091096/1b823a2(engineer) · 3faf348(cdo 토큰) · ddc87d2/0e3be2e/9ea39f3(egress) · 771db63(블루프린트)
 - **잔여(open)**: 변형명 불일치(스펙 pinned-staged vs class stats-pinned) 문서 동기화. gallery/full-bleed-strip은 파일럿 미노출(다음 데모에서 실증 권장). 타 테마 모션 옵트인 확산(현재 gtm-landing만). 타 테마 한국어 디스플레이 폴백 3종(kiln·studio·harvest, G-86 backlog). 모션 G-69 가드 정식화(G-16 후보).
 - **결정 메모리**: [[marketing-site-track]] · [[feedback-pushback]] · [[push-before-deploy]]
+
+### Growth-88 (2026-06-17) — rich-motion 파일럿 + 모션 다이얼 진짜 강도 레버화 (flux-demo, meridian)
+
+- **인격/Axis/Milestone**: CTO(설계 결정·트랩 판정·도큐) + Engineer(BaseLayout 리팩터·CSS 토큰 확장·profile 편집·빌드 검증) + CDO(비주얼 회귀체크·snap/island 결함 적발) / **frontend(motion dial 완성)+theme(8축 rich 토큰)** / M1(기존 17개 섹션 카탈로그 전체 격상)
+- **1줄 rollup**: 모션 다이얼이 "시스템 스위치"로 오배선돼 있던 것을 "강도 레버"로 통합 — off=레거시 `[data-motion]` 옵저버 단독 / subtle·rich=레거시+신규 `[data-reveal]` IO 슈퍼셋. `html[data-motion="rich"]` 가 `--animation-duration/--translate-y-from/--child-animation-duration` 등 레거시 keyframe vars 까지 스케일 → rich 가 기존 17개 섹션을 실제로 더 굵게 만든다. flux-demo·meridian 에 `motion: rich` 적용(둘 다 normal scroll).
+- **함정/교훈**: ① **다이얼 오배선**: 레거시 `[data-motion]` 옵저버가 `else`(motion=off) 브랜치에만 있어 subtle/rich 로 전환 시 기존 애니메이션 소멸(순역행). BaseLayout 에서 레거시 옵저버를 always-load 로 빼고 신규 IO 를 additive — off 바이트 동일 유지. ② **snap+astro-island 함정**: `astro-island{display:contents}` 가 레이아웃 박스를 없애 `scroll-snap-align` 무효 → `.snap-root>astro-island{display:block;min-height:100dvh}` 로 시도했으나 gtm 의 짧은 섬(ProofMarquee3d·FeatureCarousel)을 100dvh 로 강제 → 라이브 flagship 에 ~1200px 공백 회귀. 되돌리고 flux 는 snap 포기·normal scroll 채택. ③ **CDO 회귀체크가 QA 구조게이트 PASS 한 라이브-결합 회귀를 포착** — "빌드 그린·구조 PASS ≠ 라이브 비주얼 무회귀"(Growth-82 규율 재확인). 라이브 사이트 건드리는 CSS 는 build-vs-live 픽셀 비교 필수.
+- **누적 자산**: 모션 다이얼 완전 레버화(off/subtle/rich 전 레이어 일관); rich CSS 토큰 5종(`--animation-duration 640ms·--translate-y-from 40px·--child-animation-duration 580ms·--motion-distance -40px·--motion-stagger 110ms`); snap+island 한계 문서화.
+- **백로그**: snap 모드는 top-level 섹션이 SSR(비-island)인 프로파일에서만 검증됨(gtm-landing). island-hero + snap 은 per-section opt-in 마커(`data-snap-panel`) 도입 후 지원.
+- **커밋**: 782a6d1(BaseLayout) · 5b6d35c(rich 토큰 1차) · 9307f5a(flux scroll_mode:snap 추가) · 1faf503(meridian motion:rich) · 2b86ecb(레거시 dial 배선) · 215b274(snap/island 시도) · d8955a4(island 규칙 롤백) · aab9352(flux snap→normal)
