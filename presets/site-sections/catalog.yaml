@@ -28,7 +28,12 @@ sections:
     #   type:"stat" (primary metric, progress bar, mini-stats, status tags) and
     #   type:"marquee" (compact trusted-by wordmark card). cta_secondary optional.
     #   All content SSR-visible without JS (Growth-69). Marquee wordmarks in static DOM.
-    variants: [centered, split-left, split-right, fullscreen-video, glowy-waves, brew, headline-only, bento-grid]
+    # scroll-reveal: Growth-87 staged stagger entrance (badge→h1→subhead→cta 4단 stagger).
+    #   Vanilla IntersectionObserver + CSS reveal. G-69: JS off → 전부 즉시 가시.
+    #   site.motion!=off 일 때 IO 지시어 소비. motion=off → 정적 렌더 동일.
+    #   Optional: badge (copy.badge), pills (string[]), stats ({label,value}[]).
+    #   SSR-fallback: motion-ready 없으면 opacity:1; transform:none (AOS 패턴 금지).
+    variants: [centered, split-left, split-right, fullscreen-video, glowy-waves, brew, headline-only, bento-grid, scroll-reveal]
     # item_slots: bento-grid variant introduces bento_items[] in the section data.
     # These are variant-scoped (not used by other hero variants).
     # Schema: stat card requires primary_value + primary_label + progress_label + progress_value.
@@ -162,7 +167,11 @@ sections:
       grid-2x2:        { item_optional: [src] }
       parallax-scroll: { item_optional: [src] }
     # masonry-3col: 3-column CSS masonry of images; heights vary by image AR.
-    # full-bleed-strip: single decisive image fills full viewport width, tall aspect.
+    # full-bleed-strip: Growth-87 수평 풀블리드 flex strip + CSS scroll-driven parallax.
+    #   Vanilla IO reveal (data-reveal) + CSS animation-timeline:scroll() (Chrome 115+).
+    #   G-69: JS off → 모든 item 즉시 가시 (flex row). 미지원 브라우저: 정적 배치.
+    #   무사진 폴백: items[].src 없으면 CSS gradient placeholder.
+    #   SSR-fallback: motion-ready 없으면 parallax 없이 정적 배치 (G-69 준수).
     # grid-2x2: 2x2 product screenshot grid with optional per-cell caption.
     # parallax-scroll: sticky full-viewport chapter panels; on scroll the panel scales +
     #   a dark overlay fades in, and overlay heading/subheading parallax through; an
@@ -234,9 +243,14 @@ sections:
     # item_slots: each stat is a value (large number/percentage/string) + label (descriptor).
     # ticker-band: full-width band, stats inline, subtle separator, no card boxing.
     # four-up: 4 stats in a grid row; large number + small label per cell (A3 Event, A5 Mobile).
+    # pinned-staged: Growth-87 4 stat 카드 stagger reveal (vanilla IO).
+    #   G-69: JS off → 4카드 전부 즉시 가시. stagger 안무만 없음.
+    #   data-reveal + data-reveal-delay 부착. BaseLayout IO 지시어 소비.
+    #   site.motion!=off 일 때 stagger 활성; motion=off → 정적 그리드 동일.
+    #   SSR-fallback: motion-ready 없으면 opacity:1; transform:none (G-69 준수).
     item_slots:
       required: [value, label]
-    variants: [ticker-band, four-up]
+    variants: [ticker-band, four-up, pinned-staged]
 
   team:
     label: "Team / People"
