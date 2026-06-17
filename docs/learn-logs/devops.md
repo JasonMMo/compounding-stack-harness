@@ -241,6 +241,16 @@
 - **비용노트**: 공유 VPS 귀속, 정적 SSG 런타임 LLM 0.
 - **교훈 (1줄)**: A7 API Platform archetype이 동일 deploy_static_site.py 레인으로 무수정 배포됨 — push-before-deploy 없이 포털 재배포 시 구버전 이미지가 빌드됨을 재확인(Growth-78 패턴 반복).
 
+### Growth-86 (2026-06-17) — gtm-landing 한국어화 재배포 (locale ko-KR, lang="ko" 검증 PASS)
+
+- **목적**: Growth-86 한국어화 커밋(master HEAD 4f40c46) — 전 섹션 카피·SEO 한국어, `defaults.locale ko-KR`, aurora 폰트 폴백 — 을 라이브에 반영.
+- **QA 사전 플래그 해소**: `PUBLIC_SITE_MANIFEST` 누락 시 `<html lang="en">` + 영문 낙하 우려 → Dockerfile 분석으로 경로 확인. `ARG PROFILE_SLUG=gtm-landing` → `RUN python3 scripts/workflow/scaffold.py --profile ${PROFILE_SLUG}` → `ENV PUBLIC_SITE_MANIFEST=/app/out/${PROFILE_SLUG}/site-manifest.json` → Astro 빌드 시 `manifest.locale = "ko-KR"` → `<html lang="ko">` 생성 경로 이상 없음. `site_manifest.py`가 `profile.defaults.locale`을 manifest에 포함시키는 것 코드 레벨 확인.
+- **배포**: gtm-landing.n9n.co.kr (app=umyt8l38jv386mwfja5v3d2p). `GET /api/v1/applications/umyt8l38jv386mwfja5v3d2p/start` → deployment_uuid=tcd4hzhm4h0lvq6y9h6hcc60. status=finished (첫 polling).
+- **터널**: 포트 8000 기존 터널 alive (`401 tunnel OK` — 인증 오류는 인증 필요 의미, 접속 정상).
+- **라이브 검증**: `curl -sL https://gtm-landing.n9n.co.kr/` → `html_lang=ko` PASS + `<title>사내망 풀스택 시스템 자동 생성 — compounding-stack-harness</title>` PASS + `<meta description>개발팀 없이 사내 업무 시스템을 만드세요...` PASS. 헤드라인 텍스트는 React island(`client:visible` hydration) 이므로 SSG HTML 인라인 없음 — SEO 관점 lang/title/description 3종 정상.
+- **레지스트리**: `infra/registry/gtm-landing.yaml` deployed_at=2026-06-17, last_deployment_uuid=tcd4hzhm4h0lvq6y9h6hcc60 갱신.
+- **교훈 (1줄)**: React island `client:visible` 콘텐츠는 SSG HTML에 인라인되지 않으므로 curl 기반 검증 시 `<html lang>`, `<title>`, `<meta description>` 3종을 SEO 기준으로 삼고, 동적 헤드라인은 브라우저 렌더링에서 확인한다.
+
 ### Growth-85 (2026-06-17) — flux process/split-animation 섹션 재배포 (A1 FLUX 라이브 갱신)
 
 - **목적**: process/numbered-stack → split-animation 변형 교체(commit 69482e4, engineer 산출)를 라이브에 반영. git push 는 선행 세션에서 완료(미커밋 없음).
