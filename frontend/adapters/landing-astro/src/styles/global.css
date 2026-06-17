@@ -255,13 +255,29 @@ body {
 /* ── site.motion=rich override ───────────────────────────────────────────── */
 /* Perceptibly bolder than subtle: larger distance, longer duration, wider stagger.
    Impeccable floor: no glow/neon/opacity<0 tricks — scale only distance/duration/stagger/ease.
-   Legacy [data-motion] keyframes use CSS animation-duration vars where possible;
-   hardcoded keyframe values are NOT touched here (backlog: token-drive legacy keyframes). */
-:root[data-motion="rich"] {
+   IO reveal tokens (--motion-*) AND legacy [data-motion] animation vars all scaled here.
+   off guarantee: html has no data-motion attr → this block inactive → all var() fallbacks
+   in global.css remain the sole source of truth for off-mode (no :root overrides added).
+   subtle: legacy vars deliberately left at var() fallback defaults (subtle gentleness
+   lives in IO tokens only; legacy subtle ≈ off is intended per CTO). */
+html[data-motion="rich"] {
+  /* IO reveal tokens */
   --motion-duration: 640ms;
   --motion-ease:     cubic-bezier(0.16, 1, 0.3, 1);
   --motion-distance: -40px;
   --motion-stagger:  110ms;
+
+  /* Legacy [data-motion] animation vars — dial-aware wiring.
+     off-mode fallbacks (per var() in global.css): --animation-duration 500ms/200ms/300ms
+     (per class), --child-animation-duration 450ms, --translate-y-from 24px, --scale-from 0.96.
+     rich overrides: duration scaled to 640ms (all legacy classes share this token),
+     child-duration 580ms, easing → spring-out for both, translate-y-from 40px (matches
+     --motion-distance magnitude). --scale-from stays 0.96 (no scale-jank per impeccable floor). */
+  --animation-duration:       640ms;
+  --animation-easing:         cubic-bezier(0.16, 1, 0.3, 1);
+  --child-animation-duration: 580ms;
+  --child-animation-easing:   cubic-bezier(0.16, 1, 0.3, 1);
+  --translate-y-from:         40px;
 }
 
 /* ── G-69: 기본 상태 = 완전 가시 ────────────────────────────────────────────
