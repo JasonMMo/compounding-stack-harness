@@ -10,7 +10,7 @@ preview:
   coolify_app: umyt8l38jv386mwfja5v3d2p
   status: live
   deployed_at: "2026-06-17"
-  last_deployment_uuid: tcd4hzhm4h0lvq6y9h6hcc60
+  last_deployment_uuid: aawbeuyz2d5zcsaa69jdfbcb  # Growth-87 모션 파일럿 (scroll-snap+subtle motion, zero-egress CSS)
   deliverable_kind: marketing-site       # static SSG (no backend) — deploy_static_site.py lane
   theme: aurora
 production:
