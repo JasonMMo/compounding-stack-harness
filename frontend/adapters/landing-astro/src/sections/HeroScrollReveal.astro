@@ -1,0 +1,222 @@
+---
+/**
+ * HeroScrollReveal.astro — hero/scroll-reveal variant (Growth-87).
+ * CDO spec §4-1: badge → h1 → subhead → cta 4단 stagger reveal.
+ *
+ * G-69: data-reveal 요소들의 CSS 기본 상태 = 완전 가시.
+ *   html.motion-ready 없으면 전부 opacity:1; transform:none.
+ *   JS off → 배지·헤드라인·서브헤드·CTA 모두 즉시 표시.
+ *
+ * 라이브러리 0: vanilla IO reveal (BaseLayout IO 지시어 소비).
+ * prefers-reduced-motion: BaseLayout IO 스크립트가 skip → 전부 가시.
+ */
+
+interface Props {
+  copy: Record<string, string>
+  cta?: { label: string; href: string }
+  pills?: string[]
+  stats?: { label: string; value: string }[]
+}
+
+const {
+  copy = {},
+  cta,
+  pills = [],
+  stats = [],
+} = Astro.props
+
+const headline = copy.headline ?? ''
+const subhead = copy.subhead ?? ''
+const badge = copy.badge ?? copy.supporting_text ?? ''
+---
+
+<section
+  class="hero-scroll-reveal"
+  data-section="hero"
+  style="
+    background: linear-gradient(135deg, var(--color-hero-bg-from, #1E1B4B) 0%, var(--color-hero-bg-to, #4C1D95) 100%);
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-section-y, 112px) var(--space-container-gutter, 24px);
+    position: relative;
+    overflow: hidden;
+  "
+>
+  <div
+    style="
+      max-width: var(--space-container-max, 1200px);
+      width: 100%;
+      margin: 0 auto;
+      text-align: center;
+    "
+  >
+    <!-- 1) 배지 / 레이블 — 가장 먼저 진입 (delay 0) -->
+    {badge && (
+      <div
+        data-reveal
+        data-reveal-delay="0"
+        style="margin-bottom: 24px;"
+      >
+        <span
+          style="
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: var(--radius-badge, 9999px);
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.20);
+            font-family: var(--font-family-body, sans-serif);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.90);
+            letter-spacing: 0.02em;
+          "
+        >
+          {badge}
+        </span>
+      </div>
+    )}
+
+    <!-- 2) 헤드라인 — delay 1 -->
+    <h1
+      data-reveal
+      data-reveal-delay="1"
+      style="
+        font-family: var(--font-family-display, sans-serif);
+        font-size: clamp(2.25rem, 5.5vw, var(--font-size-7xl, 72px));
+        font-weight: var(--font-weight-display, 800);
+        line-height: 1.05;
+        letter-spacing: var(--letter-spacing-display, -0.03em);
+        color: #ffffff;
+        margin: 0 0 24px;
+      "
+    >
+      {headline}
+    </h1>
+
+    <!-- 3) 서브헤드 / 설명 — delay 2 -->
+    <p
+      data-reveal
+      data-reveal-delay="2"
+      style="
+        font-family: var(--font-family-body, sans-serif);
+        font-size: clamp(1rem, 1.5vw, 1.25rem);
+        line-height: 1.7;
+        color: rgba(255,255,255,0.80);
+        max-width: 640px;
+        margin: 0 auto 36px;
+      "
+    >
+      {subhead}
+    </p>
+
+    <!-- 4) CTA 그룹 — delay 3 -->
+    {cta && (
+      <div
+        data-reveal
+        data-reveal-delay="3"
+        style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;"
+      >
+        <a
+          href={cta.href}
+          style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 32px;
+            border-radius: var(--radius-button, 8px);
+            background: #ffffff;
+            color: var(--color-primary, #6D28D9);
+            font-family: var(--font-family-body, sans-serif);
+            font-size: 1rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background 150ms, box-shadow 150ms;
+          "
+        >
+          {cta.label}
+        </a>
+      </div>
+    )}
+
+    <!-- pills (선택) — delay 4 -->
+    {pills.length > 0 && (
+      <div
+        data-reveal
+        data-reveal-delay="4"
+        style="
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          justify-content: center;
+          margin-top: 28px;
+        "
+      >
+        {pills.map((pill: string) => (
+          <span
+            style="
+              padding: 4px 14px;
+              border-radius: 9999px;
+              background: rgba(255,255,255,0.10);
+              border: 1px solid rgba(255,255,255,0.18);
+              font-family: var(--font-family-body, sans-serif);
+              font-size: 0.8125rem;
+              color: rgba(255,255,255,0.78);
+            "
+          >
+            {pill}
+          </span>
+        ))}
+      </div>
+    )}
+
+    <!-- stats (선택) — delay 5 -->
+    {stats.length > 0 && (
+      <div
+        data-reveal
+        data-reveal-delay="5"
+        style="
+          display: flex;
+          flex-wrap: wrap;
+          gap: 32px;
+          justify-content: center;
+          margin-top: 48px;
+          padding-top: 32px;
+          border-top: 1px solid rgba(255,255,255,0.12);
+        "
+      >
+        {stats.map((stat: { label: string; value: string }) => (
+          <div style="text-align: center;">
+            <div
+              style="
+                font-family: var(--font-family-display, sans-serif);
+                font-size: clamp(1.75rem, 3vw, var(--font-size-5xl, 48px));
+                font-weight: 800;
+                color: #ffffff;
+                line-height: 1;
+                letter-spacing: -0.03em;
+              "
+            >
+              {stat.value}
+            </div>
+            <div
+              style="
+                font-family: var(--font-family-body, sans-serif);
+                font-size: 0.8125rem;
+                color: rgba(255,255,255,0.65);
+                margin-top: 6px;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+              "
+            >
+              {stat.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
