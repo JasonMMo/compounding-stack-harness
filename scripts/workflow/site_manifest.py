@@ -76,6 +76,10 @@ def load_section_catalog(path: Path | str | None = None) -> dict[str, Any]:
 # Validation
 # ---------------------------------------------------------------------------
 
+_VALID_SCROLL_MODES = {"normal", "snap"}
+_VALID_MOTION_VALUES = {"off", "subtle", "rich"}
+
+
 def validate_site(site: dict[str, Any], catalog: dict[str, Any]) -> list[str]:
     """Validate the site block against the section catalog.
 
@@ -98,9 +102,25 @@ def validate_site(site: dict[str, Any], catalog: dict[str, Any]) -> list[str]:
       - If catalog entry has item_slots AND section.items is present, each item must
         contain all item_slots.required keys. Omitting items entirely is not an error.
       - site.theme existence is a soft/warning check only (P2 incomplete).
+      - site.scroll_mode (if set) must be one of: normal | snap. (Growth-87)
+      - site.motion (if set) must be one of: off | subtle | rich. (Growth-87)
     """
     violations: list[str] = []
     sections_catalog: dict[str, Any] = catalog.get("sections", {})
+
+    # Growth-87: scroll_mode validation
+    scroll_mode: str = site.get("scroll_mode", "normal")
+    if scroll_mode not in _VALID_SCROLL_MODES:
+        violations.append(
+            f"site.scroll_mode '{scroll_mode}' is invalid — must be one of {sorted(_VALID_SCROLL_MODES)}"
+        )
+
+    # Growth-87: motion validation
+    motion: str = site.get("motion", "off")
+    if motion not in _VALID_MOTION_VALUES:
+        violations.append(
+            f"site.motion '{motion}' is invalid — must be one of {sorted(_VALID_MOTION_VALUES)}"
+        )
 
     # Soft check: theme existence
     theme_slug: str = site.get("theme", "")
@@ -331,11 +351,17 @@ def build_site_manifest(profile: dict[str, Any]) -> dict[str, Any]:
     defaults_block: dict[str, Any] = profile.get("defaults") or {}
     locale: str = defaults_block.get("locale") or "en-US"
 
+    # Growth-87: scroll_mode + motion dials (open-closed defaults)
+    scroll_mode: str = site.get("scroll_mode", "normal")
+    motion: str = site.get("motion", "off")
+
     manifest: dict[str, Any] = {
         "slug": slug,
         "deliverable_kind": "marketing-site",
         "theme": theme,
         "locale": locale,
+        "scroll_mode": scroll_mode,
+        "motion": motion,
         "pages": pages_out,
     }
 
