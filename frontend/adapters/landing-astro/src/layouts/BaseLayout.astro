@@ -2,7 +2,12 @@
 /**
  * BaseLayout.astro — Root HTML layout for all landing pages.
  * Imports global CSS (tokens + fonts + motion keyframes).
- * Injects motion observer island as a deferred script.
+ * Growth-87: IO reveal directive + scroll-snap shell + data-motion attr.
+ *
+ * G-69 invariant (non-negotiable):
+ *   CSS default state = fully visible. html.motion-ready 가 없으면 모든
+ *   [data-reveal] 요소는 opacity:1; transform:none (브라우저 기본).
+ *   JS off → 모든 카피 정적 HTML 에 present·가시.
  */
 import '../styles/global.css'
 
@@ -14,14 +19,37 @@ interface Props {
   /** BCP-47 locale string (e.g. "ko-KR", "en-US"). Only the language subtag is
    *  written to <html lang>: "ko-KR" → "ko", "en-US" → "en". Default: "en". */
   locale?: string
+  /**
+   * Growth-87: scroll_mode from site manifest.
+   * "snap" → body 에 snap-root 클래스 부여, 섹션 100dvh snap 활성.
+   * "normal" (default) → 기존 동작 유지, 바이트 동일.
+   */
+  scrollMode?: string
+  /**
+   * Growth-87: motion dial from site manifest.
+   * "subtle" | "rich" → html[data-motion] 부여 + IO reveal 스크립트 로드.
+   * "off" (default) → 스크립트 no-op, motion-ready 미부여 → 전부 가시.
+   */
+  motion?: string
 }
 
-const { title, description, ogImage, siteSlug = '', locale } = Astro.props
+const {
+  title,
+  description,
+  ogImage,
+  siteSlug = '',
+  locale,
+  scrollMode = 'normal',
+  motion = 'off',
+} = Astro.props
+
 const htmlLang = (locale ?? 'en-US').split('-')[0]
+const isSnapMode = scrollMode === 'snap'
+const isMotionOn = motion === 'subtle' || motion === 'rich'
 ---
 
 <!doctype html>
-<html lang={htmlLang}>
+<html lang={htmlLang} data-motion={isMotionOn ? motion : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -34,87 +62,146 @@ const htmlLang = (locale ?? 'en-US').split('-')[0]
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
-  <body>
+  <body class={isSnapMode ? 'snap-root' : undefined}>
     <slot />
 
-    <!-- Motion observer island: IntersectionObserver for scroll-triggered animations.
-         Deferred (type=module). Respects prefers-reduced-motion:
-           - reduced-motion ON  => content shown immediately, no hiding, no observer.
-           - reduced-motion OFF => elements hidden at init, revealed on intersection.
-         No autoplay (WCAG 2.2.2). -->
-    <script type="module">
-      // Motion observer — lightweight IntersectionObserver island.
-      // Targets elements with data-motion attribute.
-      // prefers-reduced-motion: when active, we skip hiding entirely so content
-      // is immediately visible (accessibility — no content ever lost).
-      const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    <!--
+      Growth-87: IO Reveal directive (vanilla IntersectionObserver, ~40 lines).
+      G-69: motion=off → 스크립트 블록 자체가 no-op 분기 → motion-ready 미부여.
+      prefers-reduced-motion: reduce → motion-ready 미부여 → 전부 가시.
+      라이브러리 0: GSAP/AOS/Swiper 없음.
+    -->
+    {isMotionOn ? (
+      <script type="module">
+        (function () {
+          // G-69: reduced-motion → skip entirely (content stays visible)
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-      function revealEl(el, observer) {
-        const preset = el.dataset.motion
-        // Always reveal the container first, regardless of preset.
-        el.classList.remove('motion-hidden')
+          // G-69: IntersectionObserver 미지원 → skip (graceful degrade)
+          if (typeof IntersectionObserver === 'undefined') return
 
-        if (preset === 'stagger-children') {
-          // Stagger: animate each direct child with delay offset
-          const staggerDelay = Number(el.dataset.staggerDelay ?? 80)
-          Array.from(el.children).forEach((child, i) => {
-            child.style.animationDelay = `${i * staggerDelay}ms`
-            child.classList.remove('motion-hidden')
-            child.classList.add('motion-stagger-child', 'motion-visible')
+          // Gate: motion-ready 부여 시점이 곧 [data-reveal] 숨김 시작점
+          document.documentElement.classList.add('motion-ready')
+
+          // stagger 값: CSS --motion-stagger 에서 읽기 (토큰 일치)
+          const staggerMs = () => {
+            const raw = getComputedStyle(document.documentElement)
+              .getPropertyValue('--motion-stagger').trim()
+            return parseInt(raw, 10) || 80
+          }
+
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return
+                const el = entry.target
+                // 8개 이상 인덱스: inline style 로 transitionDelay 주입
+                const delay = el.dataset.revealDelay
+                if (delay !== undefined && parseInt(delay, 10) > 7) {
+                  el.style.transitionDelay = `${parseInt(delay, 10) * staggerMs()}ms`
+                }
+                el.classList.add('in-view')
+                // subtle/rich 모두 in-view 유지 (이탈 시 제거 안 함)
+              })
+            },
+            {
+              threshold: 0.12,
+              // snap 환경: root 를 snap-root body 로 지정해 viewport 기준 일치
+              root: document.body.classList.contains('snap-root')
+                ? document.body
+                : null,
+            }
+          )
+
+          document.querySelectorAll('[data-reveal]').forEach((el) => {
+            observer.observe(el)
           })
-        } else if (preset === 'fade-up' || preset === 'reveal-on-scroll') {
-          el.classList.add('motion-fade-up')
-        } else if (preset === 'scale-in') {
-          el.classList.add('motion-scale-in')
-        } else {
-          // fade-simple fallback for unknown presets
-          el.classList.add('motion-fade-simple')
+
+          // Safety fallback: 1200ms 후 미진입 요소 강제 공개 (print/hidden iframe 대비)
+          setTimeout(() => {
+            document.querySelectorAll('[data-reveal]:not(.in-view)').forEach((el) => {
+              el.classList.add('in-view')
+            })
+          }, 1200)
+        })()
+      </script>
+    ) : (
+      <!-- motion=off: IO directive 미로드, html.motion-ready 없음 → G-69 기본 가시 -->
+      <!-- Legacy data-motion observer (이전 코드 하위 호환) -->
+      <script type="module">
+        // Motion observer — lightweight IntersectionObserver island.
+        // Targets elements with data-motion attribute.
+        // prefers-reduced-motion: when active, we skip hiding entirely so content
+        // is immediately visible (accessibility — no content ever lost).
+        const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+
+        function revealEl(el, observer) {
+          const preset = el.dataset.motion
+          // Always reveal the container first, regardless of preset.
+          el.classList.remove('motion-hidden')
+
+          if (preset === 'stagger-children') {
+            // Stagger: animate each direct child with delay offset
+            const staggerDelay = Number(el.dataset.staggerDelay ?? 80)
+            Array.from(el.children).forEach((child, i) => {
+              child.style.animationDelay = `${i * staggerDelay}ms`
+              child.classList.remove('motion-hidden')
+              child.classList.add('motion-stagger-child', 'motion-visible')
+            })
+          } else if (preset === 'fade-up' || preset === 'reveal-on-scroll') {
+            el.classList.add('motion-fade-up')
+          } else if (preset === 'scale-in') {
+            el.classList.add('motion-scale-in')
+          } else {
+            // fade-simple fallback for unknown presets
+            el.classList.add('motion-fade-simple')
+          }
+
+          if (observer) observer.unobserve(el)
         }
 
-        if (observer) observer.unobserve(el)
-      }
+        function initMotion() {
+          const targets = document.querySelectorAll('[data-motion]')
+          if (!targets.length) return
 
-      function initMotion() {
-        const targets = document.querySelectorAll('[data-motion]')
-        if (!targets.length) return
+          // Reduced-motion short-circuit: do not hide or observe anything.
+          // Content stays visible immediately — no scroll-reveal behaviour.
+          if (motionQuery.matches) return
 
-        // Reduced-motion short-circuit: do not hide or observe anything.
-        // Content stays visible immediately — no scroll-reveal behaviour.
-        if (motionQuery.matches) return
+          // Hide targets before observing so they can be revealed on scroll.
+          targets.forEach((el) => el.classList.add('motion-hidden'))
 
-        // Hide targets before observing so they can be revealed on scroll.
-        targets.forEach((el) => el.classList.add('motion-hidden'))
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return
+                revealEl(entry.target, observer)
+              })
+            },
+            // threshold:0 fires as soon as any pixel enters viewport.
+            // rootMargin top 200px pre-triggers elements just below fold.
+            // No negative bottom margin — avoids hiding sections in full-page
+            // screenshot contexts (headless, Playwright fullPage:true).
+            { threshold: 0, rootMargin: '200px 0px 200px 0px' }
+          )
 
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (!entry.isIntersecting) return
-              revealEl(entry.target, observer)
+          targets.forEach((el) => observer.observe(el))
+
+          // Safety fallback: reveal all remaining hidden elements after 800ms
+          // in case IntersectionObserver never fires (e.g. hidden iframe, print).
+          setTimeout(() => {
+            document.querySelectorAll('[data-motion].motion-hidden').forEach((el) => {
+              revealEl(el, null)
             })
-          },
-          // threshold:0 fires as soon as any pixel enters viewport.
-          // rootMargin top 200px pre-triggers elements just below fold.
-          // No negative bottom margin — avoids hiding sections in full-page
-          // screenshot contexts (headless, Playwright fullPage:true).
-          { threshold: 0, rootMargin: '200px 0px 200px 0px' }
-        )
+          }, 800)
+        }
 
-        targets.forEach((el) => observer.observe(el))
-
-        // Safety fallback: reveal all remaining hidden elements after 800ms
-        // in case IntersectionObserver never fires (e.g. hidden iframe, print).
-        setTimeout(() => {
-          document.querySelectorAll('[data-motion].motion-hidden').forEach((el) => {
-            revealEl(el, null)
-          })
-        }, 800)
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initMotion)
-      } else {
-        initMotion()
-      }
-    </script>
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initMotion)
+        } else {
+          initMotion()
+        }
+      </script>
+    )}
   </body>
 </html>
