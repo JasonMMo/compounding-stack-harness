@@ -2,8 +2,9 @@
 
 ## 이번 세션 범위 (최신)
 
-**마케팅사이트 8축(theme/section) 트랙 — 페이지-구조 아키타입 확장 (Growth-75 → 87)**.
+**마케팅사이트 8축(theme/section) 트랙 — 페이지-구조 아키타입 확장 (Growth-75 → 88)**.
 웹에이전시형 랜딩 데모를 "테마(색·폰트)" 다양성에서 **페이지 구조 아키타입(A1~A7)** 다양성으로 확장 중. CEO 가 "색·텍스트만 다른 같은 패턴"을 지적(Growth-76) → 진짜 차별은 **섹션 variant × 페이지 아키타입 × 테마의 곱**이라는 결론. 블루프린트: [`docs/architecture/landing-pattern-matrix.md`](docs/architecture/landing-pattern-matrix.md).
+Growth-88: **모션 다이얼 진짜 레버화** — flux-demo·meridian `motion:rich` 파일럿. 레거시 `[data-motion]` 옵저버 always-load 리팩터 + `html[data-motion="rich"]` 가 레거시 keyframe vars 스케일 → 기존 카탈로그 17개 섹션 전체 격상. snap+island 한계 문서화(`data-snap-panel` backlog).
 
 > ✅ **Growth-81 A1 FLUX LIVE** — https://flux.n9n.co.kr (6번째 데모, flux 테마). **P0 종결**.
 > ✅ **Growth-82 A3 Event LIVE** — https://summit-horizon.n9n.co.kr (7번째 데모, ignite 테마, SUMMIT Horizon 2026). 신규 variant 3종(horizontal-steps/newsletter-inline/four-up) + logos/grid 워드마크 폴백 결함 픽스. 풀페이지 9/9 섹션 비주얼 검증, ui_check 7/7. **P2(A3) 종결**.
