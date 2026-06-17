@@ -17,7 +17,7 @@
 
 **gbrain (garrytan/gbrain): REJECTED** — full report `out/eval/gbrain-adoption.md`. Reasons: total duplication of qmd+ledger-index+context-mode+codegraph (retires nothing → net heavier), default cloud embedding egress (charter violation), derived-DB two-source-of-truth risk. Re-evaluate only at M5 (multi-tenant) or CRM-graph verticals.
 
-**REAL "heaviness" fix (not a new tool):** (a) clear/compact stale sessions; (b) finish Growth-19 Phase 2 backlog = qmd Windows install + collection wiring; (c) habituate scoped queries (`ledger-index.py --symbol`, `qmd search -c wiki|docs|presets`) instead of full ledger/wiki reads.
+**REAL "heaviness" fix (not a new tool):** (a) clear/compact stale sessions; (b) ~~finish Growth-19 Phase 2~~ — **DONE & verified 2026-06-17**: qmd 2.5.3 installed, docs/presets/wiki 3-collection wired, BM25+semantic embed complete (71 files·575 vectors·pending 0). Phase 2 was already ✅ in design doc; HANDOFF prior-stale. **Real Growth-19 remainder = Phase 3** (graph.html + PM loop step 7 contribute-back→wiki Ingest wiring); (c) habituate scoped queries (`ledger-index.py --symbol`, `qmd search -c wiki|docs|presets`) instead of full ledger/wiki reads — discipline item, not a code task.
 
 **OPEN BACKLOG (do NOT start without founder direction):**
 - snap mode + island-hero: needs per-section opt-in marker (e.g. `data-snap-panel`) before snap works with island heroes; currently snap validated only for SSR-section profiles (gtm-landing).
