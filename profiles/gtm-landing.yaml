@@ -24,6 +24,8 @@ stack:
 # ── Site Block (marketing-site schema) ─────────────────────────────────────
 site:
   theme: aurora                      # SaaS/tech flagship — fits our positioning
+  scroll_mode: snap                  # Growth-87 파일럿: 100dvh 풀스크린 snap
+  motion: subtle                     # Growth-87 파일럿: conservative B2B reveal
 
   pages:
     - slug: home
@@ -34,10 +36,11 @@ site:
         og_image: "assets/og-home.png"
       sections:
         - type: hero
-          variant: glowy-waves
+          variant: scroll-reveal        # Growth-87 파일럿: 4단 stagger reveal
           copy:
             headline: "개발팀 없이 사내 업무 시스템을."
             subhead: "AI 도메인 전문가가 풀스택 앱을 자동 생성합니다 — 사내망 안에서, 여러분이 고른 기술 스택으로."
+            badge: "Growth-87 파일럿 — 모션 시스템 데모"
           cta:
             label: "무료 사전 진단 신청"
             href: "#contact"
@@ -91,6 +94,21 @@ site:
               icon: "gauge"
               image: "/proof/construction-demo.jpg"
               description: "모든 AI 호출에 토큰 수·비용이 기록되고, 고비용 호출은 자동으로 저렴한 공급자나 캐시 응답으로 전환됩니다. self-host이므로 데이터는 사내망을 벗어나지 않습니다."
+
+        - type: stats
+          variant: pinned-staged        # Growth-87 파일럿: 4 stat 카드 stagger reveal
+          copy:
+            headline: "숫자로 보는 compounding-stack-harness"
+            subhead: "첫 고객부터 설계에 내장된 지표들."
+          items:
+            - value: "14+"
+              label: "도메인 프리셋"
+            - value: "5"
+              label: "스택 어댑터"
+            - value: "0 bits"
+              label: "외부로 나간 데이터"
+            - value: "< 1일"
+              label: "첫 도메인 구축"
 
         - type: faq
           variant: two-col
