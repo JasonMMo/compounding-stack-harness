@@ -23,6 +23,7 @@ stack:
 # ── Site Block (marketing-site schema) ─────────────────────────────────────
 site:
   theme: meridian
+  motion: rich                       # Growth-87 파일럿: rich intensity dial
 
   pages:
     - slug: home
