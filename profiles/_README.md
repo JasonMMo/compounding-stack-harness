@@ -153,6 +153,15 @@ stack:
 site:
   theme: default                     # presets/themes/<slug>/ 참조 (P2 에서 생성; P1 에선 soft 경고만)
 
+  scroll_mode: normal                # normal (default) | snap
+                                    # snap = full-screen scroll-snap-type:y mandatory, 100dvh sections
+                                    # 기본값 normal: 기존 데모 바이트 동일 (opt-in 전까지 영향 없음)
+  motion: off                        # off (default) | subtle | rich
+                                    # off  → IO directive 미로드, html.motion-ready 없음, CSS 기본(fully visible)
+                                    # subtle → conservative B2B reveal (B2B 경영진 페르소나)
+                                    # rich   → promo landing staged choreography
+                                    # G-69: CSS 기본 상태 = 완전 가시. JS off → 전부 visible.
+
   pages:
     - slug: home                     # ASCII slug (G-8)
       title: "Home"
