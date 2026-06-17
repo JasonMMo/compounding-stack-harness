@@ -1,0 +1,161 @@
+---
+/**
+ * GalleryFullBleedStrip.astro — gallery/full-bleed-strip variant (Growth-87).
+ * CDO spec §4-2: 수평 풀블리드 스트립 + CSS scroll-driven parallax.
+ *
+ * G-69: JS off → flex row 나열, 모든 이미지/카드 즉시 가시.
+ *   parallax animation 은 @supports(animation-timeline) + html.motion-ready 게이트.
+ *   무사진 폴백: items[].src 없으면 CSS gradient placeholder 렌더.
+ *
+ * 라이브러리 0: vanilla IO reveal + CSS animation-timeline (Chrome 115+).
+ *   미지원 브라우저: parallax 없이 정적 strip (graceful degrade).
+ * prefers-reduced-motion: BaseLayout IO 스크립트가 skip → parallax 없음.
+ */
+
+interface GalleryItem {
+  src?: string
+  alt?: string
+  caption?: string
+}
+
+interface Props {
+  copy?: Record<string, string>
+  items?: GalleryItem[]
+}
+
+const {
+  copy = {},
+  items = [],
+} = Astro.props
+
+const headline = copy.headline ?? ''
+const subhead = copy.subhead ?? ''
+
+// 무사진 폴백: items 없으면 proof 이미지 목록 (빈 alt = decorative)
+const displayItems: GalleryItem[] = items.length > 0 ? items : [
+  { src: '/proof/shop-demo.jpg', alt: '쇼핑몰 관리 시스템' },
+  { src: '/proof/lawfirm-demo.jpg', alt: '법무법인 사건 관리 시스템' },
+  { src: '/proof/construction-demo.jpg', alt: '건설 현장 관리 시스템' },
+  { src: '/proof/distribution-demo.jpg', alt: '유통 재고 관리 시스템' },
+]
+---
+
+<section
+  class="full-bleed-strip"
+  data-section="gallery"
+  style="padding-block: var(--space-section-y, 112px);"
+>
+  <!-- 텍스트 리드 — reveal delay 0 -->
+  <div
+    class="strip__lead"
+    style="
+      max-width: var(--space-container-max, 1200px);
+      margin: 0 auto;
+      padding-inline: var(--space-container-gutter, 24px);
+      margin-bottom: 56px;
+    "
+  >
+    {headline && (
+      <h2
+        data-reveal
+        data-reveal-delay="0"
+        style="
+          font-family: var(--font-family-display, sans-serif);
+          font-size: clamp(1.75rem, 3.5vw, var(--font-size-5xl, 48px));
+          font-weight: var(--font-weight-display, 800);
+          color: var(--color-text-1, #111827);
+          margin: 0 0 16px;
+          letter-spacing: var(--letter-spacing-display, -0.03em);
+        "
+      >
+        {headline}
+      </h2>
+    )}
+    {subhead && (
+      <p
+        data-reveal
+        data-reveal-delay="1"
+        style="
+          font-family: var(--font-family-body, sans-serif);
+          font-size: clamp(0.9375rem, 1.25vw, 1.125rem);
+          color: var(--color-text-2, #6B7280);
+          margin: 0;
+          max-width: 560px;
+        "
+      >
+        {subhead}
+      </p>
+    )}
+  </div>
+
+  <!-- 풀블리드 스트립 — overflow 허용 -->
+  <div
+    class="strip__track"
+    aria-label={headline || '갤러리'}
+    role="list"
+  >
+    {displayItems.map((item: GalleryItem, idx: number) => (
+      <figure
+        class="strip__item"
+        data-reveal
+        data-reveal-delay={String(idx)}
+        role="listitem"
+        style="margin: 0;"
+      >
+        {item.src ? (
+          <img
+            src={item.src}
+            alt={item.alt ?? ''}
+            loading="lazy"
+            style="
+              width: 100%;
+              height: 300px;
+              object-fit: cover;
+              display: block;
+            "
+          />
+        ) : (
+          /* 무사진 폴백: CSS gradient placeholder */
+          <div
+            aria-hidden="true"
+            style="
+              width: 100%;
+              height: 300px;
+              background: linear-gradient(135deg,
+                var(--color-primary-subtle, #F5F3FF) 0%,
+                var(--color-section-alt-bg, #EEF2FF) 100%
+              );
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <span
+              style="
+                font-family: var(--font-family-display, sans-serif);
+                font-size: 0.875rem;
+                color: var(--color-primary, #6D28D9);
+                opacity: 0.6;
+              "
+            >
+              {item.caption ?? ''}
+            </span>
+          </div>
+        )}
+        {item.caption && (
+          <figcaption
+            style="
+              padding: 12px 16px;
+              font-family: var(--font-family-body, sans-serif);
+              font-size: 0.8125rem;
+              color: var(--color-text-2, #6B7280);
+              background: var(--color-surface-1, #ffffff);
+            "
+          >
+            {item.caption}
+          </figcaption>
+        )}
+      </figure>
+    ))}
+  </div>
+</section>
