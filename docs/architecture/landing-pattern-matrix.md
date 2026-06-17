@@ -3,8 +3,8 @@
 > CDO doc. Decision-oriented map for the multi-session buildout of diverse landing-page patterns.
 > Canonical positions: section-type taxonomy (§1), variant table (§2), page archetypes (§3),
 > buildout backlog (§4), invariants (§5).
-> Last updated: 2026-06-17 (CTO, Growth-87 — **모션 시스템** + 신규 변형 3종 HAVE(hero/scroll-reveal·gallery/full-bleed-strip·stats/pinned-staged) + self-host 폰트 egress 제거(전 테마 zero-egress). 설계: docs/architecture/motion-system.md)
-> Prev: 2026-06-17 (Growth-86 — gtm-landing 한국어화 + locale 전파 feature + aurora family-display 한국어 폴백; 타 테마 폴백 누락 3종 backlog)
+> Last updated: 2026-06-17 (CTO, Growth-88 — **모션 다이얼 레버화** — flux-demo·meridian 이 `motion: rich`(normal scroll)로 운영. 다이얼이 신규 `[data-reveal]` IO 리빌과 레거시 `[data-motion]` keyframe vars 를 동시 스케일 → 기존 카탈로그 17개 섹션 전체 격상. snap+island 한계: `astro-island{display:contents}` 로 island-wrapped 섹션은 snap 무효 — per-section `data-snap-panel` 마커 도입 전까지 snap 은 SSR 섹션 프로파일만 검증됨. 설계: docs/architecture/motion-system.md §8·Known limitation)
+> Prev: 2026-06-17 (Growth-87 — **모션 시스템** + 신규 변형 3종 HAVE(hero/scroll-reveal·gallery/full-bleed-strip·stats/pinned-staged) + self-host 폰트 egress 제거(전 테마 zero-egress). 설계: docs/architecture/motion-system.md)
 
 ---
 
