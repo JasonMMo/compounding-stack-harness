@@ -337,21 +337,6 @@ html.motion-ready [data-reveal].in-view[data-reveal-delay="7"] { transition-dela
   scroll-snap-stop: always;       /* 빠른 스크롤에도 섹션 건너뜀 방지 */
 }
 
-/* ── Island-wrapped snap sections (e.g. astro-island wrapping a hero <section>) */
-/* astro-island has display:contents by default (Astro global style), which removes
-   its layout box — scroll-snap-align is ignored on box-less elements.
-   Override to display:block so it participates in snap layout, then mirror the
-   section snap properties. No scroll-snap-stop:always here: island sections
-   (e.g. features/bento-mosaic, process/split-animation) may exceed 100dvh and
-   a hard stop would trap the user. Gentle align only. Scoped to .snap-root only —
-   no effect on normal-mode demos. G-69: no content hidden, display:contents→block
-   is a layout-box change only. */
-.snap-root > astro-island {
-  display: block;
-  min-height: 100dvh;
-  scroll-snap-align: start;
-}
-
 /* ── Stats/pinned-staged: 4-stat 그리드 레이아웃 ───────────────────────── */
 .stats-pinned-grid {
   display: grid;
