@@ -24,7 +24,7 @@ seed/
 # 0. Growth-24 baseline DDL (legal_case, legal_precedent, legal_case_party, legal_case_document)
 #    이미 적용된 경우 건너뜀.
 
-# 1. RAG augment DDL (01~07) — augments/legal/ 디렉터리
+# 1. RAG augment DDL (01~08) — augments/legal/ 디렉터리
 psql $DSN -f presets/ddl/augments/legal/01_extensions.sql
 psql $DSN -f presets/ddl/augments/legal/02_legal_case_augment.sql
 psql $DSN -f presets/ddl/augments/legal/03_precedent_augment.sql
@@ -32,10 +32,12 @@ psql $DSN -f presets/ddl/augments/legal/04_case_document_augment.sql
 psql $DSN -f presets/ddl/augments/legal/05_case_party_rls.sql
 psql $DSN -f presets/ddl/augments/legal/06_legal_document_chunk.sql
 psql $DSN -f presets/ddl/augments/legal/07_rag_query_log.sql
+psql $DSN -f presets/ddl/augments/legal/08_legal_attorney.sql
 
-# 2. 시드 데이터
+# 2. 시드 데이터 (순서 엄수 — attorney → cases 순)
+psql $DSN -f presets/ddl/augments/legal/seed/seed_attorneys.sql      # 반드시 첫 번째 (FK 피참조)
 psql $DSN -f presets/ddl/augments/legal/seed/seed_precedents.sql
-psql $DSN -f presets/ddl/augments/legal/seed/seed_cases.sql
+psql $DSN -f presets/ddl/augments/legal/seed/seed_cases.sql          # legal_attorney FK 의존
 psql $DSN -f presets/ddl/augments/legal/seed/seed_case_documents.sql
 
 # 3. demo_docs ingest (txt 파일 → legal_document_chunk)
@@ -48,8 +50,26 @@ psql $DSN -f presets/ddl/augments/legal/seed/seed_case_documents.sql
 
 - PostgreSQL 15+, pgvector, pg_bigm 확장 설치 완료
 - `app_user`, `app_service` 롤 생성 완료 (RLS 정책 의존)
-- `employee` 테이블에 담당 변호사 2명 UUID가 존재하거나,
-  `seed_cases.sql` 내 DO 블록이 자동 삽입 (스키마 일치 필요)
+- `08_legal_attorney.sql` 적용 완료 (legal_attorney 테이블 및 legal_case FK 추가)
+- `seed_attorneys.sql` 이 `seed_cases.sql` 보다 반드시 먼저 실행 (FK 의존성)
+
+> Growth-48 이전 환경: `employee` 테이블의 DO 블록 삽입은 08 augment 적용 후 불필요.
+> 08 적용 시 legal_case.assigned_attorney_id / partner_id 가 legal_attorney 를 FK 참조함.
+
+---
+
+## 데모 계정 (변호사 인증)
+
+**데모 비밀번호: `demo1234!`** (전원 동일 — 데모 환경 전용)
+
+| UUID | 이름 | 이메일 | 역할 |
+|---|---|---|---|
+| `a1000000-0000-0000-0000-000000000003` | 김정훈 | jh.kim@example-lawfirm.kr | partner |
+| `a1000000-0000-0000-0000-000000000001` | 이준호 | lee.junho@example-lawfirm.kr | attorney |
+| `a1000000-0000-0000-0000-000000000002` | 박서연 | park.seoyeon@example-lawfirm.kr | attorney |
+
+- 해시: bcrypt $2b$ cost=12. 각 행마다 salt가 달라 해시값이 다름 (정상).
+- 프로덕션 전환 시 반드시 새 비밀번호로 교체 후 `UPDATE legal_attorney SET password_hash = ... WHERE id = ...`.
 
 ---
 
