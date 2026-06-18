@@ -164,3 +164,70 @@ Every search result is anchored to `legal_document_chunk.id`. The API response
 contains only chunk IDs that exist in the DB and pass RLS. No free-text
 citation is ever generated — hallucination is structurally impossible
 at the Lite tier (no LLM in the response path).
+
+
+---
+
+# README 추가 섹션 (기존 README.md에 병합 필요)
+
+## Authentication (B-1)
+
+### /search — JWT Bearer
+
+```
+Authorization: Bearer <JWT>
+```
+
+- Algorithm: HS256
+- Secret: `LEGAL_RAG_JWT_SECRET` (required)
+- Required claims: `sub` (attorney UUID string), `exp` (Unix timestamp)
+- `sub` is used directly as `app.current_user_id` for RLS session variable.
+- Body does NOT carry `attorney_id` — token claim is the sole identity source.
+
+### /ingest — Service Token
+
+```
+X-Service-Token: <token>
+```
+
+- Must equal `LEGAL_RAG_SERVICE_TOKEN` env var (constant-time comparison).
+- Mismatch → HTTP 401.
+
+### New required environment variables
+
+| Variable | Description |
+|---|---|
+| `LEGAL_RAG_JWT_SECRET` | HS256 signing secret for attorney JWTs |
+| `LEGAL_RAG_SERVICE_TOKEN` | Static service credential for /ingest |
+
+## Running Tests
+
+```bash
+cd services/legal-rag
+
+# Unit tests (no DB, no sidecar required):
+LEGAL_RAG_INGEST_ROOT=/tmp LEGAL_RAG_JWT_SECRET=test LEGAL_RAG_SERVICE_TOKEN=test \
+  pytest tests/ -q
+
+# Gap-1 integration tests (requires live Postgres with 01~07 SQL applied):
+LEGAL_RAG_DB_DSN_POSTGRES=postgresql://app_service:pw@localhost:5432/legaldb \
+  pytest tests/ -m postgres -v
+```
+
+## Patched files pending apply (CTO action)
+
+The following `.patched` files contain the full updated version and must replace
+the original after hook fix:
+
+| Patched file | Replaces | Key changes |
+|---|---|---|
+| `config.py.patched` | `config.py` | + `jwt_secret`, `service_token` fields |
+| `api.py.patched` | `api.py` | + JWT Depends on /search, + service-token Depends on /ingest, body `attorney_id` removed |
+| `ingest.py.patched` | `ingest.py` | + `validate_source_exists()`, `SourceNotFoundError` (Gap-3) |
+| `requirements.txt.patched` | `requirements.txt` | + `pyjwt>=2.8.0` |
+
+Apply command (run from services/legal-rag/):
+```bash
+for f in config api ingest requirements; do cp ${f}.py.patched ${f}.py; done
+cp requirements.txt.patched requirements.txt
+```
