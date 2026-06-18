@@ -1,0 +1,147 @@
+# profiles/telecom-leadgen-demo.yaml
+# Demo: 통신 판매점 리드젠 랜딩 (LG U+ / SKT / KT 대리점 형)
+# Purpose: Wire the ai-guide section + bridge theme for the first Lite-tier
+#   product demo. Visitor asks a plan question → AI instant answer →
+#   lead capture. No generative LLM. No third-party API. Cost = 0 runtime.
+#
+# This profile is a general SMB lead-gen template — the telecom copy slots
+# are examples only. Swap copy + knowledge_source for any domain.
+#
+# deliverable_kind=marketing-site → bypasses entity/DDL; site: block drives output.
+# functional config for ai-guide (ai_config) is documented here as comments;
+# actual wiring is engineer follow-up (see presets/themes/bridge/README.md).
+
+version: 1
+
+customer:
+  slug: telecom-leadgen-demo
+  display: "통신 판매점 AI 즉답 랜딩 — Demo"
+  status: demo
+  contact: aijasonmore@gmail.com
+  industry: telecom-dealer
+
+# ── Pluggable Stack ──────────────────────────────────────────────────────────
+stack:
+  deliverable_kind: marketing-site
+  frontend: landing-astro
+  backend: none
+
+# ── Site Block (marketing-site schema) ──────────────────────────────────────
+site:
+  theme: bridge
+  motion: subtle
+
+  pages:
+    - slug: home
+      title: "요금제 즉답 + 상담 신청"
+      seo:
+        title: "요금제 모르겠을 때 — AI가 즉시 답해드립니다"
+        description: "궁금한 요금제 그냥 물어보세요. AI가 바로 맞춤 추천을 드리고, 상담 신청까지 한 번에."
+        og_image: "assets/og-home.png"
+      sections:
+
+        # ── Primary: AI Guide widget (above fold, split-hero layout) ─────────
+        - type: ai-guide
+          variant: split-hero
+          copy:
+            headline: "요금제, 그냥 물어보세요."
+            subhead: "AI가 질문을 이해하고 즉시 맞춤 답변을 드립니다. 영업 시간 상관없이, 24시간."
+            input_placeholder: "예) 데이터 무제한에 가장 저렴한 요금제가 뭔가요?"
+            answer_label: "추천 요금제"
+            recommendation_label: "이런 요금제는 어떠세요?"
+            lead_headline: "더 자세한 상담을 원하시면"
+            lead_button_label: "상담 신청하기"
+            privacy_note: "입력하신 내용은 외부로 전송되지 않습니다."
+          # ai_config (functional — engineer 후속, site_manifest.py 미검증):
+          # ai_config:
+          #   knowledge_source: "kb/telecom-plans.yaml"
+          #   embedding_model: "all-MiniLM-L6-v2"
+          #   top_k: 3
+          #   recommendation_rules: "rules/telecom-recommend.yaml"
+          #   lead_destination: "db:leads"
+          #   lead_fields: [name, phone, opt_in]
+          #   privacy_mode: strict
+          cta:
+            label: "지금 바로 물어보기"
+            href: "#ai-guide-input"
+
+        # ── Social proof ─────────────────────────────────────────────────────
+        - type: logos
+          variant: horizontal-scroll
+          copy:
+            eyebrow: "전국 판매점 신뢰"
+
+        # ── Features: why AI guide ────────────────────────────────────────────
+        - type: features
+          variant: three-col-icon
+          copy:
+            headline: "왜 AI 즉답인가요?"
+            subhead: "상담원 없이도, 방문 없이도 — 원하는 요금제 정보를 즉시."
+          items:
+            - title: "24시간 즉답"
+              icon: "clock"
+              description: "영업 시간 밖에도 답변합니다. 방문자가 궁금한 순간에 바로 답해 신뢰를 쌓습니다."
+            - title: "데이터 외부 유출 없음"
+              icon: "shield"
+              description: "질문과 답변은 이 서버 안에서만 처리됩니다. 방문자 질문이 제3자 AI로 전송되지 않습니다."
+            - title: "맞춤 추천 + 상담 연결"
+              icon: "arrow-right"
+              description: "AI가 요금제를 추천하고, 관심 있는 방문자를 상담 신청으로 자연스럽게 안내합니다."
+
+        # ── Testimonial ───────────────────────────────────────────────────────
+        - type: testimonial
+          variant: single-card
+          copy:
+            quote: "야간에 들어온 문의도 다음날 아침에 보면 이미 상담 신청이 되어 있어요. AI가 24시간 일하는 거잖아요."
+            author_name: "이 모 씨"
+            author_title: "LG U+ 대리점 운영자"
+
+        # ── FAQ ───────────────────────────────────────────────────────────────
+        - type: faq
+          variant: single-col
+          copy:
+            headline: "자주 묻는 질문"
+            subhead: "도입 전에 궁금한 것들을 정리했습니다."
+          items:
+            - question: "AI가 틀린 답변을 할 수도 있나요?"
+              answer: "AI는 저희가 직접 입력한 요금제 정보만을 기반으로 답변합니다. 생성형 AI가 아니라 지식 검색 방식이라 허위 정보를 만들지 않습니다. 지식베이스를 최신 상태로 유지하면 답변도 정확합니다."
+            - question: "방문자 질문 내용이 어디에 저장되나요?"
+              answer: "질문은 서버 안에서만 처리되며 외부 AI 서비스로 전송되지 않습니다. strict 모드에서는 쿼리 로그도 저장하지 않습니다. 수집하는 것은 방문자가 직접 입력한 이름/연락처(상담 신청 시)뿐입니다."
+            - question: "요금제 정보가 바뀌면 어떻게 하나요?"
+              answer: "지식베이스 파일(YAML/JSON)을 업데이트하면 됩니다. 서비스 재배포 없이 파일 교체만으로 반영됩니다. IT 담당자 없이도 직접 관리하실 수 있습니다."
+            - question: "다른 업종(보험, 금융 등)에도 쓸 수 있나요?"
+              answer: "네. 지식베이스 내용만 바꾸면 됩니다. 이 시스템은 통신 전용이 아니라 어떤 SMB 상담 시나리오에도 적용됩니다."
+
+        # ── CTA ───────────────────────────────────────────────────────────────
+        - type: cta
+          variant: centered
+          copy:
+            headline: "우리 매장에도 도입해보고 싶다면"
+            subhead: "무료 30분 데모 미팅을 신청하세요. 바로 도입 견적을 드립니다."
+          cta:
+            label: "무료 데모 신청하기"
+            href: "#contact"
+
+        # ── Footer ────────────────────────────────────────────────────────────
+        - type: footer
+          variant: minimal
+          copy:
+            brand_name: "AI 즉답 랜딩"
+            tagline: "SMB 리드젠 × AI 즉답 — 데이터는 사내망 밖으로 나가지 않습니다."
+            legal_notice: "© 2026 compounding-stack-harness."
+
+  contact:
+    enabled: true
+    fields: [name, phone, message]
+
+# ── Defaults ─────────────────────────────────────────────────────────────────
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+# ── Cost tracking ─────────────────────────────────────────────────────────────
+billing:
+  llm_budget_usd_per_month: 0        # Lite tier: local embedding, no generative LLM
+  prepaid_credits_usd: 0
+  # Runtime infra cost: self-host VPS only. Embedding model CPU usage is negligible
+  # for an SMB-scale knowledge base (< 1000 entries). No per-query API charge.
