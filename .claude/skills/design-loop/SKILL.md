@@ -27,6 +27,19 @@ description: Run the CDO design loop — token single-source grounding, persona 
 
 디자인 근거·토큰 표·페르소나 인터랙션 상세는 `docs/learn-logs/cdo.md` (누적) 또는 인도물 단위면 `docs/delivery/<slug>/design-review.md` 에 쓰고, main 으로는 **요약 + 경로 + 결정 항목만** 반환한다 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
 
+## 기능성(Interactive) 섹션 타입 추가 시 규약
+
+카탈로그에 **정적 콘텐츠 셸 이상의 런타임 동작**(임베딩 추론, API 호출, 리드 제출 등)이 필요한 섹션을 신설할 때:
+
+1. **CDO 소유 (catalog schema)**: `copy_slots`, `asset_slots`, `item_slots`, `variants` — 검증 대상 스키마에 포함.
+2. **Engineer 후속 (catalog 주석)**: 런타임 기능 설정(`ai_config{}` 등)은 `site_manifest.py` 검증 대상이 **아님**. catalog YAML 주석으로 문서화하고 schema 에 포함하지 않는다.
+3. **테마 토큰 확장**: 인터랙티브 컴포넌트가 필요로 하는 전용 색·반경·그림자 토큰은 `theme.yaml` 에 추가 선언 (예: `ai-guide-bg`, `ai-guide-panel` 반경). semantic.json 에 즉시 올리지 않는다 — 두 테마 이상에서 반복되면 그때 semantic 승격.
+4. **contract 정합성**: 기능 동작이 wire-protocol contract 변경을 요구하면 CTO 에스컬레이션 — Step 3 기존 규칙 적용.
+5. **wiki ingest**: 새 인터랙티브 패턴은 `knowledge/wiki/concepts/<slug>.md` + index.md 1줄로 즉시 환류 (Step 6).
+
+참고 사례: `ai-guide` 섹션 타입 (2026-06-18) — `concepts/smb-ai-guide-lite.md`.
+
 ## Anti-patterns
 
 - 하드코딩 hex / adapter 별 토큰 fork / contract 암묵 변경 / 페르소나 없는 단일 화면 / 장식적 복잡성 (비전문 사용자 3 페르소나가 기준)
+- 기능성 섹션의 런타임 config 를 catalog schema 에 포함 → site_manifest.py 오검증 유발
