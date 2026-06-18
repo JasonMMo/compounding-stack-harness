@@ -1632,6 +1632,35 @@ entities:
     #   RLS: precedent chunks = all app_users; case_document chunks = case attorney/partner only.
     #   Citation anchor: chunk.id binds RAG answers to verifiable source records.
 
+  legal-attorney:
+    domain: legal
+    table: legal_attorney
+    label_ko: 변호사 계정
+    primary_key: id
+    columns:
+      id:            { type: uuid,      nullable: false }
+      created_at:    { type: timestamp, nullable: false }
+      updated_at:    { type: timestamp, nullable: false }
+      email:         { type: string,    nullable: false, unique: true }
+      password_hash: { type: string,    nullable: false }
+      display_name:  { type: string,    nullable: false }
+      partner_id:    { type: uuid,      nullable: true,
+                       fk: { entity: legal-attorney, column: id, on_delete: set_null } }
+      role:          { type: enum,      values: [attorney, partner], nullable: false }
+      is_active:     { type: boolean,   nullable: false }
+    constraints:
+      - { type: check, expression: "role IN ('attorney', 'partner')" }
+    indexes:
+      - { columns: [partner_id] }
+      - { columns: [is_active] }
+    # DDL notes:
+    #   password_hash: bcrypt $2b$ cost>=12 only. Plain-text storage forbidden.
+    #   partner_id: self-referencing FK (DEFERRABLE INITIALLY DEFERRED — postgres-specific).
+    #   RLS (postgres-only): app_user SELECT = own row OR subordinate attorneys (partner_id = current_user_id).
+    #     INSERT/UPDATE/DELETE: app_service (BYPASSRLS) only — no self-registration.
+    #   FK from legal_case.assigned_attorney_id / partner_id → legal_attorney(id): added in 08_legal_attorney.sql.
+    #   Seed load order: seed_attorneys.sql BEFORE seed_cases.sql (FK dependency).
+
   rag-query-log:
     domain: legal
     table: legal_rag_query_log
