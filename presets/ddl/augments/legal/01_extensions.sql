@@ -36,7 +36,9 @@ $$ LANGUAGE plpgsql;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_service') THEN
-    CREATE ROLE app_service NOLOGIN;
+    CREATE ROLE app_service NOLOGIN BYPASSRLS;  -- RLS 우회: ingest pipeline 전용, 개별 변호사 연결은 절대 이 롤 금지
+  ELSE
+    ALTER ROLE app_service BYPASSRLS;           -- 기존 롤: idempotent 패치
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_user') THEN
     CREATE ROLE app_user NOLOGIN;
