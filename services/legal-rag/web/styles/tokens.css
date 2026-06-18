@@ -1,0 +1,164 @@
+/*
+ * tokens.css — 법무법인 legal-rag UI 디자인 토큰
+ * 버전: 0.1.0 (MVP / M3 첫 버티컬)
+ * 기반: design/tokens/raw.json + design/tokens/semantic.json
+ * 법무 버티컬 override: navy 팔레트, gold 뱃지
+ * 외부 CDN 의존 없음 — 시스템 한글폰트 스택 사용
+ * 빌드스텝 없음 — FastAPI StaticFiles 직서빙
+ */
+
+:root {
+  /* ── Raw: Navy ramp (법무 버티컬 accent override) ── */
+  --lr-navy-900: #0F1729;
+  --lr-navy-800: #1A2744;
+  --lr-navy-700: #243659;
+  --lr-navy-600: #2E4470;
+  --lr-navy-100: #E8EDF5;
+  --lr-navy-050: #F2F5FA;
+
+  /* ── Raw: Gold ramp (판례 뱃지 권위 강조) ── */
+  --lr-gold-500: #B8960C;
+  --lr-gold-100: #FDF8E7;
+
+  /* ── Raw: Gray scale (semantic.json 상속값) ── */
+  --gray-050: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+
+  /* ── Raw: State colors ── */
+  --red-050:   #FEF2F2;
+  --red-600:   #DC2626;
+  --red-700:   #B91C1C;
+  --green-050: #F0FDF4;
+  --green-600: #16A34A;
+  --amber-100: #FEF3C7;
+  --amber-700: #B45309;
+
+  /* ══ Semantic tokens (컴포넌트가 참조하는 변수) ══ */
+
+  /* Color — primary (navy override) */
+  --color-primary:         var(--lr-navy-800);
+  --color-primary-hover:   var(--lr-navy-700);
+  --color-primary-active:  var(--lr-navy-600);
+  --color-primary-subtle:  var(--lr-navy-100);
+
+  /* Color — surface */
+  --color-surface-1:       #FFFFFF;
+  --color-surface-2:       #F7F8FA;
+  --color-surface-3:       #EEF1F6;
+
+  /* Color — border */
+  --color-border:          #D4D9E3;
+  --color-border-strong:   var(--gray-300);
+  --color-border-input:    var(--gray-400);
+  --color-border-focus:    var(--lr-navy-800);
+
+  /* Color — text */
+  --color-text-1:          var(--gray-900);
+  --color-text-2:          var(--gray-700);
+  --color-text-3:          var(--gray-500);
+  --color-text-disabled:   var(--gray-400);
+  --color-text-inverse:    #FFFFFF;
+  --color-text-link:       var(--lr-navy-800);
+  --color-text-link-hover: var(--lr-navy-700);
+
+  /* Color — state */
+  --color-danger:          var(--red-600);
+  --color-danger-subtle:   var(--red-050);
+  --color-success:         var(--green-600);
+  --color-success-subtle:  var(--green-050);
+  --color-warning:         var(--amber-700);
+  --color-warning-subtle:  var(--amber-100);
+
+  /* Color — badge */
+  --color-badge-precedent-bg: var(--lr-gold-100);
+  --color-badge-precedent-fg: var(--lr-gold-500);
+  --color-badge-document-bg:  var(--lr-navy-100);
+  --color-badge-document-fg:  var(--lr-navy-800);
+
+  /* Color — status */
+  --color-status-ok:       var(--green-600);
+  --color-status-degraded: var(--amber-700);
+  --color-status-down:     var(--red-600);
+
+  /* Typography — font family */
+  --font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Malgun Gothic",
+    "맑은 고딕",
+    "Noto Sans KR",
+    "Nanum Gothic",
+    sans-serif;
+  --font-family-mono:
+    "D2Coding",
+    "JetBrains Mono",
+    "Consolas",
+    monospace;
+
+  /* Typography — size / line-height pairs */
+  --text-heading-page-size: 20px;
+  --text-heading-page-lh:   28px;
+  --text-heading-page-fw:   600;
+
+  --text-heading-card-size: 15px;
+  --text-heading-card-lh:   22px;
+  --text-heading-card-fw:   600;
+
+  --text-body-size:  14px;
+  --text-body-lh:    22px;
+  --text-body-fw:    400;
+
+  --text-meta-size:  12px;
+  --text-meta-lh:    18px;
+  --text-meta-fw:    400;
+
+  --text-label-size: 12px;
+  --text-label-lh:   18px;
+  --text-label-fw:   500;
+
+  --text-caption-size: 11px;
+  --text-caption-lh:   16px;
+  --text-caption-fw:   400;
+
+  --text-input-size: 15px;
+  --text-input-lh:   24px;
+  --text-input-fw:   400;
+
+  /* Spacing */
+  --space-page-h:   24px;
+  --space-page-v:   20px;
+  --space-card-pad: 16px;
+  --space-card-gap: 12px;
+  --space-meta-gap: 8px;
+  --space-section:  24px;
+
+  /* Border radius */
+  --radius-card:  6px;
+  --radius-badge: 4px;
+  --radius-btn:   4px;
+  --radius-input: 4px;
+
+  /* Shadow */
+  --shadow-card:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-input-focus:
+    0 0 0 3px rgba(26, 39, 68, 0.20);
+
+  /* Motion */
+  --transition-control: 150ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-fast:    100ms cubic-bezier(0.2, 0, 0, 1);
+
+  /* Z-index */
+  --z-sticky:  200;
+  --z-toast:   500;
+}
