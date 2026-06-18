@@ -18,6 +18,8 @@
 - [legal-ai-search-strategy](concepts/legal-ai-search-strategy.md) — A안 augment 패턴: tsvector 1단계 + RAG 2단계, 전략 생성 제외 (updated: 2026-06-11) `[INFERRED]`
 - [smb-ai-guide-lite](concepts/smb-ai-guide-lite.md) — Lite 티어: 로컬 임베딩 즉답 위젯 + 리드폼, API 비용 0, 데이터 외부 유출 0, SMB 리드젠 범용 패턴 (updated: 2026-06-18) `[SYNTHESIZED]`
 - [smb-ai-market-2026h1](concepts/smb-ai-market-2026h1.md) — 시장조사 salvage: GTM 피벗 검증(AI공급 얇음·홈페이지 레드오션), self-host는 규제업종만 법적필수, 진입 use case 2(규제RAG/크몽외주) (updated: 2026-06-18) `[SYNTHESIZED]`
+- [legal-rag-pattern](concepts/legal-rag-pattern.md) — 규제업종 하이브리드 검색 아키텍처: neutral catalog+dialect overlay / FTS+ANN+RRF / chunk.id 인용 무결성 / 로컬 임베딩 사이드카 (updated: 2026-06-18) `[EXTRACTED]`
+- [legal-mvp-spec](concepts/legal-mvp-spec.md) — 소형 법무법인 RAG MVP 명세: 타깃·7쿼리 패턴·MVP IN/OUT 경계·WTP 가설(미검증) (updated: 2026-06-18) `[EXTRACTED]`
 
 ## Design
 
