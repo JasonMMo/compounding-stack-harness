@@ -70,6 +70,14 @@ class Settings:
     POST /ingest rejects any path that does not resolve under this directory.
     Prevents path-traversal attacks (CISO gate, self-flagged)."""
 
+    jwt_secret: str
+    """HS256 signing secret for attorney JWT tokens (LEGAL_RAG_JWT_SECRET).
+    Required. Service refuses to start if unset."""
+
+    service_token: str
+    """Static bearer token for /ingest endpoint (LEGAL_RAG_SERVICE_TOKEN).
+    Required. Must match X-Service-Token header on all ingest requests."""
+
 
 def load() -> Settings:
     """Load settings from environment. Call once at startup."""
@@ -88,4 +96,6 @@ def load() -> Settings:
         db_pool_min=int(_optional("LEGAL_RAG_POOL_MIN", "2")),
         db_pool_max=int(_optional("LEGAL_RAG_POOL_MAX", "10")),
         ingest_root=_require("LEGAL_RAG_INGEST_ROOT"),
+        jwt_secret=_require("LEGAL_RAG_JWT_SECRET"),
+        service_token=_require("LEGAL_RAG_SERVICE_TOKEN"),
     )
