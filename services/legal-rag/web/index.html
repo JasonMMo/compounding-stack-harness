@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="법무법인 법률 문서 검색 시스템 — 사내 서버 전용">
+  <title>법률 문서 검색 시스템</title>
+  <link rel="stylesheet" href="/app/styles/tokens.css">
+  <link rel="stylesheet" href="/app/styles/app.css">
+</head>
+<body>
+  <!-- 접근성: 키보드 포커스 건너뛰기 -->
+  <a class="skip-link" href="#main-content">본문으로 이동</a>
+
+  <!-- ══ 로그인 화면 ═════════════════════════════════════════════════════════ -->
+  <div id="screen-login" class="login-wrapper" role="main">
+    <div class="login-card">
+      <div class="login-card__header">
+        <div class="login-card__wordmark">법률 문서 검색 시스템</div>
+        <div class="login-card__subtitle">한강 법무법인 · 사내 전용</div>
+      </div>
+      <div class="login-card__body">
+        <div
+          id="login-alert"
+          class="login-card__alert"
+          role="alert"
+          hidden
+          aria-live="assertive"
+        ></div>
+        <form id="login-form" novalidate>
+          <div class="form-field">
+            <label class="form-label" for="login-email">이메일</label>
+            <input
+              class="form-input"
+              type="email"
+              id="login-email"
+              name="email"
+              autocomplete="email"
+              autocapitalize="none"
+              spellcheck="false"
+              required
+              aria-required="true"
+            >
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="login-password">비밀번호</label>
+            <input
+              class="form-input"
+              type="password"
+              id="login-password"
+              name="password"
+              autocomplete="current-password"
+              required
+              aria-required="true"
+            >
+          </div>
+          <button
+            type="submit"
+            class="btn btn--primary btn--full"
+            id="login-btn"
+          >로그인</button>
+        </form>
+      </div>
+      <div class="login-card__footer">
+        사내 서버에서 동작합니다.<br>
+        외부 네트워크로 데이터가 전송되지 않습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 메인 앱 화면 (인증 후) ════════════════════════════════════════════ -->
+  <div id="screen-app" class="app-root" hidden>
+
+    <!-- 헤더 -->
+    <header class="app-header" role="banner">
+      <span class="header-wordmark">법률 문서 검색</span>
+      <div class="header-controls">
+        <span class="header-user" id="header-username" aria-label="로그인한 변호사"></span>
+        <button
+          type="button"
+          class="btn btn--ghost btn--sm"
+          id="btn-logout"
+          aria-label="로그아웃"
+        >로그아웃</button>
+      </div>
+    </header>
+
+    <!-- 탭 네비게이션 -->
+    <nav class="app-tabs" role="navigation" aria-label="화면 이동">
+      <button
+        type="button"
+        class="tab-btn tab-btn--active"
+        id="tab-search"
+        aria-selected="true"
+        aria-controls="panel-search"
+        role="tab"
+      >문서 검색</button>
+      <button
+        type="button"
+        class="tab-btn"
+        id="tab-cases"
+        aria-selected="false"
+        aria-controls="panel-cases"
+        role="tab"
+      >사건 현황</button>
+    </nav>
+
+    <!-- ── 검색 패널 ──────────────────────────────────────────────────────── -->
+    <div id="panel-search" role="tabpanel" aria-labelledby="tab-search">
+      <!-- 건강 배너: IT 담당자용 -->
+      <div
+        id="health-banner"
+        class="health-banner health-banner--ok"
+        role="status"
+        aria-live="polite"
+        hidden
+      ></div>
+
+      <!-- 검색창 섹션 -->
+      <section class="search-bar-section" aria-label="검색">
+        <div class="search-bar">
+          <textarea
+            class="search-bar__input"
+            id="search-input"
+            rows="2"
+            placeholder="판례나 사건 관련 내용을 한국어로 입력하세요"
+            aria-label="법률 문서 검색"
+            aria-multiline="true"
+          ></textarea>
+          <button
+            type="button"
+            class="btn btn--primary search-bar__btn"
+            id="btn-search"
+          >검색</button>
+        </div>
+        <div class="search-bar-controls">
+          <select
+            class="search-param-select"
+            id="search-top-k"
+            aria-label="결과 수"
+          >
+            <option value="5">결과 5건</option>
+            <option value="10" selected>결과 10건</option>
+            <option value="20">결과 20건</option>
+          </select>
+          <select
+            class="case-filter-select"
+            id="search-case-filter"
+            aria-label="사건 필터"
+          >
+            <option value="">모든 사건</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- 결과 섹션 -->
+      <main class="page-main" id="main-content">
+        <section
+          class="results-section results--empty-initial"
+          id="results-section"
+          aria-label="검색 결과"
+          aria-live="polite"
+        >
+          <div class="results-header" id="results-header" hidden></div>
+          <div class="results-message" id="results-message" role="status">
+            검색어를 입력하면 관련 문서를 출처와 함께 보여줍니다.
+          </div>
+          <ul class="results-list" id="results-list" aria-label="인용 결과 목록"></ul>
+        </section>
+      </main>
+    </div>
+
+    <!-- ── 사건현황 패널 ───────────────────────────────────────────────────── -->
+    <div id="panel-cases" role="tabpanel" aria-labelledby="tab-cases" hidden>
+      <div class="page-title-bar">담당 사건 현황</div>
+      <main class="page-main">
+        <section class="case-table-section" aria-label="담당 사건 목록">
+          <div id="cases-loading" class="results-message" hidden>사건 목록을 불러오는 중...</div>
+          <div id="cases-error" class="results-message" role="alert" hidden></div>
+          <table
+            class="case-table"
+            id="cases-table"
+            aria-label="담당 사건 목록"
+            hidden
+          >
+            <caption class="sr-only">담당 변호사의 사건 목록 및 문서 색인 상태</caption>
+            <thead>
+              <tr>
+                <th class="case-th" scope="col">사건번호</th>
+                <th class="case-th" scope="col">사건명</th>
+                <th class="case-th" scope="col">색인 상태</th>
+                <th class="case-th" scope="col">문서 수</th>
+                <th class="case-th" scope="col">검색</th>
+              </tr>
+            </thead>
+            <tbody id="cases-tbody"></tbody>
+          </table>
+          <div id="cases-empty" class="results-message" role="status" hidden>
+            담당 사건이 없습니다.
+          </div>
+        </section>
+      </main>
+    </div>
+
+  </div><!-- /#screen-app -->
+
+  <script src="/app/app.js"></script>
+</body>
+</html>
