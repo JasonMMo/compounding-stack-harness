@@ -8,7 +8,6 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-import pytest
 from ingest import chunk_text, Chunk
 
 
@@ -55,8 +54,6 @@ class TestChunkText:
         # If we have multiple chunks, adjacent ones should share some chars
         if len(chunks) > 1:
             for i in range(len(chunks) - 1):
-                # At least some content from end of chunk[i] appears in chunk[i+1]
-                # (overlap is approximate due to boundary splitting)
                 assert len(chunks[i].text) > 0
                 assert len(chunks[i + 1].text) > 0
 
