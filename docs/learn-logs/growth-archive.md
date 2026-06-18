@@ -546,3 +546,135 @@
 - **교훈 (1줄)**: seed data를 repo에 번들하면 서버 SCP 없이 이미지 빌드 시 자동 포함 — bind-mount보다 단순
 - **Revenue/cost**: LLM=없음 / 재배포 6회 / 데모 품질 향상 → 영업 접점 강화
 - **Open loops**: manufacturing-demo 추가 / Coolify stale app 정리 / Supabase adapter
+
+## Growth-54 ~ Growth-67 (2026-06-13 ~ 2026-06-15, 이동: Growth-89)
+
+### Growth-54 (2026-06-13) — manufacturing-demo 추가 + catalog 확장
+
+- **인격/Axis/Milestone**: CTO+Engineer / customer·ddl 축 / M2 — 데모 포트폴리오 7업종
+- **Why (1줄)**: 제조업은 국내 SMB 최대 업종 — 포트폴리오 공백 최우선 해소
+- **작업**: profiles/manufacturing-demo.yaml (5 도메인, 18 엔티티). catalog.yaml에 production-plan·production-result·ncr 3개 신규 엔티티 추가. seed-data 97레코드. portal 7번째 카드. deploy + HTTP 200.
+- **커밋**: d816ff2~17f18da (5 커밋)
+- **교훈 (1줄)**: deploy_to_coolify.py는 미커밋 파일이 있으면 compose_raw 로드 실패 — 커밋·푸시 먼저, 배포 나중
+- **Revenue/cost**: LLM=없음 / 재배포 2회 / 데모 포트폴리오 7업종 완비
+- **Open loops**: Coolify stale app 정리 / Supabase adapter
+
+### Growth-55 (2026-06-13) — Coolify stale app 정리
+
+- **인격/Axis/Milestone**: CTO (infra) / — / M2 — 운영 위생
+- **Why (1줄)**: Growth-51 배포 당시 demo-portal이 중복 생성됨 — stale app + 빈 project 제거로 Coolify UI 정리
+- **작업**: DELETE /applications/gwdizi7tws4yabv25xnbph0w (HTTP 200). DELETE /projects/xngfun8b14dchdujcwl3898c (HTTP 200). active app s6872cr0asfp02sc0vgw8wi2 생존 확인.
+- **커밋**: HANDOFF+learn-log 업데이트만 (코드 변경 없음)
+- **Revenue/cost**: LLM=없음 / API 호출 5회 / 운영 부채 해소
+- **Open loops**: Supabase adapter
+
+### Growth-56 (2026-06-13) — manifest 디렉터리 버그 수정 + 6개 demo 화면 복구
+
+- **인격/Axis/Milestone**: CTO+Engineer / creater 축 / M2 — 데모 품질
+- **Why (1줄)**: 6개 demo app에서 화면이 비어있는 원인이 screen-manifest.json이 파일 아닌 디렉터리로 bind-mount된 버그였음
+- **근본원인**: Docker bind-mount race — 컨테이너가 SCP 전에 기동되면 source 경로에 빈 디렉터리 생성. SCP가 그 안에 파일을 넣어 mount가 깨짐. edu-program만 정상이었던 이유: 이전에 별도 SCP 경로로 파일이 이미 있었음.
+- **작업**: 서버에서 6개 slug manifest 디렉터리→파일로 수정 (cp→rm→mv). 컨테이너 restart. deploy_to_coolify.py에 SCP 전 `rm -rf {remote_manifest}` 가드 추가.
+- **커밋**: 3e9250a (deploy_to_coolify.py fix)
+- **교훈 (1줄)**: SCP 대상이 이미 디렉터리면 파일로 덮어쓰지 않고 그 안에 들어간다 — SCP 전 rm -rf 필수
+- **Revenue/cost**: LLM=없음 / restart 6회 / 데모 품질 복구
+- **Open loops**: Supabase adapter
+
+### Growth-57 (2026-06-13) — 데모 3종 결함 일괄 수정 (화면 공백·계정 표기·테이블 가독성)
+
+- **인격/Axis/Milestone**: CTO+Engineer / frontend·creater 축 / M2 — 데모 품질
+- **Why (1줄)**: 고객 향 데모에서 화면 공백·잘못된 로그인 안내·검정 위 검정 글자 3종 동시 발견 — 영업 신뢰도 직결
+- **#1 화면 공백**: construction/itservice 컨테이너가 Growth-56 manifest fix 이전(10:38) 생성분이라 stale 디렉터리 inode를 계속 마운트. Coolify `restart`는 컨테이너 recreate 안 함 → `start?force=true`(재clone+recreate)로 해결. 교훈: bind-mount inode 교체엔 restart 부족, force deploy 필요.
+- **#2 계정 표기**: portal 카드 8곳 admin/demo1234 → demo/demo (실제 auth.py _DEMO_USERS=demo/demo와 불일치 해소).
+- **#3 테이블 가독성**: Pico v2 classless가 prefers-color-scheme:dark 자동감지 → 홀수 row 다크 배경 + td 텍스트(#111827) 겹쳐 검정 위 검정. base.html `data-theme="light"` 강제 + master-table zebra 명시 토큰(odd=surface-1/even=surface-2) 이중 방어. edu(public-sector, Pico 미사용)는 무영향이라 정상이었음.
+- **커밋**: f0c1acb(portal) 91f1919(base.html) 267a0b7(app.css)
+- **교훈 (1줄)**: 디자인이 라이트 전용이면 <html data-theme="light"> 명시 — Pico/브라우저 다크모드 자동적용이 토큰과 충돌
+- **Revenue/cost**: LLM=없음 / force deploy 8회 / 데모 3종 결함 제거
+- **Open loops**: Supabase adapter
+
+### Growth-58 (2026-06-13) — Supabase backend adapter (PostgREST) 구현
+
+- **인격/Axis/Milestone**: Engineer (구현) + CTO (seam 설계) / backend 축 / M3 — SaaS 전제(hosted PG)
+- **1줄 rollup**: fastapi adapter ZERO-TOUCH, `sys.modules["store"]` 주입 seam으로 공유 라우터 재사용 + PostgREST store만 교체. 16 유닛테스트 green, L4 live 보류(Supabase 프로젝트 미프로비저닝). 커밋 5af6921~6aa0698 (8개).
+- **상세**: [engineer ledger Growth-58](docs/learn-logs/engineer.md)
+- **Open loops**: L4 live / GoTrue auth / PostgREST pushdown · ~~G-9 §6 200줄 초과~~ → Growth-59 해소
+
+### Growth-59 (2026-06-14) — §6 슬림 회전 4차: Growth-21~32 아카이브 (G-9 FAIL→PASS)
+
+- **인격/Axis/Milestone**: CTO (integrator 유지보수) / 헌장 운영 (§6 회전 정책) / 전 milestone 공통
+- **1줄 rollup**: G-9 FAIL(275>200) → Growth-21~32 (12 엔트리, 109 비-blank행) 원문 수정 0으로 [growth-archive.md] 이동 + 그룹 포인터 1줄 갱신. 회전 후 166행 PASS (34행 헤드룸). Growth-20 회전 정책 4번째 적용 (4~12·13~15·16~20 에 이어).
+- **상세**: 본 엔트리로 충분 (메커니컬 회전 — Growth-20 정책 그대로). 검색: `ledger-index.py --symbol <name>`
+- **결정 (CTO Auto)**: 오래된 것부터 contiguous 이동 (rotation 정책 불변), founding 1~3 은 divider 앞 유지. cut point = Growth-33 (최근 26 엔트리 슬림 유지)
+- **Open loops**: 없음 — 다음 회전은 cap 재접근 시
+
+### Growth-60 (2026-06-14) — G-8 가드에 Apple `@Nx` 레티나 에셋 면제 추가
+
+- **인격/Axis/Milestone**: CTO (가드 정밀화) / creater (diagnose.py G-8) / M2 — Capacitor iOS 어댑터 호환
+- **1줄 rollup**: Capacitor iOS `AppIcon-512@2x.png` 의 `@` 가 G-8 오탐 → 삭제(빌드 깨짐) 대신 가드 면제. `_APPLE_ASSET_NAME` (`@[123]x(~idiom)?`) AND `*.xcassets` 조상 디렉터리 **이중 게이트** — 그 밖의 `@`·비-ASCII(한글 등)는 여전히 FAIL. negative test 6 케이스 확인. G-8 PASS (621 entries).
+- **상세**: 본 엔트리로 충분. §2 G-8 카탈로그 행 갱신
+- **결정 (CTO Auto)**: 면제 범위 = `.xcassets` 번들 내부로 한정 (전체 ios 디렉터리 제외 ✗ — 번들 안 진짜 위반 은폐 방지). 코드 generator 버그 아님 (Growth-59 후속의 `${slug}` 와 달리 정당한 Apple 관습)
+- **Open loops**: 없음
+
+### Growth-61 (2026-06-14) — G-13 해소: research-loop SKILL 출력 규약 링크 추가
+
+- **인격/Axis/Milestone**: CTO (가드 해소) / creater (research-loop SKILL) / 전 milestone 공통
+- **1줄 rollup**: research-loop `## 출력 규약` 에 `subagent-output-protocol.md` 링크 누락 → security-loop 관용구대로 envelope §4 문장 + 링크 추가. G-13 PASS (9 loops). 전 가드 0 FAIL (11 PASS / 2 SPEC).
+- **상세**: 본 엔트리로 충분. 링크 타깃 존재 확인, `../../../` depth 다른 loop 와 동일
+- **결정 (CTO Auto)**: 기존 `## 출력 규약` 섹션에 링크만 보강 (재작성 ✗) — 최소 임팩트
+- **Open loops**: 없음 — 코드 가드 전부 green
+
+### Growth-62 (2026-06-14) — 자율 고객 intake 파이프라인: 파운더 릴레이 제거 + 적격 정책 + needs-fit 게이트
+
+- **인격**: PM (intake 파이프 설계) + CTO (integrator·아키텍처 확정)
+- **Axis touched**: customer (intake→profile 자동화)·creater (파이프라인 스크립트·가드)·헌장 (charter v1.7·pm-delivery-loop SKILL)
+- **Milestone**: M2 — 첫 고객 전환율 개선 (파운더 릴레이 병목 제거)
+- **Revenue/cost**: gap-registry(미충족 리드) → Growth 신호 누적, stall 리드 → cost-report 환류 / 문서화 세션 소량
+- **Why (1줄)**: 제출→preview까지 파운더 수동 릴레이 제거; 적격(score≥55·고감도 플래그 없음)→자동, gap=성장 ToDo, audit trail, needs-fit(codex) 게이트, UI 자동체크, pipeline monitor(G-14 SPEC)
+- **상세**: [pm.md](docs/learn-logs/pm.md)
+- **결정**: CEO+CTO 합의 (v2 ultraplan 반영). Step 5 외부 인도 게이트 불변(CEO 단독, charter §2)
+- **Open loops**: P1~P6·P8 코드 구현 (engineer) / G-14 SPEC→PASS (cases/ 첫 엔트리 후)
+- **후속 (동일 스레드, 상세 [pm.md](docs/learn-logs/pm.md))**: deploy·ui_check `--entry-path`(`/health` 권위화), monitor·G-14 latest-terminal-wins, needs-fit codex 패스 정식화(`record-verdict` loop closer), playwright 설치, 첫 풀-배포 리허설 — autonomous 배포 3 버그(cp949 child stdout·미커밋 compose·entry-path) 발견·수정, 라이브 200 검증 후 회수
+
+### Growth-63 (2026-06-14) — Pipeline 장애 대응 웹 대시보드 (localhost·LLM 0·PII-free)
+
+- **인격/Axis/Milestone**: Engineer (구현) + CTO (설계·integrator) / creater (Phase 8 모니터) / M2 — 장애 대응 속도
+- **1줄 rollup**: CLI 모니터 위 `pipeline_dashboard.py`(127.0.0.1·stdlib·LLM 0) — Incidents triage·노드 칩·실패 drill-in(권장액션+owner+SLA+inline evidence+codex 프롬프트). monitor 투영 재사용(병렬 스토어 ✗), `DEFECT_ACTIONS` 단일 진실 + `aggregate_health` 빈-cases 버그픽스. 111 PASS·가드 0 FAIL. 커밋 `d031800`~`cc810a6`.
+- **상세**: [engineer ledger Growth-63](docs/learn-logs/engineer.md)
+- **Open loops**: 외부/원격 접속 미결([[todo-external-pipeline-monitor]], 명시 요청 시에만) / 기본 포트 8787 은 HEADROOM 점유 → `--port` 우회
+
+### Growth-64 (2026-06-14) — HANDOFF 오픈루프 3건 완료 (P2 Capacitor·P1 외부모니터·P3 Supabase L4 준비) + §6 5차 회전
+
+- **인격/Axis/Milestone**: CTO (open-loop 종결·integrator) + DevOps (P1 런북, 위임) / frontend·creater·backend 축 / M2~M3
+- **P2 (완전 완료)**: Capacitor 어댑터 CLI 8 ↔ core 6 major 불일치 해소 — 전 의존성 `^8.0.0` 정렬, v8 재설치·android 재생성·`cap sync` 검증("Android looking great", assets dir 복구). iOS native 는 Windows 빌드 불가로 생략(macOS 에서 `add:ios`). 커밋물=package.json+package-lock(나머지 gitignored). `672c110`,`a609aef`
+- **P1 (스캐폴드 완료, 활성화는 파운더)**: 외부 모니터링 = Cloudflare Tunnel+Access 경로. 런북 `docs/runbooks/external-pipeline-monitor.md` + config 템플릿 + `serve_dashboard.ps1` 런처. 로컬 Windows 대시보드(127.0.0.1:8790) 아웃바운드 노출, 이메일 OTP(파운더 단독), VPS 무관여·PII-free·인바운드 0·월 $0. 인터랙티브(login·Access 앱)는 파운더 몫. `e07fda8`~`15e72b1`
+- **P3 (코드 검증·턴키 준비, live 는 파운더)**: Supabase 어댑터 unit 16 PASS 재확인(MockTransport, 네트워크 0). L4 live 는 Supabase 프로젝트 프로비저닝(인터랙티브) 하드블록 → env 템플릿 `infra/secrets/supabase.env.example` + README "L4 Live Activation" 5단계 턴키화. `044445a`,`a5012f9`
+- **§6 회전 5차**: G-9 헤드룸 1행 → Growth-33~48(84 non-blank행) 원문수정 0 으로 [growth-archive.md] 이동 + 포인터 갱신. (Growth-20 정책 5번째)
+- **Open loops**: ~~P1 cloudflared 활성화~~ → **2026-06-15 LIVE 검증 완료** / ~~P3 L4 smoke~~ → **2026-06-14 L4 PASS** (둘 다 아래 후속). 잔여: P3 GoTrue auth·PostgREST pushdown (M5)
+- **후속 (P1 LIVE, 2026-06-15)**: cloudflared 설치+터널 `pipeline-monitor`(e572d631) 생성·DNS·config·Access(OTP, founder 단독) 구성 → `https://pipeline.n9n.co.kr` 엔드투엔드 OTP 로그인 검증. 부팅자동 = cloudflared **Windows 서비스** + 대시보드 **작업 스케줄러 `PipelineDashboard`**(AtLogOn). 기존 n8n 터널 2개와 별개. 시크릿 gitignored. 상세 메모리 [[todo-external-pipeline-monitor]]
+- **후속 (P3 Supabase L4 LIVE, 2026-06-14)**: 파운더가 Supabase Free 프로젝트 프로비저닝 → `smoke_test` 테이블 + 볼트 env(`infra/secrets/supabase.env`, gitignored) → `SupabaseEntityStore` create/find/patch/delete + slug→table fallback 실 PostgREST 왕복 **10/10 PASS** (id/created_at/updated_at Postgres populate 확인). Growth-58 L4 오픈루프 종결. README 상태 → L4 live-verified. 비용 $0(Free).
+
+### Growth-65 (2026-06-15) — marketing-site deliverable track 신설 (visual-asset 8번째 축)
+
+- **인격/Axis/Milestone**: CTO(설계·통합·contract 판정) + Engineer(구현) + CDO(테마) / **theme(8번째 축 신설)**·frontend·creater·intake / M1 GTM~M3 (웹에이전시형 신규 고객층)
+- **1줄 rollup**: `stack.deliverable_kind` 분기로 marketing-site track 신설 — site-manifest 스키마+scaffold 분기(P1)·테마 라이브러리 aurora/studio+모션8+섹션카탈로그8(P2)·landing-astro(Astro+Tailwind SSG) 어댑터(P3)·vision-QA 게이트 G-15(P4)·intake deliverable_kind 분기+answer→site 매핑(P5). 결정론 codegen 의 비주얼 약점을 **누적 테마 축**으로 전환, B급 professional 자동화. 빌드 SUCCESS·테스트 79(adapter)+76(intake)+14(vision) PASS·diagnose 15가드 0 FAIL.
+- **핵심 결정**: 별도 repo ✗(substrate 공유) / 품질 바 **B(professional SMB)**, 부티크 아트디렉션 A 비채택 / 폰트 self-host(Fontsource, CDN 금지) / 연락폼 신규 wire key ✗ → `entity.create`(entity_type=lead) 재사용(open-closed) / 테마 default→aurora flagship.
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [CDO ledger](docs/learn-logs/cdo.md) · [pm ledger](docs/learn-logs/pm.md)
+- **Open loops**: dogfood(우리 M1 GTM 랜딩) 미빌드 / vision-QA live 채점·테마 레퍼런스샷(첫 인도 시 CDO+QA) / toggle-annual pricing·carousel JS(후속 Growth) / vision-verdict.json 스키마 공식화
+- **결정 메모리**: [[marketing-site-track]]
+
+### Growth-66 (2026-06-15) — marketing-site track dogfood: 우리 자신의 M1 GTM 랜딩 + 3 실버그 수정
+
+- **인격/Axis/Milestone**: CTO(통합·프로필·검증·커밋) + CMO(카피) + Engineer(파이프라인·모션·캡처 수정) / theme·frontend·creater / **M1 GTM**(랜딩=리드수집 자산, M1→M2 게이팅 "lead 5건")
+- **1줄 rollup**: `profiles/gtm-landing.yaml`(deliverable_kind=marketing-site, theme=aurora) 로 우리 제품의 M1 GTM 랜딩을 track 으로 실제 산출(dogfood) — scaffold→site-manifest→landing-astro build→ui_check PASS(7/7)·desktop+mobile 풀페이지 시각 검증. Growth-65 가 만든 track 을 처음 end-to-end 로 태움.
+- **dogfood 가 잡은 3 실버그(전부 수정)**: ① 반복 항목 미전달 — catalog→manifest→router 에 `items[]` 슬롯 부재로 feature 카드/FAQ 가 컴포넌트 데모 placeholder 로 렌더 → catalog `item_slots` + manifest 통과·검증 + router 전달 신설. ② `/favicon.svg` 404 — 어댑터에 `public/` 자산 부재 → 테마중립 기본 favicon 배포. ③ **stagger-children 모션이 컨테이너 영구 은닉** — `el.children` 만 reveal 하고 `el` 자신의 motion-hidden 미제거 → Features/Logos(둘다 기본 stagger) 가 모든 방문자에게 opacity:0. + reduced-motion 도 below-fold 은닉(a11y 결함). → 컨테이너 항상 reveal + reduced-motion 시 미은닉, ui_check 캡처도 reduced_motion 적용(vision-QA 신뢰성).
+- **핵심 결정**: 정직성 — testimonial/구체 pricing 제외(M1 pricing 게이트), logos 제외(파트너 로고 자산 無 → placeholder 회피) / 트레일러 실제 co-author=Opus 4.8 반영(§9) / 교훈: **뷰포트 스크린샷만으론 below-fold 결함 못 잡음 — 풀페이지 캡처 필수**(ui_check viewport 검사가 hero 만 봐서 ②③ 놓칠 뻔).
+- **상세**: [engineer ledger](docs/learn-logs/engineer.md) · [CDO ledger](docs/learn-logs/cdo.md)
+- **결정 메모리**: [[marketing-site-track]]
+
+### Growth-67 (2026-06-15) — 정적 marketing-site preview 레인 + n9n 공개 데모 2종 LIVE
+
+- **인격/Axis/Milestone**: CTO(통합·배포 결정·검증) + Engineer(데모-스텁·Dockerfile) + DevOps(배포 레인·레지스트리) / frontend·creater·infra / **M1 GTM**(고객 시연 자산)
+- **1줄 rollup**: marketing-site 는 정적 SSG(백엔드 無)라 기존 `deploy_to_coolify.py`(business-system: screen-manifest+SECRET_KEY+/login) 레인 불가 → **정적 preview 레인 신설**: 멀티스테이지 Dockerfile(scaffold+astro→nginx, ARG PROFILE_SLUG/DEMO_MODE) + `deploy_static_site.py`(demo-portal 스크립트 일반화, idempotent). **gtm-landing.n9n.co.kr**(우리 M1 GTM 랜딩, aurora) + **landing.n9n.co.kr**(랜딩 데모 인덱스 포털, demo-portal 형제) 2종 Coolify 배포·HTTPS 200·콘텐츠 검증 PASS.
+- **함정/교훈**: ① Git Bash **MSYS 경로 변환** — CLI 인자 `/deploy/...`가 `C:/Program Files/Git/deploy/...`로 둔갑해 Coolify 422(format invalid). `MSYS_NO_PATHCONV=1`로 해소(하드코딩 Python 스크립트는 무사했던 이유). ② 연락폼 데모-스텁: `PUBLIC_DEMO_MODE=1` → 제출 시 네트워크 호출 없이 성공 메시지(백엔드 없는 시안에서 깨진 폼 방지), 실 POST 경로는 비데모 빌드에서 불변.
+- **자산 레지스트리**: `infra/registry/{gtm-landing,landing-portal}.yaml` (status=live, coolify uuid 기록)
+- **상세**: [devops ledger](docs/learn-logs/devops.md) · [engineer ledger](docs/learn-logs/engineer.md)
+- **결정 메모리**: [[marketing-site-track]] · [[infra-stack]]
