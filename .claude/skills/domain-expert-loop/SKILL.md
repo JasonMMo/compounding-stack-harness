@@ -27,6 +27,20 @@ description: Run the domain-expert curation loop — catalog grounding, customer
 
 큐레이션 근거·인터뷰 기록·매핑 상세는 산출물(`profiles/<slug>.yaml`·seed·wiki)에 직접 쓰거나 일회성이면 `out/analysis/<topic>.md` 에 쓰고, main 으로는 **요약 + 경로 + 갭/에스컬레이션 항목만** 반환한다 (envelope §4). 규약: [`subagent-output-protocol.md`](../../../docs/architecture/subagent-output-protocol.md).
 
+## deliverable_kind 분기
+
+`profiles/<slug>.yaml` 의 `stack.deliverable_kind` 가 `marketing-site` 이면 Step 1 의 grounding 대상이 달라진다.
+
+| deliverable_kind | Step 1 grounding | Step 4 큐레이션 대상 | Step 5 갭 |
+|---|---|---|---|
+| `business-system` (기본) | `presets/ddl/catalog.yaml` entity 키 | profile `domains[]` 블록 | DDL entity seed PR |
+| `marketing-site` | `presets/site-sections/catalog.yaml` section 타입 | profile `site.pages[].sections[]` 블록 | section-type seed (CDO 협업) |
+
+`marketing-site` 경로에서 domain-expert 의 역할은 **산업 특화 copy 슬롯 값·KB 구조·추천 규칙** 을 제공하는 것이다 (section 타입 자체는 CDO 소유). 기능성 섹션(예: `ai-guide`)의 `ai_config` 를 채우는 도메인 지식(KB YAML 스키마, 규칙 파일 구조)도 domain-expert 가 seed 로 남긴다 — `presets/skills/<industry>/<domain>.seed.md`.
+
+참고 사례: `presets/skills/telecom/leadgen.seed.md` (2026-06-18) — 통신 판매점 AI 즉답 패턴.
+
 ## Anti-patterns
 
 - phantom entity 키 (Growth-14 acme-erp 교훈) / 추측 컨벤션 / 직접 머지 / 산업 특수 지식을 generic 에 욱여넣기 (vertical 에스컬레이션 대신)
+- `marketing-site` 프로파일에서 DDL entity 키를 찾으려 하는 것 (위 분기표 참조)
