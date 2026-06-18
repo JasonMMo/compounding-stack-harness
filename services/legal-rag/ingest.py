@@ -2,11 +2,12 @@
 ingest.py — file ingestion pipeline for legal RAG.
 
 Pipeline:
-  1. Extract text from PDF / DOCX / plain-text file.
-  2. Chunk text into ~500-token windows with overlap.
-  3. Batch-embed chunks via local sidecar (embed_client).
-  4. Upsert rows into legal_document_chunk (ON CONFLICT source+type+index).
-  5. Update legal_case_document.ingest_status / ingested_at (for case_document).
+  1. Verify source_id exists in DB (Gap-3: source existence invariant).
+  2. Extract text from PDF / DOCX / plain-text file.
+  3. Chunk text into ~500-token windows with overlap.
+  4. Batch-embed chunks via local sidecar (embed_client).
+  5. Upsert rows into legal_document_chunk (ON CONFLICT source+type+index).
+  6. Update legal_case_document.ingest_status / ingested_at (for case_document).
 
 External dependencies:
   - pypdf    (PDF text extraction)
@@ -31,19 +32,14 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# ── Chunking ──────────────────────────────────────────────────────────────────
-
-# Approximate chars-per-token for Korean/legal text (conservative estimate).
-# Pure-python chunker: avoids tiktoken dependency; caller can pass actual
-# token counts if they have a tokenizer.
 _CHARS_PER_TOKEN_APPROX = 3
 
 
 @dataclass
 class Chunk:
-    index: int          # 0-based position within source document
+    index: int
     text: str
-    token_count: int    # estimated
+    token_count: int
 
 
 def chunk_text(
@@ -51,26 +47,13 @@ def chunk_text(
     token_target: int = 500,
     overlap_tokens: int = 50,
 ) -> list[Chunk]:
-    """Split text into overlapping chunks of ~token_target tokens.
-
-    Uses character-based approximation (3 chars ≈ 1 token for Korean/mixed text).
-    Splits preferentially at paragraph / sentence boundaries.
-
-    Args:
-        text:           Full document text.
-        token_target:   Target tokens per chunk.
-        overlap_tokens: Overlap between adjacent chunks.
-
-    Returns:
-        List of Chunk objects, 0-indexed.
-    """
+    """Split text into overlapping chunks of ~token_target tokens."""
     if not text or not text.strip():
         return []
 
     char_target = token_target * _CHARS_PER_TOKEN_APPROX
     char_overlap = overlap_tokens * _CHARS_PER_TOKEN_APPROX
 
-    # Prefer splitting at double-newline (paragraph), then single newline, then space.
     _paragraph_re = re.compile(r"\n{2,}")
     _sentence_re = re.compile(r"(?<=[.。！？])\s+")
 
@@ -81,11 +64,9 @@ def chunk_text(
         parts = _sentence_re.split(s)
         return [p.strip() for p in parts if p.strip()]
 
-    # Greedy accumulator
     chunks: list[Chunk] = []
     segments = _split_at_boundary(text)
 
-    # Merge small segments until char_target is reached, then emit chunk.
     buffer = ""
     for seg in segments:
         if len(buffer) + len(seg) + 1 > char_target and buffer:
@@ -96,7 +77,6 @@ def chunk_text(
                     token_count=max(1, len(buffer) // _CHARS_PER_TOKEN_APPROX),
                 )
             )
-            # Keep overlap: last `char_overlap` chars of buffer
             buffer = buffer[-char_overlap:] + " " + seg if char_overlap > 0 else seg
         else:
             buffer = (buffer + " " + seg).strip() if buffer else seg
@@ -116,21 +96,7 @@ def chunk_text(
 # ── Text extraction ───────────────────────────────────────────────────────────
 
 def extract_text(file_path: str | Path) -> str:
-    """Extract plain text from PDF, DOCX, or plain-text file.
-
-    Lazy-imports pypdf and python-docx so this module loads without them
-    in environments that don't need file ingestion.
-
-    Args:
-        file_path: Path to the file.
-
-    Returns:
-        Extracted text string (may be empty for image-only PDFs).
-
-    Raises:
-        ValueError: Unsupported file extension.
-        FileNotFoundError: File does not exist.
-    """
+    """Extract plain text from PDF, DOCX, or plain-text file."""
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path}")
@@ -168,7 +134,7 @@ def _extract_pdf(path: Path) -> str:
 
 def _extract_docx(path: Path) -> str:
     try:
-        import docx  # type: ignore[import]  # python-docx
+        import docx  # type: ignore[import]
     except ImportError as exc:
         raise ImportError(
             "python-docx is required for DOCX extraction. "
@@ -178,6 +144,46 @@ def _extract_docx(path: Path) -> str:
     doc = docx.Document(str(path))
     paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
     return "\n\n".join(paragraphs)
+
+
+# ── Source existence validation (Gap-3) ───────────────────────────────────────
+
+_CHECK_PRECEDENT_SQL = "SELECT 1 FROM legal_precedent WHERE id = %s::uuid"
+_CHECK_CASE_DOC_SQL = "SELECT 1 FROM legal_case_document WHERE id = %s::uuid"
+
+
+class SourceNotFoundError(ValueError):
+    """Raised when source_id does not exist in the DB (Gap-3 invariant)."""
+
+
+async def validate_source_exists(
+    conn,
+    source_type: str,
+    source_id: str,
+) -> None:
+    """Verify source_id exists in DB before ingesting.
+
+    Args:
+        conn:        psycopg AsyncConnection (app_service, no RLS restriction).
+        source_type: 'precedent' or 'case_document'.
+        source_id:   UUID string.
+
+    Raises:
+        SourceNotFoundError: if the source row does not exist.
+    """
+    sql = (
+        _CHECK_PRECEDENT_SQL
+        if source_type == "precedent"
+        else _CHECK_CASE_DOC_SQL
+    )
+    cur = await conn.execute(sql, (source_id,))
+    row = await cur.fetchone()
+    if row is None:
+        raise SourceNotFoundError(
+            f"source_id {source_id!r} not found in "
+            f"{'legal_precedent' if source_type == 'precedent' else 'legal_case_document'}. "
+            "Ingest rejected to preserve citation integrity."
+        )
 
 
 # ── DB upsert ─────────────────────────────────────────────────────────────────
@@ -207,13 +213,13 @@ WHERE id = %s
 
 async def ingest_file(
     *,
-    conn,           # psycopg AsyncConnection (app_service role)
+    conn,
     embed_client: "EmbedClient",
     model_version: str,
     file_path: str | Path,
-    source_type: str,           # 'precedent' or 'case_document'
-    source_id: str | uuid.UUID, # FK to legal_precedent.id or legal_case_document.id
-    case_id: str | uuid.UUID | None = None,  # required when source_type='case_document'
+    source_type: str,
+    source_id: str | uuid.UUID,
+    case_id: str | uuid.UUID | None = None,
     chunk_token_target: int = 500,
     chunk_overlap_tokens: int = 50,
     batch_size: int = 32,
@@ -221,29 +227,16 @@ async def ingest_file(
     """Ingest a single file into legal_document_chunk.
 
     Steps:
+      0. Validate source_id exists in DB (Gap-3).
       1. Extract text from file.
       2. Chunk text.
       3. Batch-embed via sidecar.
       4. Upsert chunks into legal_document_chunk.
       5. If source_type='case_document', update ingest_status on parent table.
 
-    Args:
-        conn:                 psycopg AsyncConnection authenticated as app_service.
-        embed_client:         EmbedClient instance.
-        model_version:        Model version string (recorded in chunk.model_version).
-        file_path:            Path to source file.
-        source_type:          'precedent' or 'case_document'.
-        source_id:            UUID FK to parent precedent or case_document.
-        case_id:              UUID FK to legal_case (required for case_document).
-        chunk_token_target:   Target tokens per chunk.
-        chunk_overlap_tokens: Overlap tokens between chunks.
-        batch_size:           Embed batch size (avoid sidecar OOM on large docs).
-
-    Returns:
-        Number of chunks upserted.
-
     Raises:
         ValueError: Invalid source_type or missing case_id for case_document.
+        SourceNotFoundError: source_id not found in DB (subclass of ValueError).
         EmbedSidecarUnavailable: Local sidecar unreachable.
     """
     if source_type not in ("precedent", "case_document"):
@@ -261,7 +254,10 @@ async def ingest_file(
         file_path, source_type, source_id_str,
     )
 
-    # 1. Extract text
+    # Step 0: verify source existence (Gap-3 invariant)
+    await validate_source_exists(conn, source_type, source_id_str)
+
+    # Step 1: extract text
     text = extract_text(file_path)
     if not text.strip():
         logger.warning("No text extracted from %s — ingest skipped.", file_path)
@@ -279,11 +275,11 @@ async def ingest_file(
             ("processing", None, source_id_str),
         )
 
-    # 2. Chunk
+    # Step 2: chunk
     chunks = chunk_text(text, chunk_token_target, chunk_overlap_tokens)
     logger.info("Produced %d chunks from %s", len(chunks), file_path)
 
-    # 3. Batch embed
+    # Step 3+4: batch embed + upsert
     now = datetime.now(timezone.utc)
     upserted = 0
 
@@ -292,7 +288,6 @@ async def ingest_file(
         texts = [c.text for c in batch]
         vectors = embed_client.embed_batch(texts)
 
-        # 4. Upsert batch
         rows = [
             (
                 source_type,
@@ -301,7 +296,6 @@ async def ingest_file(
                 chunk.index,
                 chunk.text,
                 chunk.token_count,
-                # psycopg passes list[float] to vector column via cast in SQL
                 vectors[i],
                 now,
                 model_version,
@@ -312,7 +306,7 @@ async def ingest_file(
         upserted += len(rows)
         logger.debug("Upserted chunks %d-%d", batch_start, batch_start + len(batch) - 1)
 
-    # 5. Update parent status
+    # Step 5: update parent status
     if source_type == "case_document":
         await conn.execute(
             _UPDATE_CASE_DOC_STATUS_SQL,
