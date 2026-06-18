@@ -387,3 +387,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **누적 자산**: **axis-2 augment 패턴**(neutral catalog + dialect overlay SQL, 의료/금융 일반화 가능) · legal RAG 서비스 `services/legal-rag/`(JWT/서비스토큰 인증·path-traversal 가드) · seed(판례22·사건12·문서15·데모3 가명) · WTP킷·포지셔닝 · wiki 2p([[legal-rag-mvp-build]]).
 - **Open loops**: #5 검색·인용 UI(engineer+CDO) · #8 self-host 런북+데모배포(devops — L2/L4/RLS통합 라이브검증, 운영가이드 DSN·EMBED_URL내부망·query_text암호화(Pro)·TLS 반영) · WTP 인터뷰 3~5곳(PM). DBA가 커밋 아티팩트에 "Growth-48" 오기(실제 90) — 사소, 추후 정정. settings.json `${CLAUDE_PROJECT_DIR}` 커밋 여부 founder 판단.
 - **결정 메모리**: [[legal-rag-mvp-build]] · [[gtm-positioning-ai-functional]] · [[subagent-cwd-hook-fragility]]
+
+### Growth-91 (2026-06-19) — 법무 RAG #5 검색·인용 UI + 최소 실제 로그인 (M3 vertical 계속)
+
+- **인격/Axis/Milestone**: CTO(스코프갈림길 결정·코디네이션·CISO triage·per-file 커밋) + DBA(legal_attorney 테이블·FK·RLS·seed 해시) + CDO(ui-spec·tokens/app.css·클래스규약) + Engineer(/auth/login·/cases·vanilla SPA) + CISO(증분표면 집중게이트) / **ddl(legal-attorney)·frontend(vanilla web)·design** / M3
+- **1줄 rollup**: #5 UI. `/search`가 JWT 요구하나 발급경로 부재 → founder "최소 실제 로그인" 선택. legal_attorney(bcrypt) + `/auth/login`(app_service 조회→verify→JWT mint) + `/cases`(rls_session 자동격리+ingest 집계) + vanilla SPA(로그인/검색/사건현황, FastAPI StaticFiles). 로그인만으로 RLS 격리(이준호 vs 박서연) 라이브 시연. 단위테스트 86→114.
+- **정직성/thesis**: 생성형 답변 영역 0(검색+인용 도구 — 시각언어 정직). 외부 CDN/폰트 0(시스템 한글폰트, self-host). user 관리 = 전 법무법인 재사용 자산(복리).
+- **게이트**: CISO 증분표면 CONDITIONAL GO. XSS VERIFIED(서버데이터 textContent/createTextNode만, innerHTML 직조립 0)·JWT(HS256핀·alg=none차단)·로깅(평문비번0)·CORS PASS. 즉시수정 2건: `_DUMMY_HASH` 60바이트 무효→ValueError로 타이밍가드 무력화(유효해시 교체·checkpw=False 실증) · seed 평문 `demo1234!` 주석 제거. rate-limit/health제한/docs는 #8 이월.
+- **함정/교훈**: cwd-hook 함정([[subagent-cwd-hook-fragility]]) 재발 0 — 에이전트에 절대경로·`.patched` 금지 명시 선반영. 진단 노이즈(root-context Pyright의 config 모듈 미해석 → jwt_secret/ingest_root "unknown")는 false positive로 식별, 활성 pytest(114)로 실검증.
+- **누적 자산**: legal_attorney 테이블+RLS · `/auth/login`·`/cases` 엔드포인트 · vanilla 법무 web UI(`services/legal-rag/web/`) · CDO 법무 디자인 토큰(`design/legal-rag/ui-spec.md`). 커밋 91c67e4~a1ee5da(15 파일 per-file).
+- **Open loops**: #8 self-host 런북+데모배포(devops — L2/L4/RLS 라이브검증 + 운영하드닝, CISO 이월분 rate-limit/docs비활성 포함) · WTP 인터뷰 3~5곳(PM). settings.json `${CLAUDE_PROJECT_DIR}` 커밋 여부 founder 판단(미해결).
+- **결정 메모리**: [[legal-rag-mvp-build]]
