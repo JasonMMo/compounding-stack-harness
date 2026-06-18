@@ -6,7 +6,6 @@ Tests fail-fast behavior when sidecar is unavailable.
 """
 import sys
 import os
-import uuid
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -40,7 +39,6 @@ class TestEmbedClientEmbed:
         with patch("httpx.post", side_effect=httpx.ConnectError("refused")):
             with pytest.raises(EmbedSidecarUnavailable) as exc_info:
                 client.embed("테스트")
-        # Error message must mention cloud fallback is disabled
         assert "cloud" in str(exc_info.value).lower() or "sidecar" in str(exc_info.value).lower()
 
     def test_embed_raises_on_wrong_dimension(self):
