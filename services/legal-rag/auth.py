@@ -18,10 +18,11 @@ No cloud key fetch. Symmetric HS256 only (self-host constraint).
 from __future__ import annotations
 
 import logging
+import time
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Header, Security
+from fastapi import HTTPException, Header, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,41 @@ class AuthError(Exception):
 
 
 # ── JWT ───────────────────────────────────────────────────────────────────────
+
+def mint_token(attorney_id: str, secret: str, ttl_seconds: int = 28800) -> str:
+    """Create a HS256 JWT for the given attorney UUID.
+
+    Args:
+        attorney_id:  UUID string of the attorney (stored in `sub` claim).
+        secret:       HS256 signing secret (from settings.jwt_secret).
+        ttl_seconds:  Token lifetime in seconds (default 8 hours = 28800).
+
+    Returns:
+        Signed JWT string, ready to send in Authorization: Bearer <token>.
+
+    Raises:
+        ImportError: pyjwt not installed.
+        ValueError:  attorney_id is not a valid UUID.
+    """
+    try:
+        import jwt  # pyjwt — lazy import for mockability in unit tests
+    except ImportError as exc:
+        raise ImportError(
+            "pyjwt is required for JWT auth. Install: pip install pyjwt"
+        ) from exc
+
+    # Validate UUID before signing — sub must be a canonical UUID string
+    try:
+        canonical_id = str(uuid.UUID(str(attorney_id)))
+    except (ValueError, AttributeError) as exc:
+        raise ValueError(f"attorney_id is not a valid UUID: {attorney_id!r}") from exc
+
+    payload = {
+        "sub": canonical_id,
+        "exp": int(time.time()) + ttl_seconds,
+    }
+    return jwt.encode(payload, secret, algorithm="HS256")
+
 
 def decode_attorney_token(token: str, secret: str) -> str:
     """Decode and validate a HS256 JWT, return attorney UUID (sub claim).
