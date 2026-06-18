@@ -376,3 +376,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **§6 회전 8차**: Growth-54~67(14 엔트리) 원문수정 0으로 growth-archive.md 이동 + 포인터 갱신(G-9 242→PASS).
 - **상세**: [[gtm-positioning-ai-functional]] · [[product-two-tier-selfhost-ai]] · [[marketing-site-track]]
 - **Open loops**: deep-research(Verify 중) 결과 → 진입 use case 확정·bridge/seed 실수치 보강·engineer 후속(ai-guide 컴포넌트·로컬임베딩 사이드카·리드 POST·privacy strict·G-69 SSR)/Pro 스파이크 GO. 다음 §6 회전은 cap 재접근 시.
+
+### Growth-90 (2026-06-19) — 법무법인 self-host RAG MVP 빌드 + CISO/QA 게이트 (M3 첫 vertical 착수)
+
+- **인격/Axis/Milestone**: CTO(스코프확정·통합·게이트triage·.patched 검증·per-file 커밋) + DBA(스키마·augment SQL·BYPASSRLS) + Engineer(RAG엔진·JWT인증·테스트) + domain-expert-legal(seed·wiki환류) + PM(WTP킷) + CMO(포지셔닝) + CISO(보안게이트) + QA(풀테스트게이트) / **ddl(augment 신패턴)·middle(RAG)·expert-agent·business docs** / M3(규제업종 법무 첫 vertical)
+- **1줄 rollup**: deep-research가 self-host=규제업종 법적필수로 검증한 창끝(법무법인)에 사내문서 RAG MVP 풀빌드. **검색+인용까지만·LLM 생성 0 → 환각0을 chunk.id PK 바인딩으로 구조적 보장**. augment 분리(neutral catalog + postgres overlay SQL)·하이브리드 검색(FTS+ANN+RRF)·RLS 6테이블·로컬 임베딩(클라우드0). 단위테스트 49→86. 커밋 6b0a8a1~2b6d4ee 푸시.
+- **정직성/thesis**: 클라우드 폴백 코드경로 0(CISO·QA grep 실증) — "API비0+데이터유출0" 쐐기 구조적 보장. 임베딩 전용(텍스트 생성 아님). SearchResponse에 answer_text 없음.
+- **게이트**: CISO CONDITIONAL GO(B-1 API인증부재·B-2 app_service BYPASSRLS) + QA CONDITIONAL PASS(Gap-1 RLS격리·Gap-2 ingest·Gap-3 source실존) → 전부 수정·재검증(86 passed/1 skip). L2/L4+RLS통합 라이브는 Postgres+사이드카 필요 → #8 인프라 게이트.
+- **함정/교훈**: ① **서브에이전트 cwd≠repo root → 상대경로 훅 깨짐**: 2개 에이전트 `.patched` 섀도파일·stub훅 폴백 → "0 tests collected" 회귀. 훅 `${CLAUDE_PROJECT_DIR}`화(메인 활성, settings.json 미커밋)·.patched 직접 diff검증으로 복구([[subagent-cwd-hook-fragility]]). ② **서브에이전트 "83 passed" 거짓**: 인증·Gap-3가 비활성 .patched라 미적용 — 활성파일 적용 후 86. 에이전트 "통과" 주장은 직접 재검증 필수.
+- **누적 자산**: **axis-2 augment 패턴**(neutral catalog + dialect overlay SQL, 의료/금융 일반화 가능) · legal RAG 서비스 `services/legal-rag/`(JWT/서비스토큰 인증·path-traversal 가드) · seed(판례22·사건12·문서15·데모3 가명) · WTP킷·포지셔닝 · wiki 2p([[legal-rag-mvp-build]]).
+- **Open loops**: #5 검색·인용 UI(engineer+CDO) · #8 self-host 런북+데모배포(devops — L2/L4/RLS통합 라이브검증, 운영가이드 DSN·EMBED_URL내부망·query_text암호화(Pro)·TLS 반영) · WTP 인터뷰 3~5곳(PM). DBA가 커밋 아티팩트에 "Growth-48" 오기(실제 90) — 사소, 추후 정정. settings.json `${CLAUDE_PROJECT_DIR}` 커밋 여부 founder 판단.
+- **결정 메모리**: [[legal-rag-mvp-build]] · [[gtm-positioning-ai-functional]] · [[subagent-cwd-hook-fragility]]
