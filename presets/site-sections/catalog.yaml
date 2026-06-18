@@ -267,6 +267,49 @@ sections:
     # headshot-list: horizontal cards; avatar + name + two-line bio.
     variants: [headshot-grid, headshot-list]
 
+  ai-guide:
+    label: "AI Instant Answer + Lead Capture"
+    # First interactive (functional) section in the catalog.
+    # Static shell (headline, subhead, placeholder) is a pure content section — CDO owns.
+    # Runtime behavior (embedding lookup, answer rendering, lead submission) is
+    # functional config — engineer/architect implements in the adapter layer (see below).
+    #
+    # Interaction model (for catalog readers / CMO):
+    #   1. Visitor types a question into the search input.
+    #   2. Local embedding model matches the question against a knowledge base.
+    #   3. Best matching answer(s) + rule-based recommendation card(s) are shown inline.
+    #   4. A lead capture prompt (name + phone/email + opt-in) appears alongside the answer.
+    #   5. Lead is saved to a destination configured in functional config.
+    #
+    # No generative LLM call. No third-party API. Zero data leaves the server.
+    # Weapon: local embedding → cost=0, privacy=absolute. B+ professional register.
+    #
+    # functional config (engineer 후속 — site_manifest.py 검증 대상 아님, 주석 문서화):
+    #   ai_config:
+    #     knowledge_source:   # string — path or identifier of the knowledge base
+    #                         # e.g. "kb/telecom-plans.yaml" | "cms:faq" | "presets/kb/<slug>"
+    #     embedding_model:    # string — local model slug used for semantic search
+    #                         # e.g. "all-MiniLM-L6-v2" (sentence-transformers, self-host)
+    #     top_k: 3            # int — max answer cards returned per query
+    #     recommendation_rules: # string — path to rule file or inline rule slug
+    #                           # e.g. "rules/telecom-plans.yaml" | "inline"
+    #     lead_destination:   # string — where captured leads are written
+    #                         # e.g. "crm:hubspot" | "db:leads" | "webhook:https://..."
+    #     lead_fields:        # string[] — fields to collect alongside the answer
+    #                         # e.g. [name, phone, email, opt_in]
+    #     privacy_mode: strict  # "strict" = no query logged, no IP stored; "analytics" = aggregate only
+    copy_slots:
+      required: [headline, subhead, input_placeholder]
+      optional: [answer_label, recommendation_label, lead_headline, lead_button_label, privacy_note]
+    asset_slots: []
+    variants: [centered-panel, split-hero, inline-compact]
+    # centered-panel: full-width white card, centered, input + answer area stacked vertically.
+    #   Default for standalone landing pages. No bg image needed.
+    # split-hero: left column = headline + subhead + trust signals; right column = AI guide widget.
+    #   Replaces or augments hero section; highest conversion placement.
+    # inline-compact: compact bar version embeddable mid-page (e.g. below features section).
+    #   Single-line input, answer dropdown, no full lead form — drives to anchor #contact.
+
   footer:
     label: "Footer"
     copy_slots:
