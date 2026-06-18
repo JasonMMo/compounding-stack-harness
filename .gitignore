@@ -94,3 +94,4 @@ tests/ddl/out/
 tests/ddl/lib/
 .obsidian/
 _obsidian_attachments/
+.gstack/
