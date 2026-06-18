@@ -8,42 +8,38 @@
 -- UUID 고정 (데모 재현성)
 -- =============================================================================
 
--- ─── 사전 전제: employee 테이블에 담당 변호사 2명이 존재해야 함 ──────────────
--- 데모 환경에서는 아래 INSERT 로 hr_employee(또는 employee) 를 먼저 삽입하거나
--- 별도 hr seed 가 선행 적용된 후 이 파일을 실행한다.
--- FK: assigned_attorney_id → employee.id (schema-level constraint)
--- 데모 단순화: FK 제약 위반 방지를 위해 BEGIN/EXCEPTION 블록으로 감싼다.
+-- ─── 사전 전제: legal_attorney 테이블에 담당 변호사 UUID 가 존재해야 함 ──────
+-- Growth-48+ 에서 legal_attorney 테이블 도입.
+-- 기존 employee 테이블 기반 DO 블록을 제거하고 legal_attorney 기반으로 교체.
+--
+-- [교체 근거 (engineer, 2026-06-19)]
+-- 08_legal_attorney.sql 이 legal_case.assigned_attorney_id / partner_id 에
+-- FK 제약을 추가(fk_legal_case_assigned_attorney, fk_legal_case_partner).
+-- employee 테이블에 존재하지 않는 UUID 를 legal_case 에 삽입하면
+-- FK 위반이 발생하는 게 아니라, 이미 legal_attorney 에 FK 가 걸려 있으므로
+-- legal_attorney UUID 가 먼저 있어야 한다.
+-- seed 로드 순서: seed_attorneys.sql → seed_cases.sql (README 규정).
+-- 따라서 아래 guard 는 seed_attorneys.sql 이 먼저 실행됐는지 확인하는 역할.
 
 DO $$
 BEGIN
-  -- 변호사 A — 파트너 이준호 (가명)
-  IF NOT EXISTS (SELECT 1 FROM employee WHERE id = 'a1000000-0000-0000-0000-000000000001'::uuid) THEN
-    INSERT INTO employee (id, created_at, updated_at, name, email, department_id, position)
-    VALUES (
-      'a1000000-0000-0000-0000-000000000001'::uuid,
-      now(), now(),
-      '이준호',                          -- 가명
-      'jh.lee.demo@hangang-law.kr',      -- 가상 이메일
-      'd0000000-0000-0000-0000-000000000001'::uuid,  -- 법무팀 부서 UUID (가상)
-      '파트너 변호사'
-    );
+  IF NOT EXISTS (
+    SELECT 1 FROM legal_attorney
+    WHERE id = 'a1000000-0000-0000-0000-000000000001'::uuid
+  ) THEN
+    RAISE EXCEPTION
+      'seed_attorneys.sql must be run before seed_cases.sql. '
+      'Missing legal_attorney UUID a1000000-0000-0000-0000-000000000001 (이준호).';
   END IF;
 
-  -- 변호사 B — 어소시에이트 박서연 (가명)
-  IF NOT EXISTS (SELECT 1 FROM employee WHERE id = 'a1000000-0000-0000-0000-000000000002'::uuid) THEN
-    INSERT INTO employee (id, created_at, updated_at, name, email, department_id, position)
-    VALUES (
-      'a1000000-0000-0000-0000-000000000002'::uuid,
-      now(), now(),
-      '박서연',                          -- 가명
-      'sy.park.demo@hangang-law.kr',     -- 가상 이메일
-      'd0000000-0000-0000-0000-000000000001'::uuid,
-      '어소시에이트 변호사'
-    );
+  IF NOT EXISTS (
+    SELECT 1 FROM legal_attorney
+    WHERE id = 'a1000000-0000-0000-0000-000000000002'::uuid
+  ) THEN
+    RAISE EXCEPTION
+      'seed_attorneys.sql must be run before seed_cases.sql. '
+      'Missing legal_attorney UUID a1000000-0000-0000-0000-000000000002 (박서연).';
   END IF;
-EXCEPTION WHEN OTHERS THEN
-  -- employee 테이블 스키마 불일치 시 경고만 출력하고 계속 진행
-  RAISE WARNING 'employee insert skipped: %. Run hr seed first.', SQLERRM;
 END $$;
 
 -- =============================================================================
