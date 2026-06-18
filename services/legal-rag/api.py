@@ -6,13 +6,18 @@ Endpoints:
   POST /search   — hybrid search (FTS+ANN+RRF), return ranked chunks + citations
   GET  /health   — liveness probe (DB pool + embed sidecar reachability)
 
+AUTH CONTRACTS (B-1):
+  /search:  Authorization: Bearer <JWT>
+            JWT must be HS256, signed with LEGAL_RAG_JWT_SECRET.
+            `sub` claim = attorney UUID → used as app.current_user_id for RLS.
+            Body does NOT carry attorney_id (removed).
+  /ingest:  X-Service-Token: <token>
+            Must equal LEGAL_RAG_SERVICE_TOKEN env var. Static service credential.
+
 DESIGN CONTRACTS:
   - /search returns chunks + citations only (Lite tier). No answer_text generated.
-    LLM generation is gated to Pro tier (not implemented here).
-  - All /search requests run inside rls_session() — attorney_id is mandatory.
-  - Ingest uses app_service role (BYPASSRLS) — no rls_session needed.
   - Cloud embedding API is never called (EmbedSidecarUnavailable = 503).
-  - /ingest file_path is validated against LEGAL_RAG_INGEST_ROOT (path-traversal guard).
+  - /ingest file_path validated against LEGAL_RAG_INGEST_ROOT (path-traversal guard).
 
 Run from services/legal-rag/:
   uvicorn api:app --host 0.0.0.0 --port 8000
@@ -24,10 +29,12 @@ import os
 import time
 import uuid
 from contextlib import asynccontextmanager
+from typing import Annotated
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+import auth as auth_mod
 import config as cfg
 import db as database
 import embed_client as ec
@@ -44,7 +51,7 @@ _pool = None
 _embedder: ec.EmbedClient | None = None
 
 
-# ── Typed accessors (eliminate Optional member-access warnings) ───────────────
+# ── Typed accessors ───────────────────────────────────────────────────────────
 
 def _get_settings() -> cfg.Settings:
     assert _settings is not None, "Settings not initialized — lifespan not complete"
@@ -59,6 +66,12 @@ def _get_pool():
 def _get_embedder() -> ec.EmbedClient:
     assert _embedder is not None, "EmbedClient not initialized — lifespan not complete"
     return _embedder
+
+
+# ── FastAPI dependency instances (bound to _get_settings at module level) ────
+
+_attorney_dep = auth_mod.make_attorney_dep(_get_settings)
+_service_token_dep = auth_mod.make_service_token_dep(_get_settings)
 
 
 @asynccontextmanager
@@ -100,18 +113,10 @@ def _validate_ingest_path(file_path: str, ingest_root: str) -> str:
 
     Uses os.path.realpath to normalise symlinks and .. traversal.
     Raises HTTPException(400) if the resolved path escapes ingest_root.
-
-    Args:
-        file_path:   Raw path string from the request.
-        ingest_root: Allowed root directory (from settings.ingest_root).
-
-    Returns:
-        Resolved absolute path string (safe to pass to ingest_file).
     """
     resolved = os.path.realpath(os.path.abspath(file_path))
     root = os.path.realpath(os.path.abspath(ingest_root))
 
-    # os.path.commonpath raises ValueError if paths are on different drives (Windows)
     try:
         common = os.path.commonpath([resolved, root])
     except ValueError:
@@ -127,8 +132,6 @@ def _validate_ingest_path(file_path: str, ingest_root: str) -> str:
         )
     return resolved
 
-
-# ── Embed helper ──────────────────────────────────────────────────────────────
 
 def _embed_or_503(text: str) -> list[float]:
     """Embed text via local sidecar; convert sidecar errors to HTTP 503."""
@@ -165,10 +168,9 @@ class IngestResponse(BaseModel):
 
 
 class SearchRequest(BaseModel):
+    """Search request. attorney_id is derived from JWT — do NOT supply in body."""
+
     query: str = Field(..., min_length=1, description="Search query text (Korean/mixed).")
-    attorney_id: str = Field(
-        ..., description="UUID of the querying attorney (RLS enforcement)."
-    )
     case_id: str | None = Field(
         None, description="Optional: scope search to a specific case."
     )
@@ -185,7 +187,6 @@ class CitationOut(BaseModel):
     rrf_score: float
     fts_rank: int | None = None
     ann_rank: int | None = None
-    # Resolved metadata
     case_number: str | None = None
     court: str | None = None
     decision_date: str | None = None
@@ -241,11 +242,13 @@ async def health():
 
 
 @app.post("/ingest", response_model=IngestResponse, tags=["ingest"])
-async def ingest(req: IngestRequest):
+async def ingest(
+    req: IngestRequest,
+    _: Annotated[None, Depends(_service_token_dep)],
+):
     """Ingest a file into legal_document_chunk.
 
-    Requires app_service DB role (BYPASSRLS). File must be accessible
-    on the server filesystem under LEGAL_RAG_INGEST_ROOT.
+    Requires X-Service-Token header. File must be under LEGAL_RAG_INGEST_ROOT.
     Idempotent: re-ingest overwrites existing chunks.
     """
     settings = _get_settings()
@@ -267,7 +270,6 @@ async def ingest(req: IngestRequest):
         except ValueError:
             raise HTTPException(400, f"case_id is not a valid UUID: {req.case_id!r}")
 
-    # Path-traversal guard (CISO gate)
     safe_path = _validate_ingest_path(req.file_path, settings.ingest_root)
 
     async with pool.connection() as conn:
@@ -298,20 +300,18 @@ async def ingest(req: IngestRequest):
 
 
 @app.post("/search", response_model=SearchResponse, tags=["search"])
-async def search(req: SearchRequest):
+async def search(
+    req: SearchRequest,
+    attorney_id: Annotated[str, Depends(_attorney_dep)],
+):
     """Hybrid search: FTS + vector ANN + RRF.
 
-    Returns ranked chunks with resolved citations.
+    Requires Authorization: Bearer <JWT>.
+    attorney_id is extracted from JWT `sub` claim — body does not carry it.
     DOES NOT generate an LLM answer (Lite tier guarantee).
-    attorney_id is mandatory — enforces RLS scoping.
     """
     settings = _get_settings()
     pool = _get_pool()
-
-    try:
-        uuid.UUID(req.attorney_id)
-    except ValueError:
-        raise HTTPException(400, f"attorney_id is not a valid UUID: {req.attorney_id!r}")
 
     if req.case_id:
         try:
@@ -322,11 +322,10 @@ async def search(req: SearchRequest):
     top_k = req.top_k or settings.top_k
     t0 = time.monotonic()
 
-    # Embed query via local sidecar (no cloud fallback)
     query_vec = _embed_or_503(req.query)
 
     async with pool.connection() as conn:
-        async with database.rls_session(conn, req.attorney_id):
+        async with database.rls_session(conn, attorney_id):
             chunks = await retrieve_mod.hybrid_search(
                 conn=conn,
                 query_text=req.query,
@@ -343,7 +342,7 @@ async def search(req: SearchRequest):
             latency_ms = int((time.monotonic() - t0) * 1000)
             log_id = await citation_mod.log_query(
                 conn=conn,
-                attorney_id=req.attorney_id,
+                attorney_id=attorney_id,
                 query_text=req.query,
                 query_embedding=query_vec,
                 citations=citations,
@@ -351,7 +350,6 @@ async def search(req: SearchRequest):
                 latency_ms=latency_ms,
             )
 
-    # Build response — merge RetrievedChunk rank info with Citation metadata
     chunk_rank_map = {
         c.chunk_id: (c.fts_rank, c.ann_rank) for c in chunks
     }
