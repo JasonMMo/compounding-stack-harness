@@ -16,6 +16,7 @@
 ## Concepts
 
 - [legal-ai-search-strategy](concepts/legal-ai-search-strategy.md) — A안 augment 패턴: tsvector 1단계 + RAG 2단계, 전략 생성 제외 (updated: 2026-06-11) `[INFERRED]`
+- [smb-ai-guide-lite](concepts/smb-ai-guide-lite.md) — Lite 티어: 로컬 임베딩 즉답 위젯 + 리드폼, API 비용 0, 데이터 외부 유출 0, SMB 리드젠 범용 패턴 (updated: 2026-06-18) `[SYNTHESIZED]`
 
 ## Design
 
