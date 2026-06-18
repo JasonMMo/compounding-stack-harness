@@ -2,9 +2,12 @@
 api.py — FastAPI application for legal RAG service.
 
 Endpoints:
-  POST /ingest   — ingest a file (PDF/DOCX/txt) into legal_document_chunk
-  POST /search   — hybrid search (FTS+ANN+RRF), return ranked chunks + citations
-  GET  /health   — liveness probe (DB pool + embed sidecar reachability)
+  POST /auth/login — email+password → JWT (attorney login)
+  GET  /cases      — list assigned cases with doc ingest status (Bearer JWT)
+  POST /ingest     — ingest a file (PDF/DOCX/txt) into legal_document_chunk
+  POST /search     — hybrid search (FTS+ANN+RRF), return ranked chunks + citations
+  GET  /health     — liveness probe (DB pool + embed sidecar reachability)
+  GET  /app/*      — static files (vanilla frontend)
 
 AUTH CONTRACTS (B-1):
   /search:  Authorization: Bearer <JWT>
@@ -13,6 +16,8 @@ AUTH CONTRACTS (B-1):
             Body does NOT carry attorney_id (removed).
   /ingest:  X-Service-Token: <token>
             Must equal LEGAL_RAG_SERVICE_TOKEN env var. Static service credential.
+  /auth/login: email + password in JSON body. Returns JWT on success.
+               Always 401 on failure (no email enumeration).
 
 DESIGN CONTRACTS:
   - /search returns chunks + citations only (Lite tier). No answer_text generated.
@@ -32,6 +37,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import auth as auth_mod
@@ -211,7 +217,172 @@ class HealthResponse(BaseModel):
     embed_sidecar: str
 
 
+class LoginRequest(BaseModel):
+    email: str = Field(..., description="Attorney email address.")
+    password: str = Field(..., description="Attorney password (plaintext, TLS in transit).")
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    attorney_id: str
+    display_name: str
+
+
+class CaseOut(BaseModel):
+    case_id: str
+    case_number: str
+    title: str
+    status: str
+    doc_total: int
+    doc_indexed: int
+    doc_pending: int
+    doc_failed: int
+
+
+class CasesResponse(BaseModel):
+    cases: list[CaseOut]
+    total: int
+
+
+# ── Login helper ──────────────────────────────────────────────────────────────
+
+_LOGIN_FAIL_MSG = "이메일 또는 비밀번호가 올바르지 않습니다."
+
+# 임의 비번과 일치하지 않는 유효 bcrypt 해시 — 이메일 열거 타이밍가드용.
+# 이 해시는 실제 비밀번호와 절대 일치하지 않으며, 존재하지 않는 이메일 조회 시
+# bcrypt.checkpw 를 한 번 수행해 응답 시간을 실제 검증과 유사하게 맞춘다.
+# 분리 연결 금지 — 단일 리터럴이어야 bcrypt 포맷 60바이트 조건을 충족한다.
+_DUMMY_HASH = b"$2b$12$WZ0mFgAfr0FC4XCL6GzSY.yyKVdGxcp5TSNqAYfdlQ/g1/STGB6ga"
+
+
+def _bcrypt_verify(password: str, password_hash: str) -> bool:
+    """Constant-time bcrypt verification. Returns True if password matches hash."""
+    try:
+        import bcrypt  # lazy import — available at runtime
+    except ImportError as exc:
+        raise ImportError(
+            "bcrypt is required for login. Install: pip install 'bcrypt>=4.0,<5.0'"
+        ) from exc
+    return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])
+async def login(req: LoginRequest):
+    """Authenticate an attorney by email + password and return a JWT.
+
+    Uses app_service (BYPASSRLS) connection to look up the attorney row.
+    bcrypt.checkpw is always called (even for unknown emails) to prevent
+    timing-based email enumeration. Both wrong-email and wrong-password
+    return 401 with an identical message.
+
+    TIMING NOTE: For unknown emails, a dummy hash is checked so response
+    time is similar to a real bcrypt comparison. This is not perfect
+    constant-time (hash existence leaks), but is sufficient for MVP
+    self-host deployment where the attorney count is small and the service
+    is internal-only.
+    """
+    pool = _get_pool()
+    settings = _get_settings()
+
+    # app_service has BYPASSRLS — safe to use for login lookup
+    async with pool.connection() as conn:
+        cur = await conn.execute(
+            """
+            SELECT id::text, password_hash, is_active, display_name
+            FROM legal_attorney
+            WHERE email = %s
+            """,
+            (req.email,),
+        )
+        row = await cur.fetchone()
+
+    if row is None:
+        # Always call bcrypt to prevent timing oracle (email enumeration)
+        _bcrypt_verify(req.password, _DUMMY_HASH.decode("utf-8"))
+        raise HTTPException(status_code=401, detail=_LOGIN_FAIL_MSG)
+
+    # row columns: id, password_hash, is_active, display_name (positional)
+    attorney_id: str = row[0]
+    password_hash: str = row[1]
+    is_active: bool = row[2]
+    display_name: str = row[3]
+
+    if not _bcrypt_verify(req.password, password_hash):
+        raise HTTPException(status_code=401, detail=_LOGIN_FAIL_MSG)
+
+    if not is_active:
+        raise HTTPException(status_code=401, detail=_LOGIN_FAIL_MSG)
+
+    token = auth_mod.mint_token(attorney_id, settings.jwt_secret)
+    return LoginResponse(
+        access_token=token,
+        token_type="bearer",
+        attorney_id=attorney_id,
+        display_name=display_name,
+    )
+
+
+@app.get("/cases", response_model=CasesResponse, tags=["cases"])
+async def list_cases(
+    attorney_id: Annotated[str, Depends(_attorney_dep)],
+):
+    """List cases assigned to the authenticated attorney, with document ingest status.
+
+    RLS enforces that only cases where assigned_attorney_id or partner_id
+    matches the JWT sub claim are returned. Document counts are aggregated
+    per case from legal_case_document.ingest_status.
+
+    ingest_status values from DDL: 'pending' | 'processing' | 'done' | 'error' | NULL
+    UI maps: done→indexed, pending+processing→pending, error→failed.
+    """
+    pool = _get_pool()
+
+    async with pool.connection() as conn:
+        async with database.rls_session(conn, attorney_id):
+            cur = await conn.execute(
+                """
+                SELECT
+                  lc.id::text            AS case_id,
+                  lc.case_number,
+                  lc.title,
+                  lc.status,
+                  COUNT(lcd.id)          AS doc_total,
+                  COUNT(lcd.id) FILTER (WHERE lcd.ingest_status = 'done')
+                                         AS doc_indexed,
+                  COUNT(lcd.id) FILTER (
+                    WHERE lcd.ingest_status IN ('pending', 'processing')
+                       OR lcd.ingest_status IS NULL
+                  )                      AS doc_pending,
+                  COUNT(lcd.id) FILTER (WHERE lcd.ingest_status = 'error')
+                                         AS doc_failed
+                FROM legal_case lc
+                LEFT JOIN legal_case_document lcd ON lcd.case_id = lc.id
+                GROUP BY lc.id, lc.case_number, lc.title, lc.status
+                ORDER BY lc.case_number
+                """,
+            )
+            rows = await cur.fetchall()
+
+    # row columns (positional): case_id, case_number, title, status,
+    #                           doc_total, doc_indexed, doc_pending, doc_failed
+    cases = [
+        CaseOut(
+            case_id=r[0],
+            case_number=r[1],
+            title=r[2],
+            status=r[3],
+            doc_total=r[4],
+            doc_indexed=r[5],
+            doc_pending=r[6],
+            doc_failed=r[7],
+        )
+        for r in rows
+    ]
+    return CasesResponse(cases=cases, total=len(cases))
+
 
 @app.get("/health", response_model=HealthResponse, tags=["ops"])
 async def health():
@@ -381,3 +552,11 @@ async def search(
         total_results=len(results_out),
         results=results_out,
     )
+
+
+# ── Static frontend ────────────────────────────────────────────────────────────
+# Mounted last so API routes take precedence over the catch-all html=True handler.
+# Serves the vanilla JS SPA at /app/ (index.html).
+
+_WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+app.mount("/app", StaticFiles(directory=_WEB_DIR, html=True), name="web")
