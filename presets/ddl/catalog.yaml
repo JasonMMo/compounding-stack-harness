@@ -1562,10 +1562,106 @@ entities:
       filed_at:      { type: timestamp, nullable: true }
       storage_key:   { type: string,    nullable: true }
       notes:         { type: string,    nullable: true }
+      content_text:  { type: text,      nullable: true }
+      ingest_status: { type: enum,      values: [pending, processing, done, error], nullable: true }
+      ingested_at:   { type: timestamp, nullable: true }
     constraints: []
     indexes:
       - { columns: [case_id] }
       - { columns: [document_type] }
+      - { columns: [ingest_status] }
     # DDL notes:
     #   storage_key resolves to document_version.storage_key — cross-domain; FK omitted (app layer).
     #   Append-only for legal audit trail — application layer.
+    #   content_text: extracted plain text from PDF/DOCX by ingest pipeline. NULL until processed.
+    #   fts_vector (tsvector GENERATED ALWAYS): postgres-specific; in augment DDL, not neutral catalog.
+    #   RLS: case-scoped (attorney/partner only). See out/legal-rag-mvp/schema/04_case_document_augment.sql.
+
+  # ─── legal-rag-mvp additions (Growth-48) ────────────────────────────────────
+
+  legal-case-augment:
+    # Not a standalone entity — documents the augment columns added to legal-case.
+    # physical table: legal_case (merged). Tracked here for catalog drift detection.
+    domain: legal
+    table: legal_case
+    label_ko: 사건 (RAG 보강)
+    primary_key: id
+    _augment_of: legal-case
+    _augment_note: "Growth-48 RAG MVP adds: partner_id, fts_vector (GIN/pg_bigm), RLS policies"
+    columns:
+      partner_id:   { type: uuid, nullable: true }
+      # fts_vector: postgres tsvector GENERATED ALWAYS — not in neutral catalog; dialect-specific
+    constraints: []
+    indexes:
+      - { columns: [partner_id] }
+    # DDL notes:
+    #   fts_vector: GENERATED ALWAYS AS tsvector (postgres-only). Not rendered by render.py.
+    #   GIN index on fts_vector: idx_legal_case_fts. pg_bigm index on title: idx_legal_case_title_bigm.
+    #   RLS policies in: out/legal-rag-mvp/schema/02_legal_case_augment.sql
+
+  document-chunk:
+    domain: legal
+    table: legal_document_chunk
+    label_ko: 문서 청크 (RAG)
+    primary_key: id
+    columns:
+      id:              { type: uuid,      nullable: false }
+      created_at:      { type: timestamp, nullable: false }
+      updated_at:      { type: timestamp, nullable: false }
+      source_type:     { type: enum,      values: [precedent, case_document], nullable: false }
+      source_id:       { type: uuid,      nullable: false }
+      case_id:         { type: uuid,      nullable: true,
+                         fk: { entity: legal-case, column: id, on_delete: cascade } }
+      chunk_index:     { type: integer,   nullable: false }
+      chunk_text:      { type: text,      nullable: false }
+      token_count:     { type: integer,   nullable: true }
+      embedded_at:     { type: timestamp, nullable: true }
+      model_version:   { type: string,    length: 64, nullable: true }
+      # embedding (vector(768)): pgvector extension type — not in neutral catalog type vocab.
+      # Tracked as metadata; actual DDL in out/legal-rag-mvp/schema/06_legal_document_chunk.sql.
+    constraints:
+      - { type: unique, columns: [source_id, source_type, chunk_index] }
+    indexes:
+      - { columns: [source_type, source_id] }
+      - { columns: [case_id] }
+    # DDL notes:
+    #   source_id is polymorphic FK: resolves to legal_precedent.id OR legal_case_document.id
+    #     based on source_type. FK omitted (app layer).
+    #   embedding vector(768): pgvector-specific column; added via augment DDL.
+    #   HNSW index (cosine): idx_legal_chunk_hnsw — partial (WHERE embedding IS NOT NULL).
+    #   RLS: precedent chunks = all app_users; case_document chunks = case attorney/partner only.
+    #   Citation anchor: chunk.id binds RAG answers to verifiable source records.
+
+  rag-query-log:
+    domain: legal
+    table: legal_rag_query_log
+    label_ko: RAG 질의 로그
+    primary_key: id
+    columns:
+      id:                   { type: uuid,      nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      attorney_id:          { type: uuid,      nullable: false }
+      case_id:              { type: uuid,      nullable: true,
+                              fk: { entity: legal-case, column: id, on_delete: set_null } }
+      query_text:           { type: text,      nullable: false }
+      retrieved_chunk_ids:  { type: text,      nullable: true }
+      citations_summary:    { type: text,      nullable: true }
+      answer_text:          { type: text,      nullable: true }
+      model_id:             { type: string,    length: 64, nullable: true }
+      tokens_used:          { type: integer,   nullable: true }
+      latency_ms:           { type: integer,   nullable: true }
+      status:               { type: enum,      values: [pending, completed, error], nullable: false }
+      error_message:        { type: text,      nullable: true }
+      # query_embedding (vector(768)): pgvector-specific; optional analytics field.
+    constraints: []
+    indexes:
+      - { columns: [attorney_id, created_at] }
+      - { columns: [case_id, created_at] }
+      - { columns: [status] }
+    # DDL notes:
+    #   attorney_id → hr_employee (cross-domain FK; enforced at application layer).
+    #   retrieved_chunk_ids: JSON array text of legal_document_chunk.id UUIDs.
+    #   Append-only audit log — no UPDATE/DELETE for app_user (RLS enforced).
+    #   query_embedding: pgvector column for query analytics; added via augment DDL.
+    #   RLS: attorney sees only their own queries.
