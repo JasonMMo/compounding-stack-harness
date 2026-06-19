@@ -18,10 +18,10 @@ preview:
   compose_file: deploy/preview/legal-rag.compose.yml
   manifest_server_path: null    # legal-rag has no screen-manifest (direct API, not scaffold UI)
   domain_service: app           # Coolify PATCH docker_compose_domains service name
-  status: pending               # pending | provisioning | live | retired
-  deployed_at: null             # TBD — set by deploy_to_coolify.py after successful deploy
-  build_commit: null            # TBD — git sha at first deploy
-  tls: null                     # TBD — "Let's Encrypt, CN=legal-rag.n9n.co.kr, exp <date>"
+  status: live                  # Growth-94/95: LIVE, 3컨테이너 healthy, RLS 격리 라이브 검증 통과
+  deployed_at: 2026-06-20       # 첫 LIVE(Growth-94) → DDL+seed+RLS fix 검증 완료(Growth-95)
+  build_commit: 6cbab8d         # RLS isolation fix (SET LOCAL ROLE app_user + 09_grants) 포함
+  tls: "Let's Encrypt (Traefik), https 200 verified"  # 정확한 만료일 미수집
 production:
   install_method: onsite        # 법무법인 사내망 self-host — 방문 또는 원격 설치
   installed_at: null
@@ -68,9 +68,16 @@ blockers:
     owner: founder
     status: resolved            # Growth-94: founder mkdir + chown 1000:1000 완료 (bind mount source)
   - id: B5
-    summary: "DDL+seed 적용 (실 PG) — base(render.py 4-entity) + 01~08 augment + seed 4종"
+    summary: "DDL+seed 적용 (실 PG) — base(render.py 4-entity) + 01~09 augment + seed 4종"
     owner: founder
-    status: open                # Growth-94: 적용 도구 완비 — deploy/preview/legal-rag.apply-schema.sh
+    status: resolved            # Growth-95: 실 적용+라이브 검증 완료. apply-schema.sh 로 base→01~09
+                                # →seed 적용, 카운트 3/12/22/29/15 PASS. 적용 중 잠복결함 3개 발현·수정:
+                                # (a) seed UUID 무효(p/o non-hex)→f/d0c (b) base 멱등결함(plain CREATE
+                                # TABLE)→to_regclass 가드 (c) **RLS 격리 누수 BLOCK**: app_service 슈퍼유저
+                                # 접속이라 rls_session 이 SET ROLE 안 해 RLS 우회 → db.py SET LOCAL ROLE
+                                # app_user + 09_grants. 박서연6/이준호12 라이브 검증 통과(격리 확정).
+                                # ↓아래는 Growth-94 도구 메모(보존):
+                                # Growth-94: 적용 도구 완비 — deploy/preview/legal-rag.apply-schema.sh
                                 # (원샷: db컨테이너/POSTGRES_USER 자동탐색 → base 렌더 → 01~08 →
                                 # seed → 검증). 베이스 스키마 출처 갭 해소: render.py 를 4 legal
                                 # entity(legal-case,precedent,case-party,case-document)로 스코프
