@@ -30,9 +30,14 @@ ALTER TABLE legal_precedent
 CREATE INDEX IF NOT EXISTS idx_legal_precedent_fts
   ON legal_precedent USING GIN (fts_vector);
 
--- pg_bigm index on holding for Korean substring search
-CREATE INDEX IF NOT EXISTS idx_legal_precedent_holding_bigm
-  ON legal_precedent USING GIN (holding gin_bigm_ops);
+-- pg_bigm index on holding for Korean substring search.
+-- Only created when pg_bigm is actually installed (see 01_extensions.sql guard).
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_bigm') THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_legal_precedent_holding_bigm ON legal_precedent USING GIN (holding gin_bigm_ops)';
+  END IF;
+END $$;
 
 -- ─────────────────────────────────────────────
 -- 2. pgvector: semantic embedding of holding text
