@@ -302,7 +302,8 @@ async def ingest_file(
             )
             for i, chunk in enumerate(batch)
         ]
-        await conn.executemany(_UPSERT_CHUNK_SQL, rows)
+        async with conn.cursor() as cur:
+            await cur.executemany(_UPSERT_CHUNK_SQL, rows)
         upserted += len(rows)
         logger.debug("Upserted chunks %d-%d", batch_start, batch_start + len(batch) - 1)
 
