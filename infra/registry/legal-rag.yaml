@@ -39,9 +39,11 @@ secret_ref:
   - vault/legal-rag/ingest-root         # LEGAL_RAG_INGEST_ROOT (e.g. /data/legal-docs)
 cost_note: >
   preview 티어 공유 VPS (187.77.140.157) 귀속분. Hostinger KVM2 $8.99/월 공유.
-  4-컨테이너(db+tei+embed+app): TEI CPU-only 추론, 추가 외부 SaaS 비용 없음.
-  tei(intfloat/multilingual-e5-base, ~1.1 GB) 가 메모리 상주하므로 KVM2 RAM(8GB) 여유 모니터링 필요.
-  추론 속도 제약 시 KVM4($15.99/월) 업그레이드 검토.
+  3-컨테이너(db+embed+app): embed-adapter 가 sentence-transformers(intfloat/multilingual-e5-base)
+  를 프로세스 내에서 직접 추론, 추가 외부 SaaS 비용 없음. 모델은 이미지에 bake-in (런타임 offline).
+  Growth-94 피벗: TEI(text-embeddings-inference cpu-1.5) 컨테이너 제거 — Rust hf-hub 다운로더의
+  `relative URL without a base` 버그로 모델 다운로드 불가가 VPS 실증됨. 컨테이너 4→3 감소로 RAM 여유↑.
+  embed 모델 CPU 상주 ~400-500MB. 추론 속도 제약 시 KVM4($15.99/월) 업그레이드 검토.
 blockers:
   # 배포 전 founder/engineer 결정 필요 항목
   - id: B1
@@ -59,7 +61,7 @@ blockers:
   - id: B4
     summary: "VPS 사전 준비: ssh root@187.77.140.157 'mkdir -p /data/legal-rag/ingest'"
     owner: founder
-    status: open
+    status: resolved            # Growth-94: founder mkdir + chown 1000:1000 완료 (bind mount source)
   - id: B5
     summary: "DDL+seed 적용 (실 PG) — 01~08 augment + seed 4종. legal-rag-install.md §4 참조"
     owner: founder
@@ -67,4 +69,4 @@ blockers:
   - id: B6
     summary: "Cloudflare DNS: legal-rag.n9n.co.kr A → 187.77.140.157 추가"
     owner: founder
-    status: open
+    status: resolved            # Growth-94: 기존 wildcard *.n9n.co.kr (DNS only/회색) 가 자동 커버 — 별도 A 불필요
