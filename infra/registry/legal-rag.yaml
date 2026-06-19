@@ -39,23 +39,23 @@ secret_ref:
   - vault/legal-rag/ingest-root         # LEGAL_RAG_INGEST_ROOT (e.g. /data/legal-docs)
 cost_note: >
   preview 티어 공유 VPS (187.77.140.157) 귀속분. Hostinger KVM2 $8.99/월 공유.
-  3-컨테이너(db+embed+app): 추가 외부 SaaS 비용 없음.
-  embed 사이드카 이미지가 확정되면 GPU/CPU 사양에 따라 VPS 업그레이드 검토 필요
-  (현재 KVM2 CPU-only, 추론 속도 제약 가능성).
+  4-컨테이너(db+tei+embed+app): TEI CPU-only 추론, 추가 외부 SaaS 비용 없음.
+  tei(intfloat/multilingual-e5-base, ~1.1 GB) 가 메모리 상주하므로 KVM2 RAM(8GB) 여유 모니터링 필요.
+  추론 속도 제약 시 KVM4($15.99/월) 업그레이드 검토.
 blockers:
   # 배포 전 founder/engineer 결정 필요 항목
   - id: B1
     summary: "services/legal-rag/Dockerfile 미존재 — app 컨테이너 빌드 불가"
     owner: engineer
-    status: open
+    status: resolved            # Growth-93 (3faf8c7): Dockerfile 추가, python:3.11-slim+uvicorn
   - id: B2
     summary: "embedding sidecar 이미지 미확정 — 어떤 off-the-shelf 이미지도 /embed contract 를 그대로 만족하지 못함. thin adapter 빌드 필요"
     owner: engineer
-    status: open
+    status: resolved            # Growth-93 (cc0908d): embed-adapter(TEI/e5-base shim) + compose tei 서비스 배선, 11 테스트 PASS
   - id: B3
-    summary: "services/legal-rag/Dockerfile.db (pg_bigm 포함) 필요 여부 결정 — preview 품질 vs 빌드 복잡성"
+    summary: "preview pg_bigm 미포함(옵션A) 수용 여부 — compose 는 이미 옵션A(pgvector only, plainto_tsquery). founder 명시 수용 필요"
     owner: founder
-    status: open
+    status: open                # 결정대기: 한국어 FTS 품질 저하 수용 = B3 close
   - id: B4
     summary: "VPS 사전 준비: ssh root@187.77.140.157 'mkdir -p /data/legal-rag/ingest'"
     owner: founder
