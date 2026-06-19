@@ -192,19 +192,30 @@ SELECT COUNT(*) FROM legal_case;  -- 기대: 12
 
 **외부 노출 금지 (하드닝 #2)**: `LEGAL_RAG_EMBED_URL` 은 반드시 localhost 또는 사내망 주소여야 한다. 인터넷 라우팅 주소 사용 시 법률 문서가 외부 서버로 전송된다.
 
+사이드카는 **2단 구성**이다 (Growth-93): TEI(임베딩 백엔드) + thin adapter(`services/legal-rag/embed-adapter/` — TEI 응답을 서비스 contract 로 변환). 서비스는 adapter 만 바라보고(`LEGAL_RAG_EMBED_URL`), adapter 가 내부에서 TEI 를 호출한다. preview 는 `deploy/preview/legal-rag.compose.yml` 가 두 컨테이너를 함께 기동하므로 아래 수동 기동은 **on-prem 단독 설치용** 참조다.
+
 ```bash
-# embeddinggemma 사이드카 예시 (vendor별 기동 방법 상이 — engineer 참조)
-# 반드시 localhost binding 또는 사내망 IP binding
+# 1) TEI 백엔드 (intfloat/multilingual-e5-base, 768-dim, CPU) — 내부 전용
+docker run -d \
+  --name legal-tei \
+  -v legal-tei-data:/data \
+  ghcr.io/huggingface/text-embeddings-inference:cpu-1.5 \
+  --model-id intfloat/multilingual-e5-base
+# 첫 기동 시 모델 ~1.1GB 다운로드 — /health 통과까지 수 분 소요
+
+# 2) embed-adapter (서비스 contract 노출) — 내부 전용, TEI 를 내부 호출
 docker run -d \
   --name legal-embed-sidecar \
-  --network host \                    # 또는 사내망 전용 bridge
-  embeddinggemma:latest \
-  --host 127.0.0.1 --port 8080       # 외부 바인딩 금지
+  -e TEI_BASE_URL="http://legal-tei:80" \
+  -e EMBED_MODEL_NAME="intfloat/multilingual-e5-base" \
+  services/legal-rag/embed-adapter   # 또는 빌드한 이미지 태그
 
-# 헬스체크
+# 헬스체크 (adapter)
 curl http://localhost:8080/health
-# 기대: 200 OK
+# 기대: 200 OK {"status":"ok"}
 ```
+
+> **프리픽스 LOCK (Growth-93, QA PASS)**: adapter 는 e5 비대칭 프리픽스를 적용한다 — `/embed`(검색)=`query: `, `/embed/batch`(인제스트)=`passage: `. **첫 인제스트 후 `EMBED_QUERY_PREFIX`/`EMBED_PASSAGE_PREFIX` 변경 금지** (전 코퍼스 재임베딩 강제). caller-split 불변식은 가드 G-87 로 강제.
 
 ### 사이드카 contract (서비스가 기대하는 API)
 
@@ -247,7 +258,7 @@ Coolify 에서 설정할 환경변수 (선택, 기본값 있음):
 
 | Variable | 기본값 | 설명 |
 |---|---|---|
-| `LEGAL_RAG_EMBED_MODEL_VERSION` | `embeddinggemma-768` | 모델 버전 기록용 |
+| `LEGAL_RAG_EMBED_MODEL_VERSION` | `intfloat/multilingual-e5-base` | 모델 버전 기록용 (Growth-93: embeddinggemma 폐기) |
 | `LEGAL_RAG_CHUNK_TOKENS` | `500` | 청크 목표 토큰 수 |
 | `LEGAL_RAG_CHUNK_OVERLAP` | `50` | 청크 오버랩 토큰 |
 | `LEGAL_RAG_RRF_K` | `60` | RRF 상수 k |
