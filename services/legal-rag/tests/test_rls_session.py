@@ -2,8 +2,9 @@
 tests/test_rls_session.py — Gap-1 단위: RLS session SET LOCAL emit 검증.
 
 검증 대상:
-  - rls_session() 컨텍스트매니저가 정확한 SQL로
-    `SELECT set_config('app.current_user_id', '<uuid>', true)` 을 emit하는가.
+  - rls_session() 컨텍스트매니저가 순서대로
+    1) `SET LOCAL ROLE app_user` (superuser → non-privileged role drop)
+    2) `SELECT set_config('app.current_user_id', '<uuid>', true)` 을 emit하는가.
   - 트랜잭션 블록 안에서 실행되는가 (conn.transaction() 호출 확인).
   - 잘못된 UUID는 RLSSessionError로 거부되는가.
   - 정상 종료 후 연결이 재사용 가능 상태인가.
@@ -83,19 +84,22 @@ class TestRlsSession:
 
     @pytest.mark.asyncio
     async def test_emits_set_config_sql(self):
-        """rls_session() must emit SELECT set_config('app.current_user_id', ...)."""
+        """rls_session() must emit SET LOCAL ROLE app_user then set_config(...)."""
         attorney_id = str(uuid.uuid4())
         conn, calls = _make_mock_conn()
 
         async with rls_session(conn, attorney_id):
             pass  # body executes inside transaction
 
-        assert len(calls) == 1, f"Expected 1 execute call, got {len(calls)}: {calls}"
-        emitted_sql = calls[0]["sql"]
+        assert len(calls) == 2, f"Expected 2 execute calls, got {len(calls)}: {calls}"
+        # First call: role drop
+        assert "SET LOCAL ROLE app_user" in calls[0]["sql"]
+        # Second call: GUC set
+        emitted_sql = calls[1]["sql"]
         assert "set_config" in emitted_sql
         assert "app.current_user_id" in emitted_sql
 
-        emitted_params = calls[0]["params"]
+        emitted_params = calls[1]["params"]
         assert emitted_params is not None
         # First param must be the canonical attorney UUID
         assert emitted_params[0] == attorney_id
@@ -109,7 +113,7 @@ class TestRlsSession:
         async with rls_session(conn, attorney_id):
             pass
 
-        sql = calls[0]["sql"]
+        sql = calls[1]["sql"]
         # Our implementation passes `true` as SQL literal inside set_config
         # The actual SQL is: SELECT set_config('app.current_user_id', %s, true)
         assert "true" in sql.lower()
@@ -124,7 +128,7 @@ class TestRlsSession:
         async with rls_session(conn, upper_id):
             pass
 
-        param_value = calls[0]["params"][0]
+        param_value = calls[1]["params"][0]
         assert param_value == canonical
 
     @pytest.mark.asyncio
@@ -149,8 +153,8 @@ class TestRlsSession:
             body_ran.append(True)
 
         assert body_ran == [True]
-        # SET LOCAL happened before body
-        assert len(calls) == 1
+        # SET LOCAL ROLE + set_config happened before body
+        assert len(calls) == 2
 
     @pytest.mark.asyncio
     async def test_exception_in_body_propagates(self):
@@ -171,7 +175,7 @@ class TestRlsSession:
         async with rls_session(conn, attorney_uuid):
             pass
 
-        assert calls[0]["params"][0] == str(attorney_uuid)
+        assert calls[1]["params"][0] == str(attorney_uuid)
 
 
 # ── Gap-1 통합 테스트 (postgres 마크) ─────────────────────────────────────────
