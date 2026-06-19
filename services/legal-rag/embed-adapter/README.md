@@ -1,13 +1,15 @@
 # embed-adapter
 
-Thin FastAPI shim that translates the legal-rag embed contract into
-HuggingFace TEI (Text Embeddings Inference) native calls.
+FastAPI shim that exposes the legal-rag embed contract via local
+sentence-transformers inference.  The model is baked into the Docker image at
+build time and runs fully offline at runtime.
 
 ## Why this exists
 
 `embed_client.py` in the legal-rag app expects a specific JSON shape.
-TEI's native API returns a bare 2-D float array. This adapter bridges
-the gap without modifying either side.
+sentence-transformers returns numpy arrays.  This adapter bridges the gap
+without modifying either side, and applies the asymmetric e5 prefixes that
+neither the app nor the DB layer should know about.
 
 ## Contract (matches embed_client.py byte-for-byte)
 
@@ -17,7 +19,7 @@ the gap without modifying either side.
 | POST | `/embed/batch` | `{"texts": [str, ...]}` | `{"embeddings": [[float x 768], ...], "model": str}` |
 | GET | `/health` | — | `{"status": "ok"}` (HTTP 200) |
 
-## Asymmetric Prefix — Caller-Split Invariant
+## Asymmetric Prefix — Caller-Split Invariant (G-87)
 
 `intfloat/multilingual-e5-base` is an asymmetric model with two projection heads:
 - **Search queries** — prefix `"query: <text>"` (query head)
@@ -42,36 +44,36 @@ batch) **must remain one-directional** — enforce at code-review time.
 **Changing either prefix after documents are already ingested invalidates all
 existing embeddings and requires a full re-embed of the entire corpus.**
 
+## Backend: local sentence-transformers, model baked in, offline at runtime
+
+- Library: `sentence-transformers>=3.0.0`
+- Model: `intfloat/multilingual-e5-base` (768-dim, Korean + English)
+- `normalize_embeddings=True` — cosine-consistent vectors, compatible with pgvector `<=>`
+- Model is downloaded into `/app/.hfcache` **at Docker build time** via a `RUN python -c "..."` layer.
+- At runtime `HF_HUB_OFFLINE=1` / `TRANSFORMERS_OFFLINE=1` prevent any outbound HF network calls.
+- The model is loaded synchronously in the FastAPI lifespan startup hook.
+  `/health` returning 200 implies the model singleton is fully loaded and ready.
+
 ## Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `TEI_BASE_URL` | `http://tei:80` | Base URL of the TEI container |
+| `EMBED_MODEL_ID` | `intfloat/multilingual-e5-base` | HF model ID to load (must match baked cache) |
 | `EMBED_MODEL_NAME` | `intfloat/multilingual-e5-base` | Model version string returned in `"model"` field |
 | `EMBED_QUERY_PREFIX` | `query: ` | Prefix for `POST /embed` (single, query head) |
 | `EMBED_PASSAGE_PREFIX` | `passage: ` | Prefix for `POST /embed/batch` (passage head) |
 
-## Backend: TEI native API
+## Image size / RAM
 
-TEI exposes `POST /embed`:
-- Request: `{"inputs": str | [str]}`
-- Response: `[[float, ...], ...]` (bare 2-D array)
+- Base python:3.11-slim + torch CPU + sentence-transformers + model weights: **~1.5 GB image**.
+- RAM at runtime: ~400–500 MB (model in CPU RAM, no GPU).
 
-This adapter prefixes each string with the appropriate asymmetric prefix
-(`EMBED_QUERY_PREFIX` for `/embed`, `EMBED_PASSAGE_PREFIX` for `/embed/batch`),
-calls TEI, validates each vector is exactly 768-dim, and wraps the result in the
-contract's object shape.
-
-## Model
-
-`intfloat/multilingual-e5-base` — 768-dim, supports Korean + English.
-TEI downloads the model from HuggingFace Hub on first startup (cached in
-`tei-data` volume). Subsequent restarts use the local cache.
-
-## Running locally
+## Running locally (without Docker)
 
 ```bash
-TEI_BASE_URL=http://localhost:8081 uvicorn app:app --port 8080
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
+uvicorn app:app --port 8080
 ```
 
 ## Tests
@@ -81,3 +83,5 @@ cd services/legal-rag/embed-adapter
 pip install -r requirements.txt
 pytest tests/ -v
 ```
+
+Tests use `monkeypatch` on `app._encode` — no real model inference required.
