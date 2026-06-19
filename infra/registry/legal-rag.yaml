@@ -1,0 +1,70 @@
+# infra/registry/legal-rag.yaml
+# Legal RAG MVP preview — slug: legal-rag
+# Growth-35 DevOps: artifacts prepared 2026-06-19. Deployment pending founder execution.
+# 시크릿 평문 절대 금지: secret_ref 는 볼트 키 이름만 (평문은 infra/secrets/, gitignored).
+slug: legal-rag
+contact:
+  channel: internal             # M3 첫 버티컬 — 현재 내부 preview 데모
+  handle: "m3-legal-preview"
+preview:
+  subdomain: legal-rag.n9n.co.kr
+  url: https://legal-rag.n9n.co.kr
+  coolify_project: null         # TBD by founder after deploy_to_coolify.py run
+  coolify_app: null             # TBD by founder after deploy_to_coolify.py run
+  coolify_env: null             # TBD by founder — environment_uuid (production)
+  deploy_key_github_id: 154181975                 # GitHub repo deploy key id (read_only, shared)
+  coolify_privkey_uuid: s127pafarr46wlu1r2mre2te  # Coolify security/keys uuid (shared)
+  server_uuid: n12vdydjpwp81hu5i15n1gsb           # Coolify server uuid (shared preview VPS)
+  compose_file: deploy/preview/legal-rag.compose.yml
+  manifest_server_path: null    # legal-rag has no screen-manifest (direct API, not scaffold UI)
+  domain_service: app           # Coolify PATCH docker_compose_domains service name
+  status: pending               # pending | provisioning | live | retired
+  deployed_at: null             # TBD — set by deploy_to_coolify.py after successful deploy
+  build_commit: null            # TBD — git sha at first deploy
+  tls: null                     # TBD — "Let's Encrypt, CN=legal-rag.n9n.co.kr, exp <date>"
+production:
+  install_method: onsite        # 법무법인 사내망 self-host — 방문 또는 원격 설치
+  installed_at: null
+  stack:
+    frontend: vanilla           # Lite 티어: REST API only, no scaffold UI frontend
+    backend: fastapi
+secret_ref:
+  # Coolify 환경변수 패널에 주입할 시크릿 — 볼트 키 이름만 기록
+  # 실제 값은 infra/secrets/ 아래 gitignored 파일에 저장
+  - vault/legal-rag/db-dsn              # LEGAL_RAG_DB_DSN (postgresql://app_service:pw@db:5432/legaldb)
+  - vault/legal-rag/postgres-user       # LEGAL_RAG_POSTGRES_USER (db service POSTGRES_USER)
+  - vault/legal-rag/postgres-password   # LEGAL_RAG_POSTGRES_PASSWORD (db service POSTGRES_PASSWORD)
+  - vault/legal-rag/jwt-secret          # LEGAL_RAG_JWT_SECRET (HS256 64-char hex)
+  - vault/legal-rag/service-token       # LEGAL_RAG_SERVICE_TOKEN (32-char hex, X-Service-Token)
+  - vault/legal-rag/ingest-root         # LEGAL_RAG_INGEST_ROOT (e.g. /data/legal-docs)
+cost_note: >
+  preview 티어 공유 VPS (187.77.140.157) 귀속분. Hostinger KVM2 $8.99/월 공유.
+  3-컨테이너(db+embed+app): 추가 외부 SaaS 비용 없음.
+  embed 사이드카 이미지가 확정되면 GPU/CPU 사양에 따라 VPS 업그레이드 검토 필요
+  (현재 KVM2 CPU-only, 추론 속도 제약 가능성).
+blockers:
+  # 배포 전 founder/engineer 결정 필요 항목
+  - id: B1
+    summary: "services/legal-rag/Dockerfile 미존재 — app 컨테이너 빌드 불가"
+    owner: engineer
+    status: open
+  - id: B2
+    summary: "embedding sidecar 이미지 미확정 — 어떤 off-the-shelf 이미지도 /embed contract 를 그대로 만족하지 못함. thin adapter 빌드 필요"
+    owner: engineer
+    status: open
+  - id: B3
+    summary: "services/legal-rag/Dockerfile.db (pg_bigm 포함) 필요 여부 결정 — preview 품질 vs 빌드 복잡성"
+    owner: founder
+    status: open
+  - id: B4
+    summary: "VPS 사전 준비: ssh root@187.77.140.157 'mkdir -p /data/legal-rag/ingest'"
+    owner: founder
+    status: open
+  - id: B5
+    summary: "DDL+seed 적용 (실 PG) — 01~08 augment + seed 4종. legal-rag-install.md §4 참조"
+    owner: founder
+    status: open
+  - id: B6
+    summary: "Cloudflare DNS: legal-rag.n9n.co.kr A → 187.77.140.157 추가"
+    owner: founder
+    status: open
