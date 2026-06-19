@@ -2,8 +2,9 @@
 # deploy/preview/legal-rag.apply-schema.sh
 #
 # PURPOSE: Apply DDL + seed to the Coolify-managed pgvector container for legal-rag preview.
-#          DDL stage is idempotent (IF NOT EXISTS / DO blocks); seed stage is guarded by an
-#          attorney-count check so a clean re-run skips reseeding.
+#          Base stage guarded by a table-exists check (render.py emits plain CREATE TABLE);
+#          augment stage idempotent (IF NOT EXISTS / DO blocks); seed stage guarded by an
+#          attorney-count check. The whole script is safely re-runnable.
 #
 # BASE DDL: rendered on-the-fly via render.py scoped to 4 legal entities only
 #   (legal-case, precedent, case-party, case-document). This omits HR FK pollution.
@@ -67,18 +68,29 @@ apply_stdin() {
     psql -U "$PG_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1
 }
 
-# ── 5. RENDER BASE DDL (4 legal entities, no HR FK pollution) ─────────────────
-echo "[4/9] Rendering base DDL via throwaway python container ..."
-BASE_DDL="$(docker run --rm \
-  -v "$REPO_ROOT":/w \
-  -w /w \
-  python:3.11-slim \
-  sh -c 'pip install -q pyyaml && python presets/ddl/render.py --dialect postgres --entities legal-case,precedent,case-party,case-document')"
+# ── 5. RENDER + APPLY BASE DDL (guarded — render.py emits plain CREATE TABLE, not IF NOT EXISTS)
+# Probe: to_regclass returns NULL (→ 'f') if table absent, 't' if present.
+# set -e tolerant via 2>/dev/null || echo f.
+EXISTS_CASE="$(docker exec "$DB_CONTAINER" \
+  psql -U "$PG_USER" -d "$DB_NAME" -t -A \
+  -c "SELECT to_regclass('public.legal_case') IS NOT NULL;" 2>/dev/null || echo f)"
+EXISTS_CASE="${EXISTS_CASE// /}"
 
-echo "  --> base DDL rendered ($(echo "$BASE_DDL" | wc -l) lines)"
+if [ "$EXISTS_CASE" = "t" ]; then
+  echo "[4-5/9] base tables already present — skipping render + base apply"
+else
+  echo "[4/9] Rendering base DDL via throwaway python container ..."
+  BASE_DDL="$(docker run --rm \
+    -v "$REPO_ROOT":/w \
+    -w /w \
+    python:3.11-slim \
+    sh -c 'pip install -q pyyaml && python presets/ddl/render.py --dialect postgres --entities legal-case,precedent,case-party,case-document')"
 
-echo "[5/9] Applying base DDL ..."
-echo "$BASE_DDL" | apply_stdin "base (legal_case, legal_precedent, legal_case_party, legal_case_document)"
+  echo "  --> base DDL rendered ($(echo "$BASE_DDL" | wc -l) lines)"
+
+  echo "[5/9] Applying base DDL ..."
+  echo "$BASE_DDL" | apply_stdin "base (legal_case, legal_precedent, legal_case_party, legal_case_document)"
+fi
 
 # ── 6. APPLY AUGMENTS 01-08 (STRICT ORDER) ───────────────────────────────────
 echo "[6/9] Applying augments 01-08 ..."
@@ -100,6 +112,8 @@ apply "07_rag_query_log" \
   "$AUGMENTS_DIR/07_rag_query_log.sql"
 apply "08_legal_attorney (FK legal_case -> legal_attorney)" \
   "$AUGMENTS_DIR/08_legal_attorney.sql"
+apply "09_grants (app_user RLS privileges)" \
+  "$AUGMENTS_DIR/09_grants.sql"
 
 # ── 7. APPLY SEEDS (FK DEPENDENCY ORDER) ──────────────────────────────────────
 SEED_DIR="$AUGMENTS_DIR/seed"
