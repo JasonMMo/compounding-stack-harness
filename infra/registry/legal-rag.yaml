@@ -55,17 +55,27 @@ blockers:
     owner: engineer
     status: resolved            # Growth-93 (cc0908d): embed-adapter(TEI/e5-base shim) + compose tei 서비스 배선, 11 테스트 PASS
   - id: B3
-    summary: "preview pg_bigm 미포함(옵션A) 수용 여부 — compose 는 이미 옵션A(pgvector only, plainto_tsquery). founder 명시 수용 필요"
+    summary: "preview pg_bigm 미포함(옵션A) — 한국어 substring FTS 품질 저하"
     owner: founder
-    status: open                # 결정대기: 한국어 FTS 품질 저하 수용 = B3 close
+    status: resolved            # Growth-94: founder 수동 수용 대신 자동 degradation 으로 종결.
+                                # 01/02/03 augment 의 pg_bigm 의존부를 pg_available_extensions/
+                                # pg_extension 체크 DO 블록으로 가드 (af4beac/15a2973/ccaa99e) —
+                                # pgvector-only(preview)면 plainto_tsquery 로 자동 폴백, pg_bigm
+                                # 설치된 production self-host 면 풀 bigram FTS 자동 활성. 같은 파일
+                                # 양쪽 동작. preview 한국어 substring 품질 저하는 알려진 trade-off.
   - id: B4
     summary: "VPS 사전 준비: ssh root@187.77.140.157 'mkdir -p /data/legal-rag/ingest'"
     owner: founder
     status: resolved            # Growth-94: founder mkdir + chown 1000:1000 완료 (bind mount source)
   - id: B5
-    summary: "DDL+seed 적용 (실 PG) — 01~08 augment + seed 4종. legal-rag-install.md §4 참조"
+    summary: "DDL+seed 적용 (실 PG) — base(render.py 4-entity) + 01~08 augment + seed 4종"
     owner: founder
-    status: open
+    status: open                # Growth-94: 적용 도구 완비 — deploy/preview/legal-rag.apply-schema.sh
+                                # (원샷: db컨테이너/POSTGRES_USER 자동탐색 → base 렌더 → 01~08 →
+                                # seed → 검증). 베이스 스키마 출처 갭 해소: render.py 를 4 legal
+                                # entity(legal-case,precedent,case-party,case-document)로 스코프
+                                # 렌더 → hr_employee FK 오염 없음(스코프밖 FK 자동 omit). 절차:
+                                # legal-rag-install.md §4-bis. founder VPS 실행 게이트 잔여.
   - id: B6
     summary: "Cloudflare DNS: legal-rag.n9n.co.kr A → 187.77.140.157 추가"
     owner: founder
