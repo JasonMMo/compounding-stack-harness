@@ -38,8 +38,8 @@
 | 디스크 | 10 GB 이상 여유 | 청크+벡터 데이터 성장 고려 |
 | 네트워크 | 사내망 폐쇄 | 임베딩 사이드카는 외부 인터넷 미사용 |
 
-**founder 접근 필요 자산 (사전 확인)**:
-- Coolify SSH key: `~/.ssh/n9n_preview_ed25519`
+**founder 접근 방법 (Coolify preview 경로)**:
+- VPS 접근: Hostinger 브라우저 터널 (Control Panel → Browser Terminal). SSH 공개키 인증은 현재 불가 — `~/.ssh` 키 기반 접근을 시도하지 않는다.
 - VPS IP: `187.77.140.157`
 - API 토큰: `infra/secrets/preview-vps.env` (gitignored 볼트)
 
@@ -108,16 +108,24 @@ postgresql://app_service:<strong-password>@127.0.0.1:5432/legaldb
 
 `DSN` 환경변수에 위 표준형식 DSN 을 설정한 뒤 repo 루트에서 실행한다.
 
-### 4-1. Growth-24 baseline DDL (최초 1회)
+### 4-1. Baseline DDL 렌더링 (최초 1회)
 
-Growth-24 baseline 이 이미 적용된 경우 이 단계를 건너뜀.
+Baseline DDL 은 커밋된 파일이 아니라 `render.py` 가 `catalog.yaml` 에서 실시간 생성한다. 4개 legal 엔티티만 스코핑하므로 HR FK 오염(`hr_employee` 등)이 발생하지 않는다.
 
 ```bash
-# baseline DDL — CTO/engineer 에게 파일 위치 확인 후 적용
-psql "$DSN" -f presets/ddl/baseline/legal_case.sql       # legal_case, legal_case_party
-psql "$DSN" -f presets/ddl/baseline/legal_precedent.sql  # legal_precedent
-# (파일명은 실제 baseline 파일 위치 확인 후 대체)
+# repo root 에서 실행. PyYAML 이 없으면 아래 docker one-liner 를 사용한다.
+python presets/ddl/render.py --dialect postgres \
+  --entities legal-case,precedent,case-party,case-document \
+  | psql "$DSN"
+
+# PyYAML 없이 throwaway 컨테이너로 렌더링 + 즉시 적용:
+docker run --rm -v "$(pwd)":/w -w /w python:3.11-slim \
+  sh -c 'pip install -q pyyaml && python presets/ddl/render.py --dialect postgres \
+  --entities legal-case,precedent,case-party,case-document' \
+  | psql "$DSN"
 ```
+
+> **Coolify / docker exec 경로**: 아래 §4-bis 의 `legal-rag.apply-schema.sh` 를 사용하면 렌더링부터 seed 까지 자동으로 처리된다. 이 단계를 수동으로 실행할 필요가 없다.
 
 ### 4-2. RAG Augment DDL (01 ~ 08, 순서 엄수)
 
@@ -144,6 +152,48 @@ psql "$DSN" -f presets/ddl/augments/legal/seed/seed_precedents.sql
 psql "$DSN" -f presets/ddl/augments/legal/seed/seed_cases.sql          # legal_attorney FK 의존
 psql "$DSN" -f presets/ddl/augments/legal/seed/seed_case_documents.sql
 ```
+
+### 4-bis. Coolify preview 적용 (docker exec 경로) [FOUNDER GATE]
+
+> **Coolify / VPS 에 직접 배포된 컨테이너에 적용할 때는 이 경로를 사용한다.** 위 §4-1 ~ §4-3 은 on-prem (고객사 서버) 참조용이다. Preview 환경에서는 `psql "$DSN"` 을 호스트에서 직접 실행할 수 없으므로 `docker exec` 를 경유한다.
+
+원샷 스크립트 (`deploy/preview/legal-rag.apply-schema.sh`) 가 아래 단계를 모두 자동화한다:
+1. db 컨테이너 자동 탐색 (project UUID `gwpba3e8j8upf9v0swf96wkt` prefix 기준, hash suffix 는 재배포마다 변경되므로 절대 하드코딩 금지)
+2. `POSTGRES_USER` 자동 탐색 (`docker exec printenv`)
+3. base DDL 렌더링 (throwaway python:3.11-slim 컨테이너 사용 — 호스트 PyYAML 불필요)
+4. 01~08 augment + 4개 seed 를 지정 순서로 적용 (`-v ON_ERROR_STOP=1` 로 오류 즉시 중단)
+5. 카운트 검증 + PASS/FAIL 출력
+
+```bash
+# VPS 호스트 Hostinger 브라우저 터널에서 실행 (repo 루트에 클론되어 있어야 함)
+cd /path/to/compounding-stack-harness   # repo 루트
+bash deploy/preview/legal-rag.apply-schema.sh
+
+# db 컨테이너 이름을 수동 지정할 경우 (자동 탐색 실패 시):
+bash deploy/preview/legal-rag.apply-schema.sh db-gwpba3e8j8upf9v0swf96wkt-<hash>
+```
+
+예상 출력 (PASS 시):
+```
+[1/9] Repo root: /path/to/repo
+[2/9] DB container (auto-discovered): db-gwpba3e8j8upf9v0swf96wkt-115816635412
+[3/9] POSTGRES_USER: <user>
+[4/9] Rendering base DDL via throwaway python container ...
+...
+  PASS  attorneys: 3
+  PASS  cases: 12
+  PASS  precedents: 22
+  PASS  parties: 29
+  PASS  documents: 15
+  PASS  pg_bigm: correctly ABSENT (preview auto-degraded to plainto_tsquery)
+  PASS  vector extension: present
+  PASS  legal_case RLS: relrowsecurity=t, relforcerowsecurity=t
+==========================================
+  ALL CHECKS PASSED. Schema + seed ready.
+==========================================
+```
+
+스크립트는 멱등(idempotent)하다 — 부분 실패 후 수정하고 재실행해도 안전하다.
 
 ### 4-4. Demo docs ingest (청크 + 벡터 생성)
 
@@ -192,28 +242,24 @@ SELECT COUNT(*) FROM legal_case;  -- 기대: 12
 
 **외부 노출 금지 (하드닝 #2)**: `LEGAL_RAG_EMBED_URL` 은 반드시 localhost 또는 사내망 주소여야 한다. 인터넷 라우팅 주소 사용 시 법률 문서가 외부 서버로 전송된다.
 
-사이드카는 **2단 구성**이다 (Growth-93): TEI(임베딩 백엔드) + thin adapter(`services/legal-rag/embed-adapter/` — TEI 응답을 서비스 contract 로 변환). 서비스는 adapter 만 바라보고(`LEGAL_RAG_EMBED_URL`), adapter 가 내부에서 TEI 를 호출한다. preview 는 `deploy/preview/legal-rag.compose.yml` 가 두 컨테이너를 함께 기동하므로 아래 수동 기동은 **on-prem 단독 설치용** 참조다.
+**Growth-94 피벗**: TEI (HuggingFace text-embeddings-inference cpu-1.5) 는 제거되었다. TEI 의 Rust `hf-hub` 다운로더가 VPS 환경에서 `'relative URL without a base'` 오류로 실패(확인됨)하였기 때문이다. 현재 embed 사이드카는 **단일 컨테이너** (`services/legal-rag/embed-adapter/`) 로, `sentence-transformers` (intfloat/multilingual-e5-base, 768-dim) 를 이미지 빌드 시점에 내장(`COPY model/`)한다. 런타임에서는 `HF_HUB_OFFLINE=1` 로 설정되어 외부 다운로드를 차단한다.
+
+**on-prem 단독 설치용 수동 기동 참조** (Coolify preview 는 `deploy/preview/legal-rag.compose.yml` 이 자동 기동):
 
 ```bash
-# 1) TEI 백엔드 (intfloat/multilingual-e5-base, 768-dim, CPU) — 내부 전용
-docker run -d \
-  --name legal-tei \
-  -v legal-tei-data:/data \
-  ghcr.io/huggingface/text-embeddings-inference:cpu-1.5 \
-  --model-id intfloat/multilingual-e5-base
-# 첫 기동 시 모델 ~1.1GB 다운로드 — /health 통과까지 수 분 소요
-
-# 2) embed-adapter (서비스 contract 노출) — 내부 전용, TEI 를 내부 호출
+# embed-adapter (모델 내장 단일 컨테이너) — 내부 전용
 docker run -d \
   --name legal-embed-sidecar \
-  -e TEI_BASE_URL="http://legal-tei:80" \
+  -e HF_HUB_OFFLINE=1 \
   -e EMBED_MODEL_NAME="intfloat/multilingual-e5-base" \
-  services/legal-rag/embed-adapter   # 또는 빌드한 이미지 태그
+  <embed-adapter-image-tag>   # Coolify 빌드 이미지 태그 또는 로컬 빌드
 
-# 헬스체크 (adapter)
+# 헬스체크
 curl http://localhost:8080/health
 # 기대: 200 OK {"status":"ok"}
 ```
+
+> **참고**: 첫 이미지 빌드 시 모델 (~1.1 GB) 이 이미지에 포함된다. 빌드는 느리지만 런타임 다운로드가 없어 사내망 폐쇄 환경에서 안정적이다.
 
 > **프리픽스 LOCK (Growth-93, QA PASS)**: adapter 는 e5 비대칭 프리픽스를 적용한다 — `/embed`(검색)=`query: `, `/embed/batch`(인제스트)=`passage: `. **첫 인제스트 후 `EMBED_QUERY_PREFIX`/`EMBED_PASSAGE_PREFIX` 변경 금지** (전 코퍼스 재임베딩 강제). caller-split 불변식은 가드 G-87 로 강제.
 
@@ -482,9 +528,10 @@ SELECT
   (SELECT COUNT(*) FROM legal_attorney)       AS attorneys,
   (SELECT COUNT(*) FROM legal_case)           AS cases,
   (SELECT COUNT(*) FROM legal_precedent)      AS precedents,
+  (SELECT COUNT(*) FROM legal_case_party)     AS parties,
   (SELECT COUNT(*) FROM legal_case_document)  AS documents;
 "
-# 기대: attorneys=3, cases=12, precedents=22, documents=15
+# 기대: attorneys=3, cases=12, precedents=22, parties=29, documents=15
 ```
 
 ### L4 — 서비스 e2e (uvicorn 기동 후)
