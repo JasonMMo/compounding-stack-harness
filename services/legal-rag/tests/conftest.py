@@ -20,6 +20,10 @@ _DEFAULTS = {
     "LEGAL_RAG_INGEST_ROOT": "/tmp",
     "LEGAL_RAG_JWT_SECRET": "test",
     "LEGAL_RAG_SERVICE_TOKEN": "test",
+    # Required by cfg.load() which is now called at api.py import time
+    # (prod-docs guard needs settings before FastAPI() constructor runs).
+    "LEGAL_RAG_DB_DSN": "postgresql://u:p@localhost:5432/d",
+    "LEGAL_RAG_EMBED_URL": "http://localhost:8080",
 }
 for _k, _v in _DEFAULTS.items():
     os.environ.setdefault(_k, _v)
