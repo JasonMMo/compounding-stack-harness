@@ -127,7 +127,7 @@ docker run --rm -v "$(pwd)":/w -w /w python:3.11-slim \
 
 > **Coolify / docker exec 경로**: 아래 §4-bis 의 `legal-rag.apply-schema.sh` 를 사용하면 렌더링부터 seed 까지 자동으로 처리된다. 이 단계를 수동으로 실행할 필요가 없다.
 
-### 4-2. RAG Augment DDL (01 ~ 08, 순서 엄수)
+### 4-2. RAG Augment DDL (01 ~ 09, 순서 엄수)
 
 ```bash
 export DSN="postgresql://app_service:<pw>@127.0.0.1:5432/legaldb"
@@ -139,7 +139,8 @@ psql "$DSN" -f presets/ddl/augments/legal/04_case_document_augment.sql
 psql "$DSN" -f presets/ddl/augments/legal/05_case_party_rls.sql
 psql "$DSN" -f presets/ddl/augments/legal/06_legal_document_chunk.sql
 psql "$DSN" -f presets/ddl/augments/legal/07_rag_query_log.sql
-psql "$DSN" -f presets/ddl/augments/legal/08_legal_attorney.sql   # 반드시 마지막
+psql "$DSN" -f presets/ddl/augments/legal/08_legal_attorney.sql   # legal_attorney 테이블
+psql "$DSN" -f presets/ddl/augments/legal/09_grants.sql           # app_user SELECT/INSERT 권한 (RLS 발효 전제)
 ```
 
 **주의**: 01 이 롤 생성을 포함한다. 슈퍼유저 또는 CREATEROLE 권한이 있는 계정으로 실행해야 한다.
@@ -161,7 +162,7 @@ psql "$DSN" -f presets/ddl/augments/legal/seed/seed_case_documents.sql
 1. db 컨테이너 자동 탐색 (project UUID `gwpba3e8j8upf9v0swf96wkt` prefix 기준, hash suffix 는 재배포마다 변경되므로 절대 하드코딩 금지)
 2. `POSTGRES_USER` 자동 탐색 (`docker exec printenv`)
 3. base DDL 렌더링 (throwaway python:3.11-slim 컨테이너 사용 — 호스트 PyYAML 불필요)
-4. 01~08 augment + 4개 seed 를 지정 순서로 적용 (`-v ON_ERROR_STOP=1` 로 오류 즉시 중단)
+4. 01~09 augment + 4개 seed 를 지정 순서로 적용 (`-v ON_ERROR_STOP=1` 로 오류 즉시 중단)
 5. 카운트 검증 + PASS/FAIL 출력
 
 ```bash
