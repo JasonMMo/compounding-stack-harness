@@ -1,0 +1,206 @@
+# deploy/preview/legal-rag.compose.yml
+# Coolify dockercompose preview — profile: legal-rag
+# Build context: repo root (Coolify clones whole repo, build context = clone root)
+#
+# Domain: set via Coolify API PATCH docker_compose_domains
+#   [{"name":"app","domain":"https://legal-rag.n9n.co.kr"}]
+# Coolify deployment:
+#   build_pack: dockercompose
+#   docker_compose_location: /deploy/preview/legal-rag.compose.yml
+#   git_repository: git@github.com:JasonMMo/compounding-stack-harness.git
+#   git_branch: master
+#   private_key_uuid: s127pafarr46wlu1r2mre2te
+#
+# 3-container topology:
+#   db    — postgres+pgvector (internal only, no external port)
+#   embed — embedding sidecar (internal only, no external port)
+#   app   — FastAPI legal-rag (Traefik-routed, TLS)
+#
+# SECURITY:
+#   - db and embed are NOT exposed outside the Coolify uuid-net.
+#   - All secrets are injected via Coolify env-var panel (${...} expansion).
+#     Plain-text values in this file are FORBIDDEN.
+#   - LEGAL_RAG_EMBED_URL points to the internal Docker service name (http://embed:8080).
+#     This satisfies hardening #2: embed never reachable from outside.
+
+services:
+
+  # ── DB: postgres + pgvector ──────────────────────────────────────────────────
+  # Image: pgvector/pgvector:pg16 — official pgvector image, pgvector pre-installed.
+  # pg_bigm is NOT included in pgvector/pgvector. Two options:
+  #   A) Use this image + apply pg_bigm via Dockerfile custom build (see TODO below).
+  #   B) Skip pg_bigm for preview tier — FTS falls back to plainto_tsquery without
+  #      bigram index (Korean subword matching degraded but functional for demo).
+  # TODO [ENGINEER]: decide A vs B. If A: create services/legal-rag/Dockerfile.db
+  #   FROM pgvector/pgvector:pg16 + apt-get install pg_bigm or source build.
+  #   Then replace `image:` below with `build: context/dockerfile` reference.
+  db:
+    image: pgvector/pgvector:pg16
+    # TODO [FOUNDER/ENGINEER]: if pg_bigm is required for preview quality,
+    # replace the image line above with a build block:
+    #   build:
+    #     context: .
+    #     dockerfile: services/legal-rag/Dockerfile.db
+    # Dockerfile.db content (engineer to create):
+    #   FROM pgvector/pgvector:pg16
+    #   RUN apt-get update && apt-get install -y postgresql-server-dev-16 build-essential curl \
+    #       && curl -L https://github.com/pgbigm/pg_bigm/archive/refs/tags/v1.2-20200228.tar.gz \
+    #          | tar xz && cd pg_bigm-1.2-20200228 \
+    #       && make USE_PGXS=1 && make USE_PGXS=1 install \
+    #       && apt-get purge -y build-essential postgresql-server-dev-16 && rm -rf /var/lib/apt/lists/*
+    environment:
+      POSTGRES_DB: legaldb
+      # Credentials injected by Coolify vault — never hardcoded here.
+      # Set these in Coolify environment variables panel:
+      #   POSTGRES_USER     → app_service
+      #   POSTGRES_PASSWORD → <strong password from vault>
+      POSTGRES_USER: ${LEGAL_RAG_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LEGAL_RAG_POSTGRES_PASSWORD}
+    volumes:
+      - legal-rag-pgdata:/var/lib/postgresql/data
+    # Internal network only — no ports exposed to host or external.
+    # Coolify attaches all services to its uuid-net; db is reachable by app as 'db:5432'.
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LEGAL_RAG_POSTGRES_USER} -d legaldb"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Embed: embedding sidecar ──────────────────────────────────────────────────
+  # CONTRACT (from embed_client.py — must be satisfied exactly):
+  #   POST /embed        body: {"text": str}
+  #                      resp: {"embedding": [float x 768], "model": str}
+  #   POST /embed/batch  body: {"texts": [str, ...]}
+  #                      resp: {"embeddings": [[float x 768], ...], "model": str}
+  #   GET  /health       resp: 200 OK (any body)
+  #   EMBED_DIM = 768 (hard-validated by EmbedClient._validate_vector)
+  #
+  # OFF-THE-SHELF IMAGE ASSESSMENT:
+  #   - Ollama: serves /api/embeddings (NOT /embed), returns {"embedding": [float...]}
+  #     with nomic-embed-text (768-dim). Paths and request body format DO NOT MATCH.
+  #     Would need a thin adapter.
+  #   - HuggingFace TEI (Text Embeddings Inference): serves /embed (matches!), returns
+  #     [[float...]] array directly (NOT {"embedding":...} object). Does NOT match.
+  #     768-dim with a compatible model (e.g. intfloat/multilingual-e5-base).
+  #     Would need a thin adapter for response shape.
+  #   - embeddinggemma (referenced in embed_client.py docstring as intended sidecar):
+  #     No public Docker Hub image found. Likely a custom/internal image. UNKNOWN.
+  #
+  # VERDICT: NO off-the-shelf image satisfies the contract as-is.
+  #   - /embed path: TEI matches, Ollama does not.
+  #   - Response body shape {"embedding": [...]} : neither TEI nor Ollama matches exactly.
+  #   - /embed/batch with {"texts": [...]} body: TEI matches path but not response key name.
+  #   THIN ADAPTER REQUIRED (engineer follow-up).
+  #
+  # TODO [ENGINEER — BLOCKER]: Build a thin FastAPI adapter (services/legal-rag/embed-adapter/)
+  #   that wraps TEI or Ollama and exposes exactly:
+  #     POST /embed        {"text":str} → {"embedding":[float x 768],"model":str}
+  #     POST /embed/batch  {"texts":[str]} → {"embeddings":[[float x 768],...],"model":str}
+  #     GET  /health       → 200 OK
+  #   Recommended backend: TEI with intfloat/multilingual-e5-base (768-dim, Korean+EN).
+  #   Adapter Dockerfile: FROM python:3.11-slim, thin httpx/fastapi shim.
+  #   Until adapter image exists, replace placeholder below with actual image+build.
+  embed:
+    # PLACEHOLDER — replace with actual image once thin adapter is built.
+    # Example if using TEI as backend (adapter calls TEI internally):
+    #   build:
+    #     context: services/legal-rag/embed-adapter
+    #     dockerfile: Dockerfile
+    #   environment:
+    #     TEI_BASE_URL: http://tei:8081
+    # For now this will cause a startup failure — intentional until adapter is ready.
+    image: busybox:latest   # TODO [ENGINEER]: replace with embed adapter image
+    command: >
+      sh -c "echo '[embed-placeholder] Embedding sidecar not yet provisioned.
+      Engineer must build thin adapter — see compose TODO above. Exiting.' && exit 1"
+    # Internal network only — no external port exposure (hardening #2).
+    restart: "no"           # placeholder: do not restart-loop
+    healthcheck:
+      test: ["CMD-SHELL", "exit 1"]
+      interval: 30s
+      retries: 1
+
+  # ── App: FastAPI legal-rag ────────────────────────────────────────────────────
+  # Build context: repo root. Dockerfile must exist at services/legal-rag/Dockerfile.
+  # TODO [ENGINEER — BLOCKER]: Create services/legal-rag/Dockerfile.
+  #   Minimal example:
+  #     FROM python:3.11-slim
+  #     WORKDIR /app
+  #     COPY services/legal-rag/requirements.txt .
+  #     RUN pip install --no-cache-dir -r requirements.txt
+  #     COPY services/legal-rag/ .
+  #     CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+  app:
+    build:
+      context: .
+      dockerfile: services/legal-rag/Dockerfile
+    environment:
+      # Required secrets — set in Coolify environment variables panel (never hardcode).
+      LEGAL_RAG_DB_DSN: ${LEGAL_RAG_DB_DSN}
+      LEGAL_RAG_JWT_SECRET: ${LEGAL_RAG_JWT_SECRET}
+      LEGAL_RAG_SERVICE_TOKEN: ${LEGAL_RAG_SERVICE_TOKEN}
+      LEGAL_RAG_INGEST_ROOT: ${LEGAL_RAG_INGEST_ROOT}
+      # Embed sidecar — internal Docker service name (hardening #2: never external URL).
+      LEGAL_RAG_EMBED_URL: "http://embed:8080"
+      # Deployment mode: disables /docs /redoc /openapi.json.
+      LEGAL_RAG_ENV: "prod"
+      # Optional tuning (defaults from config.py are fine for preview).
+      LEGAL_RAG_EMBED_MODEL_VERSION: ${LEGAL_RAG_EMBED_MODEL_VERSION:-embeddinggemma-768}
+      LEGAL_RAG_CHUNK_TOKENS: ${LEGAL_RAG_CHUNK_TOKENS:-500}
+      LEGAL_RAG_CHUNK_OVERLAP: ${LEGAL_RAG_CHUNK_OVERLAP:-50}
+      LEGAL_RAG_RRF_K: ${LEGAL_RAG_RRF_K:-60}
+      LEGAL_RAG_TOP_K: ${LEGAL_RAG_TOP_K:-10}
+      LEGAL_RAG_FTS_LIMIT: ${LEGAL_RAG_FTS_LIMIT:-100}
+      LEGAL_RAG_ANN_LIMIT: ${LEGAL_RAG_ANN_LIMIT:-100}
+      LEGAL_RAG_POOL_MIN: ${LEGAL_RAG_POOL_MIN:-2}
+      LEGAL_RAG_POOL_MAX: ${LEGAL_RAG_POOL_MAX:-10}
+      PYTHONIOENCODING: "utf-8"
+    volumes:
+      # Ingest root: bind-mount from host path set by LEGAL_RAG_INGEST_ROOT.
+      # Host path must exist before deploy. Coolify creates the Traefik uuid-net only;
+      # bind mounts require the host directory to exist.
+      # Pre-create on VPS: ssh root@187.77.140.157 'mkdir -p /data/legal-rag/ingest'
+      - type: bind
+        source: /data/legal-rag/ingest
+        target: /data/legal-docs
+        read_only: false
+    labels:
+      # ── Main router: legal-rag.n9n.co.kr → all paths ─────────────────────────
+      - "traefik.enable=true"
+      - "traefik.http.routers.legal-rag.rule=Host(`legal-rag.n9n.co.kr`)"
+      - "traefik.http.routers.legal-rag.entrypoints=https"
+      - "traefik.http.routers.legal-rag.tls=true"
+      - "traefik.http.routers.legal-rag.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.legal-rag.service=legal-rag"
+      - "traefik.http.services.legal-rag.loadbalancer.server.port=8000"
+      # ── /auth/login router with rate-limit middleware (hardening #7) ──────────
+      # Separate router with higher priority catches /auth/login before catch-all.
+      # Middleware: ~5 req/min per IP, burst 10. Prevents brute-force.
+      - "traefik.http.middlewares.legal-rag-ratelimit.ratelimit.average=5"
+      - "traefik.http.middlewares.legal-rag-ratelimit.ratelimit.burst=10"
+      - "traefik.http.middlewares.legal-rag-ratelimit.ratelimit.period=1m"
+      - "traefik.http.middlewares.legal-rag-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth=1"
+      - "traefik.http.routers.legal-rag-login.rule=Host(`legal-rag.n9n.co.kr`) && PathPrefix(`/auth/login`)"
+      - "traefik.http.routers.legal-rag-login.entrypoints=https"
+      - "traefik.http.routers.legal-rag-login.tls=true"
+      - "traefik.http.routers.legal-rag-login.service=legal-rag"
+      - "traefik.http.routers.legal-rag-login.priority=100"
+      - "traefik.http.routers.legal-rag-login.middlewares=legal-rag-ratelimit"
+    depends_on:
+      db:
+        condition: service_healthy
+      embed:
+        condition: service_started   # placeholder: embed healthcheck always fails until real image
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  legal-rag-pgdata:
+    driver: local
