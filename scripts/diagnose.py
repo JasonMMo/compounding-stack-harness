@@ -1199,6 +1199,104 @@ def g14_intake_pipeline_health(
     )
 
 
+def g87_embed_caller_split() -> GuardResult:
+    """G-87 / Growth-93 — legal-rag embed caller split: asymmetric e5 prefix invariant.
+
+    The legal-rag embed sidecar uses Microsoft e5 asymmetric prefixes:
+      - Single embed  (.embed)       → "query: "   prefix  — search queries only.
+      - Batch embed   (.embed_batch) → "passage: " prefix  — ingest passages only.
+
+    Callers MUST stay one-directional:
+      - api.py  (/search path)  : ONLY calls .embed()      — NEVER .embed_batch()
+      - ingest.py               : ONLY calls .embed_batch() — NEVER a bare .embed()
+
+    Failure mode is SILENT: wrong prefix produces no error, only degraded retrieval,
+    and the damage is irreversible after ingest. QA mandated this machine guard
+    (Growth-93) so the constraint is machine-enforced, not just convention.
+
+    Scope: services/legal-rag/ source files only (NOT tests).
+    Returns SKIP if services/legal-rag/ does not exist (safe in repos without this vertical).
+
+    Rules implemented:
+      (a) FAIL if api.py contains a .embed_batch( call (search path must never batch).
+      (b) FAIL if ingest.py contains a bare .embed( call that is NOT .embed_batch(
+          (ingest must never single-embed). Regex carefully avoids matching
+          .embed_batch( as a hit for .embed( and ignores imports/class definitions.
+    """
+    legal_rag_dir = REPO_ROOT / "services" / "legal-rag"
+    if not legal_rag_dir.exists():
+        return GuardResult(
+            "G-87", "embed caller split (e5 asymmetric prefix)", "Growth-93",
+            status="SKIP",
+            notes="services/legal-rag/ not found — guard activates once legal-rag vertical lands.",
+        )
+
+    violations: list[str] = []
+
+    # ── (a) api.py must NOT call .embed_batch( ────────────────────────────────
+    api_path = legal_rag_dir / "api.py"
+    if api_path.exists():
+        api_lines = api_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        # Pattern: .embed_batch( as a method call on any object.
+        # Must not appear in api.py (search path).
+        _batch_call_re = re.compile(r"\.\s*embed_batch\s*\(")
+        for lineno, line in enumerate(api_lines, start=1):
+            stripped = line.strip()
+            # Skip comment lines
+            if stripped.startswith("#"):
+                continue
+            if _batch_call_re.search(line):
+                rel = api_path.relative_to(REPO_ROOT)
+                violations.append(
+                    f"{rel}:{lineno} — .embed_batch( call found in search path "
+                    f"(api.py must only use .embed() with 'query:' prefix, never batch)."
+                )
+    else:
+        violations.append("services/legal-rag/api.py not found (expected source file).")
+
+    # ── (b) ingest.py must NOT call bare .embed( (only .embed_batch( allowed) ─
+    ingest_path = legal_rag_dir / "ingest.py"
+    if ingest_path.exists():
+        ingest_lines = ingest_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        # Neutralize .embed_batch( first, then any remaining .embed( is a bare
+        # single-embed violation. Robust against whitespace variants.
+        _batch_embed_re = re.compile(r"\.\s*embed_batch\s*\(")
+
+        for lineno, line in enumerate(ingest_lines, start=1):
+            stripped = line.strip()
+            # Skip comment lines
+            if stripped.startswith("#"):
+                continue
+            # Skip import statements and class/function definitions
+            if stripped.startswith(("import ", "from ", "class ", "def ")):
+                continue
+            # Check for a method call form: <object>.embed(  but not .embed_batch(
+            # Strategy: look for .embed( that is NOT part of .embed_batch(
+            # Replace all .embed_batch( occurrences to neutralize them, then
+            # check for remaining .embed( patterns.
+            neutralized = _batch_embed_re.sub(".EMBED_BATCH_SAFE(", line)
+            # Now look for .embed( in the neutralized line (method call form only)
+            if re.search(r"\.\s*embed\s*\(", neutralized):
+                rel = ingest_path.relative_to(REPO_ROOT)
+                violations.append(
+                    f"{rel}:{lineno} — bare .embed( call found in ingest path "
+                    f"(ingest.py must only use .embed_batch() with 'passage:' prefix, never single-embed)."
+                )
+    else:
+        violations.append("services/legal-rag/ingest.py not found (expected source file).")
+
+    return GuardResult(
+        "G-87", "embed caller split (e5 asymmetric prefix)", "Growth-93",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=(
+            "Invariant: api.py (search) → .embed() only; ingest.py → .embed_batch() only. "
+            "Wrong prefix = silent retrieval degradation + irreversible ingest corruption. "
+            "Scope: services/legal-rag/api.py + ingest.py source only (tests excluded)."
+        ),
+    )
+
+
 def g15_marketing_site_visual_gate(
     cases_dir: Path | None = None,
     ui_checks_dir: Path | None = None,
@@ -1403,6 +1501,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-13": g13_subagent_output_protocol_wired,
     "G-14": g14_intake_pipeline_health,
     "G-15": g15_marketing_site_visual_gate,
+    "G-87": g87_embed_caller_split,
 }
 
 
