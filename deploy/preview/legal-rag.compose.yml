@@ -11,14 +11,13 @@
 #   git_branch: master
 #   private_key_uuid: s127pafarr46wlu1r2mre2te
 #
-# 4-container topology:
+# 3-container topology:
 #   db    — postgres+pgvector (internal only, no external port)
-#   tei   — HuggingFace TEI model server (internal only, no external port)
-#   embed — thin FastAPI shim (internal only, no external port)
+#   embed — local sentence-transformers FastAPI (model baked in, internal only)
 #   app   — FastAPI legal-rag (Traefik-routed, TLS)
 #
 # SECURITY:
-#   - db, tei, and embed are NOT exposed outside the Coolify uuid-net.
+#   - db and embed are NOT exposed outside the Coolify uuid-net.
 #   - All secrets are injected via Coolify env-var panel (${...} expansion).
 #     Plain-text values in this file are FORBIDDEN.
 #   - LEGAL_RAG_EMBED_URL points to the internal Docker service name (http://embed:8080).
@@ -46,29 +45,9 @@ services:
       retries: 5
       start_period: 30s
 
-  # ── TEI: HuggingFace Text Embeddings Inference ────────────────────────────────
-  # CPU-only variant for preview VPS (no GPU).
-  # Tag: cpu-1.5 — latest stable CPU release as of 2026-06.
-  #   Image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
-  # Model: intfloat/multilingual-e5-base (768-dim, Korean+English).
-  # TEI downloads the model from HuggingFace Hub on first start; subsequent
-  # starts use the local cache in the tei-data volume.
-  # Internal only — no external port.
-  tei:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
-    command: ["--model-id", "intfloat/multilingual-e5-base"]
-    volumes:
-      - tei-data:/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:80/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s   # model download can take a few minutes on first boot
-
-  # ── Embed: thin FastAPI shim (embed-adapter) ──────────────────────────────────
-  # Translates legal-rag embed contract → TEI native API.
+  # ── Embed: local sentence-transformers (embed-adapter) ────────────────────────
+  # Model intfloat/multilingual-e5-base (768-dim, Korean+English) is baked into
+  # the image at build time.  Runs fully offline at runtime (HF_HUB_OFFLINE=1).
   # CONTRACT (from embed_client.py — must be satisfied exactly):
   #   POST /embed        body: {"text": str}
   #                      resp: {"embedding": [float x 768], "model": str}
@@ -82,20 +61,16 @@ services:
       context: services/legal-rag/embed-adapter
       dockerfile: Dockerfile
     environment:
-      TEI_BASE_URL: "http://tei:80"
       EMBED_MODEL_NAME: "intfloat/multilingual-e5-base"
-      # EMBED_PREFIX default is "query: " (symmetric — see embed-adapter/README.md).
+      # EMBED_QUERY_PREFIX / EMBED_PASSAGE_PREFIX defaults are correct.
       # Change only after QA/domain-expert sign-off + full re-embed.
     restart: unless-stopped
-    depends_on:
-      tei:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 5
+      start_period: 60s   # model load (baked) takes ~10-20s; generous margin
 
   # ── App: FastAPI legal-rag ────────────────────────────────────────────────────
   # Build context: repo root. Dockerfile: services/legal-rag/Dockerfile.
@@ -167,6 +142,4 @@ services:
 
 volumes:
   legal-rag-pgdata:
-    driver: local
-  tei-data:
     driver: local
