@@ -68,7 +68,12 @@ if _has_gap3:
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 def _make_mock_conn(source_exists: bool = True):
-    """Build a mock psycopg AsyncConnection."""
+    """Build a mock psycopg AsyncConnection mirroring the real psycopg3 API.
+
+    Real API:
+      - conn.execute(sql, params)  → coroutine returning a cursor  (shortcut, real)
+      - conn.cursor()              → async context manager → cursor with .executemany
+    """
     conn = MagicMock()
 
     async def _execute(sql, params=None):
@@ -80,7 +85,24 @@ def _make_mock_conn(source_exists: bool = True):
         return cursor
 
     conn.execute = AsyncMock(side_effect=_execute)
-    conn.executemany = AsyncMock(return_value=None)
+
+    # cursor() must be an async context manager whose __aenter__ yields a cursor
+    mock_cursor = MagicMock()
+    mock_cursor.executemany = AsyncMock(return_value=None)
+
+    async def _cursor_aenter():
+        return mock_cursor
+
+    async def _cursor_aexit(*args):
+        pass
+
+    cm = MagicMock()
+    cm.__aenter__ = AsyncMock(side_effect=_cursor_aenter)
+    cm.__aexit__ = AsyncMock(side_effect=_cursor_aexit)
+    conn.cursor = MagicMock(return_value=cm)
+
+    # Expose the inner cursor so tests can assert on it
+    conn._mock_cursor = mock_cursor
     return conn
 
 
@@ -122,7 +144,7 @@ async def test_ingest_happy_path_precedent(tmp_path):
     )
 
     assert result >= 1
-    assert conn.executemany.called
+    assert conn._mock_cursor.executemany.called
     assert embedder.embed_batch.called
     for call_args in embedder.embed_batch.call_args_list:
         texts = call_args[0][0]
@@ -148,7 +170,14 @@ async def test_ingest_case_document_status_transitions(tmp_path):
         return cursor
 
     conn.execute = AsyncMock(side_effect=_execute)
-    conn.executemany = AsyncMock(return_value=None)
+
+    _cur2 = MagicMock()
+    _cur2.executemany = AsyncMock(return_value=None)
+    _cm2 = MagicMock()
+    _cm2.__aenter__ = AsyncMock(return_value=_cur2)
+    _cm2.__aexit__ = AsyncMock(return_value=None)
+    conn.cursor = MagicMock(return_value=_cm2)
+
     embedder = _make_mock_embedder()
 
     await ingest_file(
@@ -217,9 +246,9 @@ async def test_ingest_batch_upsert_rows_correct(tmp_path):
         batch_size=5,
     )
 
-    assert conn.executemany.called
+    assert conn._mock_cursor.executemany.called
     all_rows: list = []
-    for c in conn.executemany.call_args_list:
+    for c in conn._mock_cursor.executemany.call_args_list:
         all_rows.extend(c.args[1])
 
     for row in all_rows:
