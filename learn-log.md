@@ -409,3 +409,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **누적 자산**: self-host 설치 런북(전 법무법인 재사용) · LEGAL_RAG_ENV prod 토글 · /health/detail 인증분리 패턴 · 하드닝 단위테스트 7종. 커밋 ae13529~a051cef(6 파일 per-file).
 - **Open loops**: #8 실 배포·라이브검증(L2/L4/RLS pytest -m postgres) = founder 인프라 게이트 잔존 · WTP 인터뷰 3~5곳(PM). settings.json `${CLAUDE_PROJECT_DIR}` 커밋 여부 founder 판단(미해결).
 - **결정 메모리**: [[legal-rag-mvp-build]]
+
+### Growth-93 (2026-06-19) — 법무 RAG 배포차단 B1/B2 클로즈: 앱 Dockerfile + 임베딩 어댑터(TEI/e5) (M3 vertical)
+
+- **인격/Axis/Milestone**: CTO(임베딩 백엔드 결정·caller-split 검증→비대칭 프리픽스 교정·stale Pyright 반증·per-file 커밋) + Engineer(app Dockerfile·embed-adapter shim·compose 실이미지 배선) / **backend(서비스)·creater(compose)** / M3
+- **1줄 rollup**: B1 `services/legal-rag/Dockerfile`(python:3.11-slim·비루트·uvicorn) + B2 `services/legal-rag/embed-adapter/`(TEI `intfloat/multilingual-e5-base` 768-dim 래핑 thin FastAPI, embed_client.py 계약 바이트일치, 11 테스트) + B3 compose busybox placeholder→실 embed+tei 서비스 배선. 폐기된 embeddinggemma(공개이미지 없음) 대체.
+- **정직성/thesis**: 로컬·클라우드API비0·768 thesis 유지(TEI 로컬 CPU 서빙, 외부호출 0). 실 배포(시크릿볼트·DDL적용·DNS·Coolify)는 전부 [FOUNDER GATE] — engineer는 빌드 산출물만, 자격증명 무접근.
+- **함정/교훈**: e5 비대칭성 자유획득 — caller 사용처 1방향 분리 검증(`api.py:154` embed()=검색쿼리, `ingest.py:289` embed_batch()=인제스트 패시지)으로 엔드포인트가 query/passage를 인코딩 → `/embed`="query: "·`/embed/batch`="passage: " 계약변경0으로 풀 검색품질 회복(첫 시도의 대칭 haircut 교정). 진단 stale 식별: Pyright가 편집前 스냅샷 기준 EMBED_PREFIX 미정의·prefix 인자누락 3건 플래그 → 실파일 read로 161/179행 `prefix=` 명시 확인, false. `.patched` 재발 0.
+- **누적 자산**: 앱 컨테이너 Dockerfile · 재사용 embed-adapter(TEI shim, 전 벡터검색 버티컬 재사용) · 비대칭 프리픽스 caller-split 불변식(코드리뷰 가드) · preview compose 3→4컨테이너(db+embed+tei+app). 커밋 3faf8c7~cc0908d(10 파일 per-file).
+- **Open loops**: 비대칭 프리픽스 선택 QA/domain-expert 사인오프(인제스트 개시 前) · 실 배포·라이브검증(pytest -m postgres) = founder 인프라 게이트 · WTP 인터뷰 3~5곳(PM). TEI 첫부팅 모델다운로드(~1.1GB) start_period 모니터.
+- **결정 메모리**: [[legal-rag-mvp-build]]
