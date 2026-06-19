@@ -78,6 +78,11 @@ class Settings:
     """Static bearer token for /ingest endpoint (LEGAL_RAG_SERVICE_TOKEN).
     Required. Must match X-Service-Token header on all ingest requests."""
 
+    env: str
+    """Deployment environment: 'dev' (default) | 'prod'.
+    In prod mode FastAPI auto-docs (/docs, /redoc, /openapi.json) are disabled.
+    Set via LEGAL_RAG_ENV environment variable."""
+
 
 def load() -> Settings:
     """Load settings from environment. Call once at startup."""
@@ -98,4 +103,5 @@ def load() -> Settings:
         ingest_root=_require("LEGAL_RAG_INGEST_ROOT"),
         jwt_secret=_require("LEGAL_RAG_JWT_SECRET"),
         service_token=_require("LEGAL_RAG_SERVICE_TOKEN"),
+        env=_optional("LEGAL_RAG_ENV", "dev").lower(),
     )
