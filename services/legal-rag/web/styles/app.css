@@ -43,6 +43,11 @@ a:hover {
   text-decoration: underline;
 }
 
+/* HTML hidden 속성이 author display 규칙에 덮이지 않도록 보장 (화면/패널/배너 토글의 단일 진실) */
+[hidden] {
+  display: none !important;
+}
+
 /* ══════════════════════════════════════════════
    2. 레이아웃 루트
 ══════════════════════════════════════════════ */
