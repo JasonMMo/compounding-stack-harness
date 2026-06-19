@@ -50,7 +50,7 @@ fi
 echo "[3/6] Logging in as 이준호 (lee.junho@example-lawfirm.kr) ..."
 
 # Password demo1234! lives only in the python string literal below — never in bash.
-JUNHO_TOKEN="$(docker exec "$APP_CONTAINER" python - <<'PY'
+JUNHO_TOKEN="$(docker exec -i "$APP_CONTAINER" python - <<'PY'
 import urllib.request
 import urllib.error
 import json
@@ -92,7 +92,7 @@ echo "  OK  JWT obtained for 이준호"
 # ── 4. LOGIN — 박서연 (sees c007-c012 only) ───────────────────────────────────
 echo "[4/6] Logging in as 박서연 (park.seoyeon@example-lawfirm.kr) ..."
 
-SEOYEON_TOKEN="$(docker exec "$APP_CONTAINER" python - <<'PY'
+SEOYEON_TOKEN="$(docker exec -i "$APP_CONTAINER" python - <<'PY'
 import urllib.request
 import urllib.error
 import json
@@ -144,7 +144,7 @@ PASS=true
 echo "  [A] 이준호 + '소프트웨어 공급계약 해지 손해배상 기회손실'"
 echo "      EXPECT: total_results > 0  AND  at least one citation.case_id == $C001"
 
-RESULT_A="$(docker exec \
+RESULT_A="$(docker exec -i \
   -e JUNHO_TOKEN="$JUNHO_TOKEN" \
   -e C001="$C001" \
   "$APP_CONTAINER" python - <<'PY'
@@ -205,7 +205,7 @@ echo ""
 echo "  [B] 박서연 + '소프트웨어 공급계약 해지 손해배상 기회손실'"
 echo "      EXPECT: 0 citations referencing case_id == $C001 (RLS chunk isolation)"
 
-RESULT_B="$(docker exec \
+RESULT_B="$(docker exec -i \
   -e SEOYEON_TOKEN="$SEOYEON_TOKEN" \
   -e C001="$C001" \
   "$APP_CONTAINER" python - <<'PY'
@@ -268,7 +268,7 @@ echo ""
 echo "  [C] 박서연 + '소스코드 저작권 침해 의거성 실질적 유사성'"
 echo "      EXPECT: total_results > 0  AND  at least one citation.case_id == $C012"
 
-RESULT_C="$(docker exec \
+RESULT_C="$(docker exec -i \
   -e SEOYEON_TOKEN="$SEOYEON_TOKEN" \
   -e C012="$C012" \
   "$APP_CONTAINER" python - <<'PY'
