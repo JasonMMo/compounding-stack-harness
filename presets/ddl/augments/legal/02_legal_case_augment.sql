@@ -31,9 +31,16 @@ ALTER TABLE legal_case
 CREATE INDEX IF NOT EXISTS idx_legal_case_fts
   ON legal_case USING GIN (fts_vector);
 
--- pg_bigm trigram index: enables LIKE '%keyword%' on Korean without full parser
-CREATE INDEX IF NOT EXISTS idx_legal_case_title_bigm
-  ON legal_case USING GIN (title gin_bigm_ops);
+-- pg_bigm trigram index: enables LIKE '%keyword%' on Korean without full parser.
+-- Only created when pg_bigm is actually installed (see 01_extensions.sql guard).
+-- Uses dynamic SQL because gin_bigm_ops operator class is unresolvable at parse time
+-- when the extension is absent.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_bigm') THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_legal_case_title_bigm ON legal_case USING GIN (title gin_bigm_ops)';
+  END IF;
+END $$;
 
 -- ─────────────────────────────────────────────
 -- 2. RLS columns: row-ownership for per-attorney isolation
