@@ -452,3 +452,10 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **누적 자산**: **ingest-demo.sh**(컨테이너 자동탐색·문서복사→ingest마운트·서비스토큰 런타임read·`if !` set-e-safe·청크검증) + **verify-search.sh**(2변호사 로그인·A/B/C 격리단언·`!` history-expansion 을 python heredoc 으로 봉인) — 전 법무 데모/설치 재사용 · `cursor.executemany` 패턴 · **`.gitattributes` LF 가드**(`*.sh`/`*.sql` — Windows 재저장發 CRLF 가 VPS 실행 깨는 것 차단) · runbook §4-4(실 UUID 매핑표)·§4-5(검증 절차) 배선. 커밋 59cbbb1~1c83517(per-file).
 - **Open loops**: **C2 강화**(pytest -m postgres 통합테스트 — executemany+uuid바인딩+RLS격리 동시 커버, 이번 2결함을 인프라게이트 전에 잡는 단일 게이트) · production app_service 비-슈퍼유저 하드닝(C1) · G-88(seed UUID 가드) · WTP 인터뷰 3~5곳(PM) · `legal_document_chunk` 데모데이터는 컨테이너 재생성 시 ingest-demo 재실행 필요.
 - **결정 메모리**: [[legal-rag-mvp-build]]
+
+### Growth-97 (2026-06-20) — 법무 RAG 브라우저 데모 라이브: `/app` SPA 화면전환 복구(`[hidden]` CSS 결함), M3 비전문 구매자 시연 가능 (M3 vertical)
+- **1줄 rollup**: 이미 빌드돼 있던 SPA(`web/`, `/app` 마운트, 로그인+검색+사건현황+인용카드+접근성)가 1개 CSS 결함으로 화면전환 불능 → 1줄로 복구해 **브라우저 데모 라이브**. founder Redeploy 후 로그인→검색 전환·A/B 격리 화면시연 확인.
+- **근본원인/교훈**: SPA 가 화면·패널·배너 가시성을 HTML `hidden` 속성(`el.hidden=...`)으로 토글하는데 `app.css` 에 전역 `[hidden]` 리셋이 없어, `.login-wrapper`/`.app-root` 의 `display:flex`(author)가 UA `[hidden]{display:none}` 을 덮어 **`hidden` 속성이 무력화**(author cascade > UA). `showScreen()`/패널 토글이 "에러 없이 전환만 안 됨" 증상. 픽스: `[hidden]{display:none !important}` 전역 1줄(normalize.css 표준) — 화면+모든 `.hidden` 토글 일괄 복구. **교훈: author `display` 클래스가 하나라도 있으면 `[hidden]` 전역 리셋은 필수(빠지면 정적·단위테스트 불가시, 브라우저 실행에서만 발현)**.
+- **정직성**: 오늘 새 UI 빌드 없음 — CDO 가 이미 빌드해 둔 자산의 막힌 데를 뚫음. 진단은 정적으로 확정(JS 정상 → CSS cascade 위반) 후 design-agent(CDO) 에 1줄 위임, CDO 스킬 자가환류. web/ 는 이미지 bake-in → 적용에 Redeploy 필요(git pull 불충분), 브라우저 CSS 캐시는 강력새로고침으로 무효화.
+- **누적 자산**: runbook §4-6(브라우저 데모 경로 `/app` + `[hidden]` 함정노트) · 커밋 cafea04(per-file).
+- **Open loops**: 내일 founder 질문 예정 — 관련도(`rrf_score`)·청크 의미·조절 방법(top_k·청크 토큰타깃·RRF k·하이브리드 가중치). [[legal-rag-mvp-build]]
