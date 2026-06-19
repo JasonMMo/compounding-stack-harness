@@ -7,9 +7,19 @@
 -- pgvector: vector similarity search (embedding storage + HNSW/IVFFlat index)
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- pg_bigm: bi-gram FTS for Korean (GIN index compatible, no separate parser needed)
--- Alternative: pgroonga (comment out pg_bigm and uncomment pgroonga block if preferred)
-CREATE EXTENSION IF NOT EXISTS pg_bigm;
+-- pg_bigm: Korean bigram FTS. Guarded — preview tier (pgvector-only image) lacks
+-- this extension; there the system degrades to plainto_tsquery (option A). Production
+-- self-host with pg_bigm installed gets full substring/bigram quality automatically.
+-- Alternative: pgroonga (comment out pg_bigm block and uncomment pgroonga block if preferred)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pg_bigm') THEN
+    CREATE EXTENSION IF NOT EXISTS pg_bigm;
+    RAISE NOTICE 'pg_bigm enabled: Korean bigram FTS active';
+  ELSE
+    RAISE NOTICE 'pg_bigm unavailable: Korean substring search degraded to plainto_tsquery (option A / preview tier)';
+  END IF;
+END $$;
 
 -- uuid generation (Postgres 13+ built-in; explicit for older versions)
 -- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";  -- uncomment if gen_random_uuid() unavailable
