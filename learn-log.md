@@ -398,3 +398,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **누적 자산**: legal_attorney 테이블+RLS · `/auth/login`·`/cases` 엔드포인트 · vanilla 법무 web UI(`services/legal-rag/web/`) · CDO 법무 디자인 토큰(`design/legal-rag/ui-spec.md`). 커밋 91c67e4~a1ee5da(15 파일 per-file).
 - **Open loops**: #8 self-host 런북+데모배포(devops — L2/L4/RLS 라이브검증 + 운영하드닝, CISO 이월분 rate-limit/docs비활성 포함) · WTP 인터뷰 3~5곳(PM). settings.json `${CLAUDE_PROJECT_DIR}` 커밋 여부 founder 판단(미해결).
 - **결정 메모리**: [[legal-rag-mvp-build]]
+
+### Growth-92 (2026-06-19) — 법무 RAG #8 self-host 설치 런북 + CISO 이월 하드닝 클로즈 (M3 vertical)
+
+- **인격/Axis/Milestone**: CTO(병렬 wave 코디·문서-코드 불일치 검증·CISO 게이트·per-file 커밋) + DevOps(설치 런북·README 정리·운영 하드닝 7항목) + Engineer(LEGAL_RAG_ENV·/health 분리·prod docs 비활성·하드닝 테스트) + CISO(이월 클로즈 증분게이트) / **creater(런북)·backend(하드닝)** / M3
+- **1줄 rollup**: #8 devops 빌드. `docs/runbooks/legal-rag-install.md` 단일 설치 런북(사전요건→PG/pgvector/pg_bigm→DDL+seed→사이드카→기동→하드닝7→데모자격→라이브검증→트러블슈팅). CISO #5 이월 3건 코드/인프라 클로즈. 단위테스트 114→121.
+- **정직성/thesis**: 추가 고정 infra 비용 0(기존 단일 VPS Coolify 컨테이너 추가). 실 인프라 필요 단계 전부 [FOUNDER GATE] 명시 — DevOps 인격이 자격증명 없이 임의 배포·시크릿 노출 시도 차단(정직한 경계).
+- **게이트**: CISO 증분 CONDITIONAL GO(BLOCK/HIGH 0). 이월 3건 CLOSED — (a) rate-limit=Traefik 미들웨어 5req/min(앱 무의존), (b) /health shallow{status:ok}+/health/detail(X-Service-Token), (c) LEGAL_RAG_ENV=prod 시 docs/redoc/openapi 비활성. 잔존 LOW 2건(배포시 Traefik 라우터 라벨 dead-router 확인·nosymfollow remount 절차)은 founder 배포게이트로.
+- **함정/교훈**: 서브에이전트 산출물의 문서-코드 불일치를 커밋 전 실코드 대조로 차단 — 런북 ENV 기본값 `prod`→실제 `dev`, /health "DB핑 수행" 서술→실제 분리됨, LoginResponse 필드 `access_token` 확인. Pyright 가짜양성(config.py:89 env누락·test 미정의변수)은 pytest 121 실측·env='dev' 출력으로 반증. `.patched` 재발 0.
+- **누적 자산**: self-host 설치 런북(전 법무법인 재사용) · LEGAL_RAG_ENV prod 토글 · /health/detail 인증분리 패턴 · 하드닝 단위테스트 7종. 커밋 ae13529~a051cef(6 파일 per-file).
+- **Open loops**: #8 실 배포·라이브검증(L2/L4/RLS pytest -m postgres) = founder 인프라 게이트 잔존 · WTP 인터뷰 3~5곳(PM). settings.json `${CLAUDE_PROJECT_DIR}` 커밋 여부 founder 판단(미해결).
+- **결정 메모리**: [[legal-rag-mvp-build]]
