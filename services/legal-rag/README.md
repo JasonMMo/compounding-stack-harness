@@ -27,8 +27,12 @@ Client → POST /search
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `LEGAL_RAG_DB_DSN` | YES | — | psycopg3 DSN for `app_service` role |
-| `LEGAL_RAG_EMBED_URL` | YES | — | Base URL of local embeddinggemma sidecar |
+| `LEGAL_RAG_DB_DSN` | YES | — | psycopg3 DSN for `app_service` role. **Must use standard URI format**: `postgresql://user:pw@host:port/db` (log masking depends on this format) |
+| `LEGAL_RAG_EMBED_URL` | YES | — | Base URL of local embeddinggemma sidecar. **localhost/intranet only** — no cloud URLs |
+| `LEGAL_RAG_INGEST_ROOT` | YES | — | Absolute path on server allowed for ingest `file_path`. Prevents path-traversal attacks |
+| `LEGAL_RAG_JWT_SECRET` | YES | — | HS256 signing secret for attorney JWTs (`/auth/login` issues, `/search` verifies) |
+| `LEGAL_RAG_SERVICE_TOKEN` | YES | — | Static bearer credential for `/ingest` endpoint (`X-Service-Token` header) |
+| `LEGAL_RAG_ENV` | no | `dev` | Set to `prod` in production to disable FastAPI auto-docs (`/docs`, `/redoc`, `/openapi.json`) |
 | `LEGAL_RAG_EMBED_MODEL_VERSION` | no | `embeddinggemma-768` | Recorded in `model_version` column |
 | `LEGAL_RAG_CHUNK_TOKENS` | no | `500` | Target tokens per chunk |
 | `LEGAL_RAG_CHUNK_OVERLAP` | no | `50` | Overlap tokens between chunks |
@@ -113,7 +117,18 @@ Apply augment SQLs in order (requires existing Growth-24 baseline tables):
 \i presets/ddl/augments/legal/05_case_party_rls.sql
 \i presets/ddl/augments/legal/06_legal_document_chunk.sql
 \i presets/ddl/augments/legal/07_rag_query_log.sql
+\i presets/ddl/augments/legal/08_legal_attorney.sql
 ```
+
+Then apply seed data (order matters — FK dependencies):
+```sql
+\i presets/ddl/augments/legal/seed/seed_attorneys.sql
+\i presets/ddl/augments/legal/seed/seed_precedents.sql
+\i presets/ddl/augments/legal/seed/seed_cases.sql
+\i presets/ddl/augments/legal/seed/seed_case_documents.sql
+```
+
+Full setup procedure with hardening steps: `docs/runbooks/legal-rag-install.md`
 
 ## RLS Role Model
 
@@ -126,19 +141,61 @@ Apply augment SQLs in order (requires existing Growth-24 baseline tables):
 
 ```bash
 cd services/legal-rag
-pytest tests/ -v
-# No DB or sidecar required for unit tests.
+
+# Unit tests (no DB, no sidecar required):
+LEGAL_RAG_INGEST_ROOT=/tmp LEGAL_RAG_JWT_SECRET=test LEGAL_RAG_SERVICE_TOKEN=test \
+  pytest tests/ -q
+
+# Integration tests (requires live Postgres with 01~08 DDL applied + pgvector + sidecar):
+LEGAL_RAG_DB_DSN_POSTGRES=postgresql://app_service:pw@localhost:5432/legaldb \
+  pytest tests/ -m postgres -v
 ```
+
+## Authentication
+
+### /auth/login — JWT 발급
+
+```
+POST /auth/login
+Content-Type: application/json
+{"email": "<string>", "password": "<string>"}
+
+200 OK
+{"access_token": "<JWT>", "token_type": "bearer"}
+```
+
+### /search — JWT Bearer
+
+```
+Authorization: Bearer <JWT>
+```
+
+- Algorithm: HS256
+- Secret: `LEGAL_RAG_JWT_SECRET` (required)
+- Required claims: `sub` (attorney UUID string), `exp` (Unix timestamp)
+- `sub` is used directly as `app.current_user_id` for RLS session variable.
+- Body does NOT carry `attorney_id` — token claim is the sole identity source.
+
+### /ingest — Service Token
+
+```
+X-Service-Token: <token>
+```
+
+- Must equal `LEGAL_RAG_SERVICE_TOKEN` env var (constant-time comparison).
+- Mismatch → HTTP 401.
 
 ## Endpoints
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/health` | Liveness: DB pool + sidecar reachability |
-| `POST` | `/ingest` | Ingest file → chunks → embeddings → DB |
-| `POST` | `/search` | Hybrid search, return chunks + citations |
+| `GET` | `/health` | Liveness (shallow): DB pool ping + sidecar ping. Does not expose internal state. |
+| `POST` | `/auth/login` | Email + bcrypt login → JWT |
+| `POST` | `/ingest` | Ingest file → chunks → embeddings → DB (X-Service-Token required) |
+| `POST` | `/search` | Hybrid search, return chunks + citations (JWT required) |
 
-See `/docs` (FastAPI OpenAPI UI) for request/response schemas.
+API docs available at `/docs` in dev only (`LEGAL_RAG_ENV != prod`).
+In production (`LEGAL_RAG_ENV=prod`), `/docs`, `/redoc`, `/openapi.json` are disabled.
 
 ## Search Pipeline
 
@@ -164,70 +221,3 @@ Every search result is anchored to `legal_document_chunk.id`. The API response
 contains only chunk IDs that exist in the DB and pass RLS. No free-text
 citation is ever generated — hallucination is structurally impossible
 at the Lite tier (no LLM in the response path).
-
-
----
-
-# README 추가 섹션 (기존 README.md에 병합 필요)
-
-## Authentication (B-1)
-
-### /search — JWT Bearer
-
-```
-Authorization: Bearer <JWT>
-```
-
-- Algorithm: HS256
-- Secret: `LEGAL_RAG_JWT_SECRET` (required)
-- Required claims: `sub` (attorney UUID string), `exp` (Unix timestamp)
-- `sub` is used directly as `app.current_user_id` for RLS session variable.
-- Body does NOT carry `attorney_id` — token claim is the sole identity source.
-
-### /ingest — Service Token
-
-```
-X-Service-Token: <token>
-```
-
-- Must equal `LEGAL_RAG_SERVICE_TOKEN` env var (constant-time comparison).
-- Mismatch → HTTP 401.
-
-### New required environment variables
-
-| Variable | Description |
-|---|---|
-| `LEGAL_RAG_JWT_SECRET` | HS256 signing secret for attorney JWTs |
-| `LEGAL_RAG_SERVICE_TOKEN` | Static service credential for /ingest |
-
-## Running Tests
-
-```bash
-cd services/legal-rag
-
-# Unit tests (no DB, no sidecar required):
-LEGAL_RAG_INGEST_ROOT=/tmp LEGAL_RAG_JWT_SECRET=test LEGAL_RAG_SERVICE_TOKEN=test \
-  pytest tests/ -q
-
-# Gap-1 integration tests (requires live Postgres with 01~07 SQL applied):
-LEGAL_RAG_DB_DSN_POSTGRES=postgresql://app_service:pw@localhost:5432/legaldb \
-  pytest tests/ -m postgres -v
-```
-
-## Patched files pending apply (CTO action)
-
-The following `.patched` files contain the full updated version and must replace
-the original after hook fix:
-
-| Patched file | Replaces | Key changes |
-|---|---|---|
-| `config.py.patched` | `config.py` | + `jwt_secret`, `service_token` fields |
-| `api.py.patched` | `api.py` | + JWT Depends on /search, + service-token Depends on /ingest, body `attorney_id` removed |
-| `ingest.py.patched` | `ingest.py` | + `validate_source_exists()`, `SourceNotFoundError` (Gap-3) |
-| `requirements.txt.patched` | `requirements.txt` | + `pyjwt>=2.8.0` |
-
-Apply command (run from services/legal-rag/):
-```bash
-for f in config api ingest requirements; do cp ${f}.py.patched ${f}.py; done
-cp requirements.txt.patched requirements.txt
-```
