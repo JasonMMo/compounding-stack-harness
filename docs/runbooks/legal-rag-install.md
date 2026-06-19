@@ -261,6 +261,19 @@ SELECT COUNT(*) FROM legal_case;  -- 기대: 12
 
 ---
 
+### 4-6. 브라우저 데모 경로 (`/app`) [비전문 구매자 시연용]
+
+curl/jq 없이 브라우저 화면으로 시연한다. SPA(`services/legal-rag/web/`)가 앱 이미지에 bake-in 되어 `/app` 에 마운트된다 (`api.py` StaticFiles, env=prod 시 Swagger `/docs` 는 비활성).
+
+1. 브라우저 → **`https://<subdomain>/app`** (preview: `https://legal-rag.n9n.co.kr/app`)
+2. 변호사 로그인 (데모 계정 §8, 비번 `demo1234!`) → **검색 탭으로 전환**
+3. **격리 시연**: 이준호 로그인 → "소프트웨어 공급계약 해지 손해배상 기회손실" 검색 → c001 인용 카드 표시. 로그아웃 → 박서연 로그인 → **동일 쿼리에 c001 안 보임**(검색계층 RLS 를 화면으로 실증). §4-5 의 A/B 단언을 UI 로 재현.
+4. **사건 현황** 탭 → 변호사별 담당 사건 목록(RLS) + 색인 상태.
+
+> **함정 (G-드리프트)**: SPA 가 화면·패널 가시성을 HTML `hidden` 속성으로 토글하므로, `app.css` 에 전역 `[hidden]{display:none !important}` 리셋이 **반드시** 있어야 한다. `.app-root`/`.login-wrapper` 등 author `display:flex` 가 UA 의 `[hidden]{display:none}` 을 덮어 화면 전환이 무력화된 사례(cafea04 수정). web/ 변경은 이미지 bake-in 이라 적용에 **Coolify Redeploy** 필요(git pull 불충분), 시연 시 브라우저 **강력 새로고침**(Ctrl+Shift+R)으로 CSS 캐시 무효화.
+
+---
+
 ## 5. 임베딩 사이드카 기동
 
 **외부 노출 금지 (하드닝 #2)**: `LEGAL_RAG_EMBED_URL` 은 반드시 localhost 또는 사내망 주소여야 한다. 인터넷 라우팅 주소 사용 시 법률 문서가 외부 서버로 전송된다.
