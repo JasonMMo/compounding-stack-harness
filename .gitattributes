@@ -1,0 +1,6 @@
+# Shell scripts MUST keep LF endings — they run on the Linux VPS via bash.
+# A CRLF-mangled .sh breaks the shebang/heredoc on checkout (Growth-95 deploy tooling).
+*.sh text eol=lf
+
+# SQL applied via psql on Linux; keep LF for consistent diffs.
+*.sql text eol=lf
