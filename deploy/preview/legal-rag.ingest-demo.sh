@@ -102,7 +102,7 @@ PASS=true
 # set -e-safe so the SUMMARY block always prints (PASS=false is accumulated).
 
 # Doc 1: complaint_hanbit_vs_miraesolution.txt
-if ! docker exec \
+if ! docker exec -i \
   -e TOKEN="$SERVICE_TOKEN" \
   -e DOC_FILENAME="complaint_hanbit_vs_miraesolution.txt" \
   -e DOC_SOURCE_ID="d0c00000-0001-0001-0001-000000000001" \
@@ -154,7 +154,7 @@ then
 fi
 
 # Doc 2: contract_software_supply.txt
-if ! docker exec \
+if ! docker exec -i \
   -e TOKEN="$SERVICE_TOKEN" \
   -e DOC_FILENAME="contract_software_supply.txt" \
   -e DOC_SOURCE_ID="d0c00000-0001-0001-0001-000000000002" \
@@ -206,7 +206,7 @@ then
 fi
 
 # Doc 3: brief_alphatech_copyright.txt
-if ! docker exec \
+if ! docker exec -i \
   -e TOKEN="$SERVICE_TOKEN" \
   -e DOC_FILENAME="brief_alphatech_copyright.txt" \
   -e DOC_SOURCE_ID="d0c00000-0001-0001-0001-000000000015" \
