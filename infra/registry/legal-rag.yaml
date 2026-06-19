@@ -18,9 +18,13 @@ preview:
   compose_file: deploy/preview/legal-rag.compose.yml
   manifest_server_path: null    # legal-rag has no screen-manifest (direct API, not scaffold UI)
   domain_service: app           # Coolify PATCH docker_compose_domains service name
-  status: live                  # Growth-94/95: LIVE, 3컨테이너 healthy, RLS 격리 라이브 검증 통과
-  deployed_at: 2026-06-20       # 첫 LIVE(Growth-94) → DDL+seed+RLS fix 검증 완료(Growth-95)
-  build_commit: 6cbab8d         # RLS isolation fix (SET LOCAL ROLE app_user + 09_grants) 포함
+  status: live                  # Growth-94/95/96: LIVE, 3컨테이너 healthy, RLS 격리(목록+검색) 라이브 검증 통과
+  deployed_at: 2026-06-20       # 첫 LIVE(Growth-94) → DDL+seed+RLS fix(Growth-95) → 데모 ingest+/search+청크RLS 검증(Growth-96)
+  build_commit: 1c83517         # Growth-96: cursor.executemany 수정 포함 (RLS fix 6cbab8d 위)
+  rag_verified: true            # Growth-96: 데모문서 3종 ingest(12청크) → hybrid /search 랭킹청크+인용 반환 +
+                                # 검색 계층 RLS 격리 라이브 단언 PASS — [A]이준호 c001 / [B]박서연 0×c001 / [C]박서연 c012.
+                                # 도구: deploy/preview/legal-rag.{ingest-demo,verify-search}.sh (재실행 가능).
+                                # DEMO-READY. 청크데이터는 컨테이너 재생성 시 ingest-demo 재실행로 재인입.
   tls: "Let's Encrypt (Traefik), https 200 verified"  # 정확한 만료일 미수집
 production:
   install_method: onsite        # 법무법인 사내망 self-host — 방문 또는 원격 설치
