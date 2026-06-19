@@ -6,7 +6,8 @@ Endpoints:
   GET  /cases      — list assigned cases with doc ingest status (Bearer JWT)
   POST /ingest     — ingest a file (PDF/DOCX/txt) into legal_document_chunk
   POST /search     — hybrid search (FTS+ANN+RRF), return ranked chunks + citations
-  GET  /health     — liveness probe (DB pool + embed sidecar reachability)
+  GET  /health        — shallow liveness probe ({"status":"ok"}, no internals)
+  GET  /health/detail — deep health check (DB+sidecar), requires X-Service-Token
   GET  /app/*      — static files (vanilla frontend)
 
 AUTH CONTRACTS (B-1):
@@ -52,7 +53,10 @@ logger = logging.getLogger(__name__)
 
 # ── App state ─────────────────────────────────────────────────────────────────
 
-_settings: cfg.Settings | None = None
+# Settings are loaded eagerly at import time so that FastAPI app creation can
+# conditionally disable auto-docs in prod mode.  Lifespan reuses this instance
+# instead of calling cfg.load() a second time.
+_settings: cfg.Settings = cfg.load()
 _pool = None
 _embedder: ec.EmbedClient | None = None
 
@@ -60,7 +64,6 @@ _embedder: ec.EmbedClient | None = None
 # ── Typed accessors ───────────────────────────────────────────────────────────
 
 def _get_settings() -> cfg.Settings:
-    assert _settings is not None, "Settings not initialized — lifespan not complete"
     return _settings
 
 
@@ -82,9 +85,9 @@ _service_token_dep = auth_mod.make_service_token_dep(_get_settings)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _settings, _pool, _embedder
+    global _pool, _embedder
 
-    _settings = cfg.load()
+    # _settings already loaded at module import time (cfg.load() called above).
     _embedder = ec.EmbedClient(
         base_url=_settings.embed_url,
         timeout=30.0,
@@ -100,6 +103,11 @@ async def lifespan(app: FastAPI):
     logger.info("legal-rag service stopped.")
 
 
+_docs_kwargs: dict = (
+    {"docs_url": None, "redoc_url": None, "openapi_url": None}
+    if _settings.env == "prod"
+    else {}
+)
 app = FastAPI(
     title="Legal RAG Service",
     description=(
@@ -109,6 +117,7 @@ app = FastAPI(
     ),
     version="0.1.0",
     lifespan=lifespan,
+    **_docs_kwargs,
 )
 
 
@@ -212,6 +221,10 @@ class SearchResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
+    status: str
+
+
+class HealthDetailResponse(BaseModel):
     status: str
     db_pool: str
     embed_sidecar: str
@@ -386,7 +399,23 @@ async def list_cases(
 
 @app.get("/health", response_model=HealthResponse, tags=["ops"])
 async def health():
-    """Liveness probe: checks DB pool and embedding sidecar reachability."""
+    """Shallow liveness probe: returns 200 + {"status": "ok"}.
+
+    No internal component state is exposed to prevent infrastructure
+    reconnaissance. Coolify/Traefik liveness probes only need 200.
+    """
+    return HealthResponse(status="ok")
+
+
+@app.get("/health/detail", response_model=HealthDetailResponse, tags=["ops"])
+async def health_detail(
+    _: Annotated[None, Depends(_service_token_dep)],
+):
+    """Deep health check: DB pool + embed sidecar reachability.
+
+    Requires X-Service-Token header (same credential as /ingest).
+    Not for public/liveness use — internal ops only.
+    """
     db_ok = False
     embed_ok = False
 
@@ -405,7 +434,7 @@ async def health():
         embed_ok = embedder.health_check()
 
     overall = "ok" if (db_ok and embed_ok) else "degraded"
-    return HealthResponse(
+    return HealthDetailResponse(
         status=overall,
         db_pool="ok" if db_ok else "error",
         embed_sidecar="ok" if embed_ok else "error",
