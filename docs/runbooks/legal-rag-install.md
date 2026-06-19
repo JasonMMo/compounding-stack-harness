@@ -196,32 +196,54 @@ bash deploy/preview/legal-rag.apply-schema.sh db-gwpba3e8j8upf9v0swf96wkt-<hash>
 
 스크립트는 멱등(idempotent)하다 — 부분 실패 후 수정하고 재실행해도 안전하다.
 
-### 4-4. Demo docs ingest (청크 + 벡터 생성)
+### 4-4. Demo docs ingest (청크 + 벡터 생성) [FOUNDER GATE]
 
-임베딩 사이드카(§5)가 기동된 후 실행:
+임베딩 사이드카(§5)가 기동된 후 실행한다. `legal_document_chunk` 가 비어 있으면 `/search` 는 빈 결과를 반환하므로, 데모/검증 전에 반드시 1회 수행한다.
+
+**원샷 스크립트 (권장)** — `apply-schema.sh` 와 동일한 컨테이너 자동탐색 패턴:
 
 ```bash
-# 서비스 기동 상태에서 ingest API 호출
-# X-Service-Token 은 LEGAL_RAG_SERVICE_TOKEN 볼트 값 사용
-curl -X POST http://localhost:8000/ingest \
-  -H "X-Service-Token: <service-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"file_path": "/data/demo_docs/complaint_hanbit_vs_miraesolution.txt", "source_id": "<doc-uuid-000001>", "source_type": "case_document"}'
-
-curl -X POST http://localhost:8000/ingest \
-  -H "X-Service-Token: <service-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"file_path": "/data/demo_docs/brief_alphatech_copyright.txt", "source_id": "<doc-uuid-000015>", "source_type": "case_document"}'
-
-curl -X POST http://localhost:8000/ingest \
-  -H "X-Service-Token: <service-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"file_path": "/data/demo_docs/contract_software_supply.txt", "source_id": "<doc-uuid-000002>", "source_type": "case_document"}'
+# VPS 호스트 브라우저 터널, repo 루트에서 실행
+bash deploy/preview/legal-rag.ingest-demo.sh
 ```
 
-`<doc-uuid-*>` 는 `seed_case_documents.sql` 의 실제 UUID 값으로 대체한다.
+스크립트가 자동 수행: ① app/db 컨테이너 자동탐색 → ② 데모 문서 3개를 repo (`presets/ddl/augments/legal/seed/demo_docs/`) 에서 ingest 바인드마운트 호스트 경로 `/data/legal-rag/ingest/` 로 복사 → ③ app 컨테이너 env 에서 `LEGAL_RAG_SERVICE_TOKEN` 읽기 → ④ app 컨테이너 내부 python 으로 `POST /ingest` 3회 (slim 이미지에 curl 없음 — 호스트 curl/시크릿 노출 회피) → ⑤ `legal_document_chunk` 카운트 + source 별 분해 검증. 멱등(재실행 안전, `/ingest` 가 `source_id` 기준 upsert).
 
-적용 확인:
+**문서 → source_id → case_id 매핑** (컨테이너 내부 경로는 `/data/legal-docs/<파일명>`):
+
+| 데모 파일 | source_id (= `legal_case_document.id`) | case_id | 가시 변호사 |
+|---|---|---|---|
+| `complaint_hanbit_vs_miraesolution.txt` | `d0c00000-0001-0001-0001-000000000001` | `c0000000-…-000000000001` (c001) | 이준호 only |
+| `contract_software_supply.txt` | `d0c00000-0001-0001-0001-000000000002` | `c0000000-…-000000000001` (c001) | 이준호 only |
+| `brief_alphatech_copyright.txt` | `d0c00000-0001-0001-0001-000000000015` | `c0000000-…-000000000012` (c012) | 박서연 + 이준호 |
+
+> 매핑이 RLS 청크격리 데모를 성립시킨다 (06_legal_document_chunk.sql 정책: case_document 청크는 `assigned_attorney_id` 또는 `partner_id` 일치 시에만 가시). 이준호는 파트너로 전 사건 가시 → c001+c012 청크 모두 검색됨. 박서연은 c007~c012 만 가시 → c001 청크 0건, c012 청크는 가시.
+
+**수동 참조** (스크립트 미사용 시 — `<service-token>` = `LEGAL_RAG_SERVICE_TOKEN`, 컨테이너 경로 주의):
+
+```bash
+curl -X POST http://localhost:8000/ingest \
+  -H "X-Service-Token: <service-token>" -H "Content-Type: application/json" \
+  -d '{"file_path":"/data/legal-docs/complaint_hanbit_vs_miraesolution.txt","source_type":"case_document","source_id":"d0c00000-0001-0001-0001-000000000001","case_id":"c0000000-0001-0001-0001-000000000001"}'
+# contract(…002, case c001), brief_alphatech(…015, case c012) 동일 패턴
+```
+
+> **주의**: `source_type=case_document` 시 `case_id` 필수 (없으면 400). `file_path` 는 ingest_root(`/data/legal-docs`) 하위 절대경로여야 한다 (path-traversal 가드).
+
+### 4-5. /search + RLS 청크격리 라이브 검증 [FOUNDER GATE]
+
+ingest 완료 후, hybrid `/search` 가 랭킹 청크+인용을 반환하는지와 RLS 가 **검색 계층까지** 격리하는지를 한 번에 실증한다:
+
+```bash
+bash deploy/preview/legal-rag.verify-search.sh
+```
+
+3개 단언 (전부 app 컨테이너 내부 python — 데모 비번 `demo1234!` 의 `!` history-expansion 회피):
+- **[A]** 이준호 + "소프트웨어 공급계약 해지 손해배상 기회손실" → `total_results>0` AND c001 인용 존재 (RAG 검색 동작 실증)
+- **[B]** 박서연 + 동일 쿼리 → c001 인용 **0건** (RLS 청크격리 실증 — `/cases` 목록뿐 아니라 검색까지)
+- **[C]** 박서연 + "소스코드 저작권 침해 의거성 실질적 유사성" → `total_results>0` AND c012 인용 존재 (본인 사건 청크 가시)
+
+적용 확인 (수동 SQL):
 
 ```sql
 -- 확장 설치 확인
@@ -230,8 +252,8 @@ SELECT extname FROM pg_extension WHERE extname IN ('vector','pg_bigm');
 -- 롤 확인
 SELECT rolname, rolbypassrls FROM pg_roles WHERE rolname IN ('app_service','app_user');
 
--- 변호사 3명 확인 (비밀번호 해시만, 평문 아님)
-SELECT id, email, role, is_active FROM legal_attorney;
+-- 청크 생성 확인 (ingest 후)
+SELECT source_id, COUNT(*) FROM legal_document_chunk GROUP BY source_id ORDER BY source_id;
 
 -- 사건 12건 확인
 SELECT COUNT(*) FROM legal_case;  -- 기대: 12
