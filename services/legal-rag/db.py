@@ -2,9 +2,13 @@
 db.py — psycopg3 connection pool + RLS session context manager.
 
 RLS CONTRACT (from README §핵심 계약):
-  - app_service role: BYPASSRLS — used for ingest writes.
-  - app_user role:    RLS enforced — every query transaction must call
-    SET LOCAL app.current_user_id = '<attorney_uuid>' before any data access.
+  - app_service role: BYPASSRLS/superuser — pool login role, used for ingest
+    writes and authentication lookups (intentional BYPASSRLS).
+  - app_user role:    RLS enforced — rls_session() issues SET LOCAL ROLE
+    app_user (drops superuser privileges) then SET LOCAL app.current_user_id
+    = '<attorney_uuid>' so RLS policies (defined TO app_user) are enforced.
+    Both SET LOCAL statements are transaction-scoped and revert at
+    COMMIT/ROLLBACK, so pooled-connection reuse via app_service stays correct.
   - Missing attorney_id → 0 rows returned (fail-safe, not an exception).
 
 Usage:
@@ -48,13 +52,17 @@ async def rls_session(
     conn,  # psycopg.AsyncConnection
     attorney_id: str | uuid.UUID,
 ) -> AsyncGenerator[None, None]:
-    """Context manager that sets app.current_user_id for the current transaction.
+    """Context manager that enforces RLS for the current transaction.
 
-    Wraps the body in a transaction and issues:
-        SET LOCAL app.current_user_id = '<validated_attorney_uuid>'
+    Wraps the body in a transaction and issues (in order):
+        SET LOCAL ROLE app_user
+        SELECT set_config('app.current_user_id', '<validated_attorney_uuid>', true)
 
-    SET LOCAL is transaction-scoped: the variable reverts automatically
-    at COMMIT/ROLLBACK, so no cleanup is needed and connection reuse is safe.
+    SET LOCAL ROLE drops the pool's app_service login role (BYPASSRLS/superuser)
+    to the non-privileged app_user role so RLS policies (defined TO app_user)
+    are actually enforced for the duration of the transaction.
+    Both SET LOCAL statements are transaction-scoped: they revert automatically
+    at COMMIT/ROLLBACK, so pooled-connection reuse via app_service stays correct.
 
     Args:
         conn:        psycopg AsyncConnection (from pool.connection()).
@@ -66,11 +74,16 @@ async def rls_session(
     safe_id = _validate_uuid(attorney_id, "attorney_id")
 
     async with conn.transaction():
+        # Drop from the pool's app_service (BYPASSRLS/superuser) login role to
+        # the non-privileged app_user role so RLS policies (TO app_user) are
+        # ENFORCED. SET LOCAL is transaction-scoped → reverts at COMMIT/ROLLBACK,
+        # pool-safe.
+        await conn.execute("SET LOCAL ROLE app_user")
         await conn.execute(
             "SELECT set_config('app.current_user_id', %s, true)",
             (safe_id,),
         )
-        logger.debug("RLS session opened for attorney_id=%s", safe_id)
+        logger.debug("RLS session opened (role=app_user) for attorney_id=%s", safe_id)
         yield
 
 
