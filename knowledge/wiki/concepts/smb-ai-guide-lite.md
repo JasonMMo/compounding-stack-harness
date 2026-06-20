@@ -19,7 +19,7 @@ This is the Lite tier of the "self-host AI 즉답 가이드 + 시맨틱검색 + 
 ```
 Visitor question (text)
     ↓
-Local embedding model (e.g. all-MiniLM-L6-v2, sentence-transformers)
+Local embedding model (multilingual-e5-base, 768-dim, sentence-transformers — Korean+English)
     ↓  cosine similarity
 Knowledge base (YAML/JSON, embedded at build or server start)
     ↓  top-K results
