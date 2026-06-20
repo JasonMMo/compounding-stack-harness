@@ -9,7 +9,7 @@ LLM answer generation is NOT implemented — gated to Pro tier.
 ```
 Client → POST /search
            │
-           ├─ embed_client.py  ← local embeddinggemma sidecar (HTTP)
+           ├─ embed_client.py  ← local embedding sidecar (HTTP)
            │                      NO cloud API. missing sidecar = 503.
            │
            ├─ retrieve.py      ← Stage 1: FTS (plainto_tsquery)
@@ -28,7 +28,7 @@ Client → POST /search
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `LEGAL_RAG_DB_DSN` | YES | — | psycopg3 DSN for `app_service` role. **Must use standard URI format**: `postgresql://user:pw@host:port/db` (log masking depends on this format) |
-| `LEGAL_RAG_EMBED_URL` | YES | — | Base URL of local embeddinggemma sidecar. **localhost/intranet only** — no cloud URLs |
+| `LEGAL_RAG_EMBED_URL` | YES | — | Base URL of local embedding sidecar. **localhost/intranet only** — no cloud URLs |
 | `LEGAL_RAG_INGEST_ROOT` | YES | — | Absolute path on server allowed for ingest `file_path`. Prevents path-traversal attacks |
 | `LEGAL_RAG_JWT_SECRET` | YES | — | HS256 signing secret for attorney JWTs (`/auth/login` issues, `/search` verifies) |
 | `LEGAL_RAG_SERVICE_TOKEN` | YES | — | Static bearer credential for `/ingest` endpoint (`X-Service-Token` header) |
@@ -46,7 +46,7 @@ Client → POST /search
 ## NO CLOUD FALLBACK
 
 The embedding sidecar (`LEGAL_RAG_EMBED_URL`) must be a locally-running
-embeddinggemma or compatible server (768-dim output). Cloud embedding APIs
+multilingual-e5-base or compatible server (768-dim output). Cloud embedding APIs
 (OpenAI, Cohere, etc.) are intentionally NOT supported as fallback.
 
 Reason: this service's value proposition requires:
@@ -58,7 +58,7 @@ returns HTTP 503 with an explicit error message.
 
 ## Sidecar Interface Contract
 
-The local embeddinggemma sidecar must implement:
+The local embedding sidecar must implement:
 
 **Single embed**
 ```
