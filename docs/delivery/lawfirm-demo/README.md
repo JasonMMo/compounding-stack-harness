@@ -4,6 +4,8 @@
 
 이 패키지는 30인 법무법인을 대상으로 한 AI 판례 검색 시스템 데모의 인도 자산입니다. 변호사가 키워드로 관련 판례를 검색하면 시스템이 PostgreSQL full-text search (tsvector/GIN 인덱스) 를 사용해 판례를 묶어 제시합니다. 재판 전략 수립은 변호사가 담당하며, 시스템은 관련 판례 제시(augment 모드)만 수행합니다.
 
+> **버전 주의**: 이 인도 패키지는 `lawfirm-demo` 프로파일 기반 **tsvector FTS 단독** 경로다. 이후 구현된 라이브 RAG 서비스(`legal-rag.n9n.co.kr`, Growth-93/97)는 **FTS∥ANN→RRF 하이브리드 + 로컬 e5-base 임베딩 + chunk_id 인용**으로 한 단계 진화했다. 통합 제품(사건관리+RAG) 방향은 `docs/projects/legal/` 참조.
+
 ---
 
 ## 패키지 구성
