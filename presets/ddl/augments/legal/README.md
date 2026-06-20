@@ -26,7 +26,7 @@ ERD: `erd_legal_rag.md`.
 - **롤 모델**: 백엔드 서비스 = `app_service`(BYPASSRLS 또는 SET SESSION AUTHORIZATION), 개별 변호사 = `app_user`(RLS 적용).
 - **인용 무결성**: RAG 답변은 `legal_document_chunk.id` 만 출처로 인용 → `source_id`(precedent|case_document)로 역해소. chunk.id 외 참조 금지 = 환각 불가.
 - **검색 파이프라인**: `plainto_tsquery` FTS 1단계 → `embedding <=> $query_vec` ANN 2단계 → RRF(Reciprocal Rank Fusion) 병합.
-- **임베딩**: embeddinggemma 로컬 사이드카(768-dim), 클라우드 API 0. `model_version` 기록 → 모델 교체 시 재임베드 추적.
+- **임베딩**: multilingual-e5-base 로컬 사이드카(768-dim), 클라우드 API 0. `model_version` 기록 → 모델 교체 시 재임베드 추적.
 
 ## 출처
 
