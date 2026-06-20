@@ -106,7 +106,7 @@ erDiagram
         integer     token_count
         vector768   embedding       "768-dim cosine; NULL=미임베드; HNSW 부분인덱스"
         timestamptz embedded_at
-        text        model_version   "e.g. nomic-embed-text-v1.5"
+        text        model_version   "e.g. multilingual-e5-base"
         timestamptz created_at
         timestamptz updated_at
     }
