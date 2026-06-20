@@ -2,7 +2,7 @@
 
 > [← docs](../../) · 법무 vertical (M3 첫 버티컬) 의 **통합 단일 제품** 문서화 anchor.
 > 흩어진 기존 자산을 정식 산출물 슬롯에 매핑하고, 페르소나 owner·DFD 검증 게이트를 정의한다.
-> 작성: 2026-06-20 (CTO). 상태: **골격 — 정식 문서 드래프팅 대기.**
+> 작성: 2026-06-20 (CTO). 상태: **D1~D5 페르소나 드래프팅 완료** (PM·CDO·DBA·QA). DFD 게이트 의심 1건은 CTO 독립검증으로 false positive 기각 → §7 참조.
 
 ## 1. 결정 (2026-06-20, founder)
 
@@ -24,15 +24,15 @@
 
 ## 3. 문서 산출물 세트 — owner · 상태 · 기존 소스 매핑
 
-| # | 문서 | owner | 상태 | 기존 원자재 (정식화 대상) |
+| # | 문서 | owner | 상태 | 산출물 (정식 문서) |
 |---|---|---|---|---|
-| D1 | **기능명세서** | PM | 원자재 산재, 정식 미작성 | `profiles/lawfirm-demo.yaml`(domains/entities) · `services/legal-rag/api.py`(엔드포인트 계약) · `docs/runbooks/legal-rag-install.md` · `docs/business/positioning-legal.md` |
-| D2 | **유저플로우** | PM·CDO | 부분 존재 | `design/legal-rag/ui-spec.md`(3 페르소나: CEO/업무담당자/IT담당자) · `services/legal-rag/web/app.js`(로그인→검색→사건현황 실동작) |
-| D3 | **와이어프레임** | CDO | 라이브 구현 존재, 문서 미정리 | `design/legal-rag/ui-spec.md` · 라이브 SPA `legal-rag.n9n.co.kr/app` · `web/index.html` |
-| D4 | **ERD** | DBA | DDL 존재, 다이어그램 미작성 | `presets/ddl/augments/legal/*.sql`(legal_case·precedent·case_party·case_document·legal_attorney·legal_document_chunk + RLS) · `presets/ddl/render.py`(4 base 엔티티) |
-| D5 | **DFD** | DBA·QA | **신규 작성 필요** | (없음 — §4 게이트 정의 따라 신규) |
+| D1 | **기능명세서** | PM | ✅ 작성 완료 | [`D1-functional-spec.md`](D1-functional-spec.md) — F-01~F-22 (5 모듈), NFR 22건, 추적성 매트릭스, 열린질문 Q-1~Q-5 |
+| D2 | **유저플로우** | PM·CDO | ✅ 작성 완료 | [`D2-user-flow.md`](D2-user-flow.md) — 4 플로우(3 페르소나 + 통합 시나리오), screen inventory S-01~S-17, 갭 G-1~G-6 |
+| D3 | **와이어프레임** | CDO | ✅ 작성 완료 | [`D3-wireframe.md`](D3-wireframe.md) — 16 유니크 뷰 ASCII wire, theme `legal-pro` 권고(navy+gold 토큰), UX 갭 6건 |
+| D4 | **ERD** | DBA | ✅ 작성 완료 | [`D4-erd.md`](D4-erd.md) — 8 엔티티 / 10 관계 Mermaid, RLS·인용 환각0 체인, data store R/W 매핑 |
+| D5 | **DFD** | DBA·QA | ✅ 작성 완료 (활성 BLOCK 없음) | [`D5-dfd.md`](D5-dfd.md) — P1~P25 (Context+3 흐름), §9 검증게이트 21 단언, BLK-1 철회(§7) |
 
-> 상태 표기는 정직하게: D1~D4 는 "원자재/구현은 있으나 **정식 standalone 문서 미작성**", D5 는 처음부터 작성.
+> 상태 표기는 정직하게: 5개 모두 정식 standalone 문서로 산출됨. D5 검증게이트의 의심 1건(BLK-1)은 CTO 독립검증으로 false positive 기각 — §7 참조.
 
 ## 4. DFD 검증 게이트 (설계 검증)
 
@@ -51,13 +51,32 @@
 - `legal-rag` 서비스의 `/search`·`/cases`·`/auth` 를 그대로 backend 로, 새 adapter 가 프런트.
 - vanilla-htmx 와의 관계(별 adapter vs theme 레이어)는 CDO·engineer 설계 패스에서 확정.
 
-## 6. 다음 단계 — 페르소나 드래프팅
+## 6. 페르소나 드래프팅 — 완료 (2026-06-20)
 
-> ⚠️ 현재 세션 컨텍스트 고갈 임박. **체크포인트 후 새 컨텍스트에서** 페르소나별 드래프팅 권장.
+3 wave 오케스트레이션으로 D1~D5 산출(각 페르소나 envelope 반환, subagent-output-protocol):
 
-1. **PM** → D1 기능명세서 + D2 유저플로우 (`pm-delivery-loop`)
-2. **CDO** → D3 와이어프레임 + adapter/theme 디자인 토큰
-3. **DBA** → D4 ERD 다이어그램 + D5 DFD
-4. **QA** → D5 DFD 검증 게이트 명세 (무엇을 체크/자동·수동 경계)
+1. ✅ **PM** → D1 기능명세서, D2 유저플로우
+2. ✅ **CDO** → D3 와이어프레임 + theme `legal-pro` 디자인 토큰 권고
+3. ✅ **DBA** → D4 ERD, D5 DFD(Context+3 흐름, P1~P25)
+4. ✅ **QA** → D5 §9 검증 게이트(21 단언, 자동/수동 경계, merge BLOCK 기준)
 
-각 산출물은 본 README 의 슬롯(D1~D5)을 채우고 상태를 갱신한다. 산출 후 `learn-log.md` 1줄 + 메모리 환류.
+산출물은 §3 슬롯에 매핑됨. 다음 단계: §7 BLK-1 해소 → 미해결 갭(아래) triage → adapter/theme 구현 패스.
+
+## 7. DFD 게이트 운영 결과 & 미해결 갭
+
+**DFD 검증 게이트 + CTO 독립검증 2단 프로세스가 작동.** QA 가 코드 前 설계검증에서 의심 1건(I-1 prefix 미적용)을 제기 → CTO 가 founder 보고 전 소스 독립검증 → **false positive 로 확정·기각**. 게이트의 가치는 "결함을 잡는 것" 뿐 아니라 **검증되지 않은 주장이 founder 까지 가지 않게 거르는 것** 임을 입증.
+
+| ID | 의심 | 검증 결과 | 비고 |
+|---|---|---|---|
+| ~~BLK-1~~ | 임베딩 `passage:`/`query:` prefix 미적용 (QA 가 `embed_client.py` thin wrapper 만 보고 제기) | **철회 (false positive)** | prefix 는 **embed-adapter 사이드카**(`embed-adapter/app.py`)가 적용: `/embed`→query·`/embed/batch`→passage, 호출부 정합(ingest=batch/passage, search=single/query), 사이드카 불변식 테스트 존재. 활성 BLOCK 없음. |
+
+> ✅ **founder 메모**: 라이브 검색의 prefix·관련도(rrf_score) 품질은 **정상**. legal-rag 메모리의 "LIVE·검색 동작" 유효 + prefix 정합 확인. 내일 rrf_score 설명 시 "prefix 비대칭 임베딩 정상 작동" 전제로 안내 가능.
+> 🧭 **교훈(learn-log 환류)**: 서브에이전트 결함 판정은 cross-service/사이드카 경계를 추적하지 않으면 거짓일 수 있음 → **founder-facing 주장은 CTO 독립검증 후 보고**.
+
+**기타 갭** (BLOCK 아님, triage 대상):
+- **엔드포인트 갭** (D2 §9): G-1 `GET /cases/{id}` 부재 → 사건 상세 화면 구현 불가 · G-2 `POST/PATCH /cases` (Q-1 미확정) · G-3 원문 서빙 부재 · G-4 검색 페이지네이션 부재 · G-6 app.js 429 미분기.
+- **성능** (I-2): `retrieve.py` FTS+ANN 순차 await — N-16(검색<3s) 목표 시 `asyncio.gather` 병렬화 검토.
+- **데이터 모델** (D4): `legal_document_chunk.source_id` polymorphic FK(앱 레이어 강제) · `legal_precedent.keywords` 1NF 위배(FTS 대체 중, 태그 UI 시 분리) · `legal_rag_query_log.attorney_id` 물리 FK 부재.
+- **열린 질문** (D1): Q-1 사건 CRUD 범위 · Q-3 `query_text` 평문 저장 PIPA 협의 — CEO·업무담당자 확인 필요.
+
+각 산출 후 `learn-log.md` 1줄 + 메모리 환류 완료.
