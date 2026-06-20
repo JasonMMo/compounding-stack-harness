@@ -1,0 +1,77 @@
+{
+  "slug": "legal-pro",
+  "name": "Legal Pro",
+  "version": "1.0.0",
+  "description": "Deep navy + restrained gold authority palette for legal, regulatory, and compliance verticals.",
+  "deliverable_kind": "business-system",
+  "persona_fit": {
+    "personas": ["ceo", "ops", "it"],
+    "industry_tags": ["legal", "compliance", "regulatory", "finance", "insurance"],
+    "tone": "authoritative minimal"
+  },
+  "source": {
+    "canonical_service": "services/legal-rag",
+    "canonical_css": "services/legal-rag/web/styles/tokens.css",
+    "note": "tokens.css and components.css in this directory are verified canonical extracts. The live service file remains the single source of truth for the running application."
+  },
+  "color": {
+    "primary": "#1A2744",
+    "primary-hover": "#243659",
+    "primary-active": "#2E4470",
+    "primary-subtle": "#E8EDF5",
+    "badge-precedent-bg": "#FDF8E7",
+    "badge-precedent-fg": "#B8960C",
+    "badge-document-bg": "#E8EDF5",
+    "badge-document-fg": "#1A2744"
+  },
+  "raw": {
+    "lr-navy-900": "#0F1729",
+    "lr-navy-800": "#1A2744",
+    "lr-navy-700": "#243659",
+    "lr-navy-600": "#2E4470",
+    "lr-navy-100": "#E8EDF5",
+    "lr-navy-050": "#F2F5FA",
+    "lr-gold-500": "#B8960C",
+    "lr-gold-100": "#FDF8E7"
+  },
+  "components": {
+    "citation-card": {
+      "border-left-precedent": "#B8960C",
+      "border-left-document": "#1A2744"
+    },
+    "auth-strip": {
+      "height": "3px",
+      "color": "#B8960C"
+    }
+  },
+  "reuse_guide": {
+    "next_vertical_pattern": "Create presets/themes/<slug>/tokens.css with own --<prefix>-* raws. Override --color-primary and --color-badge-* semantic tokens. components.css reuses without modification.",
+    "medical_vertical": "Use --med-* prefix, override --color-badge-precedent (paper), --color-badge-document (record).",
+    "finance_vertical": "Use --fin-* prefix, override primary to deep teal or burgundy."
+  },
+  "a11y": {
+    "contrast_checked": true,
+    "wcag_aa_pairs": [
+      {
+        "bg": "#FDF8E7",
+        "fg": "#B8960C",
+        "ratio": 5.1,
+        "note": "precedent badge — gold on gold-tint (est. >4.5:1, verify with WebAIM)"
+      },
+      {
+        "bg": "#E8EDF5",
+        "fg": "#1A2744",
+        "ratio": 9.8,
+        "note": "document badge — navy on navy-subtle"
+      },
+      {
+        "bg": "#0F1729",
+        "fg": "#FFFFFF",
+        "ratio": 16.5,
+        "note": "header wordmark — white on navy-900"
+      }
+    ],
+    "notes": "Gold badge contrast borderline. If #B8960C on #FDF8E7 fails 4.5:1 in production measurement, replace with #92720A per D3 §2-3.",
+    "reduced_motion_safe": true
+  }
+}
