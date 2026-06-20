@@ -183,7 +183,7 @@ SET app.current_user_id = 'a1000000-0000-0000-0000-000000000002';
    ```
    txt 파일 읽기
      → 약 500 토큰 단위 청크 분할
-     → nomic-embed-text (dim=768) 임베딩
+     → multilingual-e5-base (dim=768, passage: prefix) 임베딩
      → legal_document_chunk INSERT
          (source_type='case_document', source_id=<doc_uuid>, case_id=<case_uuid>)
      → legal_case_document.ingest_status = 'done' 업데이트
