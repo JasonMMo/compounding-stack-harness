@@ -29,13 +29,15 @@ source: lawfirm-demo (Growth-24 PM loop #1)
 
 판결문 전문(`full_text`) 저장 전 공개 여부 확인 필수. 대법원 종합법률정보(glaw.scourt.go.kr) 공개 판례는 저장 가능 — 단, 상업적 재배포 조건 재확인 필요.
 
-## AI 검색 패턴 (A안)
+## AI 검색 패턴 (A안) — ✅ 구현·라이브 (Growth-93/97)
 
-### 1단계 — tsvector (즉시 가능)
-`holding` + `keywords` → GIN index → `plainto_tsquery` 키워드 검색.
+> 1·2단계 모두 구현됨. 실제는 `legal-rag` 서비스의 단일 하이브리드(FTS∥ANN→RRF)로 통합. 상세 [[legal-rag-pattern]] · [[legal-ai-search-strategy]].
 
-### 2단계 — RAG (설계 예정)
-`full_text` chunk → embedding → vector store. 설계 완료 시 [[legal-rag-pattern]] 에 기록.
+### 1단계 — FTS ✅
+`holding` + `keywords` → 생성 컬럼 `fts_vector`(GIN) → `plainto_tsquery('simple', …)` 키워드 검색 (한국어는 `pg_bigm` 보강).
+
+### 2단계 — RAG (벡터 ANN) ✅
+`full_text` → `legal_document_chunk` 청크 → 로컬 `multilingual-e5-base` 임베딩 → `pgvector` HNSW. 메인 검색은 청크 레벨, 인용은 `chunk_id` 기준. [[legal-rag-pattern]] 작성 완료.
 
 ## 관련 엔티티
 
