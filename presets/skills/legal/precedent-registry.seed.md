@@ -32,6 +32,11 @@
 > (FTS ∥ ANN → RRF k=60)으로 통합. 코드 `services/legal-rag/retrieve.py`,
 > DDL `presets/ddl/augments/legal/03_precedent_augment.sql` · `06_legal_document_chunk.sql`.
 > 아키텍처 상세: [[legal-rag-pattern]]. 검색 전략 상세: [[legal-ai-search-strategy]].
+>
+> **검색 단위 주의**: 메인 하이브리드 검색 경로는 **`legal_document_chunk` 청크 레벨**에서
+> 돈다 (`retrieve.py` 가 `chunk_text` FTS + chunk `embedding` ANN 을 RRF 병합).
+> 아래 1단계에 보이는 `legal_precedent.fts_vector`/`holding_embedding` 은 판례 레벨
+> 보조 검색면으로 존재하지만, 실제 답변 검색은 청크 단위로 수행되고 인용도 `chunk_id` 기준이다.
 
 ### 1단계 (postgres FTS) — ✅ 구현
 실제 구현은 `'korean'` config 대신 **`'simple'` + 선택적 `pg_bigm`**(extension 없으면
