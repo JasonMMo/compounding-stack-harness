@@ -36,13 +36,13 @@ CREATE TABLE IF NOT EXISTS legal_document_chunk (
   token_count     INTEGER     NULL,      -- actual token count (populated by ingest)
 
   -- ─── Vector embedding ─────────────────────────────────────────────────────
-  -- Dimension = 768 (embeddinggemma / nomic-embed-text)
+  -- Dimension = 768 (intfloat/multilingual-e5-base)
   -- NULL until ingest sidecar processes the chunk
   embedding       vector(768) NULL,
 
   -- ─── Ingest metadata ──────────────────────────────────────────────────────
   embedded_at     TIMESTAMPTZ NULL,
-  model_version   VARCHAR(64) NULL,  -- e.g. 'nomic-embed-text-v1.5' — for re-embed on model change
+  model_version   VARCHAR(64) NULL,  -- e.g. 'multilingual-e5-base' — for re-embed on model change
 
   -- ─── Unique constraint: one chunk per (source, index) ─────────────────────
   CONSTRAINT uq_legal_document_chunk_source_idx UNIQUE (source_id, source_type, chunk_index)
@@ -58,7 +58,7 @@ COMMENT ON COLUMN legal_document_chunk.source_id IS
   'Enforced at application layer (polymorphic).';
 
 COMMENT ON COLUMN legal_document_chunk.embedding IS
-  'Vector embedding of chunk_text. Dim=768 (embeddinggemma local sidecar). '
+  'Vector embedding of chunk_text. Dim=768 (multilingual-e5-base local sidecar). '
   'Populated by engineer-implemented ingest pipeline — schema only defines storage.';
 
 -- ─────────────────────────────────────────────
