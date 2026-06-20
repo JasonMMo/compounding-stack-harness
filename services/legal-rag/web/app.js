@@ -630,7 +630,11 @@ function buildCitationCard(cit, queryTerms) {
 
   const score = document.createElement("span");
   score.className = "relevance-score";
-  score.textContent = `관련도 ${cit.rrf_score.toFixed(2)}`;
+  if (cit.relevance != null) {
+    score.textContent = `관련도 ${Math.round(cit.relevance * 100)}%`;
+  } else {
+    score.textContent = `관련도 ${cit.rrf_score.toFixed(2)}`;
+  }
   footer.appendChild(score);
 
   const chunkRef = document.createElement("span");
