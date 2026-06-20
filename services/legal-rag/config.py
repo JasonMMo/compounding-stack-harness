@@ -34,7 +34,7 @@ class Settings:
 
     # ── Embedding sidecar ────────────────────────────────────────────────────
     embed_url: str
-    """Base URL of local embeddinggemma sidecar, e.g. http://localhost:8080.
+    """Base URL of local embedding sidecar, e.g. http://localhost:8080.
     No cloud fallback. Missing = service refuses to start."""
 
     embed_model_version: str
