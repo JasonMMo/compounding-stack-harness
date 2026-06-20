@@ -37,7 +37,7 @@ intake → active → trial → appeal → closed
 
 ## AI 검색 연결
 
-`summary` 필드 → postgres tsvector GIN index → 키워드 기반 사건 검색. `[INFERRED]` — RAG 2단계는 Growth-24 escalation 항목.
+`summary`/`fts_vector` → postgres tsvector GIN index → 키워드 기반 사건 검색. RAG 하이브리드 검색(FTS∥ANN→RRF)은 **구현·라이브**(Growth-93/97, `legal-rag` 서비스, 청크 레벨) — Growth-24 escalation 항목이었으나 완료됨. 상세 [[legal-rag-pattern]].
 
 ## 관련 엔티티
 
