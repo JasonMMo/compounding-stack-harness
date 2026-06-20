@@ -41,7 +41,7 @@ END $$;
 
 -- ─────────────────────────────────────────────
 -- 2. pgvector: semantic embedding of holding text
---    Dimension = 768 (embeddinggemma / nomic-embed-text output dim).
+--    Dimension = 768 (intfloat/multilingual-e5-base output dim).
 --    Engineer fills this column via ingest pipeline — NULL until embedded.
 --    HNSW index: better recall + faster build than IVFFlat for < 1M rows.
 -- ─────────────────────────────────────────────
@@ -49,7 +49,7 @@ ALTER TABLE legal_precedent
   ADD COLUMN IF NOT EXISTS holding_embedding vector(768) NULL;
 
 COMMENT ON COLUMN legal_precedent.holding_embedding IS
-  'Semantic embedding of holding text. Populated by ingest sidecar (embeddinggemma local). NULL = not yet embedded. Dim=768.';
+  'Semantic embedding of holding text. Populated by ingest sidecar (multilingual-e5-base local). NULL = not yet embedded. Dim=768.';
 
 -- HNSW index: approximate nearest neighbor (cosine distance)
 -- m=16, ef_construction=64 are conservative defaults; tune upward for larger corpus
