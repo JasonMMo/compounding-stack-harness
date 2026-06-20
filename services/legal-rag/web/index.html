@@ -204,6 +204,39 @@
 
   </div><!-- /#screen-app -->
 
+  <!-- ══ 원문 슬라이드오버 드로어 ══════════════════════════════════════════ -->
+  <div
+    id="doc-drawer-backdrop"
+    class="doc-drawer-backdrop"
+    aria-hidden="true"
+  ></div>
+  <aside
+    id="doc-drawer"
+    class="doc-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="doc-drawer-title"
+    aria-label="원문 보기"
+    hidden
+  >
+    <div class="doc-drawer__header">
+      <div class="doc-drawer__title-block">
+        <div class="doc-drawer__title" id="doc-drawer-title">원문 보기</div>
+        <div class="doc-drawer__citation" id="doc-drawer-citation" hidden></div>
+      </div>
+      <button
+        type="button"
+        class="doc-drawer__close"
+        id="doc-drawer-close"
+        aria-label="닫기"
+      >&#x2715;</button>
+    </div>
+    <div class="doc-drawer__meta" id="doc-drawer-meta" hidden></div>
+    <div class="doc-drawer__body" id="doc-drawer-body">
+      <div class="doc-drawer__status" id="doc-drawer-status">불러오는 중...</div>
+    </div>
+  </aside>
+
   <script src="/app/app.js"></script>
 </body>
 </html>
