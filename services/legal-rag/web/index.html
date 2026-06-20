@@ -204,6 +204,49 @@
 
   </div><!-- /#screen-app -->
 
+  <!-- ══ 사건 상세 패널 (S-16) ════════════════════════════════════════════ -->
+  <aside
+    id="case-detail-panel"
+    class="case-detail-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="case-detail-title"
+    aria-label="사건 상세"
+    hidden
+  >
+    <div class="case-detail-panel__header">
+      <div class="case-detail-panel__title-block">
+        <div class="case-detail-panel__title" id="case-detail-title">사건 상세</div>
+        <div class="case-detail-panel__case-number" id="case-detail-number"></div>
+      </div>
+      <button
+        type="button"
+        class="doc-drawer__close"
+        id="case-detail-close"
+        aria-label="닫기"
+      >&#x2715;</button>
+    </div>
+    <div class="case-detail-panel__meta" id="case-detail-meta"></div>
+    <div class="case-detail-panel__docs" id="case-detail-docs">
+      <div class="case-detail-panel__docs-title">문서 목록</div>
+      <div class="case-detail-panel__status" id="case-detail-status">불러오는 중...</div>
+      <ul class="case-detail-panel__doc-list" id="case-detail-doc-list" aria-label="사건 문서 목록"></ul>
+    </div>
+    <div class="case-detail-panel__actions">
+      <button
+        type="button"
+        class="btn btn--primary btn--sm"
+        id="case-detail-search-btn"
+        aria-label="이 사건으로 검색"
+      >이 사건으로 검색</button>
+    </div>
+  </aside>
+  <div
+    id="case-detail-backdrop"
+    class="doc-drawer-backdrop"
+    aria-hidden="true"
+  ></div>
+
   <!-- ══ 원문 슬라이드오버 드로어 ══════════════════════════════════════════ -->
   <div
     id="doc-drawer-backdrop"
