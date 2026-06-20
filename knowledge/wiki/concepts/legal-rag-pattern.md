@@ -64,7 +64,7 @@ RAG 답변은 `chunk.id` 만 인용 → `source_id`로 역해소. **LLM이 판�
 
 ## 5. 로컬 임베딩 사이드카 — self-host 쐐기
 
-임베딩 모델: `embeddinggemma` / `nomic-embed-text` 768-dim, 로컬 사이드카 배포. **클라우드 API 호출 0.** **[EXTRACTED]**
+임베딩 모델: `intfloat/multilingual-e5-base` 768-dim (한+영, 비대칭 query/passage prefix), 로컬 sentence-transformers 사이드카 배포 (모델 weight 이미지 baked, 런타임 오프라인). **클라우드 API 호출 0.** (Growth-93: 후보였던 embeddinggemma 는 공개 이미지 부재로 폐기) **[EXTRACTED]**
 
 - 의료·법무 등 규제업종에서 외부 API 전송은 개인정보보호법·비밀유지 의무 위반 소지 (PIPA §23, §28-8, 변호사법 §26). **[INFERRED]**
 - `model_version` 필드 기록 → 모델 교체 시 재임베드 추적 가능
