@@ -77,7 +77,7 @@ LLM summarization MVP 제외 이유: **[EXTRACTED]**
 2. holding 원문 표시로 변호사가 직접 판단 — augment 모드 (전략 생성 ≠ 이 시스템)
 3. 면책 고지 필수: "이 시스템은 검색 도구입니다. 법률 판단은 변호사가 수행합니다."
 
-Growth-17 honest-promise 교훈: RAG 어댑터 미완성 상태에서 AI 전략 생성 약속 금지. **[INFERRED]**
+Growth-17 honest-promise 교훈: RAG 검색은 구현됐으나 AI 전략 *자동생성*(B안)은 미구현 — 미구현 기능 약속 금지. **[INFERRED]**
 
 ## 7. 의료·금융 버티컬 일반화
 
