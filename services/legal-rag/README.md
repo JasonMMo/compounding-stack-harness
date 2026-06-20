@@ -33,7 +33,7 @@ Client → POST /search
 | `LEGAL_RAG_JWT_SECRET` | YES | — | HS256 signing secret for attorney JWTs (`/auth/login` issues, `/search` verifies) |
 | `LEGAL_RAG_SERVICE_TOKEN` | YES | — | Static bearer credential for `/ingest` endpoint (`X-Service-Token` header) |
 | `LEGAL_RAG_ENV` | no | `dev` | Set to `prod` in production to disable FastAPI auto-docs (`/docs`, `/redoc`, `/openapi.json`) |
-| `LEGAL_RAG_EMBED_MODEL_VERSION` | no | `embeddinggemma-768` | Recorded in `model_version` column |
+| `LEGAL_RAG_EMBED_MODEL_VERSION` | no | `multilingual-e5-base` | Recorded in `model_version` column |
 | `LEGAL_RAG_CHUNK_TOKENS` | no | `500` | Target tokens per chunk |
 | `LEGAL_RAG_CHUNK_OVERLAP` | no | `50` | Overlap tokens between chunks |
 | `LEGAL_RAG_RRF_K` | no | `60` | RRF constant k |
