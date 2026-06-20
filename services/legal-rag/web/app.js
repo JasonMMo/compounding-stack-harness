@@ -61,6 +61,16 @@ const casesTable    = $("cases-table");
 const casesTbody    = $("cases-tbody");
 const casesEmpty    = $("cases-empty");
 
+// ── 원문 슬라이드오버 드로어 DOM 참조 ────────────────────────────────────────
+const docDrawer         = $("doc-drawer");
+const docDrawerBackdrop = $("doc-drawer-backdrop");
+const docDrawerClose    = $("doc-drawer-close");
+const docDrawerTitle    = $("doc-drawer-title");
+const docDrawerCitation = $("doc-drawer-citation");
+const docDrawerMeta     = $("doc-drawer-meta");
+const docDrawerBody     = $("doc-drawer-body");
+const docDrawerStatus   = $("doc-drawer-status");
+
 // ── 화면 전환 ────────────────────────────────────────────────────────────────
 
 function showScreen(name) {
@@ -156,9 +166,210 @@ loginForm.addEventListener("submit", async (e) => {
   }
 });
 
+// ── 원문 슬라이드오버 드로어 ─────────────────────────────────────────────────
+
+let _drawerTrigger = null; // 드로어를 연 버튼 (닫을 때 포커스 복귀용)
+
+/** 드로어 열기: 로딩 상태 먼저 표시 후 API 호출 */
+async function openDocDrawer(sourceType, sourceId, triggerEl) {
+  _drawerTrigger = triggerEl || null;
+
+  // 로딩 상태로 초기화
+  _drawerSetLoading();
+  _drawerOpen();
+
+  try {
+    const res = await fetch(`/documents/${encodeURIComponent(sourceType)}/${encodeURIComponent(sourceId)}`, {
+      headers: { "Authorization": `Bearer ${STATE.token}` },
+    });
+
+    if (res.status === 404) {
+      _drawerSetError("권한이 없거나 원문을 찾을 수 없습니다.");
+      return;
+    }
+
+    if (res.status === 401) {
+      _drawerSetError("인증이 만료되었습니다. 다시 로그인하세요.");
+      return;
+    }
+
+    if (!res.ok) {
+      _drawerSetError("원문을 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도하세요.");
+      return;
+    }
+
+    const doc = await res.json();
+    _drawerRender(doc);
+
+  } catch (err) {
+    console.error("DocDrawer fetch error", err);
+    _drawerSetError("네트워크 오류로 원문을 불러올 수 없습니다.");
+  }
+}
+
+function _drawerOpen() {
+  docDrawer.hidden = false;
+  // hidden 제거 후 다음 frame 에 class 추가해야 transition 동작
+  requestAnimationFrame(() => {
+    docDrawer.classList.add("is-open");
+    docDrawerBackdrop.classList.add("is-open");
+    docDrawerBackdrop.removeAttribute("aria-hidden");
+  });
+  document.body.style.overflow = "hidden";
+  // 포커스 트랩: 드로어 닫기 버튼으로 이동
+  requestAnimationFrame(() => docDrawerClose.focus());
+  document.addEventListener("keydown", _drawerKeyHandler);
+}
+
+function closeDocDrawer() {
+  docDrawer.classList.remove("is-open");
+  docDrawerBackdrop.classList.remove("is-open");
+  docDrawerBackdrop.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  document.removeEventListener("keydown", _drawerKeyHandler);
+
+  // transition 완료 후 hidden 처리 (transition: 150ms)
+  const TRANSITION_MS = 160;
+  setTimeout(() => {
+    docDrawer.hidden = true;
+  }, TRANSITION_MS);
+
+  // 포커스 복귀
+  if (_drawerTrigger) {
+    _drawerTrigger.focus();
+    _drawerTrigger = null;
+  }
+}
+
+function _drawerKeyHandler(e) {
+  if (e.key === "Escape") {
+    e.preventDefault();
+    closeDocDrawer();
+    return;
+  }
+  // 포커스 트랩: Tab/Shift+Tab 을 드로어 내부로 한정
+  if (e.key === "Tab") {
+    const focusable = Array.from(
+      docDrawer.querySelectorAll(
+        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((el) => !el.closest("[hidden]"));
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+}
+
+function _drawerSetLoading() {
+  docDrawerTitle.textContent = "원문 불러오는 중...";
+  docDrawerCitation.hidden = true;
+  docDrawerMeta.hidden = true;
+  docDrawerMeta.innerHTML = "";
+  docDrawerBody.innerHTML = "";
+  const status = document.createElement("div");
+  status.className = "doc-drawer__status";
+  status.textContent = "불러오는 중...";
+  docDrawerBody.appendChild(status);
+}
+
+function _drawerSetError(msg) {
+  docDrawerTitle.textContent = "원문 보기";
+  docDrawerCitation.hidden = true;
+  docDrawerMeta.hidden = true;
+  docDrawerBody.innerHTML = "";
+  const status = document.createElement("div");
+  status.className = "doc-drawer__status doc-drawer__status--error";
+  status.textContent = msg;
+  docDrawerBody.appendChild(status);
+}
+
+function _drawerRender(doc) {
+  // 헤더
+  if (doc.source_type === "precedent") {
+    docDrawerTitle.textContent = doc.citation || doc.title || "판례";
+    if (doc.citation && doc.citation !== doc.title) {
+      docDrawerCitation.textContent = doc.citation;
+      docDrawerCitation.hidden = false;
+    } else {
+      docDrawerCitation.hidden = true;
+    }
+  } else {
+    docDrawerTitle.textContent = doc.title || "사건문서";
+    docDrawerCitation.hidden = true;
+  }
+
+  // 메타
+  docDrawerMeta.innerHTML = "";
+  const metaItems = [];
+  if (doc.source_type === "precedent") {
+    if (doc.court)        metaItems.push(["법원",     doc.court]);
+    if (doc.decided_date) metaItems.push(["선고일",   doc.decided_date]);
+    if (doc.case_type)    metaItems.push(["사건유형", doc.case_type]);
+    if (doc.keywords)     metaItems.push(["키워드",   doc.keywords]);
+  } else {
+    if (doc.document_type) metaItems.push(["문서유형", doc.document_type]);
+    if (doc.filed_at)      metaItems.push(["접수일",   doc.filed_at]);
+  }
+
+  if (metaItems.length > 0) {
+    metaItems.forEach(([label, value]) => {
+      const span = document.createElement("span");
+      span.className = "doc-drawer__meta-item";
+      const strong = document.createElement("strong");
+      strong.textContent = label + ":";
+      span.appendChild(strong);
+      span.appendChild(document.createTextNode(" " + value));
+      docDrawerMeta.appendChild(span);
+    });
+    docDrawerMeta.hidden = false;
+  } else {
+    docDrawerMeta.hidden = true;
+  }
+
+  // 본문
+  docDrawerBody.innerHTML = "";
+
+  if (doc.body_is_holding_fallback) {
+    const badge = document.createElement("div");
+    badge.className = "doc-drawer__fallback-badge";
+    badge.textContent = "전문 미등록 — 판시요지 표시";
+    docDrawerBody.appendChild(badge);
+  }
+
+  const bodyText = document.createElement("div");
+  bodyText.className = "doc-drawer__body-text";
+  bodyText.textContent = doc.body || "(본문 없음)";
+  docDrawerBody.appendChild(bodyText);
+}
+
+// 이벤트: 닫기 버튼, 백드롭 클릭
+docDrawerClose.addEventListener("click", closeDocDrawer);
+docDrawerBackdrop.addEventListener("click", closeDocDrawer);
+
 // ── 로그아웃 ─────────────────────────────────────────────────────────────────
 
 btnLogout.addEventListener("click", () => {
+  // 드로어가 열려 있으면 즉시 숨김 (transition 없이)
+  if (docDrawer.classList.contains("is-open")) {
+    docDrawer.classList.remove("is-open");
+    docDrawerBackdrop.classList.remove("is-open");
+    docDrawerBackdrop.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", _drawerKeyHandler);
+    docDrawer.hidden = true;
+    _drawerTrigger = null;
+  }
   STATE.token = null;
   STATE.displayName = null;
   STATE.attorneyId = null;
@@ -402,13 +613,15 @@ function buildCitationCard(cit, queryTerms) {
     footer.appendChild(details);
   }
 
-  // 원문 보기 링크 — 백엔드가 원문 서빙 엔드포인트를 제공하지 않으므로
-  // aria-disabled 처리 (ui-spec §9 #2)
-  const link = document.createElement("span");
+  // 원문 보기 버튼 — GET /documents/{source_type}/{source_id} 호출
+  const link = document.createElement("button");
+  link.type = "button";
   link.className = "citation-card__link";
-  link.setAttribute("role", "button");
-  link.setAttribute("aria-disabled", "true");
   link.textContent = "원문 보기 →";
+  link.setAttribute("aria-label", `원문 보기: ${cit.source_type === "precedent" ? (cit.case_number || cit.citation || "판례") : (cit.document_title || "사건문서")}`);
+  link.addEventListener("click", () => {
+    openDocDrawer(cit.source_type, cit.source_id, link);
+  });
   footer.appendChild(link);
 
   li.appendChild(footer);
