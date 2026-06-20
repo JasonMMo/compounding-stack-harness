@@ -466,3 +466,8 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **정직성**: 라이브 검색 prefix·rrf_score 품질 정상 확정(메모리 legal-rag "LIVE·동작" 유효, 품질 미달 아님). 새 코드 0 — 문서 산출 + 거짓 BLOCK 정정만. D5 §9.1/9.2/9.4/9.5 + README §3/§7 의 BLK-1 표기를 "철회(false positive)" 로 일괄 정정.
 - **누적 자산**: D1~D5 정식 standalone 문서 5종(`docs/projects/legal/D{1..5}-*.md`) — §2 3중용도(영업·인도물·구현입력). DFD 게이트 = 코드 前 설계검증 + CTO 독립검증 2단 프로세스 패턴 확립.
 - **Open loops**: BLOCK 아닌 triage 갭 — 엔드포인트 G-1~G-6(D2), 성능 I-2(FTS+ANN 병렬화), 데이터모델(polymorphic FK·keywords 1NF), 열린질문 Q-1(사건 CRUD 범위)/Q-3(query_text 평문 PIPA). 다음: adapter/theme `legal-pro` 구현 패스. [[legal-unified-product-docs]] [[legal-rag-mvp-build]]
+
+### Growth-99 (2026-06-20) — 한국어 형태소 분석기(pg_bigm/pgroonga) "조건부 장착·기본 비활성" 설계 근거 follow-up 박음 (M3 vertical)
+- **1줄 rollup**: founder 질문("형태소 분석기 적용을 왜 미뤘나")에 코드 독립검증 후 답 — 미적용이 아니라 **조건부 opt-in + 기본 비활성**. 런타임 FTS 는 `to_tsvector('simple', …)`(형태소 없음, `retrieve.py`/06_chunk.sql:86), pg_bigm 는 `01_extensions.sql:14-22` 가 `pg_available_extensions` 가드로 감싸 있으면 켜고 없으면 plainto_tsquery degrade, pgroonga 는 주석 대안만.
+- **유보 근거 4종(CTO 판단, follow-up 트리거 명시)**: ①preview/데모 티어 pgvector-only 이미지 호환 — 필수 의존으로 걸면 데모 깨짐(G-4 round-trip 정신, 환경차를 강결합화 금지) ②**하이브리드라 한계효용 낮음** — `'simple'` 토큰화 약점(동의어·어미변화)을 e5-base ANN 이 상쇄, RRF 병합이 두 약점 보완(`legal-rag-pattern.md §2`) → 형태소 분석기 marginal gain 이 FTS-only 대비 작음 ③운영비용 — pgroonga 별도 빌드+큰 이미지, mecab-ko 사전 운영부담, 데모 12청크엔 premature ④비-블로킹 — 정밀도 gap 인지·문서화됨, follow-up 일 뿐 게이트 차단 아님. **트리거: 한국어 substring recall 이 ANN 으로도 안 잡히는 실쿼리가 실고객 코퍼스(M2/M3)에서 발생하는 시점.**
+- **정직성**: 새 코드 0 — 설계 근거 환류만. 메모리 legal-rag "미검증 리스크" 한국어 FTS 항목과 정합. [[legal-rag-mvp-build]] [[subagent-cross-service-verify]]
