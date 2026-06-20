@@ -61,6 +61,17 @@ const casesTable    = $("cases-table");
 const casesTbody    = $("cases-tbody");
 const casesEmpty    = $("cases-empty");
 
+// ── 사건 상세 패널 DOM 참조 (S-16) ──────────────────────────────────────────
+const caseDetailPanel     = $("case-detail-panel");
+const caseDetailBackdrop  = $("case-detail-backdrop");
+const caseDetailClose     = $("case-detail-close");
+const caseDetailTitle     = $("case-detail-title");
+const caseDetailNumber    = $("case-detail-number");
+const caseDetailMeta      = $("case-detail-meta");
+const caseDetailStatus    = $("case-detail-status");
+const caseDetailDocList   = $("case-detail-doc-list");
+const caseDetailSearchBtn = $("case-detail-search-btn");
+
 // ── 원문 슬라이드오버 드로어 DOM 참조 ────────────────────────────────────────
 const docDrawer         = $("doc-drawer");
 const docDrawerBackdrop = $("doc-drawer-backdrop");
@@ -360,6 +371,17 @@ docDrawerBackdrop.addEventListener("click", closeDocDrawer);
 // ── 로그아웃 ─────────────────────────────────────────────────────────────────
 
 btnLogout.addEventListener("click", () => {
+  // 사건 상세 패널이 열려 있으면 즉시 숨김
+  if (caseDetailPanel.classList.contains("is-open")) {
+    caseDetailPanel.classList.remove("is-open");
+    caseDetailBackdrop.classList.remove("is-open");
+    caseDetailBackdrop.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", _caseDetailKeyHandler);
+    caseDetailPanel.hidden = true;
+    _caseDetailTrigger = null;
+    _caseDetailCurrentId = null;
+  }
   // 드로어가 열려 있으면 즉시 숨김 (transition 없이)
   if (docDrawer.classList.contains("is-open")) {
     docDrawer.classList.remove("is-open");
@@ -717,6 +739,175 @@ async function doSearch() {
   }
 }
 
+// ── 사건 상세 패널 (S-16) ────────────────────────────────────────────────────
+
+let _caseDetailTrigger = null;  // 패널을 연 버튼 (닫을 때 포커스 복귀용)
+let _caseDetailCurrentId = null; // 현재 표시 중인 case_id (검색 연동용)
+
+function _caseDetailOpen() {
+  caseDetailPanel.hidden = false;
+  requestAnimationFrame(() => {
+    caseDetailPanel.classList.add("is-open");
+    caseDetailBackdrop.classList.add("is-open");
+    caseDetailBackdrop.removeAttribute("aria-hidden");
+  });
+  document.body.style.overflow = "hidden";
+  requestAnimationFrame(() => caseDetailClose.focus());
+  document.addEventListener("keydown", _caseDetailKeyHandler);
+}
+
+function closeCaseDetailPanel() {
+  caseDetailPanel.classList.remove("is-open");
+  caseDetailBackdrop.classList.remove("is-open");
+  caseDetailBackdrop.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  document.removeEventListener("keydown", _caseDetailKeyHandler);
+  setTimeout(() => {
+    caseDetailPanel.hidden = true;
+  }, 160);
+  if (_caseDetailTrigger) {
+    _caseDetailTrigger.focus();
+    _caseDetailTrigger = null;
+  }
+}
+
+function _caseDetailKeyHandler(e) {
+  if (e.key === "Escape") {
+    e.preventDefault();
+    closeCaseDetailPanel();
+  }
+}
+
+function _caseDetailSetLoading(caseNumber) {
+  caseDetailTitle.textContent = caseNumber || "사건 상세";
+  caseDetailNumber.textContent = "";
+  caseDetailMeta.innerHTML = "";
+  caseDetailDocList.innerHTML = "";
+  caseDetailStatus.textContent = "불러오는 중...";
+  caseDetailStatus.hidden = false;
+}
+
+function _caseDetailSetError(msg) {
+  caseDetailStatus.textContent = msg;
+  caseDetailStatus.hidden = false;
+}
+
+function _caseDetailRender(data) {
+  caseDetailTitle.textContent = data.title || "사건 상세";
+  caseDetailNumber.textContent = data.case_number || "";
+  caseDetailStatus.hidden = true;
+
+  // 메타 항목
+  caseDetailMeta.innerHTML = "";
+  const metaFields = [
+    ["사건번호", data.case_number],
+    ["상태", data.status],
+    ["사건유형", data.case_type],
+    ["개시일", data.opened_at],
+    ["종결일", data.closed_at],
+  ].filter(([, v]) => v);
+
+  metaFields.forEach(([label, value]) => {
+    const span = document.createElement("span");
+    span.className = "case-detail-panel__meta-item";
+    const strong = document.createElement("strong");
+    strong.textContent = label + ":";
+    span.appendChild(strong);
+    span.appendChild(document.createTextNode(" " + value));
+    caseDetailMeta.appendChild(span);
+  });
+
+  // 문서 목록
+  caseDetailDocList.innerHTML = "";
+  const docs = data.documents || [];
+  if (docs.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "case-detail-panel__doc-item case-detail-panel__doc-empty";
+    empty.textContent = "등록된 문서가 없습니다.";
+    caseDetailDocList.appendChild(empty);
+  } else {
+    docs.forEach((doc) => {
+      const li = document.createElement("li");
+      li.className = "case-detail-panel__doc-item";
+
+      const typeSpan = document.createElement("span");
+      typeSpan.className = "case-detail-panel__doc-type";
+      typeSpan.textContent = doc.document_type || "문서";
+      li.appendChild(typeSpan);
+
+      const titleSpan = document.createElement("span");
+      titleSpan.className = "case-detail-panel__doc-title";
+      titleSpan.textContent = doc.title || "(제목 없음)";
+      li.appendChild(titleSpan);
+
+      // 원문 보기 버튼 — 기존 openDocDrawer 연결
+      if (doc.doc_id) {
+        const viewBtn = document.createElement("button");
+        viewBtn.type = "button";
+        viewBtn.className = "citation-card__link case-detail-panel__doc-view";
+        viewBtn.textContent = "원문 →";
+        viewBtn.setAttribute("aria-label", `원문 보기: ${doc.title || "문서"}`);
+        viewBtn.addEventListener("click", () => {
+          openDocDrawer("case_document", doc.doc_id, viewBtn);
+        });
+        li.appendChild(viewBtn);
+      }
+
+      caseDetailDocList.appendChild(li);
+    });
+  }
+}
+
+/** 사건 상세 패널 열기 — GET /cases/{case_id} 호출 */
+async function openCaseDetailPanel(caseId, caseNumber, triggerEl) {
+  _caseDetailTrigger = triggerEl || null;
+  _caseDetailCurrentId = caseId;
+
+  _caseDetailSetLoading(caseNumber);
+  _caseDetailOpen();
+
+  // "이 사건으로 검색" 버튼 — case_id 주입 후 검색 탭 이동
+  caseDetailSearchBtn.onclick = () => {
+    closeCaseDetailPanel();
+    switchTab("search");
+    for (const opt of searchCaseFilter.options) {
+      if (opt.value === caseId) {
+        opt.selected = true;
+        break;
+      }
+    }
+    searchInput.focus();
+  };
+
+  try {
+    const res = await fetch(`/cases/${encodeURIComponent(caseId)}`, {
+      headers: { "Authorization": `Bearer ${STATE.token}` },
+    });
+
+    if (res.status === 404) {
+      _caseDetailSetError("권한이 없거나 사건을 찾을 수 없습니다.");
+      return;
+    }
+    if (res.status === 401) {
+      _caseDetailSetError("인증이 만료되었습니다. 다시 로그인하세요.");
+      return;
+    }
+    if (!res.ok) {
+      _caseDetailSetError("사건 정보를 불러오는 중 오류가 발생했습니다.");
+      return;
+    }
+
+    const data = await res.json();
+    _caseDetailRender(data);
+  } catch (err) {
+    console.error("CaseDetail fetch error", err);
+    _caseDetailSetError("네트워크 오류로 사건 정보를 불러올 수 없습니다.");
+  }
+}
+
+caseDetailClose.addEventListener("click", closeCaseDetailPanel);
+caseDetailBackdrop.addEventListener("click", closeCaseDetailPanel);
+
 // ── 사건현황 ─────────────────────────────────────────────────────────────────
 
 function getIngestBadgeClass(caseRow) {
@@ -749,16 +940,28 @@ function renderCasesTable(cases) {
     const modifier = getCaseRowModifier(c);
     tr.className = modifier ? `case-row ${modifier}` : "case-row";
 
-    // 사건번호
+    // 사건번호 — 클릭 시 S-16 사건 상세 패널
     const tdNum = document.createElement("td");
     tdNum.className = "case-number";
-    tdNum.textContent = c.case_number;
+    const numBtn = document.createElement("button");
+    numBtn.type = "button";
+    numBtn.className = "case-number-link";
+    numBtn.textContent = c.case_number;
+    numBtn.setAttribute("aria-label", `${c.case_number} 상세 보기`);
+    numBtn.addEventListener("click", () => openCaseDetailPanel(c.case_id, c.case_number, numBtn));
+    tdNum.appendChild(numBtn);
     tr.appendChild(tdNum);
 
-    // 사건명
+    // 사건명 — 클릭 시 S-16 사건 상세 패널
     const tdTitle = document.createElement("td");
     tdTitle.className = "case-title";
-    tdTitle.textContent = c.title;
+    const titleBtn = document.createElement("button");
+    titleBtn.type = "button";
+    titleBtn.className = "case-title-link";
+    titleBtn.textContent = c.title;
+    titleBtn.setAttribute("aria-label", `${c.title} 상세 보기`);
+    titleBtn.addEventListener("click", () => openCaseDetailPanel(c.case_id, c.case_number, titleBtn));
+    tdTitle.appendChild(titleBtn);
     tr.appendChild(tdTitle);
 
     // 색인 상태 뱃지
