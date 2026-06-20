@@ -83,6 +83,10 @@
   --color-badge-document-bg:  var(--lr-navy-100);
   --color-badge-document-fg:  var(--lr-navy-800);
 
+  /* 법무 전용 신규 토큰 */
+  --lr-auth-strip-height: 3px;  /* 헤더 상단 권위 표시 컬러 스트립 (D3 S-02) */
+  --lr-header-bg: var(--lr-navy-900);
+
   /* Color — status */
   --color-status-ok:       var(--green-600);
   --color-status-degraded: var(--amber-700);
