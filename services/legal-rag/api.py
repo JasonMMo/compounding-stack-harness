@@ -6,6 +6,7 @@ Endpoints:
   GET  /cases      — list assigned cases with doc ingest status (Bearer JWT)
   POST /ingest     — ingest a file (PDF/DOCX/txt) into legal_document_chunk
   POST /search     — hybrid search (FTS+ANN+RRF), return ranked chunks + citations
+  GET  /documents/{source_type}/{source_id} — fetch full source document (Bearer JWT)
   GET  /health        — shallow liveness probe ({"status":"ok"}, no internals)
   GET  /health/detail — deep health check (DB+sidecar), requires X-Service-Token
   GET  /app/*      — static files (vanilla frontend)
@@ -256,6 +257,21 @@ class CaseOut(BaseModel):
 class CasesResponse(BaseModel):
     cases: list[CaseOut]
     total: int
+
+
+class DocumentResponse(BaseModel):
+    source_type: str
+    source_id: str
+    title: str | None = None
+    citation: str | None = None
+    court: str | None = None
+    decided_date: str | None = None
+    case_type: str | None = None
+    keywords: str | None = None
+    document_type: str | None = None
+    filed_at: str | None = None
+    body: str | None = None
+    body_is_holding_fallback: bool = False
 
 
 # ── Login helper ──────────────────────────────────────────────────────────────
@@ -581,6 +597,106 @@ async def search(
         total_results=len(results_out),
         results=results_out,
     )
+
+
+@app.get("/documents/{source_type}/{source_id}", response_model=DocumentResponse, tags=["documents"])
+async def get_document(
+    source_type: str,
+    source_id: str,
+    attorney_id: Annotated[str, Depends(_attorney_dep)],
+):
+    """Fetch full source document (precedent or case_document) for slide-over view.
+
+    Requires Authorization: Bearer <JWT>.
+    RLS is applied: case_document rows not visible to the requesting attorney
+    return 404 (same response as not-found — existence is not disclosed).
+
+    source_type='precedent': returns full_text (or holding as fallback if full_text is NULL).
+    source_type='case_document': returns content_text, RLS auto-filters cross-attorney rows.
+    source_type=other: 400.
+    """
+    _VALID_SOURCE_TYPES = {"precedent", "case_document"}
+    if source_type not in _VALID_SOURCE_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"source_type must be one of {sorted(_VALID_SOURCE_TYPES)}",
+        )
+
+    try:
+        uuid.UUID(source_id)
+    except ValueError:
+        raise HTTPException(400, f"source_id is not a valid UUID: {source_id!r}")
+
+    pool = _get_pool()
+
+    async with pool.connection() as conn:
+        async with database.rls_session(conn, attorney_id):
+            if source_type == "precedent":
+                cur = await conn.execute(
+                    """
+                    SELECT
+                        citation,
+                        court,
+                        decided_date::text,
+                        case_type,
+                        holding,
+                        full_text,
+                        keywords
+                    FROM legal_precedent
+                    WHERE id = %s
+                    """,
+                    (source_id,),
+                )
+                row = await cur.fetchone()
+                if row is None:
+                    raise HTTPException(status_code=404, detail="원문을 찾을 수 없습니다.")
+
+                citation, court, decided_date, case_type, holding, full_text, keywords = row
+                body_is_fallback = full_text is None
+                body = full_text if not body_is_fallback else holding
+
+                return DocumentResponse(
+                    source_type=source_type,
+                    source_id=source_id,
+                    title=citation,
+                    citation=citation,
+                    court=court,
+                    decided_date=decided_date,
+                    case_type=case_type,
+                    keywords=keywords,
+                    body=body,
+                    body_is_holding_fallback=body_is_fallback,
+                )
+
+            else:  # case_document
+                cur = await conn.execute(
+                    """
+                    SELECT
+                        document_type,
+                        title,
+                        filed_at::text,
+                        content_text
+                    FROM legal_case_document
+                    WHERE id = %s
+                    """,
+                    (source_id,),
+                )
+                row = await cur.fetchone()
+                # 0 rows: either doesn't exist or RLS hid it — return 404 without disclosing
+                if row is None:
+                    raise HTTPException(status_code=404, detail="원문을 찾을 수 없습니다.")
+
+                document_type, title, filed_at, content_text = row
+
+                return DocumentResponse(
+                    source_type=source_type,
+                    source_id=source_id,
+                    title=title,
+                    document_type=document_type,
+                    filed_at=filed_at,
+                    body=content_text,
+                    body_is_holding_fallback=False,
+                )
 
 
 # ── Static frontend ────────────────────────────────────────────────────────────
