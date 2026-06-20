@@ -393,7 +393,8 @@ class TestSearchContractUnchanged:
         expected_co = {
             "chunk_id", "source_type", "source_id", "case_id",
             "chunk_index", "chunk_text_excerpt", "rrf_score",
-            "fts_rank", "ann_rank", "case_number", "court",
+            "fts_rank", "ann_rank", "relevance",
+            "case_number", "court",
             "decision_date", "holding_summary", "document_title", "document_type",
         }
         assert expected_co == co_fields, f"CitationOut 필드 변경 감지: {co_fields}"
