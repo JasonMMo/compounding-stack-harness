@@ -68,6 +68,18 @@ a:hover {
    3. 앱 헤더 (.app-header)
 ══════════════════════════════════════════════ */
 
+/* ── 권위 스트립: 헤더 상단 3px gold line (D3 S-02) ── */
+.app-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--lr-auth-strip-height, 3px);
+  background-color: var(--lr-gold-500);
+  pointer-events: none;
+}
+
 .app-header {
   background: var(--lr-navy-900);
   color: var(--color-text-inverse);
@@ -78,6 +90,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;  /* ::before 기준점 */
   padding: 0 var(--space-page-h);
   flex-shrink: 0;
 }
@@ -514,10 +527,21 @@ a:hover {
 .citation-card {
   background: var(--color-surface-1);
   border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-border);  /* default — overridden per type below */
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   padding: var(--space-card-pad);
   transition: box-shadow var(--transition-fast);
+}
+
+/* D3 S-13: 판례 타입 — gold 스트립 */
+.citation-card--precedent {
+  border-left-color: var(--lr-gold-500);
+}
+
+/* D3 S-14: 사건문서 타입 — navy 스트립 */
+.citation-card--document {
+  border-left-color: var(--lr-navy-800);
 }
 
 .citation-card:hover {
@@ -1110,6 +1134,213 @@ body.persona-it .chunk-ref {
   border-radius: var(--radius-badge);
   background-color: var(--color-warning-subtle);
   color: var(--color-warning);
+}
+
+/* ══════════════════════════════════════════════
+   14b. 사건 상세 패널 (.case-detail-panel)
+══════════════════════════════════════════════ */
+
+/* doc-drawer-backdrop 재활용 (백드롭 공통 스타일) */
+
+.case-detail-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(480px, 92vw);
+  background: var(--color-surface-1);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+  z-index: 301;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform var(--transition-control);
+  overflow: hidden;
+}
+
+.case-detail-panel.is-open {
+  transform: translateX(0);
+}
+
+.case-detail-panel__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px var(--space-card-pad);
+  border-bottom: 1px solid var(--color-border);
+  border-top: var(--lr-auth-strip-height, 3px) solid var(--lr-gold-500);
+  flex-shrink: 0;
+}
+
+.case-detail-panel__title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.case-detail-panel__title {
+  font-size: var(--text-heading-card-size);
+  font-weight: var(--text-heading-card-fw);
+  line-height: var(--text-heading-card-lh);
+  color: var(--color-text-1);
+  word-break: break-word;
+}
+
+.case-detail-panel__case-number {
+  font-size: var(--text-meta-size);
+  color: var(--color-text-3);
+  font-family: var(--font-family-mono);
+  margin-top: 2px;
+}
+
+.case-detail-panel__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 12px var(--space-card-pad);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  flex-shrink: 0;
+}
+
+.case-detail-panel__meta-item {
+  font-size: var(--text-caption-size);
+  color: var(--color-text-3);
+}
+
+.case-detail-panel__meta-item strong {
+  font-weight: 500;
+  color: var(--color-text-2);
+  margin-right: 2px;
+}
+
+.case-detail-panel__docs {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-card-pad);
+}
+
+.case-detail-panel__docs-title {
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  color: var(--color-text-2);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.case-detail-panel__status {
+  padding: 20px 0;
+  text-align: center;
+  font-size: var(--text-body-size);
+  color: var(--color-text-3);
+}
+
+.case-detail-panel__doc-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.case-detail-panel__doc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  font-size: var(--text-body-size);
+}
+
+.case-detail-panel__doc-empty {
+  color: var(--color-text-3);
+  font-size: var(--text-meta-size);
+  background: transparent;
+  border: none;
+  padding: 8px 0;
+}
+
+.case-detail-panel__doc-type {
+  flex-shrink: 0;
+  font-size: var(--text-label-size);
+  font-weight: 500;
+  color: var(--lr-navy-800);
+  background: var(--lr-navy-100);
+  padding: 1px 6px;
+  border-radius: var(--radius-badge);
+  white-space: nowrap;
+}
+
+.case-detail-panel__doc-title {
+  flex: 1;
+  color: var(--color-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.case-detail-panel__doc-view {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: var(--text-caption-size);
+}
+
+.case-detail-panel__actions {
+  padding: 12px var(--space-card-pad);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+  background: var(--color-surface-1);
+}
+
+/* results-header Lite 안내 (F-12) */
+.results-header__note {
+  font-size: var(--text-caption-size);
+  color: var(--color-text-3);
+  font-style: normal;
+}
+
+/* CEO 파트너 캡션 (D3 S-10 UX-2) */
+.cases-partner-caption {
+  font-size: 11px;
+  color: var(--color-text-3);
+  margin-top: 8px;
+  padding: 0 2px;
+}
+
+/* 사건번호/사건명 드릴다운 링크 버튼 (S-16) */
+.case-number-link,
+.case-title-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-align: left;
+}
+
+.case-number-link {
+  font-family: var(--font-family-mono);
+  font-size: var(--text-meta-size);
+}
+
+.case-number-link:hover,
+.case-title-link:hover {
+  color: var(--color-primary-hover);
+}
+
+.case-number-link:focus-visible,
+.case-title-link:focus-visible {
+  outline: 3px solid var(--color-border-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* ══════════════════════════════════════════════
