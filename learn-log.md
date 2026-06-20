@@ -459,3 +459,10 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **정직성**: 오늘 새 UI 빌드 없음 — CDO 가 이미 빌드해 둔 자산의 막힌 데를 뚫음. 진단은 정적으로 확정(JS 정상 → CSS cascade 위반) 후 design-agent(CDO) 에 1줄 위임, CDO 스킬 자가환류. web/ 는 이미지 bake-in → 적용에 Redeploy 필요(git pull 불충분), 브라우저 CSS 캐시는 강력새로고침으로 무효화.
 - **누적 자산**: runbook §4-6(브라우저 데모 경로 `/app` + `[hidden]` 함정노트) · 커밋 cafea04(per-file).
 - **Open loops**: 내일 founder 질문 예정 — 관련도(`rrf_score`)·청크 의미·조절 방법(top_k·청크 토큰타깃·RRF k·하이브리드 가중치). [[legal-rag-mvp-build]]
+
+### Growth-98 (2026-06-20) — 법무 통합 제품 D1~D5 페르소나 드래프팅 + DFD 게이트 false-positive 2단 검증 (M3 vertical)
+- **1줄 rollup**: `docs/projects/legal/README.md` 골격의 D1~D5 슬롯을 4 페르소나 3-wave 오케스트레이션으로 산출 — D1 기능명세(PM, F-01~F-22+NFR22), D2 유저플로우(PM, 4플로우+screen inventory S-01~S-17), D3 와이어프레임(CDO, 16뷰+theme `legal-pro` 권고), D4 ERD(DBA, 8엔티티/10관계), D5 DFD(DBA P1~P25 + QA §9 검증게이트 21단언). 각 페르소나 envelope-only 반환(subagent-output-protocol)으로 main context 보호.
+- **근본원인/교훈**: QA 가 DFD 게이트에서 I-1(임베딩 `passage:`/`query:` prefix 미적용 → BLK-1 merge BLOCK)을 founder 보고 직전까지 올렸으나, **CTO 독립 소스검증 결과 false positive**. prefix 는 메인 `embed_client.py`(thin wrapper, raw text 의도된 전달)가 아니라 **embed-adapter 사이드카**(`embed-adapter/app.py`: `/embed`→query·`/embed/batch`→passage, `_embed_local()` 적용, 불변식 테스트 `test_adapter.py` 보유)가 적용. 호출부 정합(ingest=batch/passage, search=single/query)이며 caller-split 은 **기존 정적 가드 G-87 으로 이미 보호**. QA 가 사이드카+G-87 둘 다 미열람. **교훈: 서브에이전트의 결함 판정(특히 cross-service/사이드카 경계)은 founder-facing 보고 전 CTO 독립검증 필수 — thin wrapper 만 보고 결함 단정 금지**. [[subagent-cross-service-verify]]
+- **정직성**: 라이브 검색 prefix·rrf_score 품질 정상 확정(메모리 legal-rag "LIVE·동작" 유효, 품질 미달 아님). 새 코드 0 — 문서 산출 + 거짓 BLOCK 정정만. D5 §9.1/9.2/9.4/9.5 + README §3/§7 의 BLK-1 표기를 "철회(false positive)" 로 일괄 정정.
+- **누적 자산**: D1~D5 정식 standalone 문서 5종(`docs/projects/legal/D{1..5}-*.md`) — §2 3중용도(영업·인도물·구현입력). DFD 게이트 = 코드 前 설계검증 + CTO 독립검증 2단 프로세스 패턴 확립.
+- **Open loops**: BLOCK 아닌 triage 갭 — 엔드포인트 G-1~G-6(D2), 성능 I-2(FTS+ANN 병렬화), 데이터모델(polymorphic FK·keywords 1NF), 열린질문 Q-1(사건 CRUD 범위)/Q-3(query_text 평문 PIPA). 다음: adapter/theme `legal-pro` 구현 패스. [[legal-unified-product-docs]] [[legal-rag-mvp-build]]
