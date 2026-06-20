@@ -34,6 +34,7 @@ class RetrievedChunk:
     rrf_score: float        # higher = more relevant
     fts_rank: int | None    # rank in FTS result (1-based), None if not in FTS results
     ann_rank: int | None    # rank in ANN result (1-based), None if not in ANN results
+    relevance: float | None = None  # cosine similarity: 1 - ANN distance. None if ANN miss.
 
 
 def _rrf_score(rank: int | None, k: int) -> float:
@@ -95,11 +96,12 @@ LIMIT %s
 # Stage 2: ANN candidates
 # Uses HNSW index (embedding IS NOT NULL partial index covers only embedded rows).
 # pgvector cosine: <=> operator (lower = more similar). ORDER BY ASC → best first.
+# distance column (alias) is captured so relevance = 1 - distance can be computed.
 _ANN_SQL = """
-SELECT id::text
+SELECT id::text, embedding <=> %s::vector AS distance
 FROM legal_document_chunk
 WHERE embedding IS NOT NULL
-ORDER BY embedding <=> %s::vector
+ORDER BY distance ASC
 LIMIT %s
 """
 
@@ -127,6 +129,7 @@ async def hybrid_search(
     fts_limit: int = 100,
     ann_limit: int = 100,
     rrf_k: int = 60,
+    min_relevance: float = 0.0,
 ) -> list[RetrievedChunk]:
     """Run hybrid FTS+ANN+RRF search and return top_k chunks.
 
@@ -141,6 +144,9 @@ async def hybrid_search(
         fts_limit:       Max candidates from FTS stage.
         ann_limit:       Max candidates from ANN stage.
         rrf_k:           RRF constant.
+        min_relevance:   Minimum cosine relevance threshold [0.0, 1.0].
+                         Results with no FTS match and relevance < min_relevance
+                         are discarded. Default 0.0 = filter OFF.
 
     Returns:
         List of RetrievedChunk ordered by RRF score descending.
@@ -166,6 +172,10 @@ async def hybrid_search(
     )
     ann_rows = await ann_cur.fetchall()
     ann_ids = [r[0] for r in ann_rows]
+    # Build {chunk_id: relevance} map. pgvector cosine distance = 1 - similarity.
+    ann_relevance: dict[str, float] = {
+        r[0]: max(0.0, round(1.0 - float(r[1]), 4)) for r in ann_rows
+    }
     logger.debug("ANN stage: %d candidates", len(ann_ids))
 
     # Stage 3: RRF merge
@@ -203,8 +213,24 @@ async def hybrid_search(
                 rrf_score=score,
                 fts_rank=fts_rank,
                 ann_rank=ann_rank,
+                relevance=ann_relevance.get(row[0]),
             )
         )
+
+    # Relevance filter: skip ANN-only results below threshold.
+    # FTS matches (fts_rank is not None) bypass the threshold — lexical hits always kept.
+    if min_relevance > 0.0:
+        before = len(results)
+        results = [
+            c for c in results
+            if c.fts_rank is not None
+            or (c.relevance is not None and c.relevance >= min_relevance)
+        ]
+        if len(results) < before:
+            logger.debug(
+                "Relevance filter (min=%.4f) dropped %d/%d chunks.",
+                min_relevance, before - len(results), before,
+            )
 
     logger.info(
         "hybrid_search returned %d chunks (top_k=%d) for query: %.60s...",
