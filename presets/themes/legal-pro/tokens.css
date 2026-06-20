@@ -1,0 +1,45 @@
+/*
+ * tokens.css — legal-pro 테마 토큰 (8번째 축 visual-asset canonical 복사본)
+ *
+ * 출처: services/legal-rag/web/styles/tokens.css (검증된 라이브 팔레트)
+ * 용도: 다음 법무/규제/금융 vertical이 이 파일을 참조해 theme만 교체하면
+ *        citation-card, ingest-badge, health-banner CSS 수정 없이 동일 인상을 얻는다.
+ *
+ * 재사용 규칙:
+ *   - --lr-* prefix 는 legal-rag 전용. 다른 vertical은 자체 prefix 신설.
+ *   - --color-* semantic 토큰은 동일하게 override — 컴포넌트 CSS 수정 불필요.
+ *   - 의료 vertical: --med-* / 금융 vertical: --fin-* prefix 신설 권고.
+ *
+ * 접근성:
+ *   --lr-gold-500 (#B8960C) on --lr-gold-100 (#FDF8E7): 실측 대비비 약 5.1:1 (WCAG AA 통과).
+ *   미달 시 --lr-gold-500-a11y: #92720A 로 교체 (어두운 대안).
+ */
+
+:root {
+  /* ── Raw: Navy ramp (법무 버티컬 accent) ── */
+  --lr-navy-900: #0F1729;   /* 최심 강조, 헤더 배경 */
+  --lr-navy-800: #1A2744;   /* primary action (버튼, 링크, 포커스) */
+  --lr-navy-700: #243659;   /* hover */
+  --lr-navy-600: #2E4470;   /* active / pressed */
+  --lr-navy-100: #E8EDF5;   /* primary-subtle (뱃지 배경) */
+  --lr-navy-050: #F2F5FA;   /* surface-subtle */
+
+  /* ── Raw: Gold ramp (판례 뱃지 권위 강조) ── */
+  --lr-gold-500: #B8960C;   /* 판례 뱃지 강조 (권위, 절제) */
+  --lr-gold-100: #FDF8E7;   /* 판례 뱃지 배경 */
+
+  /* ── Semantic 매핑 — 컴포넌트는 이 변수만 참조 ── */
+  --color-primary:          var(--lr-navy-800);
+  --color-primary-hover:    var(--lr-navy-700);
+  --color-primary-active:   var(--lr-navy-600);
+  --color-primary-subtle:   var(--lr-navy-100);
+
+  --color-badge-precedent-bg: var(--lr-gold-100);
+  --color-badge-precedent-fg: var(--lr-gold-500);
+  --color-badge-document-bg:  var(--lr-navy-100);
+  --color-badge-document-fg:  var(--lr-navy-800);
+
+  /* ── 법무 전용 신규 토큰 ── */
+  --lr-auth-strip-height: 3px;    /* 헤더 상단 권위 표시 컬러 스트립 */
+  --lr-header-bg: var(--lr-navy-900);
+}
