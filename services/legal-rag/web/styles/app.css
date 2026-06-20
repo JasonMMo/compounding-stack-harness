@@ -953,6 +953,166 @@ body.persona-it .chunk-ref {
 }
 
 /* ══════════════════════════════════════════════
+   14a. 원문 슬라이드오버 드로어 (.doc-drawer)
+══════════════════════════════════════════════ */
+
+/* 백드롭 오버레이 */
+.doc-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.35);
+  z-index: 300;
+  opacity: 0;
+  transition: opacity var(--transition-control);
+  pointer-events: none;
+}
+
+.doc-drawer-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 드로어 패널 */
+.doc-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(520px, 92vw);
+  background: var(--color-surface-1);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+  z-index: 301;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform var(--transition-control);
+  overflow: hidden;
+}
+
+.doc-drawer.is-open {
+  transform: translateX(0);
+}
+
+/* 드로어 헤더 */
+.doc-drawer__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px var(--space-card-pad);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.doc-drawer__title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-drawer__title {
+  font-size: var(--text-heading-card-size);
+  font-weight: var(--text-heading-card-fw);
+  line-height: var(--text-heading-card-lh);
+  color: var(--color-text-1);
+  word-break: break-word;
+}
+
+.doc-drawer__citation {
+  font-size: var(--text-meta-size);
+  color: var(--color-text-3);
+  margin-top: 2px;
+  word-break: break-word;
+}
+
+.doc-drawer__close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--color-text-3);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.doc-drawer__close:hover {
+  background-color: var(--color-surface-3);
+  color: var(--color-text-1);
+}
+
+.doc-drawer__close:focus-visible {
+  outline: 3px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* 드로어 메타 행 */
+.doc-drawer__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 12px var(--space-card-pad);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  background: var(--color-surface-2);
+}
+
+.doc-drawer__meta-item {
+  font-size: var(--text-caption-size);
+  color: var(--color-text-3);
+}
+
+.doc-drawer__meta-item strong {
+  font-weight: 500;
+  color: var(--color-text-2);
+  margin-right: 2px;
+}
+
+/* 드로어 본문 */
+.doc-drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-card-pad);
+}
+
+.doc-drawer__body-text {
+  font-size: var(--text-body-size);
+  line-height: 1.9;
+  color: var(--color-text-1);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 드로어 상태 메시지 (로딩/오류) */
+.doc-drawer__status {
+  padding: 40px var(--space-card-pad);
+  text-align: center;
+  font-size: var(--text-body-size);
+  color: var(--color-text-3);
+  line-height: 1.6;
+}
+
+.doc-drawer__status--error {
+  color: var(--color-danger);
+}
+
+/* fallback 뱃지 */
+.doc-drawer__fallback-badge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 2px 8px;
+  font-size: var(--text-caption-size);
+  border-radius: var(--radius-badge);
+  background-color: var(--color-warning-subtle);
+  color: var(--color-warning);
+}
+
+/* ══════════════════════════════════════════════
    14. 반응형 (1024px 이상 기본, 768px 이하 최소 대응)
 ══════════════════════════════════════════════ */
 
