@@ -274,6 +274,25 @@ class DocumentResponse(BaseModel):
     body_is_holding_fallback: bool = False
 
 
+class CaseDocumentItem(BaseModel):
+    doc_id: str
+    title: str | None = None
+    document_type: str | None = None
+    ingest_status: str | None = None
+
+
+class CaseDetailResponse(BaseModel):
+    case_id: str
+    case_number: str
+    title: str
+    status: str
+    case_type: str | None = None
+    description: str | None = None
+    opened_at: str | None = None
+    closed_at: str | None = None
+    documents: list[CaseDocumentItem]
+
+
 # ── Login helper ──────────────────────────────────────────────────────────────
 
 _LOGIN_FAIL_MSG = "이메일 또는 비밀번호가 올바르지 않습니다."
@@ -411,6 +430,96 @@ async def list_cases(
         for r in rows
     ]
     return CasesResponse(cases=cases, total=len(cases))
+
+
+@app.get("/cases/{case_id}", response_model=CaseDetailResponse, tags=["cases"])
+async def get_case(
+    case_id: str,
+    attorney_id: Annotated[str, Depends(_attorney_dep)],
+):
+    """Fetch a single case and its document list (read-only, S-16).
+
+    Requires Authorization: Bearer <JWT>.
+    RLS enforces visibility: only cases where assigned_attorney_id or partner_id
+    matches the JWT sub claim are returned. If the case exists but the attorney
+    has no access, the result is 0 rows → 404 (existence not disclosed).
+
+    UUID format error → 400.
+    """
+    try:
+        uuid.UUID(case_id)
+    except ValueError:
+        raise HTTPException(400, f"case_id is not a valid UUID: {case_id!r}")
+
+    pool = _get_pool()
+
+    async with pool.connection() as conn:
+        async with database.rls_session(conn, attorney_id):
+            # Case meta — RLS filters cross-attorney rows
+            cur = await conn.execute(
+                """
+                SELECT
+                  id::text,
+                  case_number,
+                  title,
+                  status,
+                  case_type,
+                  description,
+                  opened_at::text,
+                  closed_at::text
+                FROM legal_case
+                WHERE id = %s
+                """,
+                (case_id,),
+            )
+            row = await cur.fetchone()
+
+            if row is None:
+                # 404: cross-attorney case or non-existent — same response (existence not disclosed)
+                raise HTTPException(status_code=404, detail="사건을 찾을 수 없습니다.")
+
+            (
+                _case_id, case_number, title, status,
+                case_type, description, opened_at, closed_at,
+            ) = row
+
+            # Document list for this case (RLS already scoped by session above)
+            dcur = await conn.execute(
+                """
+                SELECT
+                  id::text,
+                  title,
+                  document_type,
+                  ingest_status
+                FROM legal_case_document
+                WHERE case_id = %s
+                ORDER BY filed_at NULLS LAST, id
+                """,
+                (case_id,),
+            )
+            doc_rows = await dcur.fetchall()
+
+    documents = [
+        CaseDocumentItem(
+            doc_id=dr[0],
+            title=dr[1],
+            document_type=dr[2],
+            ingest_status=dr[3],
+        )
+        for dr in doc_rows
+    ]
+
+    return CaseDetailResponse(
+        case_id=_case_id,
+        case_number=case_number,
+        title=title,
+        status=status,
+        case_type=case_type,
+        description=description,
+        opened_at=opened_at,
+        closed_at=closed_at,
+        documents=documents,
+    )
 
 
 @app.get("/health", response_model=HealthResponse, tags=["ops"])
