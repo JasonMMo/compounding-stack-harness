@@ -18,6 +18,7 @@ const STATE = {
   token: null,         // JWT 문자열 (메모리)
   displayName: null,   // 로그인한 변호사 이름
   attorneyId: null,    // UUID
+  role: null,          // attorney role ('partner' | 'associate' | null)
   cases: [],           // CaseOut[] — 사건 목록 캐시
   lastQuery: "",       // 직전 검색어 (검색창 유지용)
 };
@@ -60,6 +61,7 @@ const casesError    = $("cases-error");
 const casesTable    = $("cases-table");
 const casesTbody    = $("cases-tbody");
 const casesEmpty    = $("cases-empty");
+const casesPartnerCaption = $("cases-partner-caption");
 
 // ── 사건 상세 패널 DOM 참조 (S-16) ──────────────────────────────────────────
 const caseDetailPanel     = $("case-detail-panel");
@@ -145,6 +147,12 @@ loginForm.addEventListener("submit", async (e) => {
       body: JSON.stringify({ email, password }),
     });
 
+    if (res.status === 429) {
+      // G-6: rate-limit 전용 메시지 (D2 §6)
+      showLoginAlert("요청이 너무 많습니다. 잠시 후 다시 시도하세요.");
+      return;
+    }
+
     if (res.status === 401) {
       const data = await res.json();
       showLoginAlert(data.detail || "이메일 또는 비밀번호가 올바르지 않습니다.");
@@ -160,6 +168,15 @@ loginForm.addEventListener("submit", async (e) => {
     STATE.token = data.access_token;
     STATE.displayName = data.display_name;
     STATE.attorneyId = data.attorney_id;
+
+    // JWT payload 클라이언트 디코드 — role 클레임 추출 (검증 없이 표시 전용)
+    try {
+      const payloadB64 = data.access_token.split(".")[1];
+      const payload = JSON.parse(atob(payloadB64));
+      STATE.role = payload.role || null;
+    } catch {
+      STATE.role = null;
+    }
 
     headerUsername.textContent = STATE.displayName;
     loginPassword.value = "";   // 비밀번호 필드 클리어
@@ -395,6 +412,7 @@ btnLogout.addEventListener("click", () => {
   STATE.token = null;
   STATE.displayName = null;
   STATE.attorneyId = null;
+  STATE.role = null;
   STATE.cases = [];
   STATE.lastQuery = "";
   searchInput.value = "";
@@ -554,7 +572,10 @@ function createMetaSep() {
 
 function buildCitationCard(cit, queryTerms) {
   const li = document.createElement("li");
-  li.className = "citation-card";
+  const typeClass = cit.source_type === "precedent"
+    ? "citation-card--precedent"
+    : "citation-card--document";
+  li.className = `citation-card ${typeClass}`;
 
   // ── 헤더 (뱃지 + 메타) ──────────────────────────────────────────────────
   const header = document.createElement("div");
@@ -732,6 +753,18 @@ async function doSearch() {
     const queryText = document.createElement("em");
     queryText.textContent = `"${query}"`;
     resultsHeader.appendChild(queryText);
+
+    // F-12: SearchResponse.note 시각화 — Lite 안내 (D3 S-05 results-header)
+    if (data.note) {
+      const noteSep = document.createElement("span");
+      noteSep.setAttribute("aria-hidden", "true");
+      noteSep.textContent = " · ";
+      resultsHeader.appendChild(noteSep);
+      const noteSpan = document.createElement("span");
+      noteSpan.className = "results-header__note";
+      noteSpan.textContent = "출처 인용만 제공 — 생성형 답변 없음";
+      resultsHeader.appendChild(noteSpan);
+    }
 
   } catch (err) {
     console.error("Search error", err);
@@ -1075,6 +1108,11 @@ async function loadCases() {
 
     renderCasesTable(cases);
     casesTable.hidden = false;
+
+    // CEO 파트너 캡션 (D3 S-10 UX-2)
+    if (casesPartnerCaption) {
+      casesPartnerCaption.hidden = STATE.role !== "partner";
+    }
 
   } catch (err) {
     console.error("Cases fetch error", err);
