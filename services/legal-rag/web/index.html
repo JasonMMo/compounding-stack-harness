@@ -123,7 +123,7 @@
             class="search-bar__input"
             id="search-input"
             rows="2"
-            placeholder="판례나 사건 관련 내용을 한국어로 입력하세요"
+            placeholder="예: 이혼소송 재산분할 최근 판례, 손해배상 과실상계 비율 등 자연어로 입력하세요"
             aria-label="법률 문서 검색"
             aria-multiline="true"
           ></textarea>
@@ -197,6 +197,10 @@
           </table>
           <div id="cases-empty" class="results-message" role="status" hidden>
             담당 사건이 없습니다.
+          </div>
+          <!-- CEO 파트너 캡션 (조건부 표시 — role=partner 시) -->
+          <div id="cases-partner-caption" class="cases-partner-caption" hidden>
+            파트너 변호사로 로그인 중. 법인 전체 사건이 표시됩니다.
           </div>
         </section>
       </main>
