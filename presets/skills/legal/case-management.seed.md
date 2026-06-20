@@ -32,6 +32,6 @@
 
 ## AI Search 연결 (Growth-24 A안)
 
-- `legal-case.summary` 필드: postgres tsvector 인덱스 → 키워드 기반 사건 검색 (즉시 가능)
+- `legal-case.summary`/`fts_vector`: postgres tsvector 인덱스 → 키워드 기반 사건 검색 ✅ 구현
 - `precedent` 연결은 별도 seed (`precedent-registry.seed.md`) 참조
-- RAG 벡터 임베딩: 어댑터 레이어 구현 예정 — 이 seed 의 scope 외
+- RAG 벡터 임베딩: **구현·라이브** (`services/legal-rag/`, 로컬 multilingual-e5-base, 청크 레벨 하이브리드 FTS∥ANN→RRF — Growth-93/97). 상세 [[legal-rag-pattern]]
