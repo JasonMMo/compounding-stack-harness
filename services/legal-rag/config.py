@@ -90,7 +90,7 @@ def load() -> Settings:
         db_dsn=_require("LEGAL_RAG_DB_DSN"),
         embed_url=_require("LEGAL_RAG_EMBED_URL").rstrip("/"),
         embed_model_version=_optional(
-            "LEGAL_RAG_EMBED_MODEL_VERSION", "embeddinggemma-768"
+            "LEGAL_RAG_EMBED_MODEL_VERSION", "multilingual-e5-base"
         ),
         chunk_token_target=int(_optional("LEGAL_RAG_CHUNK_TOKENS", "500")),
         chunk_overlap_tokens=int(_optional("LEGAL_RAG_CHUNK_OVERLAP", "50")),
