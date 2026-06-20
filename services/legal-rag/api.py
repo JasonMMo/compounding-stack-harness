@@ -203,6 +203,7 @@ class CitationOut(BaseModel):
     rrf_score: float
     fts_rank: int | None = None
     ann_rank: int | None = None
+    relevance: float | None = None
     case_number: str | None = None
     court: str | None = None
     decision_date: str | None = None
@@ -659,6 +660,7 @@ async def search(
                 fts_limit=settings.fts_candidate_limit,
                 ann_limit=settings.ann_candidate_limit,
                 rrf_k=settings.rrf_k,
+                min_relevance=settings.search_min_relevance,
             )
             citations = await citation_mod.resolve_citations(
                 conn=conn,
@@ -676,11 +678,11 @@ async def search(
             )
 
     chunk_rank_map = {
-        c.chunk_id: (c.fts_rank, c.ann_rank) for c in chunks
+        c.chunk_id: (c.fts_rank, c.ann_rank, c.relevance) for c in chunks
     }
     results_out = []
     for cit in citations:
-        fts_r, ann_r = chunk_rank_map.get(cit.chunk_id, (None, None))
+        fts_r, ann_r, relevance = chunk_rank_map.get(cit.chunk_id, (None, None, None))
         results_out.append(
             CitationOut(
                 chunk_id=cit.chunk_id,
@@ -692,6 +694,7 @@ async def search(
                 rrf_score=cit.rrf_score,
                 fts_rank=fts_r,
                 ann_rank=ann_r,
+                relevance=relevance,
                 case_number=cit.case_number,
                 court=cit.court,
                 decision_date=cit.decision_date,
