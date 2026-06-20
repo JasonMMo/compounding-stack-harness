@@ -136,8 +136,8 @@ flowchart TD
     B --> C[F-01 POST /auth/login]
     C --> D[검색 탭 자동 진입\n초기 상태: '검색어를 입력하면...']
     D --> E{검색어 입력}
-    E -- 직접 자유 검색 --> F[POST /search\n{query, top_k, case_id=null}\nF-08]
-    E -- 사건현황에서 필터 진입 --> G[case_id 자동 설정\nPOST /search {query, top_k, case_id}\nF-09]
+    E -- 직접 자유 검색 --> F["POST /search\n{query, top_k, case_id=null}\nF-08"]
+    E -- 사건현황에서 필터 진입 --> G["case_id 자동 설정\nPOST /search {query, top_k, case_id}\nF-09"]
     F --> H{검색 응답}
     G --> H
     H -- 결과 있음 --> I[인용 카드 목록 렌더\n스켈레톤 3개 → 실제 카드 교체]
@@ -191,7 +191,7 @@ flowchart TD
     I --> J[사건 목록 + 색인 상태 뱃지 확인\n색인완료/대기중/색인실패 F-06]
     J --> K{색인 실패 확인?}
     K -- 실패 행 발견 --> L[실패 사건 파악\nIngest 재실행 필요]
-    L --> M[서비스 토큰으로 POST /ingest\n{file_path, case_id, source_type, ...}\nF-14 — 브라우저 SPA 외부 경로]
+    L --> M["서비스 토큰으로 POST /ingest\n{file_path, case_id, source_type, ...}\nF-14 — 브라우저 SPA 외부 경로"]
     M --> N[path-traversal 검증 F-15\n멱등성 보장 F-16]
     N --> O[재색인 후 GET /cases 재확인]
     K -- 정상 --> P[인용 카드 IT 상세 확인]
