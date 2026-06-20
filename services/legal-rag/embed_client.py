@@ -1,5 +1,5 @@
 """
-embed_client.py — HTTP client for local embeddinggemma sidecar.
+embed_client.py — HTTP client for the local embedding sidecar.
 
 CONTRACT:
   - Sidecar base URL: env LEGAL_RAG_EMBED_URL (e.g. http://localhost:8080)
@@ -30,7 +30,7 @@ class EmbedDimensionError(ValueError):
 
 
 class EmbedClient:
-    """Thin HTTP wrapper around the local embeddinggemma sidecar.
+    """Thin HTTP wrapper around the local embedding sidecar.
 
     Lazy-imports httpx so the module is importable without httpx installed
     (unit tests that don't exercise HTTP paths still work).
@@ -58,7 +58,7 @@ class EmbedClient:
             return resp.json()
         except httpx.ConnectError as exc:
             raise EmbedSidecarUnavailable(
-                f"Cannot reach embeddinggemma sidecar at {self._base_url}. "
+                f"Cannot reach embedding sidecar at {self._base_url}. "
                 "Ensure the sidecar container is running. "
                 "Cloud API fallback is intentionally disabled."
             ) from exc
