@@ -60,6 +60,11 @@ class Settings:
     ann_candidate_limit: int
     """Max rows fetched by ANN stage before RRF (default 100)."""
 
+    search_min_relevance: float
+    """Minimum cosine relevance [0.0, 1.0] for ANN-only results to be returned.
+    Results that have an FTS match bypass this threshold (lexical hits are always kept).
+    Default 0.0 = filter OFF (all results pass). Set via LEGAL_RAG_SEARCH_MIN_RELEVANCE."""
+
     # ── Connection pool ───────────────────────────────────────────────────────
     db_pool_min: int
     db_pool_max: int
@@ -84,6 +89,22 @@ class Settings:
     Set via LEGAL_RAG_ENV environment variable."""
 
 
+def _load_min_relevance() -> float:
+    """Parse LEGAL_RAG_SEARCH_MIN_RELEVANCE; validate [0.0, 1.0]. Default 0.0."""
+    raw = _optional("LEGAL_RAG_SEARCH_MIN_RELEVANCE", "0.0")
+    try:
+        val = float(raw)
+    except ValueError:
+        raise RuntimeError(
+            f"LEGAL_RAG_SEARCH_MIN_RELEVANCE must be a float in [0.0, 1.0], got {raw!r}"
+        )
+    if not (0.0 <= val <= 1.0):
+        raise RuntimeError(
+            f"LEGAL_RAG_SEARCH_MIN_RELEVANCE must be in [0.0, 1.0], got {val}"
+        )
+    return val
+
+
 def load() -> Settings:
     """Load settings from environment. Call once at startup."""
     return Settings(
@@ -98,6 +119,7 @@ def load() -> Settings:
         top_k=int(_optional("LEGAL_RAG_TOP_K", "10")),
         fts_candidate_limit=int(_optional("LEGAL_RAG_FTS_LIMIT", "100")),
         ann_candidate_limit=int(_optional("LEGAL_RAG_ANN_LIMIT", "100")),
+        search_min_relevance=_load_min_relevance(),
         db_pool_min=int(_optional("LEGAL_RAG_POOL_MIN", "2")),
         db_pool_max=int(_optional("LEGAL_RAG_POOL_MAX", "10")),
         ingest_root=_require("LEGAL_RAG_INGEST_ROOT"),
