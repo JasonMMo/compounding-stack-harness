@@ -42,7 +42,7 @@ source: Growth-24 CTO 설계 (lawfirm-demo A안 채택)
 | 검색 쿼리 임베딩 | $0.02/1M tokens | 50회/일 × 200 tokens × 30일 = 0.3M | ~$0.006 |
 | **합계** | | | **< $1/월** |
 
-로컬 모델(`nomic-embed-text`) 채택 시 비용 0.
+로컬 모델(`multilingual-e5-base`) 채택 시 비용 0. (실제 채택 모델 — Growth-93)
 
 ## 관련
 
