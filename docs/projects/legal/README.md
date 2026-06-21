@@ -45,11 +45,18 @@
 
 **자동 vs 수동:** 1차는 수동 리뷰 게이트(DBA 작성·QA 검증). 일부는 이미 자동화됨 — RLS 격리 흐름(흐름 3)은 `deploy/preview/legal-rag.verify-search.sh` 의 A/B/C 단언으로 라이브 실증 가능. 향후 DFD 노드별 단언을 `pytest -m postgres`(Open loop C2)로 흡수.
 
-## 5. 통합 아키텍처 스케치 (다음 단계, 미확정)
+## 5. 통합 아키텍처 — 확정 (2026-06-21, founder)
 
-- 새 adapter 가칭 `frontend/adapters/legal-pro/` — 사건관리 화면 + 판례 검색 패널 **통합 1앱**. middle contract 읽기전용.
-- `legal-rag` 서비스의 `/search`·`/cases`·`/auth` 를 그대로 backend 로, 새 adapter 가 프런트.
-- vanilla-htmx 와의 관계(별 adapter vs theme 레이어)는 CDO·engineer 설계 패스에서 확정.
+- **별도 frontend adapter `frontend/adapters/legal-pro/`** (React+Vite, 기존 `react` 어댑터 변형). vanilla-htmx 위 theme 레이어 ✗. 동기: 7 데모가 한 디자인이라 의뢰자에게 "하나처럼" 보이는 약점 → legal 은 시각적으로 다른 프리미엄 제품. CTO 권장(라이브 vanilla-JS SPA 승격)을 founder 가 기각, React 택함(컴포넌트화·인터랙션 우선).
+- 사건관리 화면 + 판례 검색 패널 **통합 1앱**. middle contract **읽기전용**(open-closed 불변). backend = `legal-rag` 서비스의 `/search`·`/cases`·`/auth`.
+- `legal-pro` 테마(navy+gold, `presets/themes/legal-pro/`) baked-in.
+
+**페이즈 분리** (의존성 기반):
+
+| 페이즈 | 범위 | 차단 |
+|---|---|---|
+| **A** | 스캐폴드 + legal-pro 테마 + 판례검색 화면(라이브 `/search`, 응답계약 보존: relevance%·citation 1:1·min_relevance) + 로그인(JWT) | 없음 — 즉시 빌드 (engineer 위임, L3 npm build 게이트) |
+| **B** | 사건관리 CRUD 화면(목록/상세/생성) | `/cases` 엔드포인트 G-1~G-6 미구현 + Q-1(CRUD 범위) 미확정 |
 
 ## 6. 페르소나 드래프팅 — 완료 (2026-06-20)
 
