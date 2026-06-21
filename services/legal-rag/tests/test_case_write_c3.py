@@ -383,6 +383,26 @@ class TestUploadEndpointMock:
         assert resp.status_code == 400
         assert "document_type" in resp.json().get("detail", "")
 
+    # ── 400: filed_at 잘못된 형식 ────────────────────────────────────────────────
+    def test_invalid_filed_at_format_400(self, tmp_path):
+        """filed_at 이 YYYY-MM-DD 가 아닌 문자열이면 400 (500 방어)."""
+        from unittest.mock import patch, MagicMock
+
+        with patch("api._pool", MagicMock()), \
+             patch("api._settings") as mock_settings:
+            mock_settings.storage_root = str(tmp_path)
+            mock_settings.jwt_secret = "test"
+
+            client = self._client()
+            resp = client.post(
+                f"/cases/{uuid.uuid4()}/documents",
+                headers=self._headers(),
+                data={"document_type": "contract", "filed_at": "20240101"},  # 잘못된 형식
+                files={"file": ("doc.pdf", b"%PDF-1.4 test", "application/pdf")},
+            )
+        assert resp.status_code == 400
+        assert "filed_at" in resp.json().get("detail", "")
+
     # ── 400: invalid UUID case_id ─────────────────────────────────────────────
     def test_invalid_case_id_uuid_400(self, tmp_path):
         from unittest.mock import patch, MagicMock
