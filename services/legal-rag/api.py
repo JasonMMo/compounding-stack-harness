@@ -38,7 +38,7 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -190,7 +190,10 @@ class SearchRequest(BaseModel):
     case_id: str | None = Field(
         None, description="Optional: scope search to a specific case."
     )
-    top_k: int | None = Field(None, ge=1, le=50, description="Override default top-k.")
+    top_k: int | None = Field(None, ge=1, le=50, description="Override default top-k (max results per page).")
+    offset: int = Field(
+        0, ge=0, description="Zero-based result offset for pagination. Default 0."
+    )
     match_mode: str = Field(
         "or",
         pattern="^(or|and)$",
@@ -220,6 +223,7 @@ class CitationOut(BaseModel):
 class SearchResponse(BaseModel):
     query_log_id: str
     total_results: int
+    offset: int = Field(0, description="Zero-based result offset that was applied.")
     results: list[CitationOut]
     note: str = (
         "Lite tier: ranked chunks + citations returned. "
@@ -262,7 +266,9 @@ class CaseOut(BaseModel):
 
 class CasesResponse(BaseModel):
     cases: list[CaseOut]
-    total: int
+    total: int = Field(..., description="Total matching cases in DB (for pagination).")
+    limit: int = Field(50, description="Page size used for this response.")
+    offset: int = Field(0, description="Zero-based offset used for this response.")
 
 
 class DocumentResponse(BaseModel):
@@ -379,9 +385,13 @@ async def login(req: LoginRequest):
     )
 
 
+_CASES_LIST_MAX_LIMIT = 200  # hard cap per page
+
 @app.get("/cases", response_model=CasesResponse, tags=["cases"])
 async def list_cases(
     attorney_id: Annotated[str, Depends(_attorney_dep)],
+    limit: int = Query(50, ge=1, le=_CASES_LIST_MAX_LIMIT, description="Page size (1–200). Default 50."),
+    offset: int = Query(0, ge=0, description="Zero-based row offset. Default 0."),
 ):
     """List cases assigned to the authenticated attorney, with document ingest status.
 
@@ -391,11 +401,25 @@ async def list_cases(
 
     ingest_status values from DDL: 'pending' | 'processing' | 'done' | 'error' | NULL
     UI maps: done→indexed, pending+processing→pending, error→failed.
+
+    Pagination: use `limit` and `offset` query params. `total` in response is the
+    total number of accessible cases (for computing page count on the client).
+
+    TODO (Q-1 deferred): POST /cases and PATCH /cases/{id} (case intake/edit) are
+    blocked on CTO decision re: intake workflow and required fields. See Q-1 in
+    docs/projects/legal/D2-user-flow.md §9 gap G-2.
     """
     pool = _get_pool()
 
     async with pool.connection() as conn:
         async with database.rls_session(conn, attorney_id):
+            # Total count (RLS-filtered) — separate query avoids OVER() overhead
+            count_cur = await conn.execute(
+                "SELECT COUNT(*) FROM legal_case"
+            )
+            total_row = await count_cur.fetchone()
+            total_count: int = total_row[0] if total_row else 0
+
             cur = await conn.execute(
                 """
                 SELECT
@@ -416,7 +440,9 @@ async def list_cases(
                 LEFT JOIN legal_case_document lcd ON lcd.case_id = lc.id
                 GROUP BY lc.id, lc.case_number, lc.title, lc.status
                 ORDER BY lc.case_number
+                LIMIT %s OFFSET %s
                 """,
+                (limit, offset),
             )
             rows = await cur.fetchall()
 
@@ -435,7 +461,7 @@ async def list_cases(
         )
         for r in rows
     ]
-    return CasesResponse(cases=cases, total=len(cases))
+    return CasesResponse(cases=cases, total=total_count, limit=limit, offset=offset)
 
 
 @app.get("/cases/{case_id}", response_model=CaseDetailResponse, tags=["cases"])
@@ -632,6 +658,9 @@ async def ingest(
     )
 
 
+_SEARCH_MAX_TOP_K = 50   # hard cap matching SearchRequest.top_k le=50
+_SEARCH_MAX_OFFSET = 500  # cap offset: RRF is a re-ranking pass, deep paging degrades quality
+
 @app.post("/search", response_model=SearchResponse, tags=["search"])
 async def search(
     req: SearchRequest,
@@ -642,6 +671,12 @@ async def search(
     Requires Authorization: Bearer <JWT>.
     attorney_id is extracted from JWT `sub` claim — body does not carry it.
     DOES NOT generate an LLM answer (Lite tier guarantee).
+
+    Pagination: `top_k` is the page size (max 50); `offset` is zero-based result
+    offset (max 500 — deep offset into RRF ranking degrades result quality and is
+    capped). The retrieve layer fetches top_k + offset candidates so that slicing
+    is applied after RRF ordering. `total_results` in response is the count of
+    results after applying offset (i.e. the number of items in `results`).
     """
     settings = _get_settings()
     pool = _get_pool()
@@ -652,7 +687,12 @@ async def search(
         except ValueError:
             raise HTTPException(400, f"case_id is not a valid UUID: {req.case_id!r}")
 
-    top_k = req.top_k or settings.top_k
+    page_size = req.top_k or settings.top_k
+    # Clamp offset to max (guards against absurdly deep pagination)
+    eff_offset = min(req.offset, _SEARCH_MAX_OFFSET)
+    # Fetch enough candidates so slicing after RRF produces page_size results
+    retrieve_top_k = page_size + eff_offset
+
     t0 = time.monotonic()
 
     query_vec = _embed_or_503(req.query)
@@ -663,7 +703,7 @@ async def search(
                 conn=conn,
                 query_text=req.query,
                 query_embedding=query_vec,
-                top_k=top_k,
+                top_k=retrieve_top_k,
                 fts_limit=settings.fts_candidate_limit,
                 ann_limit=settings.ann_candidate_limit,
                 rrf_k=settings.rrf_k,
@@ -671,9 +711,11 @@ async def search(
                 match_mode=req.match_mode,
                 case_id=req.case_id,
             )
+            # Apply offset slice before citation resolution (skip already-seen top results)
+            paged_chunks = chunks[eff_offset:]
             citations = await citation_mod.resolve_citations(
                 conn=conn,
-                chunks=chunks,
+                chunks=paged_chunks,
             )
             latency_ms = int((time.monotonic() - t0) * 1000)
             log_id = await citation_mod.log_query(
@@ -687,7 +729,7 @@ async def search(
             )
 
     chunk_rank_map = {
-        c.chunk_id: (c.fts_rank, c.ann_rank, c.relevance) for c in chunks
+        c.chunk_id: (c.fts_rank, c.ann_rank, c.relevance) for c in paged_chunks
     }
     results_out = []
     for cit in citations:
@@ -716,6 +758,7 @@ async def search(
     return SearchResponse(
         query_log_id=log_id,
         total_results=len(results_out),
+        offset=eff_offset,
         results=results_out,
     )
 
