@@ -470,9 +470,8 @@ async def get_case(
                   title,
                   status,
                   case_type,
-                  description,
-                  opened_at::text,
-                  closed_at::text
+                  summary,
+                  filed_date::text
                 FROM legal_case
                 WHERE id = %s
                 """,
@@ -486,8 +485,11 @@ async def get_case(
 
             (
                 _case_id, case_number, title, status,
-                case_type, description, opened_at, closed_at,
+                case_type, summary, filed_date,
             ) = row
+            description = summary
+            opened_at = filed_date
+            closed_at = None
 
             # Document list for this case (RLS already scoped by session above)
             dcur = await conn.execute(
