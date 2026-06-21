@@ -4,6 +4,9 @@ import LoginScreen from './screens/LoginScreen'
 import PrecedentSearchScreen from './screens/PrecedentSearchScreen'
 import CasesScreen from './screens/CasesScreen'
 import CaseDetailScreen from './screens/CaseDetailScreen'
+// G-2 C1 — 사건 쓰기 화면
+import CaseCreateScreen from './screens/CaseCreateScreen'
+import CaseEditScreen from './screens/CaseEditScreen'
 
 // ── Auth token helpers (sessionStorage — clears on tab close) ─────────────
 const TOKEN_KEY = 'lp_token'
@@ -142,6 +145,24 @@ export default function App() {
           element={
             <RequireAuth>
               <CasesScreen />
+            </RequireAuth>
+          }
+        />
+        {/* G-2 C1 — 사건 쓰기 화면 (기존 라우트 수정 금지, 신규 가산만)
+            /cases/new 는 /cases/:id 보다 먼저 선언해야 React Router v6 이 정적 경로 우선 매칭 */}
+        <Route
+          path="/cases/new"
+          element={
+            <RequireAuth>
+              <CaseCreateScreen />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/cases/:id/edit"
+          element={
+            <RequireAuth>
+              <CaseEditScreen />
             </RequireAuth>
           }
         />
