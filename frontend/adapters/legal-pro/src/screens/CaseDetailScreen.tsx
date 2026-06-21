@@ -198,14 +198,25 @@ export default function CaseDetailScreen() {
           </button>
           <span>{detail.title}</span>
         </div>
-        <button
-          type="button"
-          className="btn btn--primary btn--sm"
-          onClick={handleSearch}
-          aria-label="이 사건으로 판례 검색"
-        >
-          검색
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {/* G-2 C1 진입점: [사건 수정] -> /cases/:id/edit (기존 렌더 로직 불변) */}
+          <button
+            type="button"
+            className="btn btn--outline btn--sm"
+            onClick={() => navigate(`/cases/${caseId}/edit`)}
+            aria-label="사건 수정"
+          >
+            사건 수정
+          </button>
+          <button
+            type="button"
+            className="btn btn--primary btn--sm"
+            onClick={handleSearch}
+            aria-label="이 사건으로 판례 검색"
+          >
+            검색
+          </button>
+        </div>
       </div>
 
       {/* 메타 행 (null 필드 생략) */}
