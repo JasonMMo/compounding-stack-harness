@@ -12,12 +12,13 @@
 #
 # PINNED VERSIONS
 #   pgvector : inherited from base image (pgvector/pgvector:pg16 — latest stable)
-#   pg_bigm  : 1.2 (last release 2021-08-17, stable on PG 16 via PGXS)
-#   Source   : https://github.com/pgbigm/pg_bigm/archive/refs/tags/v1.2.0.tar.gz
+#   pg_bigm  : v1.2-20250903 (latest v1.2 release, stable on PG 16 via PGXS)
+#   Source   : https://github.com/pgbigm/pg_bigm/archive/refs/tags/v1.2-20250903.tar.gz
+#   NOTE: pg_bigm tags use the form v1.2-YYYYMMDD (NOT semver v1.2.0).
 #
-# CHECKSUM (SHA-256 of v1.2.0.tar.gz — verify with: sha256sum v1.2.0.tar.gz)
-#   b8cde5a6f72016a5da6b059e0e8ef789faead35a0e966a3cdd1c64d8c3ab0a60
-#   Source: https://github.com/pgbigm/pg_bigm/releases/tag/v1.2.0
+# CHECKSUM (SHA-256 of v1.2-20250903.tar.gz — verified against GitHub codeload)
+#   4d4fb48161e3f9e99207851299379c83b3e5d1d3c1a07c35f6a3153d577b3142
+#   Tag: https://github.com/pgbigm/pg_bigm/releases/tag/v1.2-20250903
 #
 # BUILD OUTPUT
 #   pg_bigm.so, pg_bigm.control, pg_bigm--1.2.sql are installed to the
@@ -34,9 +35,9 @@
 FROM pgvector/pgvector:pg16
 
 # -- Pinned pg_bigm version / download coordinates ----------------------------
-ARG PGBIGM_VERSION=1.2.0
+ARG PGBIGM_VERSION=1.2-20250903
 ARG PGBIGM_URL=https://github.com/pgbigm/pg_bigm/archive/refs/tags/v${PGBIGM_VERSION}.tar.gz
-ARG PGBIGM_SHA256=b8cde5a6f72016a5da6b059e0e8ef789faead35a0e966a3cdd1c64d8c3ab0a60
+ARG PGBIGM_SHA256=4d4fb48161e3f9e99207851299379c83b3e5d1d3c1a07c35f6a3153d577b3142
 
 # -- Build pg_bigm from source (single RUN layer = minimal image delta) -------
 RUN set -eux; \
