@@ -12,10 +12,16 @@ RLS: conn must have rls_session() active (attorney_id SET LOCAL).
 
 Korean FTS — dual-path:
   pg_bigm present:  bigm_similarity() scan (handles compound Korean, subword match).
-                    SET LOCAL pg_bigm.similarity_limit = _BIGM_SIMILARITY_LIMIT first.
-  pg_bigm absent:   OR-tsquery fallback via _build_or_tsquery() — splits query into
-                    tokens and joins with ' | ' so multi-term queries don't zero-out.
-                    Single-term: passes through as-is (no AND risk).
+                    OR mode: =% full-similarity scan with SET LOCAL similarity_limit.
+                    AND mode: per-token LIKE AND-chain (gin_bigm_ops accelerated).
+  pg_bigm absent:   tsquery fallback via _build_tsquery():
+                    OR mode: joins tokens with ' | '.
+                    AND mode: joins tokens with ' & '.
+                    Single-term: passes through as-is (no ambiguity).
+
+match_mode parameter (hybrid_search):
+  'or'  — default; any-term match; high recall (existing live behaviour, no regression).
+  'and' — all-term match; precise; caller-controlled per request.
 """
 from __future__ import annotations
 
@@ -55,15 +61,42 @@ async def _probe_bigm(conn) -> bool:
     return _BIGM_AVAILABLE
 
 
-# ── OR-tsquery builder (pure, testable) ────────────────────────────────────────
+# ── tokenizer + tsquery / bigm-LIKE builders (pure, testable) ─────────────────
+
+
+def _tokenize(query_text: str) -> list[str]:
+    """Whitespace-split + sanitize (keep ASCII word chars + Korean syllables). Drops empties."""
+    out = []
+    for tok in query_text.split():
+        clean = re.sub(r"[^\w가-힣]", "", tok)
+        if clean:
+            out.append(clean)
+    return out
+
+
+def _build_tsquery(query_text: str, operator: str) -> str | None:
+    """Build a tsquery string from a raw query using the given operator.
+
+    operator must be ' | ' (OR) or ' & ' (AND).
+    Returns None if no valid tokens remain (caller should skip FTS stage).
+
+    Examples (OR):
+        "손해배상 계약해지"  → "손해배상 | 계약해지"
+        "손해배상"          → "손해배상"
+        "  !!! "            → None
+    Examples (AND):
+        "손해배상 계약해지"  → "손해배상 & 계약해지"
+    """
+    toks = _tokenize(query_text)
+    if not toks:
+        return None
+    return operator.join(toks)
 
 
 def _build_or_tsquery(query_text: str) -> str | None:
-    """Build an OR-combined tsquery string from a raw query.
+    """Build an OR-combined tsquery string. Thin wrapper around _build_tsquery.
 
-    Splits on whitespace, sanitizes each token (keeps only ASCII word chars +
-    Korean syllables), drops empty tokens, joins survivors with ' | '.
-    Returns None if no valid tokens remain (caller should skip FTS stage).
+    Kept for backward-compatibility: existing tests import _build_or_tsquery directly.
 
     Examples:
         "손해배상 계약해지"  → "손해배상 | 계약해지"
@@ -71,16 +104,29 @@ def _build_or_tsquery(query_text: str) -> str | None:
         "  !!! "            → None
         ""                  → None
     """
-    tokens = query_text.split()
-    sanitized = []
-    for tok in tokens:
-        # Remove characters that are not ASCII word chars or Korean syllables.
-        clean = re.sub(r"[^\w가-힣]", "", tok)
-        if clean:
-            sanitized.append(clean)
-    if not sanitized:
+    return _build_tsquery(query_text, " | ")
+
+
+def _build_bigm_like(query_text: str, operator: str) -> tuple[str, list[str]] | None:
+    """Build a WHERE fragment + bind params for LIKE-based bigm AND/OR search.
+
+    operator must be 'AND' or 'OR'.
+    Returns (where_fragment, like_params) or None if no valid tokens.
+
+    where_fragment example (2 tokens, AND):
+        '(chunk_text LIKE %s AND chunk_text LIKE %s)'
+    like_params example:
+        ['%손해배상%', '%계약해지%']
+
+    NOTE: '%' in like_params values is a bind *value*, not a SQL literal —
+    no psycopg %%-doubling is needed here. Only literal '%' characters that
+    appear in the SQL text itself require doubling.
+    """
+    toks = _tokenize(query_text)
+    if not toks:
         return None
-    return " | ".join(sanitized)
+    frag = "(" + f" {operator} ".join(["chunk_text LIKE %s"] * len(toks)) + ")"
+    return frag, [f"%{t}%" for t in toks]
 
 
 @dataclass
@@ -208,6 +254,7 @@ async def hybrid_search(
     ann_limit: int = 100,
     rrf_k: int = 60,
     min_relevance: float = 0.0,
+    match_mode: str = "or",
 ) -> list[RetrievedChunk]:
     """Run hybrid FTS+ANN+RRF search and return top_k chunks.
 
@@ -225,10 +272,15 @@ async def hybrid_search(
         min_relevance:   Minimum cosine relevance threshold [0.0, 1.0].
                          Results with no FTS match and relevance < min_relevance
                          are discarded. Default 0.0 = filter OFF.
+        match_mode:      'or'  — any-term match (default, high recall, existing behaviour).
+                         'and' — all-term match (precise; bigm: per-token LIKE AND-chain;
+                                 tsquery fallback: ' & ' operator).
 
     Returns:
         List of RetrievedChunk ordered by RRF score descending.
     """
+    if match_mode not in ("or", "and"):
+        raise ValueError(f"match_mode must be 'or' or 'and', got {match_mode!r}")
     if not query_text.strip():
         raise ValueError("query_text must not be empty.")
     if len(query_embedding) != 768:
@@ -236,12 +288,12 @@ async def hybrid_search(
             f"query_embedding must be 768-dim, got {len(query_embedding)}"
         )
 
-    # Stage 1: FTS — dual-path (pg_bigm or OR-tsquery)
+    # Stage 1: FTS — dual-path (pg_bigm or tsquery)
     use_bigm = await _probe_bigm(conn)
     fts_ids: list[str] = []
 
-    if use_bigm:
-        # Path A: pg_bigm similarity scan.
+    if use_bigm and match_mode == "or":
+        # Path A-OR: pg_bigm =% full-similarity scan (existing live behaviour).
         # Lower similarity_limit for high recall; tune _BIGM_SIMILARITY_LIMIT as needed.
         await conn.execute(
             f"SET LOCAL pg_bigm.similarity_limit = {_BIGM_SIMILARITY_LIMIT}"
@@ -251,20 +303,42 @@ async def hybrid_search(
         )
         fts_rows = await fts_cur.fetchall()
         fts_ids = [r[0] for r in fts_rows]
-        logger.debug("FTS stage (bigm): %d candidates", len(fts_ids))
+        logger.debug("FTS stage (bigm OR): %d candidates", len(fts_ids))
+
+    elif use_bigm and match_mode == "and":
+        # Path A-AND: per-token LIKE AND-chain (gin_bigm_ops index accelerated).
+        # SET LOCAL similarity_limit is not needed — LIKE filter replaces =% scan.
+        built = _build_bigm_like(query_text, "AND")
+        if built is None:
+            logger.debug("FTS stage (bigm AND) skipped: no valid tokens in %r", query_text)
+        else:
+            frag, like_params = built
+            sql = (
+                "SELECT id::text, bigm_similarity(chunk_text, %s) AS sim "
+                "FROM legal_document_chunk "
+                f"WHERE {frag} AND embedding IS NOT NULL "
+                "ORDER BY sim DESC LIMIT %s"
+            )
+            fts_cur = await conn.execute(sql, (query_text, *like_params, fts_limit))
+            fts_rows = await fts_cur.fetchall()
+            fts_ids = [r[0] for r in fts_rows]
+            logger.debug("FTS stage (bigm AND): %d candidates", len(fts_ids))
+
     else:
-        # Path B: OR-tsquery fallback.
-        or_query = _build_or_tsquery(query_text)
-        if or_query is None:
+        # Path B: tsquery fallback (pg_bigm absent).
+        op = " & " if match_mode == "and" else " | "
+        ts_query = _build_tsquery(query_text, op)
+        if ts_query is None:
             logger.debug("FTS stage skipped: no valid tokens in %r", query_text)
         else:
             fts_cur = await conn.execute(
-                _FTS_OR_SQL, (or_query, or_query, fts_limit)
+                _FTS_OR_SQL, (ts_query, ts_query, fts_limit)
             )
             fts_rows = await fts_cur.fetchall()
             fts_ids = [r[0] for r in fts_rows]
             logger.debug(
-                "FTS stage (or-tsquery=%r): %d candidates", or_query, len(fts_ids)
+                "FTS stage (tsquery=%r, mode=%s): %d candidates",
+                ts_query, match_mode, len(fts_ids),
             )
 
     # Stage 2: ANN
