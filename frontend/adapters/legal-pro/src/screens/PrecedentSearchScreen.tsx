@@ -21,6 +21,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { apiSearch, apiHealth, type CitationOut, type WireError } from '../api/wire'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -239,9 +240,15 @@ function CitationCard({ cit, queryTerms, lastQuery }: CitationCardProps) {
 // ── Main screen ────────────────────────────────────────────────────────────
 
 export default function PrecedentSearchScreen() {
+  // OQ-3: ?case_id= query-param → 사건 필터 드롭다운 초기값 (Phase B 최소 연결)
+  const [searchParams] = useSearchParams()
+  const initialCaseId = searchParams.get('case_id') ?? ''
+
   const [query, setQuery] = useState('')
   const [topK, setTopK] = useState(5)
   const [matchMode, setMatchMode] = useState<MatchMode>('or')
+  // case_id 필터 — Phase B: URL query-param 으로 초기값 주입, 드롭다운 UI는 후속 패스
+  const [selectedCaseId] = useState<string>(initialCaseId)
   const [resultsState, setResultsState] = useState<ResultsState>('initial')
   const [results, setResults] = useState<CitationOut[]>([])
   const [searchError, setSearchError] = useState<WireError | null>(null)
@@ -285,7 +292,12 @@ export default function PrecedentSearchScreen() {
     setNote(null)
     queryTermsRef.current = []
 
-    const res = await apiSearch({ query: q, top_k: topK, match_mode: matchMode })
+    const res = await apiSearch({
+      query: q,
+      top_k: topK,
+      match_mode: matchMode,
+      case_id: selectedCaseId || null,
+    })
 
     if (res.error) {
       if (res.error.code === 'SIDECAR_DOWN') {
@@ -385,12 +397,17 @@ export default function PrecedentSearchScreen() {
             </button>
           </div>
 
-          {/*
-           * Phase B TODO: case filter select (사건 필터)
-           * Blocked on: /cases endpoint not implemented (G-1~G-6)
-           * When implemented: fetch GET /cases on mount, populate <select>,
-           * pass selected case_id to apiSearch() body.
-           */}
+          {/* Phase B: case_id URL param 수신 시 사건 필터 표시 (읽기전용, AC-07) */}
+          {selectedCaseId && (
+            <span
+              className="ingest-status-badge ingest-badge--indexed"
+              style={{ alignSelf: 'center' }}
+              aria-label={`사건 필터 적용 중: ${selectedCaseId}`}
+              title={`사건 필터: ${selectedCaseId}`}
+            >
+              사건 필터 적용
+            </span>
+          )}
         </div>
       </div>
 
