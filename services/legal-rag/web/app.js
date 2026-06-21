@@ -21,6 +21,7 @@ const STATE = {
   role: null,          // attorney role ('partner' | 'associate' | null)
   cases: [],           // CaseOut[] — 사건 목록 캐시
   lastQuery: "",       // 직전 검색어 (검색창 유지용)
+  matchMode: "or",     // 'or' | 'and' — 검색 매치 방식 (기본: 하나라도)
 };
 
 // ── DOM 참조 ─────────────────────────────────────────────────────────────────
@@ -55,6 +56,10 @@ const resultsSection = $("results-section");
 const resultsHeader  = $("results-header");
 const resultsMessage = $("results-message");
 const resultsList    = $("results-list");
+
+// ── 매치모드 토글 DOM 참조 ───────────────────────────────────────────────────
+const matchModeAndBtn = $("match-mode-and");
+const matchModeOrBtn  = $("match-mode-or");
 
 const casesLoading  = $("cases-loading");
 const casesError    = $("cases-error");
@@ -111,6 +116,20 @@ function switchTab(tabName) {
 
 tabSearch.addEventListener("click", () => switchTab("search"));
 tabCases.addEventListener("click",  () => switchTab("cases"));
+
+// ── 매치모드 토글 ─────────────────────────────────────────────────────────────
+
+function _setMatchMode(mode) {
+  STATE.matchMode = mode;
+  const isAnd = mode === "and";
+  matchModeAndBtn.classList.toggle("match-mode-btn--active", isAnd);
+  matchModeAndBtn.setAttribute("aria-pressed", isAnd ? "true" : "false");
+  matchModeOrBtn.classList.toggle("match-mode-btn--active", !isAnd);
+  matchModeOrBtn.setAttribute("aria-pressed", isAnd ? "false" : "true");
+}
+
+matchModeAndBtn.addEventListener("click", () => _setMatchMode("and"));
+matchModeOrBtn.addEventListener("click",  () => _setMatchMode("or"));
 
 // ── 로그인 ───────────────────────────────────────────────────────────────────
 
@@ -741,6 +760,7 @@ async function doSearch() {
 
   try {
     const body = { query, top_k: topK };
+    body.match_mode = STATE.matchMode;
     if (caseFilterValue) body.case_id = caseFilterValue;
 
     const res = await fetch("/search", {
