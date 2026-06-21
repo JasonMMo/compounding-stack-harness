@@ -271,3 +271,41 @@ export async function apiGetCase(caseId: string): Promise<WireResult<CaseDetailR
   const url = LEGAL_RAG_ENDPOINTS.case_read.replace(':case_id', encodeURIComponent(caseId))
   return legalRequest<CaseDetailResponse>('GET', url)
 }
+
+// ── G-2 C1 — 사건 생성/수정 타입 및 API ─────────────────────────────────────
+
+// DDL CHECK 기준 (hsqldb-schema.sql):
+//   case_type: civil | criminal | administrative | family | commercial  (other 없음)
+//   status:    intake | active | trial | appeal | closed | withdrawn
+export type CaseType = 'civil' | 'criminal' | 'administrative' | 'family' | 'commercial'
+export type CaseStatus = 'intake' | 'active' | 'trial' | 'appeal' | 'closed' | 'withdrawn'
+
+export interface CaseCreateIn {
+  case_number: string
+  title: string
+  case_type?: CaseType | null
+  status?: CaseStatus
+  description?: string | null
+  opened_at?: string | null
+}
+
+export interface CaseUpdateIn {
+  title?: string | null
+  case_type?: CaseType | null
+  status?: CaseStatus | null
+  description?: string | null
+  opened_at?: string | null
+  closed_at?: string | null
+}
+
+export async function apiCreateCase(body: CaseCreateIn): Promise<WireResult<CaseSummary>> {
+  return legalRequest<CaseSummary>('POST', LEGAL_RAG_ENDPOINTS.case_create, { body })
+}
+
+export async function apiUpdateCase(
+  caseId: string,
+  body: CaseUpdateIn,
+): Promise<WireResult<CaseDetailResponse>> {
+  const url = LEGAL_RAG_ENDPOINTS.case_update.replace(':case_id', encodeURIComponent(caseId))
+  return legalRequest<CaseDetailResponse>('PATCH', url, { body })
+}
