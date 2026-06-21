@@ -38,7 +38,8 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+import re as _re
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -415,6 +416,74 @@ class CaseUpdateIn(BaseModel):
             raise ValueError("opened_at 형식: YYYY-MM-DD")
         if self.closed_at is not None and not _date_pat.fullmatch(self.closed_at):
             raise ValueError("closed_at 형식: YYYY-MM-DD")
+
+
+# ── G-2 C3 — 문서 업로드 모델 + CISO 헬퍼 ─────────────────────────────────────
+
+_DOC_TYPE_VALUES = {
+    "complaint", "brief", "evidence", "court-order",
+    "contract", "correspondence", "other",
+}
+# DDL CHECK constraint 기준 (legal_case_document.document_type)
+
+_ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
+# 업로드 허용 확장자 (소문자 기준, CISO 게이트 AC-12)
+
+_ALLOWED_CONTENT_TYPES = {
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+    "text/markdown",
+    "application/octet-stream",
+}
+# 허용 Content-Type (명백히 위반인 경우만 400 — 과민 거부 금지)
+
+_UPLOAD_MAX_BYTES = 20 * 1024 * 1024  # 20 MiB
+
+_SAFE_FILENAME_RE = _re.compile(r"[^A-Za-z0-9._-]")
+
+
+class CaseDocumentUploadOut(BaseModel):
+    """POST /cases/{case_id}/documents 201 응답 — G-2 C3."""
+    doc_id: str
+    case_id: str
+    title: str | None
+    document_type: str
+    ingest_status: str
+    filed_at: str | None
+    notes: str | None
+
+
+def _sanitize_filename(name: str) -> str:
+    """Strip directory components and replace unsafe characters.
+
+    - os.path.basename removes any leading path separators / '..' traversal.
+    - Characters outside [A-Za-z0-9._-] are replaced with '_'.
+    - Leading '.' (hidden file) replaced with '_'.
+    - Result truncated to 200 chars to leave room in storage_key (≤255 total).
+
+    >>> _sanitize_filename("../../../etc/passwd")
+    'passwd'
+    >>> _sanitize_filename(".hidden")
+    '_hidden'
+    """
+    base = os.path.basename(name)  # strips path separators and '..' segments
+    sanitized = _SAFE_FILENAME_RE.sub("_", base)
+    if sanitized.startswith("."):
+        sanitized = "_" + sanitized[1:]
+    return sanitized[:200]
+
+
+def _build_storage_key(case_id: str, sanitized_filename: str) -> str:
+    """Build storage key: legal/cases/<case_id>/<uuid4_hex>_<sanitized_filename>.
+
+    Total length guaranteed ≤ 255 (sanitized_filename is already ≤200 chars).
+    """
+    # "legal/cases/" (12) + case_id UUID (36) + "/" (1) + uuid4 hex (32) + "_" (1) = 82 prefix chars
+    prefix = f"legal/cases/{case_id}/{uuid.uuid4().hex}_"
+    # remaining room for filename (255 - 82 = 173, but sanitized is already ≤200; trim to safe bound)
+    max_name = 255 - len(prefix)
+    return prefix + sanitized_filename[:max_name]
 
 
 # ── Login helper ──────────────────────────────────────────────────────────────
@@ -1063,6 +1132,240 @@ async def update_party(
         role=row[2],
         name=row[3],
         notes=row[4],
+    )
+
+
+# ── G-2 C3 — 비동기 ingest 래퍼 ──────────────────────────────────────────────
+
+async def _run_case_document_ingest(
+    doc_id: str,
+    case_id: str,
+    storage_path: str,
+) -> None:
+    """BackgroundTask: ingest case document into legal_document_chunk.
+
+    새 커넥션을 풀에서 획득(app_service BYPASSRLS) — 요청 핸들러 커넥션을
+    BackgroundTask 로 넘기지 않는다 (스펙 §6 line 366).
+
+    ingest_file 은 embed 실패 시 ingest_status 를 error 로 변경하지 않으므로
+    래퍼가 전체 예외를 감싸 error 로 강제한다.
+    """
+    pool = _get_pool()
+    try:
+        async with pool.connection() as conn:
+            await ingest_mod.ingest_file(
+                conn=conn,
+                embed_client=_get_embedder(),
+                model_version=_settings.embed_model_version,
+                file_path=storage_path,
+                source_type="case_document",
+                source_id=doc_id,
+                case_id=case_id,
+                chunk_token_target=_settings.chunk_token_target,
+                chunk_overlap_tokens=_settings.chunk_overlap_tokens,
+            )
+    except Exception:
+        logger.error(
+            "C3 background ingest failed for doc_id=%s case_id=%s path=%s",
+            doc_id, case_id, storage_path,
+            exc_info=True,
+        )
+        # 별도 커넥션으로 상태 error 기록 (ingest 커넥션이 롤백됐을 수도 있음)
+        try:
+            async with pool.connection() as err_conn:
+                await err_conn.execute(
+                    """
+                    UPDATE legal_case_document
+                       SET ingest_status = 'error', ingested_at = now()
+                     WHERE id = %s
+                    """,
+                    (doc_id,),
+                )
+        except Exception:
+            logger.error(
+                "C3 failed to set error status for doc_id=%s", doc_id, exc_info=True
+            )
+
+
+# ── G-2 C3 — 문서 업로드 엔드포인트 ──────────────────────────────────────────
+
+@app.post(
+    "/cases/{case_id}/documents",
+    response_model=CaseDocumentUploadOut,
+    status_code=201,
+    tags=["cases"],
+)
+async def upload_case_document(
+    case_id: str,
+    background: BackgroundTasks,
+    file: UploadFile = File(...),
+    document_type: str = Form(...),
+    title: str | None = Form(None),
+    filed_at: str | None = Form(None),
+    notes: str | None = Form(None),
+    attorney_id: Annotated[str, Depends(_attorney_dep)] = ...,
+):
+    """사건 문서 업로드 (C3, §3.3 POST /cases/{case_id}/documents).
+
+    멀티파트 POST — JWT Authorization Bearer 필요.
+    허용 파일: .pdf / .docx / .txt / .md (최대 20 MiB).
+    빈 파일, 경로 순회, 비허용 확장자/Content-Type → 400.
+
+    처리 순서 (CISO 설계):
+      1. 입력 검증 (파일명, 확장자, content-type, 크기, document_type)
+      2. storage_key 생성
+      3. DB INSERT (RLS rls_session → 타 사건 접근 시 404 존재 은폐)
+      4. 파일 디스크 기록
+      5. BackgroundTask ingest 등록
+      6. 201 반환
+
+    오류: 401(JWT), 400(입력 위반), 404(사건 미존재 또는 RLS 격리), 500(파일 쓰기 실패).
+    """
+    settings = _settings
+
+    # ── case_id UUID 검증 ──────────────────────────────────────────────────────
+    try:
+        uuid.UUID(case_id)
+    except ValueError:
+        raise HTTPException(400, f"case_id is not a valid UUID: {case_id!r}")
+
+    # ── document_type enum 검증 ────────────────────────────────────────────────
+    if document_type not in _DOC_TYPE_VALUES:
+        raise HTTPException(
+            400,
+            f"document_type 허용값: {sorted(_DOC_TYPE_VALUES)}",
+        )
+
+    # ── 파일명 정제 (CISO — path traversal 차단) ──────────────────────────────
+    original_name = file.filename or "upload"
+    sanitized = _sanitize_filename(original_name)
+    if not sanitized:
+        sanitized = "upload"
+
+    # ── 확장자 allowlist (소문자 기준) ─────────────────────────────────────────
+    _, ext = os.path.splitext(sanitized.lower())
+    if ext not in _ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            400,
+            f"허용 확장자: {sorted(_ALLOWED_EXTENSIONS)}. 제출된 확장자: {ext!r}",
+        )
+
+    # ── Content-Type 점검 (과민 거부 금지 — known-bad 만 차단) ────────────────
+    ct = (file.content_type or "").split(";")[0].strip().lower()
+    if ct and ct not in _ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            400,
+            f"허용되지 않는 Content-Type: {ct!r}",
+        )
+
+    # ── 파일 내용 읽기 + 크기 검증 ────────────────────────────────────────────
+    content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(400, "빈 파일은 업로드할 수 없습니다.")
+    if len(content) > _UPLOAD_MAX_BYTES:
+        raise HTTPException(400, f"파일 크기 초과: 최대 {_UPLOAD_MAX_BYTES // (1024*1024)} MiB")
+
+    # ── storage_root 설정 확인 ─────────────────────────────────────────────────
+    if not settings.storage_root:
+        logger.error("C3 upload: LEGAL_RAG_STORAGE_ROOT not configured")
+        raise HTTPException(500, "문서 저장소가 설정되지 않았습니다. 관리자에게 문의하세요.")
+
+    # ── storage_key + path 생성 및 path-safety 검증 (F-15) ────────────────────
+    storage_key = _build_storage_key(case_id, sanitized)
+    root = os.path.realpath(settings.storage_root)
+    target = os.path.realpath(os.path.join(root, storage_key))
+    try:
+        common = os.path.commonpath([root, target])
+    except ValueError:
+        common = ""
+    if common != root:
+        logger.error("C3 path-safety violation: root=%s target=%s", root, target)
+        raise HTTPException(400, "파일 경로가 허용 범위를 벗어났습니다.")
+
+    # ── 1. DB INSERT 먼저 (RLS 강제 — 타 변호사 사건이면 INSERT 거부 → 파일 안 씀) ──
+    pool = _get_pool()
+    doc_id: str
+    db_filed_at: str | None = None
+    db_ingest_status: str = "pending"
+
+    async with pool.connection() as conn:
+        async with database.rls_session(conn, attorney_id):
+            try:
+                cur = await conn.execute(
+                    """
+                    INSERT INTO legal_case_document (
+                        id, created_at, updated_at,
+                        case_id, document_type, title,
+                        filed_at, storage_key, notes,
+                        content_text, ingest_status
+                    ) VALUES (
+                        gen_random_uuid(), now(), now(),
+                        %s::uuid, %s, %s,
+                        %s::timestamptz, %s, %s,
+                        NULL, 'pending'
+                    )
+                    RETURNING
+                        id::text,
+                        filed_at::text,
+                        ingest_status
+                    """,
+                    (
+                        case_id,
+                        document_type,
+                        title,
+                        filed_at,
+                        storage_key,
+                        notes,
+                    ),
+                )
+                row = await cur.fetchone()
+            except Exception as exc:
+                exc_str = str(exc).lower()
+                if any(kw in exc_str for kw in ("policy", "check", "permission", "rls")):
+                    raise HTTPException(
+                        status_code=404, detail="사건을 찾을 수 없습니다."
+                    ) from exc
+                raise
+
+    if row is None:
+        raise HTTPException(500, "문서 등록 후 행을 읽지 못했습니다.")
+
+    doc_id = row[0]
+    db_filed_at = row[1]
+    db_ingest_status = row[2] or "pending"
+
+    # ── 2. 파일 디스크 기록 ────────────────────────────────────────────────────
+    storage_path = target
+    try:
+        os.makedirs(os.path.dirname(storage_path), exist_ok=True)
+        with open(storage_path, "wb") as fh:
+            fh.write(content)
+    except Exception as exc:
+        logger.error(
+            "C3 file write failed doc_id=%s path=%s: %s", doc_id, storage_path, exc
+        )
+        # best-effort: DB 상태를 error 로 기록
+        try:
+            async with pool.connection() as err_conn:
+                await err_conn.execute(
+                    "UPDATE legal_case_document SET ingest_status='error', ingested_at=now() WHERE id=%s",
+                    (doc_id,),
+                )
+        except Exception:
+            pass
+        raise HTTPException(500, "파일 저장에 실패했습니다. 관리자에게 문의하세요.")
+
+    # ── 3. BackgroundTask ingest 등록 ────────────────────────────────────────
+    background.add_task(_run_case_document_ingest, doc_id, case_id, storage_path)
+
+    return CaseDocumentUploadOut(
+        doc_id=doc_id,
+        case_id=case_id,
+        title=title,
+        document_type=document_type,
+        ingest_status=db_ingest_status,
+        filed_at=db_filed_at,
+        notes=notes,
     )
 
 
