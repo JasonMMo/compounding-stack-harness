@@ -39,6 +39,9 @@ const LEGAL_RAG_ENDPOINTS = {
   document_read: '/documents/:source_type/:source_id',
   cases_list:    '/cases',
   case_read:     '/cases/:case_id',
+  // G-2 C1 — 사건 쓰기 경로 상수 (기존 상수 수정 금지, 가산만 허용 §5.2)
+  case_create:   '/cases',
+  case_update:   '/cases/:case_id',
 }
 
 // ── Build TS content ────────────────────────────────────────────────────────
