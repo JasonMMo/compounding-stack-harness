@@ -589,6 +589,16 @@ function buildCitationCard(cit, queryTerms) {
   badge.setAttribute("aria-label", `출처 유형: ${cit.source_type === "precedent" ? "판례" : "사건문서"}`);
   header.appendChild(badge);
 
+  // 키워드 일치(FTS 매치) 뱃지 — RRF 상위 노출 이유 설명
+  if (cit.fts_rank != null) {
+    const kw = document.createElement("span");
+    kw.className = "citation-badge citation-badge--keyword";
+    kw.textContent = "🔑 키워드 일치";
+    kw.setAttribute("title", "검색 키워드가 본문에 직접 일치 — 의미 유사도 외 추가 가점으로 상위 노출");
+    kw.setAttribute("aria-label", "검색 키워드 본문 일치");
+    header.appendChild(kw);
+  }
+
   const meta = document.createElement("div");
   meta.className = "citation-card__meta";
 
