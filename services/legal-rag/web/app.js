@@ -540,6 +540,30 @@ function renderSkeletons() {
 }
 
 /**
+ * countMatchedWords(excerptText, query) → { matched: number, total: number }
+ *
+ * excerpt 에 실제로 보이는(하이라이트되는) 단어 기준 일치 수를 반환한다.
+ * - 질의어를 공백으로 분해한 의미 단위 '단어'를 기준으로 함 (bigram 아님).
+ * - 각 단어를 동일 sanitize(한글+ASCII 영숫자만)로 정규화 후 대소문자 무시 substring 검색.
+ * - highlightText() 의 정규화와 동일 규칙을 사용해 카운트와 하이라이트가 항상 일치한다.
+ */
+function countMatchedWords(excerptText, query) {
+  if (!excerptText || !query) return { matched: 0, total: 0 };
+  const rawTokens = query.trim().split(/\s+/).filter(Boolean);
+  const words = rawTokens
+    .map((t) => t.replace(/[^\w가-힣]/g, ""))
+    .filter(Boolean);
+  if (words.length === 0) return { matched: 0, total: 0 };
+
+  const lowerExcerpt = excerptText.toLowerCase();
+  let matched = 0;
+  words.forEach((w) => {
+    if (lowerExcerpt.includes(w.toLowerCase())) matched++;
+  });
+  return { matched, total: words.length };
+}
+
+/**
  * expandQueryTermsForHighlight(query) → string[]
  *
  * 공백 토큰 + 다문자 토큰의 2-gram을 합쳐 강조 후보 집합을 반환한다.
@@ -653,6 +677,25 @@ function buildCitationCard(cit, queryTerms) {
     header.appendChild(kw);
   }
 
+  // 단어 일치 배지 — excerpt 기준 (하이라이트와 동일 규범)
+  if (queryTerms && queryTerms.length > 0) {
+    const excerptRaw = cit.chunk_text_excerpt || "";
+    // buildCitationCard 는 expandQueryTermsForHighlight 결과(queryTerms)가 아닌
+    // 원본 query 를 받지 않으므로, queryTerms 에서 원본 '단어'만 역추출한다:
+    // expandQueryTermsForHighlight 가 항상 rawToken 자체를 terms 에 먼저 add 하므로,
+    // 공백 split 으로 얻은 sanitized 토큰이 queryTerms 안에 포함되어 있다.
+    // 단어 배지는 원본 query 를 직접 받지 않으므로, STATE.lastQuery 를 참조한다.
+    const wordMatch = countMatchedWords(excerptRaw, STATE.lastQuery);
+    if (wordMatch.total >= 2) {
+      const mBadge = document.createElement("span");
+      const isFull = wordMatch.matched === wordMatch.total;
+      mBadge.className = `match-count-badge${isFull ? " match-count-badge--full" : " match-count-badge--partial"}`;
+      mBadge.textContent = `단어 ${wordMatch.matched}/${wordMatch.total} 일치`;
+      mBadge.setAttribute("aria-label", `질의어 ${wordMatch.total}개 중 ${wordMatch.matched}개 미리보기에서 일치`);
+      header.appendChild(mBadge);
+    }
+  }
+
   const meta = document.createElement("div");
   meta.className = "citation-card__meta";
 
@@ -754,6 +797,8 @@ async function doSearch() {
   STATE.lastQuery = query;
   const topK = parseInt(searchTopK.value, 10);
   const caseFilterValue = searchCaseFilter.value || null;
+  // 검색 시점 모드를 고정 — 결과 표시 후 토글이 바뀌어도 이 결과의 모드 유지
+  const usedMode = STATE.matchMode;
 
   setResultsState("loading");
   resultsHeader.hidden = true;
@@ -815,6 +860,15 @@ async function doSearch() {
     resultsHeader.textContent = "";
     const countText = document.createTextNode(`검색 결과 ${results.length}건`);
     resultsHeader.appendChild(countText);
+    const modeSep = document.createElement("span");
+    modeSep.setAttribute("aria-hidden", "true");
+    modeSep.textContent = " · ";
+    resultsHeader.appendChild(modeSep);
+    const modeLabel = document.createElement("span");
+    modeLabel.className = "results-mode-label";
+    modeLabel.textContent = usedMode === "and" ? "모두 포함" : "하나라도";
+    modeLabel.setAttribute("aria-label", `검색 모드: ${usedMode === "and" ? "모두 포함(AND)" : "하나라도(OR)"}`);
+    resultsHeader.appendChild(modeLabel);
     const sep = document.createElement("span");
     sep.setAttribute("aria-hidden", "true");
     sep.textContent = " · ";
