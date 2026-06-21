@@ -581,6 +581,12 @@ a:hover {
   color: var(--color-badge-document-fg);
 }
 
+.citation-badge--keyword {
+  background-color: var(--lr-gold-100);
+  color: var(--lr-gold-500);
+  border: 1px solid var(--lr-gold-500);
+}
+
 /* 카드 메타 행 */
 .citation-card__meta {
   display: flex;
