@@ -324,7 +324,9 @@ class TestCasesContractUnchanged:
     def test_cases_response_keys_unchanged(self):
         from api import CasesResponse, CaseOut
         sr_fields = set(CasesResponse.model_fields.keys())
-        assert {"cases", "total"} == sr_fields, f"CasesResponse 필드 변경 감지: {sr_fields}"
+        # G-4 pagination: `limit` and `offset` added to CasesResponse (intentional extension)
+        assert {"cases", "total", "limit", "offset"} == sr_fields, \
+            f"CasesResponse 필드 변경 감지: {sr_fields}"
 
         co_fields = set(CaseOut.model_fields.keys())
         assert {
