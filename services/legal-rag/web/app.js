@@ -1026,12 +1026,12 @@ async function openCaseDetailPanel(caseId, caseNumber, triggerEl) {
   caseDetailSearchBtn.onclick = () => {
     closeCaseDetailPanel();
     switchTab("search");
-    for (const opt of searchCaseFilter.options) {
-      if (opt.value === caseId) {
-        opt.selected = true;
-        break;
-      }
-    }
+    searchCaseFilter.value = caseId;
+    searchCaseFilter.dispatchEvent(new Event("change"));
+    const caseLabel = caseNumber || caseId;
+    setResultsState("initial");
+    resultsMessage.textContent = `「${caseLabel}」 사건 내에서 검색합니다 — 검색어를 입력하세요.`;
+    searchInput.value = "";
     searchInput.focus();
   };
 
@@ -1144,13 +1144,12 @@ function renderCasesTable(cases) {
     searchBtn.addEventListener("click", () => {
       // 해당 사건으로 필터 설정하고 검색 탭으로 이동
       switchTab("search");
-      // case filter 드롭다운에서 해당 사건 선택
-      for (const opt of searchCaseFilter.options) {
-        if (opt.value === c.case_id) {
-          opt.selected = true;
-          break;
-        }
-      }
+      searchCaseFilter.value = c.case_id;
+      searchCaseFilter.dispatchEvent(new Event("change"));
+      const caseLabel = c.title || c.case_number;
+      setResultsState("initial");
+      resultsMessage.textContent = `「${caseLabel}」 사건 내에서 검색합니다 — 검색어를 입력하세요.`;
+      searchInput.value = "";
       searchInput.focus();
     });
     tdSearch.appendChild(searchBtn);
