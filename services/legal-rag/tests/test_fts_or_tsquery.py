@@ -1,14 +1,14 @@
 """
-tests/test_fts_or_tsquery.py — unit tests for _build_or_tsquery() (pure function).
+tests/test_fts_or_tsquery.py — unit tests for _build_or_tsquery() and _build_tsquery() (pure functions).
 
-No DB / sidecar required. Tests sanitize logic, OR joining, and edge cases.
+No DB / sidecar required. Tests sanitize logic, OR/AND joining, and edge cases.
 """
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from retrieve import _build_or_tsquery
+from retrieve import _build_or_tsquery, _build_tsquery
 
 
 class TestBuildOrTsquery:
@@ -65,3 +65,29 @@ class TestBuildOrTsquery:
     def test_leading_trailing_whitespace(self):
         result = _build_or_tsquery("  손해배상  ")
         assert result == "손해배상"
+
+
+class TestBuildTsqueryAndOperator:
+    """_build_tsquery with AND operator (' & ')."""
+
+    def test_two_tokens_joined_with_and(self):
+        result = _build_tsquery("손해배상 계약해지", " & ")
+        assert result == "손해배상 & 계약해지"
+
+    def test_single_token_returned_as_is(self):
+        result = _build_tsquery("손해배상", " & ")
+        assert result == "손해배상"
+
+    def test_none_on_empty_string(self):
+        assert _build_tsquery("", " & ") is None
+
+    def test_none_on_special_chars_only(self):
+        assert _build_tsquery("!!! ???", " & ") is None
+
+    def test_three_tokens(self):
+        result = _build_tsquery("손해배상 계약 해지", " & ")
+        assert result == "손해배상 & 계약 & 해지"
+
+    def test_or_operator_still_works_via_build_tsquery(self):
+        result = _build_tsquery("손해배상 계약해지", " | ")
+        assert result == "손해배상 | 계약해지"
