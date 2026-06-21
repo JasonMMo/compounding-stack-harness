@@ -2,7 +2,7 @@
 retrieve.py — hybrid search (FTS + vector ANN + RRF).
 
 Pipeline (CTO confirmed, change requires CTO sign-off):
-  Stage 1: FTS   — plainto_tsquery on legal_document_chunk.chunk_text (GIN index)
+  Stage 1: FTS   — dual-path Korean keyword search (see below)
   Stage 2: ANN   — embedding <=> query_vec (HNSW, cosine) on legal_document_chunk
   Stage 3: RRF   — Reciprocal Rank Fusion, k=60, merges both ranked lists
   Output:  Top-K chunks with rank score, source metadata, case_id
@@ -10,16 +10,77 @@ Pipeline (CTO confirmed, change requires CTO sign-off):
 RLS: conn must have rls_session() active (attorney_id SET LOCAL).
      Precedent chunks visible to all. Case_document chunks scoped to attorney.
 
-Korean support: FTS uses 'simple' dictionary (no Korean stemmer needed for pg_bigm
-trigram assist which handles subword matching via idx_legal_chunk_fts GIN).
+Korean FTS — dual-path:
+  pg_bigm present:  bigm_similarity() scan (handles compound Korean, subword match).
+                    SET LOCAL pg_bigm.similarity_limit = _BIGM_SIMILARITY_LIMIT first.
+  pg_bigm absent:   OR-tsquery fallback via _build_or_tsquery() — splits query into
+                    tokens and joins with ' | ' so multi-term queries don't zero-out.
+                    Single-term: passes through as-is (no AND risk).
 """
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+# ── pg_bigm probe ──────────────────────────────────────────────────────────────
+# None = not yet probed. True/False = cached result.
+# Written once per process; reads are unsynchronized (benign race: worst case
+# two probes fire concurrently, both write the same value).
+_BIGM_AVAILABLE: bool | None = None
+
+# Tuning point: lower = more recall, higher = fewer false positives.
+# 0.1 is permissive; raise to 0.2–0.3 if noise is a problem.
+_BIGM_SIMILARITY_LIMIT: float = 0.1
+
+
+async def _probe_bigm(conn) -> bool:
+    """Return True if pg_bigm extension is installed. Caches result module-wide."""
+    global _BIGM_AVAILABLE
+    if _BIGM_AVAILABLE is not None:
+        return _BIGM_AVAILABLE
+    try:
+        cur = await conn.execute(
+            "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname='pg_bigm')"
+        )
+        rows = await cur.fetchall()
+        _BIGM_AVAILABLE = bool(rows[0][0]) if rows else False
+    except Exception:
+        logger.warning("pg_bigm probe failed; falling back to OR-tsquery.", exc_info=True)
+        _BIGM_AVAILABLE = False
+    logger.info("pg_bigm available: %s", _BIGM_AVAILABLE)
+    return _BIGM_AVAILABLE
+
+
+# ── OR-tsquery builder (pure, testable) ────────────────────────────────────────
+
+
+def _build_or_tsquery(query_text: str) -> str | None:
+    """Build an OR-combined tsquery string from a raw query.
+
+    Splits on whitespace, sanitizes each token (keeps only ASCII word chars +
+    Korean syllables), drops empty tokens, joins survivors with ' | '.
+    Returns None if no valid tokens remain (caller should skip FTS stage).
+
+    Examples:
+        "손해배상 계약해지"  → "손해배상 | 계약해지"
+        "손해배상"          → "손해배상"
+        "  !!! "            → None
+        ""                  → None
+    """
+    tokens = query_text.split()
+    sanitized = []
+    for tok in tokens:
+        # Remove characters that are not ASCII word chars or Korean syllables.
+        clean = re.sub(r"[^\w가-힣]", "", tok)
+        if clean:
+            sanitized.append(clean)
+    if not sanitized:
+        return None
+    return " | ".join(sanitized)
 
 
 @dataclass
@@ -80,16 +141,33 @@ def rrf_merge(
 
 # ── SQL templates ──────────────────────────────────────────────────────────────
 
-# Stage 1: FTS candidates
-# Uses chunk_text GIN index via to_tsvector('simple', chunk_text).
-# RLS policy on legal_document_chunk scopes results automatically.
-_FTS_SQL = """
+# Stage 1-A: FTS via pg_bigm similarity scan.
+# =% is the pg_bigm similarity operator (requires gin_bigm_ops index).
+# NOTE: the operator's literal '%' MUST be doubled (=%%) under psycopg's
+# parameterized (pyformat) mode, else psycopg mis-parses it as a placeholder
+# and raises at runtime. Unit tests mock conn.execute so they don't catch this.
+# SET LOCAL pg_bigm.similarity_limit before executing to control recall.
+# Params: (query_text, query_text, fts_limit)
+_FTS_BIGM_SQL = """
+SELECT id::text, bigm_similarity(chunk_text, %s) AS sim
+FROM legal_document_chunk
+WHERE chunk_text =%% %s
+  AND embedding IS NOT NULL
+ORDER BY sim DESC
+LIMIT %s
+"""
+
+# Stage 1-B: FTS via OR-tsquery (pg_bigm absent).
+# to_tsquery is used (not plainto_tsquery) because OR-joining is manual.
+# _build_or_tsquery() produces the 'a | b | c' string; caller must not pass
+# raw user input directly here (sanitization already done).
+# Params: (or_tsquery_str, or_tsquery_str, fts_limit)
+_FTS_OR_SQL = """
 SELECT id::text
 FROM legal_document_chunk
-WHERE to_tsvector('simple', chunk_text) @@ plainto_tsquery('simple', %s)
+WHERE to_tsvector('simple', chunk_text) @@ to_tsquery('simple', %s)
   AND embedding IS NOT NULL
-ORDER BY ts_rank_cd(to_tsvector('simple', chunk_text),
-                    plainto_tsquery('simple', %s)) DESC
+ORDER BY ts_rank_cd(to_tsvector('simple', chunk_text), to_tsquery('simple', %s)) DESC
 LIMIT %s
 """
 
@@ -158,13 +236,36 @@ async def hybrid_search(
             f"query_embedding must be 768-dim, got {len(query_embedding)}"
         )
 
-    # Stage 1: FTS
-    fts_cur = await conn.execute(
-        _FTS_SQL, (query_text, query_text, fts_limit)
-    )
-    fts_rows = await fts_cur.fetchall()
-    fts_ids = [r[0] for r in fts_rows]
-    logger.debug("FTS stage: %d candidates", len(fts_ids))
+    # Stage 1: FTS — dual-path (pg_bigm or OR-tsquery)
+    use_bigm = await _probe_bigm(conn)
+    fts_ids: list[str] = []
+
+    if use_bigm:
+        # Path A: pg_bigm similarity scan.
+        # Lower similarity_limit for high recall; tune _BIGM_SIMILARITY_LIMIT as needed.
+        await conn.execute(
+            f"SET LOCAL pg_bigm.similarity_limit = {_BIGM_SIMILARITY_LIMIT}"
+        )
+        fts_cur = await conn.execute(
+            _FTS_BIGM_SQL, (query_text, query_text, fts_limit)
+        )
+        fts_rows = await fts_cur.fetchall()
+        fts_ids = [r[0] for r in fts_rows]
+        logger.debug("FTS stage (bigm): %d candidates", len(fts_ids))
+    else:
+        # Path B: OR-tsquery fallback.
+        or_query = _build_or_tsquery(query_text)
+        if or_query is None:
+            logger.debug("FTS stage skipped: no valid tokens in %r", query_text)
+        else:
+            fts_cur = await conn.execute(
+                _FTS_OR_SQL, (or_query, or_query, fts_limit)
+            )
+            fts_rows = await fts_cur.fetchall()
+            fts_ids = [r[0] for r in fts_rows]
+            logger.debug(
+                "FTS stage (or-tsquery=%r): %d candidates", or_query, len(fts_ids)
+            )
 
     # Stage 2: ANN
     ann_cur = await conn.execute(
