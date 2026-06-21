@@ -216,7 +216,8 @@ class TestCaseDetailEndpoint:
         token = _make_token(attorney_id, self.SECRET)
 
         # 1st execute: case meta row
-        # columns: id, case_number, title, status, case_type, description, opened_at, closed_at
+        # columns: id, case_number, title, status, case_type, summary, filed_date
+        # (description=summary, opened_at=filed_date, closed_at=None 로 api.py 가 매핑)
         case_row = (
             case_id,
             "2024가합12345",
@@ -225,7 +226,6 @@ class TestCaseDetailEndpoint:
             "민사",
             "차량 충돌 손해배상 사건",
             "2024-03-01",
-            None,
         )
         # 2nd execute: document list rows
         doc_rows = [
