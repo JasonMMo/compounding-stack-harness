@@ -503,16 +503,16 @@ DBA가 플래그한 4건을 `embed_client.py` / `ingest.py` / `api.py` / `retrie
 | A | P2 | `../` path-traversal 시도 → HTTP 400 반환 | 자동 (pytest, `test_path_traversal.py`) | 구현됨 |
 | A | P3 | 존재하지 않는 `source_id` 인제스트 → `SourceNotFoundError` → HTTP 404 | 자동 (pytest, `test_ingest_unit.py`) | 구현됨 |
 | A | P6 | embed 호출 텍스트가 `passage:` 로 시작함 | 자동 (`embed-adapter/tests/test_adapter.py::test_batch_embed_sends_passage_prefix`) | 구현됨 (사이드카) |
-| A | P7 | 동일 `(source_id, source_type, chunk_index)` 재실행 시 `legal_document_chunk` 행 수 동일 | 자동 (pytest -m postgres) | **미구현 — C2 흡수 대상** |
-| A | P8 | `ingest_status`: `pending` -> `processing` -> `done` 전이 순서 확인 | 자동 (pytest -m postgres) | **미구현 — C2 흡수 대상** |
-| A | P8 | 텍스트 추출 0건(빈 파일) 시 `ingest_status = error` 기록 | 자동 (pytest -m postgres) | **미구현 — C2 흡수 대상** |
+| A | P7 | 동일 `(source_id, source_type, chunk_index)` 재실행 시 `legal_document_chunk` 행 수 동일 | 자동 (pytest -m postgres) | **구현됨** (DSN 게이트·라이브=founder) |
+| A | P8 | `ingest_status`: `pending` -> `processing` -> `done` 전이 순서 확인 | 자동 (pytest -m postgres) | **구현됨** (DSN 게이트·라이브=founder) |
+| A | P8 | 텍스트 추출 0건(빈 파일) 시 `ingest_status = error` 기록 | 자동 (pytest -m postgres) | **구현됨** (DSN 게이트·라이브=founder) |
 | **B — Search** | P11 | embed 호출 텍스트가 `query:` 로 시작함 | 자동 (`embed-adapter/tests/test_adapter.py::test_single_embed_sends_query_prefix`) | 구현됨 (사이드카) |
 | B | P14 | RRF 병합 결과가 `rrf_score` 내림차순 정렬 | 자동 (pytest, `test_rrf.py`) | 구현됨 |
 | B | P14 | FTS-only hit: `fts_rank` 있고 `ann_rank` None -> score = 1/(60+rank) | 자동 (pytest, `test_rrf.py`) | 구현됨 |
-| B | P15 | RRF top-K 중 RLS 차단 chunk_id 는 최종 응답에서 제외 (`chunk_map.get` None 처리) | 자동 (pytest -m postgres) | **미구현 — C2 흡수 대상** |
+| B | P15 | RRF top-K 중 RLS 차단 chunk_id 는 최종 응답에서 제외 (`chunk_map.get` None 처리) | 자동 (pytest -m postgres) | **구현됨** (DSN 게이트·라이브=founder) |
 | B | P16 | `CitationOut.chunk_id` 는 `legal_document_chunk.id` 에 실재하는 UUID만 (환각 0) | 수동 리뷰 (구조적 보장 — LLM 생성 경로 없음, N-04) | 설계 보장 (코드 변경 시 재검증) |
-| B | P17 | 검색마다 `legal_rag_query_log` INSERT 1건 — `attorney_id`, `query_text`, `latency_ms` 비null | 자동 (pytest -m postgres) | **미구현 — C2 흡수 대상** |
-| **C — Auth/격리** | P19/P20 | `app_user` 역할로 `legal_attorney` 직접 SELECT -> `permission denied` 또는 0건 (BYPASSRLS 전용) | 자동 (pytest -m postgres) | **미구현 — C2 흡수 대상** |
+| B | P17 | 검색마다 `legal_rag_query_log` INSERT 1건 — `attorney_id`, `query_text`, `latency_ms` 비null | 자동 (pytest -m postgres) | **구현됨** (DSN 게이트·라이브=founder) |
+| **C — Auth/격리** | P19/P20 | `app_user` 역할로 `legal_attorney` 직접 SELECT -> `permission denied` 또는 0건 (BYPASSRLS 전용) | 자동 (pytest -m postgres) | **구현됨** (DSN 게이트·라이브=founder) |
 | C | P20 | 존재하지 않는 이메일 로그인 -> dummy hash bcrypt 실행 후 401 반환 | 수동 리뷰 (타이밍 측정. I-4 PASS) | 수동 검증됨 |
 | C | P23 | `rls_session()` 미사용 상태 `legal_document_chunk` SELECT -> 0건 (RLS deny-by-default) | 자동 (pytest, `test_rls_session.py`) | 구현됨 |
 | C | P24/P25 | 이준호(partner) `POST /search` -> c001 케이스 청크 포함 응답 (Assertion A) | 자동 (verify-search.sh A — 라이브) | 구현됨 (LIVE) |
@@ -526,7 +526,8 @@ DBA가 플래그한 4건을 `embed_client.py` / `ingest.py` / `api.py` / `retrie
 | 상태 | 수 |
 |---|---|
 | 구현됨 (LIVE/자동/수동 검증 완료, 사이드카 prefix 2 포함) | 14 |
-| 미구현 (C2 흡수 대상) | 6 |
+| 구현됨 (C2 `pytest -m postgres` — 코드 wired·DSN 게이트, 라이브 실행은 founder) | 6 |
+| 미구현 | 0 |
 | FAIL | 0 (당초 I-1 2건은 false positive — §9.1 정정) |
 
 ---
@@ -582,9 +583,22 @@ DBA가 플래그한 4건을 `embed_client.py` / `ingest.py` / `api.py` / `retrie
 
 ---
 
-### 9.5 `pytest -m postgres` (C2) 흡수 목록
+### 9.5 `pytest -m postgres` (C2) 흡수 목록 — **구현 완료**
 
-아래 단언(필수 6 + 선택 e2e 1)은 DB 연결이 필요한 통합 테스트로 C2 milestone 에서 구현한다 (`pytest -m postgres` 마크).
+아래 단언(필수 6)은 DB 연결이 필요한 통합 테스트로 C2 에서 구현 완료했다 (`pytest -m postgres` 마크, `LEGAL_RAG_DB_DSN_POSTGRES` DSN 게이트 — 미설정 시 자동 skip, 라이브 실행은 founder 게이트). 공용 픽스처(`pg_conn` force_rollback 트랜잭션 → DB 무오염, `stub_embed_client` → 외부 API 0)는 `services/legal-rag/tests/conftest.py`.
+
+| 단언 | 테스트 파일 |
+|---|---|
+| G-P7 재인제스트 멱등(COUNT 불변) | `tests/test_postgres_integration.py::test_gp7_idempotent_reingest` |
+| G-P8a `ingest_status=done` | `::test_gp8a_status_done` |
+| G-P8b 빈파일→`ingest_status=error`+0건 | `::test_gp8b_empty_file_error_status` |
+| G-P17 `/search`→`legal_rag_query_log` +1 | `::test_gp17_query_log_plus_one` |
+| G-P19 app_user→`legal_attorney` `InsufficientPrivilege` | `::test_gp19_app_user_denied_legal_attorney` |
+| G-P15 RLS 검색격리(이준호 c001 가시 / 박서연 c001 0건) | `tests/test_rls_session.py::test_rls_blocks_cross_attorney_access` |
+
+> G-P19 는 C1 production 최소권한 하드닝(`presets/ddl/augments/legal/10_production_hardening.sql`)의 경계(app_user 가 `legal_attorney` 미접근)를 실증하는 게이트이기도 하다.
+
+원래 목록(이력):
 
 1. **G-P7** — 동일 `(source_id, source_type, chunk_index)` 재실행 후 `COUNT(*)` 동일
 2. **G-P8a** — `ingest_file()` 실행 후 `ingest_status = done` 기록됨
