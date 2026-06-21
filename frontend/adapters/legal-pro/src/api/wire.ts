@@ -341,6 +341,114 @@ export async function apiUpdateCase(
   return legalRequest<CaseDetailResponse>('PATCH', url, { body })
 }
 
+// ── G-2 C3 — 문서 업로드 타입 및 API ───────────────────────────────────────────
+
+// DDL CHECK enum (legal_case_document.document_type):
+// complaint/brief/evidence/court-order/contract/correspondence/other
+export type DocumentType =
+  | 'complaint'
+  | 'brief'
+  | 'evidence'
+  | 'court-order'
+  | 'contract'
+  | 'correspondence'
+  | 'other'
+
+export interface CaseDocumentUploadOut {
+  doc_id: string
+  case_id: string
+  title: string | null
+  document_type: string
+  ingest_status: string
+  filed_at: string | null
+  notes: string | null
+}
+
+/**
+ * POST /cases/:case_id/documents (멀티파트, JWT Bearer)
+ *
+ * Content-Type 헤더를 설정하지 않는다 — 브라우저가 boundary 자동 추가.
+ */
+export async function apiUploadDocument(
+  caseId: string,
+  formData: FormData,
+): Promise<WireResult<CaseDocumentUploadOut>> {
+  const token = getToken()
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  // NOTE: Content-Type 헤더를 명시적으로 설정하지 않음.
+  // multipart/form-data + boundary 는 브라우저 fetch 가 자동으로 설정한다.
+
+  const url = LEGAL_RAG_ENDPOINTS.document_upload.replace(
+    ':case_id',
+    encodeURIComponent(caseId),
+  )
+
+  let response: Response
+  try {
+    response = await fetch(url, { method: 'POST', headers, body: formData })
+  } catch {
+    return {
+      data: null,
+      error: {
+        code: 'UNAVAILABLE',
+        messageKo: getMessageKo('UNAVAILABLE'),
+        retriable: isRetriable('UNAVAILABLE'),
+        isAuth: false,
+      },
+    }
+  }
+
+  if (response.status === 401) {
+    clearToken()
+    return {
+      data: null,
+      error: {
+        code: 'UNAUTHORIZED',
+        messageKo: '인증이 만료되었습니다. 다시 로그인하세요.',
+        retriable: false,
+        isAuth: true,
+      },
+    }
+  }
+
+  let payload: Record<string, unknown> = {}
+  try {
+    const text = await response.text()
+    if (text) payload = JSON.parse(text)
+  } catch {
+    return {
+      data: null,
+      error: {
+        code: 'INTERNAL',
+        messageKo: getMessageKo('INTERNAL'),
+        retriable: isRetriable('INTERNAL'),
+        isAuth: false,
+      },
+    }
+  }
+
+  if (!response.ok) {
+    const detail =
+      typeof payload['detail'] === 'string' ? payload['detail'] : getMessageKo('INTERNAL')
+    return {
+      data: null,
+      error: {
+        code: 'INTERNAL',
+        messageKo: detail,
+        retriable: false,
+        isAuth: false,
+      },
+    }
+  }
+
+  return { data: payload as unknown as CaseDocumentUploadOut, error: null }
+}
+
 // ── G-2 C2 — 당사자 등록/수정 API ───────────────────────────────────────────
 
 export async function apiCreateParty(
