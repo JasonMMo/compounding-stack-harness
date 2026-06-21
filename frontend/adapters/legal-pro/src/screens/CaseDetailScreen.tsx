@@ -11,16 +11,18 @@
  *  - 삭제 UI 없음 (AC-10)
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   apiGetCase,
   apiCreateParty,
   apiUpdateParty,
+  apiUploadDocument,
   type CaseDetailResponse,
   type CaseDocumentItem,
   type CaseParty,
   type PartyRole,
+  type DocumentType,
 } from '../api/wire'
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -98,6 +100,216 @@ function DocItem({ doc }: DocItemProps) {
     </li>
   )
 }
+
+// ── DocumentUploadPanel (G-2 C3) ──────────────────────────────────────────────
+
+const DOC_TYPE_OPTIONS: { value: DocumentType; label: string }[] = [
+  { value: 'complaint',      label: '소장' },
+  { value: 'brief',          label: '준비서면' },
+  { value: 'evidence',       label: '증거' },
+  { value: 'court-order',    label: '법원명령' },
+  { value: 'contract',       label: '계약서' },
+  { value: 'correspondence', label: '서신' },
+  { value: 'other',          label: '기타' },
+]
+
+interface DocumentUploadPanelProps {
+  caseId: string
+  documents: CaseDocumentItem[]
+  onRefresh: () => void
+}
+
+function DocumentUploadPanel({ caseId, documents, onRefresh }: DocumentUploadPanelProps) {
+  const [showForm, setShowForm] = useState(false)
+  const [docType, setDocType] = useState<DocumentType>('complaint')
+  const [docTitle, setDocTitle] = useState('')
+  const [filedAt, setFiledAt] = useState('')
+  const [notes, setNotes] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // AC-11 폴링: pending|processing 인 doc 가 하나라도 있으면 5초마다 자동 새로고침
+  useEffect(() => {
+    const hasPending = documents.some(
+      d => d.ingest_status === 'pending' || d.ingest_status === 'processing',
+    )
+    if (hasPending) {
+      if (!pollRef.current) {
+        pollRef.current = setInterval(() => {
+          onRefresh()
+        }, 5000)
+      }
+    } else {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+    }
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+    }
+  }, [documents, onRefresh])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!file) {
+      setError('첨부 파일을 선택하세요.')
+      return
+    }
+    setSaving(true)
+    setError(null)
+
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('document_type', docType)
+    if (docTitle.trim()) fd.append('title', docTitle.trim())
+    if (filedAt) fd.append('filed_at', filedAt)
+    if (notes.trim()) fd.append('notes', notes.trim())
+
+    const res = await apiUploadDocument(caseId, fd)
+    setSaving(false)
+
+    if (res.error) {
+      setError(res.error.messageKo)
+      return
+    }
+
+    // 성공 → 폼 초기화 + 목록 새로고침
+    setDocType('complaint')
+    setDocTitle('')
+    setFiledAt('')
+    setNotes('')
+    setFile(null)
+    setShowForm(false)
+    onRefresh()
+  }
+
+  return (
+    <div className="case-detail-panel__docs" style={{ padding: 'var(--space-page-h, 24px)' }}>
+      {/* 헤더 */}
+      <div
+        className="case-detail-panel__docs-title"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}
+      >
+        <span>문서 {documents.length}건</span>
+        {!showForm && (
+          <button
+            type="button"
+            className="btn btn--outline btn--sm"
+            onClick={() => { setShowForm(true); setError(null) }}
+            aria-label="문서 첨부 업로드"
+          >
+            + 문서 추가
+          </button>
+        )}
+      </div>
+
+      {/* 업로드 폼 */}
+      {showForm && (
+        <form
+          onSubmit={handleSubmit}
+          style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, marginBottom: 12 }}
+        >
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>문서 유형 *</label>
+            <select
+              value={docType}
+              onChange={e => setDocType(e.target.value as DocumentType)}
+              className="input input--sm"
+              style={{ width: '100%' }}
+              required
+            >
+              {DOC_TYPE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>문서 제목</label>
+            <input
+              type="text"
+              value={docTitle}
+              onChange={e => setDocTitle(e.target.value)}
+              className="input input--sm"
+              style={{ width: '100%' }}
+              placeholder="예: 1차 준비서면"
+            />
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>제출일자</label>
+            <input
+              type="date"
+              value={filedAt}
+              onChange={e => setFiledAt(e.target.value)}
+              className="input input--sm"
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>메모</label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              className="input input--sm"
+              style={{ width: '100%', resize: 'vertical', minHeight: 56 }}
+              placeholder="추가 메모 (선택)"
+            />
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>첨부 파일 * (.pdf/.docx/.txt/.md, 최대 20MB)</label>
+            <input
+              type="file"
+              accept=".pdf,.docx,.txt,.md"
+              onChange={e => setFile(e.target.files?.[0] ?? null)}
+              required
+            />
+          </div>
+          {error && (
+            <p role="alert" style={{ color: 'var(--color-error, #d32)', fontSize: 12, marginBottom: 8 }}>
+              {error}
+            </p>
+          )}
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              className="btn btn--outline btn--sm"
+              onClick={() => { setShowForm(false); setError(null) }}
+              disabled={saving}
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="btn btn--primary btn--sm"
+              disabled={saving}
+            >
+              {saving ? '업로드 중…' : '업로드'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* 문서 목록 */}
+      {documents.length === 0 ? (
+        <li className="case-detail-panel__doc-item case-detail-panel__doc-empty" style={{ listStyle: 'none' }}>
+          등록된 문서가 없습니다.
+        </li>
+      ) : (
+        <ul className="case-detail-panel__doc-list" aria-label="소속 문서 목록">
+          {documents.map(doc => (
+            <DocItem key={doc.doc_id} doc={doc} />
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 
 // ── PartyPanel ────────────────────────────────────────────────────────────────
 
@@ -572,24 +784,14 @@ export default function CaseDetailScreen() {
         />
       )}
 
-      {/* 문서 목록 */}
-      <div className="case-detail-panel__docs" style={{ padding: 'var(--space-page-h, 24px)' }}>
-        <div className="case-detail-panel__docs-title">
-          문서 {detail.documents.length}건
-        </div>
-
-        {detail.documents.length === 0 ? (
-          <li className="case-detail-panel__doc-item case-detail-panel__doc-empty" style={{ listStyle: 'none' }}>
-            등록된 문서가 없습니다.
-          </li>
-        ) : (
-          <ul className="case-detail-panel__doc-list" aria-label="소속 문서 목록">
-            {detail.documents.map(doc => (
-              <DocItem key={doc.doc_id} doc={doc} />
-            ))}
-          </ul>
-        )}
-      </div>
+      {/* G-2 C3 문서 업로드 패널 (문서 목록 + 업로드 폼 + 폴링 통합) */}
+      {caseId && (
+        <DocumentUploadPanel
+          caseId={caseId}
+          documents={detail.documents ?? []}
+          onRefresh={handleRefresh}
+        />
+      )}
     </main>
   )
 }
