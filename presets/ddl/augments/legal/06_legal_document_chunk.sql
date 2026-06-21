@@ -80,11 +80,29 @@ CREATE INDEX IF NOT EXISTS idx_legal_chunk_hnsw
   WITH (m = 16, ef_construction = 64)
   WHERE embedding IS NOT NULL;
 
--- FTS on chunk_text (fallback keyword search within chunks)
+-- FTS on chunk_text (tsquery-OR fallback keyword search — always active, no extension required)
 CREATE INDEX IF NOT EXISTS idx_legal_chunk_fts
   ON legal_document_chunk USING GIN (
     to_tsvector('simple', chunk_text)
   );
+
+-- Bigram GIN index for Korean substring/partial-match FTS (pg_bigm extension required).
+-- Guard: only created when pg_bigm extension is present; idempotent (IF NOT EXISTS).
+-- Both idx_legal_chunk_fts and idx_legal_chunk_bigm coexist:
+--   retrieve.py probes pg_extension at runtime and uses LIKE ANY (bigm path) or
+--   plainto_tsquery/tsquery-OR (simple FTS path) depending on which extension is active.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_bigm') THEN
+    EXECUTE $idx$
+      CREATE INDEX IF NOT EXISTS idx_legal_chunk_bigm
+        ON legal_document_chunk USING gin (chunk_text gin_bigm_ops)
+    $idx$;
+    RAISE NOTICE 'idx_legal_chunk_bigm: created (pg_bigm active)';
+  ELSE
+    RAISE NOTICE 'idx_legal_chunk_bigm: skipped (pg_bigm not installed — degraded to idx_legal_chunk_fts)';
+  END IF;
+END $$;
 
 -- ─────────────────────────────────────────────
 -- RLS: chunk visibility mirrors source document
