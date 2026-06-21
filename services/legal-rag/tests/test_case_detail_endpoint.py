@@ -68,23 +68,33 @@ async def _rls_noop(conn, attorney_id):
     yield
 
 
-def _make_pool_mock_two_queries(fetchone_return, fetchall_return):
-    """Build an async pool mock where the first execute returns fetchone_return
-    and the second execute (document list) returns fetchall_return.
+def _make_pool_mock_two_queries(fetchone_return, fetchall_return, party_rows=None):
+    """Build an async pool mock for GET /cases/{case_id}.
 
-    conn.execute is called twice in sequence within the same rls_session:
+    conn.execute is called THREE times within the same rls_session (G-2 C2):
       1st call → case meta (fetchone)
-      2nd call → document list (fetchall)
+      2nd call → document list (fetchall)  — returns fetchall_return
+      3rd call → party list (fetchall)     — returns party_rows (default [])
+
+    party_rows: list of 5-tuples (id, case_id, role, name, notes).
+    Pass a list with one tuple to assert party data in the response.
     """
+    if party_rows is None:
+        party_rows = []
+
     call_count = 0
 
     class _Cur1:
         async def fetchone(self):
             return fetchone_return
 
-    class _Cur2:
+    class _CurDocs:
         async def fetchall(self):
             return fetchall_return
+
+    class _CurParties:
+        async def fetchall(self):
+            return party_rows
 
     conn = MagicMock()
 
@@ -93,7 +103,9 @@ def _make_pool_mock_two_queries(fetchone_return, fetchall_return):
         call_count += 1
         if call_count == 1:
             return _Cur1()
-        return _Cur2()
+        if call_count == 2:
+            return _CurDocs()
+        return _CurParties()
 
     conn.execute = _execute
 
@@ -203,16 +215,20 @@ class TestCaseDetailEndpoint:
         assert res.status_code == 400, res.text
         assert "not a valid UUID" in res.json()["detail"]
 
-    # (c) 이준호 본인 사건 → 200 + 사건 메타 + 문서 목록
+    # (c) 이준호 본인 사건 → 200 + 사건 메타 + 문서 목록 + 당사자 목록
     def test_own_case_returns_200_with_documents(self):
         """
         이준호가 자신이 담당하는 사건(2024가합12345)을 조회.
-        DB 에서 사건 메타 + 문서 2건 반환 → 200.
+        DB 에서 사건 메타 + 문서 2건 + 당사자 1명 반환 → 200.
+
+        G-2 C2: get_case 핸들러가 이제 3번째 execute 로 party 목록을 조회한다.
+        mock 은 3번째 execute 에 party_rows 를 반환하도록 갱신됨.
         """
         attorney_id = str(uuid.uuid4())
         case_id = str(uuid.uuid4())
         doc_id_1 = str(uuid.uuid4())
         doc_id_2 = str(uuid.uuid4())
+        party_id_1 = str(uuid.uuid4())
         token = _make_token(attorney_id, self.SECRET)
 
         # 1st execute: case meta row
@@ -227,15 +243,19 @@ class TestCaseDetailEndpoint:
             "차량 충돌 손해배상 사건",
             "2024-03-01",
         )
-        # 2nd execute: document list rows
+        # 2nd execute: document list rows (4-tuple: id, title, document_type, ingest_status)
         doc_rows = [
             (doc_id_1, "소장", "소장", "done"),
             (doc_id_2, "준비서면 1차", "준비서면", "pending"),
         ]
+        # 3rd execute: party list rows (5-tuple: id, case_id, role, name, notes)
+        party_rows = [
+            (party_id_1, case_id, "plaintiff", "주식회사 한빛테크", "원고 법인."),
+        ]
 
         import api as api_mod
         import db as db_mod
-        pool_mock = _make_pool_mock_two_queries(case_row, doc_rows)
+        pool_mock = _make_pool_mock_two_queries(case_row, doc_rows, party_rows=party_rows)
 
         with (
             patch.object(api_mod, "_pool", pool_mock),
@@ -258,6 +278,11 @@ class TestCaseDetailEndpoint:
         assert data["documents"][0]["doc_id"] == doc_id_1
         assert data["documents"][0]["document_type"] == "소장"
         assert data["documents"][1]["ingest_status"] == "pending"
+        # G-2 C2: parties 필드 확인 (OQ-11 additive)
+        assert len(data["parties"]) == 1
+        assert data["parties"][0]["party_id"] == party_id_1
+        assert data["parties"][0]["role"] == "plaintiff"
+        assert data["parties"][0]["name"] == "주식회사 한빛테크"
 
     # (d) 박서연 cross-attorney 사건 → 404 (RLS 격리 실증)
     def test_cross_attorney_case_returns_404(self):
@@ -337,9 +362,11 @@ class TestCasesContractUnchanged:
     def test_case_detail_response_fields(self):
         from api import CaseDetailResponse, CaseDocumentItem
         dr_fields = set(CaseDetailResponse.model_fields.keys())
+        # G-2 C2 additive: 'parties' 가산 (OQ-11 CTO判定 — open-closed, documents 동일 패턴)
         assert {
             "case_id", "case_number", "title", "status",
             "case_type", "description", "opened_at", "closed_at", "documents",
+            "parties",
         } == dr_fields, f"CaseDetailResponse 필드 변경 감지: {dr_fields}"
 
         di_fields = set(CaseDocumentItem.model_fields.keys())
