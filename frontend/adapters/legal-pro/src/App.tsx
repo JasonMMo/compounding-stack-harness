@@ -1,7 +1,9 @@
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import LoginScreen from './screens/LoginScreen'
 import PrecedentSearchScreen from './screens/PrecedentSearchScreen'
+import CasesScreen from './screens/CasesScreen'
+import CaseDetailScreen from './screens/CaseDetailScreen'
 
 // ── Auth token helpers (sessionStorage — clears on tab close) ─────────────
 const TOKEN_KEY = 'lp_token'
@@ -36,6 +38,59 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
 // ── App shell ──────────────────────────────────────────────────────────────
 
+// ── Tab navigation ─────────────────────────────────────────────────────────
+
+interface TabNavProps {
+  onLogout: () => void
+  displayName: string
+}
+
+function TabNav({ onLogout, displayName }: TabNavProps) {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  // 사건 현황 탭: /cases 와 /cases/:id 양쪽에서 active (OQ-2)
+  const isCasesActive = location.pathname === '/cases' || location.pathname.startsWith('/cases/')
+  const isSearchActive = location.pathname === '/search'
+
+  return (
+    <>
+      <div className="app-tabs" role="tablist" aria-label="주요 메뉴">
+        <button
+          type="button"
+          className="tab-btn"
+          role="tab"
+          aria-selected={isCasesActive}
+          onClick={() => navigate('/cases')}
+        >
+          사건 현황
+        </button>
+        <button
+          type="button"
+          className="tab-btn"
+          role="tab"
+          aria-selected={isSearchActive}
+          onClick={() => navigate('/search')}
+        >
+          문서 검색
+        </button>
+        <div style={{ flex: 1 }} />
+        <span className="header-user" style={{ alignSelf: 'center', fontSize: 'var(--text-meta-size)', color: 'var(--color-text-3)' }}>
+          {displayName}
+        </span>
+        <button
+          className="btn btn--ghost btn--sm"
+          style={{ alignSelf: 'center', marginLeft: 8, marginRight: 0 }}
+          onClick={onLogout}
+          type="button"
+        >
+          로그아웃
+        </button>
+      </div>
+    </>
+  )
+}
+
 export default function App() {
   const navigate = useNavigate()
   // displayName is held in state so header re-renders after login
@@ -44,7 +99,7 @@ export default function App() {
   function handleLoginSuccess(token: string, name: string) {
     setToken(token, name)
     setDisplayNameState(name)
-    navigate('/search', { replace: true })
+    navigate('/cases', { replace: true })
   }
 
   function handleLogout() {
@@ -60,15 +115,12 @@ export default function App() {
       {/* ── Header (navy-900 + gold authority strip) ── */}
       <header className="app-header">
         <span className="header-wordmark">법무 판례 검색</span>
-        {isLoggedIn && (
-          <div className="header-controls">
-            <span className="header-user">{displayName}</span>
-            <button className="btn btn--ghost btn--sm" onClick={handleLogout} type="button">
-              로그아웃
-            </button>
-          </div>
-        )}
       </header>
+
+      {/* ── Tab nav (로그인 상태에서만) ── */}
+      {isLoggedIn && (
+        <TabNav onLogout={handleLogout} displayName={displayName} />
+      )}
 
       {/* ── Routes ── */}
       <Routes>
@@ -84,20 +136,25 @@ export default function App() {
             </RequireAuth>
           }
         />
-        {/*
-         * Phase B — case-management CRUD screens (DEFERRED).
-         * Blocked on:
-         *   G-1: /cases endpoints not implemented in backend (GET /cases, GET /cases/:id)
-         *   G-2: /cases POST/PATCH/DELETE endpoints missing
-         *   G-3: case_document ingest pipeline incomplete
-         *   G-4: CaseOut schema not yet stabilised
-         *   G-5: role-based access policy for case mutations TBD
-         *   G-6: RLS row isolation for case-scoped search not end-to-end tested
-         *   Q-1: open question — should Phase B be a separate micro-frontend or same SPA?
-         * TODO (Phase B): add /cases route here pointing to CasesScreen.tsx
-         */}
-        <Route path="/" element={<Navigate to={isLoggedIn ? '/search' : '/login'} replace />} />
-        <Route path="*" element={<Navigate to={isLoggedIn ? '/search' : '/login'} replace />} />
+        {/* Phase B — 사건관리 read 화면 */}
+        <Route
+          path="/cases"
+          element={
+            <RequireAuth>
+              <CasesScreen />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/cases/:id"
+          element={
+            <RequireAuth>
+              <CaseDetailScreen />
+            </RequireAuth>
+          }
+        />
+        <Route path="/" element={<Navigate to={isLoggedIn ? '/cases' : '/login'} replace />} />
+        <Route path="*" element={<Navigate to={isLoggedIn ? '/cases' : '/login'} replace />} />
       </Routes>
     </div>
   )
