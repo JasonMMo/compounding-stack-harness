@@ -108,6 +108,35 @@ export interface CaseDocumentItem {
   ingest_status: string | null
 }
 
+// Cases — party
+// DDL CHECK: plaintiff/defendant/witness/opposing-counsel/expert-witness
+export type PartyRole =
+  | 'plaintiff'
+  | 'defendant'
+  | 'witness'
+  | 'opposing-counsel'
+  | 'expert-witness'
+
+export interface CaseParty {
+  party_id: string
+  case_id: string
+  role: PartyRole
+  name: string
+  notes: string | null
+}
+
+export interface CasePartyCreateIn {
+  role: PartyRole
+  name: string
+  notes?: string | null
+}
+
+export interface CasePartyUpdateIn {
+  role?: PartyRole | null
+  name?: string | null
+  notes?: string | null
+}
+
 export interface CaseDetailResponse {
   case_id: string
   case_number: string
@@ -118,6 +147,8 @@ export interface CaseDetailResponse {
   opened_at: string | null
   closed_at: string | null
   documents: CaseDocumentItem[]
+  // OQ-11 CTO判定: parties 배열 가산 (additive, open-closed — documents 와 동일 패턴)
+  parties: CaseParty[]
 }
 
 // ── Core request ──────────────────────────────────────────────────────────
@@ -308,4 +339,25 @@ export async function apiUpdateCase(
 ): Promise<WireResult<CaseDetailResponse>> {
   const url = LEGAL_RAG_ENDPOINTS.case_update.replace(':case_id', encodeURIComponent(caseId))
   return legalRequest<CaseDetailResponse>('PATCH', url, { body })
+}
+
+// ── G-2 C2 — 당사자 등록/수정 API ───────────────────────────────────────────
+
+export async function apiCreateParty(
+  caseId: string,
+  body: CasePartyCreateIn,
+): Promise<WireResult<CaseParty>> {
+  const url = LEGAL_RAG_ENDPOINTS.party_create.replace(':case_id', encodeURIComponent(caseId))
+  return legalRequest<CaseParty>('POST', url, { body })
+}
+
+export async function apiUpdateParty(
+  caseId: string,
+  partyId: string,
+  body: CasePartyUpdateIn,
+): Promise<WireResult<CaseParty>> {
+  const url = LEGAL_RAG_ENDPOINTS.party_update
+    .replace(':case_id', encodeURIComponent(caseId))
+    .replace(':party_id', encodeURIComponent(partyId))
+  return legalRequest<CaseParty>('PATCH', url, { body })
 }
