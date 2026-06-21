@@ -182,31 +182,52 @@ class TestRlsSession:
 
 @pytest.mark.postgres
 @pytest.mark.asyncio
-async def test_rls_blocks_cross_attorney_access():
+async def test_rls_blocks_cross_attorney_access(pg_conn):
     """
-    Gap-1 통합 테스트: 변호사 A 세션이 변호사 B 사건문서 청크를 0행으로 차단.
+    G-P15 — RLS search isolation: 변호사 A 세션이 변호사 B-only 사건문서 청크를 0행으로 차단.
+
+    Control : 이준호(A)로 검색 → c001 청크가 최소 1개 반환됨.
+    Isolation: 박서연(B)로 동일 검색 → c001 청크가 0개 반환됨.
 
     실행 방법:
-        pytest -m postgres tests/test_rls_session.py
+        LEGAL_RAG_DB_DSN_POSTGRES=<dsn> pytest -m postgres tests/test_rls_session.py
 
-    요구사항:
-      - 실 Postgres (pgvector, pg_bigm 설치) 또는 testcontainers
-      - 환경변수 LEGAL_RAG_DB_DSN_POSTGRES (app_service DSN) 설정
-      - 01~07_*.sql 적용 완료
-
-    현재: DB 없으면 자동 skip.
+    DB 없으면 자동 skip (pg_conn fixture가 처리).
     """
-    db_dsn = os.environ.get("LEGAL_RAG_DB_DSN_POSTGRES")
-    if not db_dsn:
-        pytest.skip("LEGAL_RAG_DB_DSN_POSTGRES not set — postgres integration skipped")
+    from conftest import DUMMY_VEC
+    from db import rls_session
+    from retrieve import hybrid_search
 
-    # 실 DB가 있을 때만 아래 코드 실행
-    try:
-        from psycopg_pool import AsyncConnectionPool
-        import db as database
-    except ImportError:
-        pytest.skip("psycopg_pool not installed")
+    _ATTORNEY_이준호 = "a1000000-0000-0000-0000-000000000001"
+    _ATTORNEY_박서연 = "a1000000-0000-0000-0000-000000000002"
+    _C001 = "c0000000-0001-0001-0001-000000000001"
 
-    # 이 테스트 본문은 인프라(Gap-1 통합 게이트 #8)에서 구현 완성
-    # 현재는 skip 경로로 종료 (DB 없는 단위 환경에서 통과)
-    pytest.skip("Postgres integration test not yet wired (infra gate #8)")
+    _QUERY = "소프트웨어 공급계약 해지 손해배상"
+
+    # Control: 이준호는 c001 청크를 볼 수 있어야 한다
+    async with rls_session(pg_conn, _ATTORNEY_이준호):
+        chunks_a = await hybrid_search(
+            conn=pg_conn,
+            query_text=_QUERY,
+            query_embedding=DUMMY_VEC,
+        )
+
+    c001_in_a = [c for c in chunks_a if c.case_id == _C001]
+    assert len(c001_in_a) >= 1, (
+        f"이준호(A) 세션에서 c001 청크가 반환되지 않음 "
+        f"(총 {len(chunks_a)}개 반환). 시드 데이터 또는 청크 인덱스를 확인하세요."
+    )
+
+    # Isolation: 박서연은 c001 청크를 볼 수 없어야 한다
+    async with rls_session(pg_conn, _ATTORNEY_박서연):
+        chunks_b = await hybrid_search(
+            conn=pg_conn,
+            query_text=_QUERY,
+            query_embedding=DUMMY_VEC,
+        )
+
+    c001_in_b = [c for c in chunks_b if c.case_id == _C001]
+    assert len(c001_in_b) == 0, (
+        f"박서연(B) 세션에서 c001 청크 {len(c001_in_b)}개가 노출됨 — "
+        f"RLS 격리 실패: {[c.chunk_id for c in c001_in_b]}"
+    )
