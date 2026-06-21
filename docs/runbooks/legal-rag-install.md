@@ -391,7 +391,7 @@ uvicorn api:app --host 127.0.0.1 --port 8000
 
 ## 7. 운영 하드닝 체크리스트
 
-아래 7항목을 설치 완료 전 모두 확인한다.
+아래 8항목을 설치 완료 전 모두 확인한다.
 
 ### #1 DSN 표준형식 강제
 
@@ -488,6 +488,30 @@ labels:
 ```
 
 > **주의 (CISO 게이트-8 LOW)**: `legal-rag-login` 라우터는 반드시 `entrypoints`·`tls`·`service`(기존 `legal-rag` 서비스명)·`priority`(기본 catch-all 라우터보다 높게)를 명시해야 한다. 누락 시 라우터가 어느 서비스에도 연결되지 않는 dead router 가 되어 rate-limit 이 적용되지 않는다. 배포 후 `traefik` 대시보드 또는 `curl` 429 검증(아래)으로 활성화를 반드시 확인한다.
+
+### #8 app_service production 최소권한 (비-슈퍼유저)
+
+프리뷰 티어는 postgres 슈퍼유저 단축 경로로 동작한다(의도적, 허용). **production self-host 에서는 app_service 가 슈퍼유저여서도, 테이블 소유자여서도 안 된다.**
+
+- [ ] app_service 를 production 에서 다음과 같이 생성 (§3 표준형식 DSN 과 함께):
+  ```sql
+  CREATE ROLE app_service LOGIN PASSWORD '<strong-password>'
+    NOSUPERUSER NOCREATEDB NOCREATEROLE BYPASSRLS;
+  ```
+  > `BYPASSRLS` 는 유지한다 — ingest 가 모든 사건에 걸쳐 청크를 기록하고 로그인이 `legal_attorney`(app_user 미부여 테이블)를 읽으려면 필수다. `BYPASSRLS ≠ 슈퍼유저`: 소유·DDL 권한 없는 롤도 가질 수 있다.
+- [ ] DDL 객체 소유자는 **app_service 가 아닌** 별도 롤(`app_owner` 또는 `postgres`)로 둔다 (소유자는 묵시적 DROP/ALTER 권한 → 최소권한 위배).
+- [ ] 09_grants.sql 적용 후 `presets/ddl/augments/legal/10_production_hardening.sql` 적용:
+  ```bash
+  psql "$DSN" -f presets/ddl/augments/legal/10_production_hardening.sql
+  ```
+  이 파일은 app_service 의 슈퍼유저 계열 속성을 제거하고(`ALTER ROLE ... NOSUPERUSER ...`), 코드가 실제 쓰는 최소 GRANT(legal_attorney SELECT, legal_document_chunk SELECT/INSERT/UPDATE, legal_case_document SELECT + UPDATE(ingest_status,ingested_at), legal_precedent SELECT)만 부여한다. **프리뷰 `apply-schema.sh` 에는 의도적으로 포함하지 않는다** (프리뷰는 슈퍼유저 단축 경로).
+- [ ] 속성 검증: `SELECT rolsuper, rolcreaterole, rolcreatedb, rolbypassrls FROM pg_roles WHERE rolname='app_service';` → 기대 `f, f, f, t`
+- [ ] 격리 통합테스트(C2)로 회귀 확인 (실 DB 게이트):
+  ```bash
+  LEGAL_RAG_DB_DSN_POSTGRES="postgresql://app_service:<pw>@127.0.0.1:5432/legaldb" \
+    pytest -m postgres -q
+  ```
+  G-P19(app_user→legal_attorney `permission denied`) 통과로 최소권한 경계를 실증한다.
 
 **Traefik 정적 설정 경로 (traefik.yml)**:
 
