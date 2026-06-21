@@ -533,3 +533,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **CTO 가드**: (a) 엔지니어가 DDL 불일치 보고(case_type CHECK에 other 없음) → 스펙 정합 수정(OQ-12). (b) 엔지니어가 API↔DB 실컬럼 교정(description→summary, opened_at→filed_date). (c) diagnostics 대량 발생했으나 전부 확정 FP(pydantic Field기본값·lazy import·stale never-read), App.tsx 라우트 실연결·RLS 주입 직접 소스검증.
 - **CTO 판정**: OQ-11(party 노출) = C2에서 CaseDetailResponse에 parties 가산(additive, documents 패턴).
 - 다음: C2(당사자 CRUD) → C3(문서첨부+ingest, CISO 게이트). C1 라이브 RLS AC는 founder DSN 실행.
+
+### Growth-107 — legal-pro G-2 C2(당사자 parties CRUD, PII) 구현 + CTO 회귀 적발
+
+- **범위**: G-2 sub-phase C2 — 당사자 등록/수정. `POST /cases/{case_id}/parties`·`PATCH /cases/{case_id}/parties/{party_id}` + 신규 `CasePartyOut`/`CasePartyCreateIn`/`CasePartyUpdateIn` 모델 + `CaseDetailResponse.parties` 가산(OQ-11 additive) + CaseDetailScreen 인라인 PartyPanel + wire/codegen. engineer 7커밋(86d1d0a..acffa0c).
+- **DDL 선완비**: 05_case_party_rls.sql(RLS-only augment)에 select/insert/update 정책 이미 존재, role CHECK = plaintiff/defendant/witness/opposing-counsel/expert-witness. 신규 DDL 0.
+- **CTO spec-vs-DDL 판정**: 스펙 name 256자·notes 2000자 → 렌더 컬럼 VARCHAR(255) 초과. C1 case_type 'other'와 동형, **DDL 충실하게 name·notes 255 cap** 확정(catalog `string` maxlen 미지정→렌더 기본 255, postgres 빌드 미체크인). pydantic max_length=255.
+- **PII RLS→404 존재은폐 경계(CTO 직접 소스검증)**: create_party = RLS INSERT WITH CHECK EXISTS(legal_case 소유) 위반 → psycopg 예외 "policy" 매칭 → 404(타 변호사는 부모 case 비가시→EXISTS false→위반). update_party = RLS UPDATE USING 조용히 0행 + 이후 SELECT None → 404. 양쪽 사건·party 존재 은폐 확정.
+- **CTO 회귀 적발(핵심)**: 엔지니어가 C1+C2 테스트 파일만 돌려 "70 passed" 보고했으나, CTO 전체 스위트 재현 → **2 fail**. get_case_detail에 parties SELECT(3번째 execute) 추가가 Phase B `test_case_detail_endpoint.py` 깨뜨림 — (a) mock 미갱신으로 `notes=pr[4]` IndexError, (b) "필드 불변" 단언이 새 parties 필드 미반영. **프로덕션 코드는 정상**(실 SELECT 5컬럼), 테스트 픽스처 staleness. 동일 엔지니어 재디스패치 → acffa0c 수정(parties fetchall mock + 필드셋 가산 + parties 라운드트립 단언). CTO 재현 **281 passed/17 skipped/0 fail**.
+- **diagnostics 전부 확정 FP**: wire.ts party_create 미존재(실제 contract.gen.ts:19-20 존재)·CaseDetailScreen PartyPanel/handleRefresh never-read(line 568 렌더링·466 사용)·pydantic Field/lazy import possibly-unbound — npm build 0 error·pytest green로 교차확인.
+- **하드닝 노트(향후)**: create_party 예외 substring 매칭("check"/"permission")은 pydantic 선검증 덕에 안전하나 psycopg SQLSTATE 42501(InsufficientPrivilege) 타입 캐치가 더 견고.
+- **교훈**: 엔지니어 self-test 범위가 변경 파일에만 국한되면 cross-file 회귀를 놓침. CTO 게이트는 **반드시 전체 스위트 재현** — envelope의 "N passed"를 부분 스위트로 신뢰 금지. [[subagent-cross-service-verify]] 연장.
+- 다음: C3(문서첨부+비동기 ingest, CISO 게이트) → 그 후 phase 2 G-3(원문보기). C2 라이브 RLS AC-05~07은 founder DSN 실행(@pytest.mark.postgres).
