@@ -25,11 +25,16 @@
 
 services:
 
-  # ── DB: postgres + pgvector ──────────────────────────────────────────────────
-  # Image: pgvector/pgvector:pg16 — official pgvector image, pgvector pre-installed.
-  # Preview runs WITHOUT pg_bigm: Korean FTS falls back to plainto_tsquery (demo-quality).
+  # ── DB: postgres + pgvector + pg_bigm ───────────────────────────────────────
+  # Custom image built from deploy/preview/postgres-bigm/Dockerfile.
+  # Base: pgvector/pgvector:pg16 (pgvector pre-installed) + pg_bigm 1.2 source-built on top.
+  # pg_bigm enables Korean bigram FTS: 01_extensions.sql DO-block activates it automatically.
+  # Data volume (legal-rag-pgdata) is preserved across rebuilds — pg16→pg16, no migration needed.
   db:
-    image: pgvector/pgvector:pg16
+    build:
+      context: ./postgres-bigm
+      dockerfile: Dockerfile
+    image: legal-rag-postgres-bigm:pg16
     environment:
       POSTGRES_DB: legaldb
       # Credentials injected by Coolify vault — never hardcoded here.
