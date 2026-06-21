@@ -57,7 +57,7 @@
 |---|---|---|
 | **A** | 스캐폴드 + legal-pro 테마 + 판례검색 화면(라이브 `/search`, 응답계약 보존: relevance%·citation 1:1·min_relevance) + 로그인(JWT) | 없음 — 즉시 빌드 (engineer 위임, L3 npm build 게이트) |
 | **B (read)** | 사건관리 read 화면(목록/상세) — 빌드 스펙 [`phase-b-spec.md`](phase-b-spec.md) | 차단 해소(Growth-103: `GET /cases`·`/cases/{id}`·`/documents` 라이브). 구현 중 |
-| **B (write)** | 사건 생성/수정 화면(`POST/PATCH /cases`=G-2) | Q-1(사건 CRUD 범위) 미확정 — 보류 |
+| **B (write)** | 사건 쓰기(G-2): C1 사건메타 + C2 당사자 + C3 문서첨부+ingest — 빌드 스펙 [`g2-write-spec.md`](g2-write-spec.md) | Q-1 확정(2026-06-22, founder: 사건+당사자+문서첨부, 삭제 영구배제, 생성자=담당본인). 원문보기(G-3)는 phase 2. C1 착수 |
 
 ## 6. 페르소나 드래프팅 — 완료 (2026-06-20)
 
