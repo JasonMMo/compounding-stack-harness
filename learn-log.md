@@ -524,3 +524,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 **가드 발동 — 배포 깨질 결함 CTO 적발**: DevOps 1차 산출(5커밋)이 **build 재검증 없이** 끝났고, Dockerfile Stage 1 이 어댑터를 `/src` 에 직접 COPY → prebuild(codegen/build-tokens)의 `REPO_ROOT=resolve(__dirname,'..'×4)` 가 `/` 로 해석 → `/middle`·`/presets`·`/services/legal-rag/web/styles` 부재 → **컨테이너 빌드 실패**. 로컬 `npm run build` 는 PASS(repo 경로 존재)라 founder 가 Redeploy 눌렀을 때만 깨지는 함정. CTO 가 REPO_ROOT 손계산 + prebuild 경로참조 grep 으로 근본원인 확정 → DevOps 에 repo-레이아웃 보존 COPY 구조 지시 → 수정(6aae618: 어댑터를 `/src/frontend/adapters/legal-pro` 에 두고 REPO_ROOT→`/src`, 의존 서브트리 3종 COPY). .dockerignore 가 그 경로 미배제 확인. 교훈: **빌드설정 변경은 변경한 환경(컨테이너)에서 재현해야 — 로컬 PASS 가 컨테이너 PASS 를 보장 안 함**. [[subagent-cross-service-verify]] 의 "thin wrapper 보고 단정 금지" 와 짝.
 
 **라이브 트리거 경계**: 외부 API/SSH 금지(founder 룰) → DevOps 산출 = 로컬설정+절차문서+커밋까지, 실제 Coolify Redeploy 는 founder 실행. 절차: `deploy/preview/legal-pro.md`. **cost**: API 미사용. **revenue**: M3 flagship 데모 라이브화 직전. 잔여: founder Redeploy → `/pro` 스모크(7항목) → 통과 시 L4 종결.
+
+### Growth-106 — legal-pro G-2 사건 쓰기: Q-1 확정 + C1(사건 메타 CRUD) 구현
+- **Q-1 확정**(founder): 사건 쓰기 범위 = 사건+당사자+문서첨부, 삭제 영구배제(법적 감사), 생성자=담당변호사 본인. 원문보기(G-3)는 phase 2.
+- **DDL/RLS 선완비 발견**: `02/04/05_*.sql` 에 case/case_party/case_document app_user INSERT·UPDATE RLS 정책 이미 존재 → G-2는 API 레이어만 추가(신규 DDL 0). 문서는 append-only(UPDATE/DELETE 정책 부재).
+- **PM 빌드스펙** `docs/projects/legal/g2-write-spec.md`: 3 sub-phase(C1 메타/C2 당사자/C3 문서첨부+비동기ingest) 독립머지, AC-01~12(RLS 음성 4종 포함), CISO 업로드 게이트.
+- **C1 구현**(engineer, 9커밋 381d5da..1226d61): `POST /cases`+`PATCH /cases/{id}`(api.py, rls_session SET LOCAL·assigned_attorney_id 서버주입·404 존재은폐) + CaseCreate/EditScreen + wire.ts + 라우트(/cases/new·:id/edit 정적우선) + 진입버튼. AC-01 PASS(pytest 244·npm build 0err). RLS 라이브 AC는 @pytest.mark.postgres 보류(founder DSN 게이트).
+- **CTO 가드**: (a) 엔지니어가 DDL 불일치 보고(case_type CHECK에 other 없음) → 스펙 정합 수정(OQ-12). (b) 엔지니어가 API↔DB 실컬럼 교정(description→summary, opened_at→filed_date). (c) diagnostics 대량 발생했으나 전부 확정 FP(pydantic Field기본값·lazy import·stale never-read), App.tsx 라우트 실연결·RLS 주입 직접 소스검증.
+- **CTO 판정**: OQ-11(party 노출) = C2에서 CaseDetailResponse에 parties 가산(additive, documents 패턴).
+- 다음: C2(당사자 CRUD) → C3(문서첨부+ingest, CISO 게이트). C1 라이브 RLS AC는 founder DSN 실행.
