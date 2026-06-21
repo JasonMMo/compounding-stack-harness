@@ -42,6 +42,9 @@ const LEGAL_RAG_ENDPOINTS = {
   // G-2 C1 — 사건 쓰기 경로 상수 (기존 상수 수정 금지, 가산만 허용 §5.2)
   case_create:   '/cases',
   case_update:   '/cases/:case_id',
+  // G-2 C2 — 당사자 쓰기 경로 상수 (기존 상수 수정 금지 §5.2)
+  party_create:  '/cases/:case_id/parties',
+  party_update:  '/cases/:case_id/parties/:party_id',
 }
 
 // ── Build TS content ────────────────────────────────────────────────────────
