@@ -10,6 +10,11 @@ Pipeline (CTO confirmed, change requires CTO sign-off):
 RLS: conn must have rls_session() active (attorney_id SET LOCAL).
      Precedent chunks visible to all. Case_document chunks scoped to attorney.
 
+Case scoping (case_id param):
+  Provided  — FTS + ANN WHERE adds AND case_id = %s::uuid; precedent chunks
+              (case_id IS NULL) are automatically excluded, matching intent.
+  None      — existing behaviour: all accessible chunks (precedent + all cases).
+
 Korean FTS — dual-path:
   pg_bigm present:  bigm_similarity() scan (handles compound Korean, subword match).
                     OR mode: =% full-similarity scan with SET LOCAL similarity_limit.
@@ -193,12 +198,13 @@ def rrf_merge(
 # parameterized (pyformat) mode, else psycopg mis-parses it as a placeholder
 # and raises at runtime. Unit tests mock conn.execute so they don't catch this.
 # SET LOCAL pg_bigm.similarity_limit before executing to control recall.
-# Params: (query_text, query_text, fts_limit)
+# {case_filter} is replaced at call time with either "" or "AND case_id = %s::uuid".
+# Params: (query_text, query_text, [case_id,] fts_limit)
 _FTS_BIGM_SQL = """
 SELECT id::text, bigm_similarity(chunk_text, %s) AS sim
 FROM legal_document_chunk
 WHERE chunk_text =%% %s
-  AND embedding IS NOT NULL
+  AND embedding IS NOT NULL {case_filter}
 ORDER BY sim DESC
 LIMIT %s
 """
@@ -207,12 +213,13 @@ LIMIT %s
 # to_tsquery is used (not plainto_tsquery) because OR-joining is manual.
 # _build_or_tsquery() produces the 'a | b | c' string; caller must not pass
 # raw user input directly here (sanitization already done).
-# Params: (or_tsquery_str, or_tsquery_str, fts_limit)
+# {case_filter} is replaced at call time with either "" or "AND case_id = %s::uuid".
+# Params: (or_tsquery_str, [case_id,] or_tsquery_str, fts_limit)
 _FTS_OR_SQL = """
 SELECT id::text
 FROM legal_document_chunk
 WHERE to_tsvector('simple', chunk_text) @@ to_tsquery('simple', %s)
-  AND embedding IS NOT NULL
+  AND embedding IS NOT NULL {case_filter}
 ORDER BY ts_rank_cd(to_tsvector('simple', chunk_text), to_tsquery('simple', %s)) DESC
 LIMIT %s
 """
@@ -221,10 +228,12 @@ LIMIT %s
 # Uses HNSW index (embedding IS NOT NULL partial index covers only embedded rows).
 # pgvector cosine: <=> operator (lower = more similar). ORDER BY ASC → best first.
 # distance column (alias) is captured so relevance = 1 - distance can be computed.
+# {case_filter} is replaced at call time with either "" or "AND case_id = %s::uuid".
+# Params: (query_embedding, [case_id,] ann_limit)
 _ANN_SQL = """
 SELECT id::text, embedding <=> %s::vector AS distance
 FROM legal_document_chunk
-WHERE embedding IS NOT NULL
+WHERE embedding IS NOT NULL {case_filter}
 ORDER BY distance ASC
 LIMIT %s
 """
@@ -255,6 +264,7 @@ async def hybrid_search(
     rrf_k: int = 60,
     min_relevance: float = 0.0,
     match_mode: str = "or",
+    case_id: str | None = None,
 ) -> list[RetrievedChunk]:
     """Run hybrid FTS+ANN+RRF search and return top_k chunks.
 
@@ -275,6 +285,10 @@ async def hybrid_search(
         match_mode:      'or'  — any-term match (default, high recall, existing behaviour).
                          'and' — all-term match (precise; bigm: per-token LIKE AND-chain;
                                  tsquery fallback: ' & ' operator).
+        case_id:         UUID string to scope search to a single case's chunks.
+                         None (default) — all accessible chunks (existing behaviour).
+                         Provided — FTS + ANN WHERE adds AND case_id = %s::uuid;
+                         precedent chunks (case_id IS NULL) are excluded automatically.
 
     Returns:
         List of RetrievedChunk ordered by RRF score descending.
@@ -288,6 +302,17 @@ async def hybrid_search(
             f"query_embedding must be 768-dim, got {len(query_embedding)}"
         )
 
+    # Case scoping: build SQL fragment and bind-param list for all three stages.
+    # case_filter is injected into {case_filter} placeholder in each SQL template.
+    # When case_id is None the fragment is empty string → templates render identically
+    # to the pre-case_id SQL (no regression for None path).
+    if case_id is not None:
+        case_filter = "AND case_id = %s::uuid"
+        case_params: list[str] = [case_id]
+    else:
+        case_filter = ""
+        case_params = []
+
     # Stage 1: FTS — dual-path (pg_bigm or tsquery)
     use_bigm = await _probe_bigm(conn)
     fts_ids: list[str] = []
@@ -299,7 +324,8 @@ async def hybrid_search(
             f"SET LOCAL pg_bigm.similarity_limit = {_BIGM_SIMILARITY_LIMIT}"
         )
         fts_cur = await conn.execute(
-            _FTS_BIGM_SQL, (query_text, query_text, fts_limit)
+            _FTS_BIGM_SQL.format(case_filter=case_filter),
+            (query_text, query_text, *case_params, fts_limit),
         )
         fts_rows = await fts_cur.fetchall()
         fts_ids = [r[0] for r in fts_rows]
@@ -316,10 +342,12 @@ async def hybrid_search(
             sql = (
                 "SELECT id::text, bigm_similarity(chunk_text, %s) AS sim "
                 "FROM legal_document_chunk "
-                f"WHERE {frag} AND embedding IS NOT NULL "
+                f"WHERE {frag} AND embedding IS NOT NULL {case_filter} "
                 "ORDER BY sim DESC LIMIT %s"
             )
-            fts_cur = await conn.execute(sql, (query_text, *like_params, fts_limit))
+            fts_cur = await conn.execute(
+                sql, (query_text, *like_params, *case_params, fts_limit)
+            )
             fts_rows = await fts_cur.fetchall()
             fts_ids = [r[0] for r in fts_rows]
             logger.debug("FTS stage (bigm AND): %d candidates", len(fts_ids))
@@ -332,7 +360,8 @@ async def hybrid_search(
             logger.debug("FTS stage skipped: no valid tokens in %r", query_text)
         else:
             fts_cur = await conn.execute(
-                _FTS_OR_SQL, (ts_query, ts_query, fts_limit)
+                _FTS_OR_SQL.format(case_filter=case_filter),
+                (ts_query, *case_params, ts_query, fts_limit),
             )
             fts_rows = await fts_cur.fetchall()
             fts_ids = [r[0] for r in fts_rows]
@@ -343,7 +372,8 @@ async def hybrid_search(
 
     # Stage 2: ANN
     ann_cur = await conn.execute(
-        _ANN_SQL, (query_embedding, ann_limit)
+        _ANN_SQL.format(case_filter=case_filter),
+        (query_embedding, *case_params, ann_limit),
     )
     ann_rows = await ann_cur.fetchall()
     ann_ids = [r[0] for r in ann_rows]
