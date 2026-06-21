@@ -84,10 +84,13 @@ class TestCaseOutModel:
 @skip_if_no_api
 class TestCasesResponseModel:
     def test_empty_cases(self):
+        # G-4: limit/offset have defaults (50/0) so existing callers need not pass them
         resp = CasesResponse(cases=[], total=0)
         d = resp.model_dump()
         assert d["cases"] == []
         assert d["total"] == 0
+        assert d["limit"] == 50   # default
+        assert d["offset"] == 0   # default
 
     def test_total_matches_list_length(self):
         cases = [_case(case_number=f"2024가합{i:05d}") for i in range(5)]
@@ -103,6 +106,9 @@ class TestCasesResponseModel:
         parsed = json.loads(raw)
         assert parsed["total"] == 1
         assert len(parsed["cases"]) == 1
+        # G-4: pagination fields present in JSON
+        assert "limit" in parsed
+        assert "offset" in parsed
 
 
 # ── 사건 ingest 상태 대표 상태 로직 ─────────────────────────────────────────
