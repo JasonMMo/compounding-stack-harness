@@ -1624,11 +1624,20 @@ entities:
     indexes:
       - { columns: [source_type, source_id] }
       - { columns: [case_id] }
+      - { name: idx_legal_chunk_fts,  type: gin, expression: "to_tsvector('simple', chunk_text)",
+          note: "tsquery-OR fallback — always active, no extension required" }
+      - { name: idx_legal_chunk_hnsw, type: hnsw, columns: [embedding],
+          ops: vector_cosine_ops, partial: "embedding IS NOT NULL",
+          note: "pgvector HNSW cosine ANN" }
+      - { name: idx_legal_chunk_bigm, type: gin, columns: [chunk_text],
+          ops: gin_bigm_ops, extension_guard: pg_bigm,
+          note: "Korean bigram FTS — created only when pg_bigm extension is present" }
     # DDL notes:
     #   source_id is polymorphic FK: resolves to legal_precedent.id OR legal_case_document.id
     #     based on source_type. FK omitted (app layer).
     #   embedding vector(768): pgvector-specific column; added via augment DDL.
-    #   HNSW index (cosine): idx_legal_chunk_hnsw — partial (WHERE embedding IS NOT NULL).
+    #   idx_legal_chunk_bigm: guarded by DO block in 06_legal_document_chunk.sql —
+    #     skipped silently when pg_bigm absent; active when custom image (DevOps Growth-?) ships.
     #   RLS: precedent chunks = all app_users; case_document chunks = case attorney/partner only.
     #   Citation anchor: chunk.id binds RAG answers to verifiable source records.
 
