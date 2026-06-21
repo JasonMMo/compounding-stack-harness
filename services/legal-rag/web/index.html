@@ -150,6 +150,26 @@
           >
             <option value="">모든 사건</option>
           </select>
+          <div
+            class="match-mode-toggle"
+            role="group"
+            aria-label="검색 매치 방식"
+          >
+            <button
+              type="button"
+              class="match-mode-btn"
+              id="match-mode-and"
+              data-mode="and"
+              aria-pressed="false"
+            >모두 포함</button>
+            <button
+              type="button"
+              class="match-mode-btn match-mode-btn--active"
+              id="match-mode-or"
+              data-mode="or"
+              aria-pressed="true"
+            >하나라도</button>
+          </div>
         </div>
       </section>
 
