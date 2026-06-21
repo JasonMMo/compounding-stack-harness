@@ -203,14 +203,24 @@ check "precedents" "$PRECEDENTS" "22"
 check "parties"    "$PARTIES"    "29"
 check "documents"  "$DOCUMENTS"  "15"
 
-# pg_bigm should be ABSENT in preview
+# pg_bigm: PRESENT = full bigram path active (custom pg_bigm image)
+#           ABSENT = degrade path active (pgvector-only image) — both are valid states
 BIGM_COUNT="$(docker exec "$DB_CONTAINER" \
   psql -U "$PG_USER" -d "$DB_NAME" -t -A \
   -c "SELECT COUNT(*) FROM pg_extension WHERE extname='pg_bigm';")"
-if [ "$BIGM_COUNT" = "0" ]; then
-  echo "  PASS  pg_bigm: correctly ABSENT (preview auto-degraded to plainto_tsquery)"
+if [ "$BIGM_COUNT" = "1" ]; then
+  # Verify idx_legal_chunk_bigm was actually created by the DO block in 06_legal_document_chunk.sql
+  BIGM_IDX="$(docker exec "$DB_CONTAINER" \
+    psql -U "$PG_USER" -d "$DB_NAME" -t -A \
+    -c "SELECT COUNT(*) FROM pg_indexes WHERE indexname='idx_legal_chunk_bigm';")"
+  if [ "$BIGM_IDX" = "1" ]; then
+    echo "  PASS  pg_bigm: PRESENT + idx_legal_chunk_bigm created (full bigram FTS active)"
+  else
+    echo "  FAIL  pg_bigm: PRESENT but idx_legal_chunk_bigm missing — 06_legal_document_chunk.sql DO block may have failed"
+    PASS=false
+  fi
 else
-  echo "  WARN  pg_bigm: PRESENT (unexpected on pgvector-only image — verify image)"
+  echo "  PASS  pg_bigm: ABSENT — degraded to plainto_tsquery / tsquery-OR (idx_legal_chunk_fts active)"
 fi
 
 VECTOR_COUNT="$(docker exec "$DB_CONTAINER" \
