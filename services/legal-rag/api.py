@@ -869,3 +869,13 @@ async def get_document(
 
 _WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
 app.mount("/app", StaticFiles(directory=_WEB_DIR, html=True), name="web")
+
+# ── legal-pro React SPA ────────────────────────────────────────────────────────
+# Built from frontend/adapters/legal-pro/ (base=/pro/) and copied into web/pro/
+# by the multi-stage Dockerfile.  Served at /pro — same origin as the API, so
+# fetch("/auth/login") etc. resolve without CORS.  html=True enables SPA fallback
+# (any unknown path under /pro returns index.html for React Router to handle).
+# BrowserRouter basename="/pro" aligns React Router with this mount point.
+_WEB_PRO_DIR = os.path.join(_WEB_DIR, "pro")
+if os.path.isdir(_WEB_PRO_DIR):
+    app.mount("/pro", StaticFiles(directory=_WEB_PRO_DIR, html=True), name="web-pro")
