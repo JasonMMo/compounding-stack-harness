@@ -1198,12 +1198,12 @@ async def _run_case_document_ingest(
 async def upload_case_document(
     case_id: str,
     background: BackgroundTasks,
+    attorney_id: Annotated[str, Depends(_attorney_dep)],
     file: UploadFile = File(...),
     document_type: str = Form(...),
     title: str | None = Form(None),
     filed_at: str | None = Form(None),
     notes: str | None = Form(None),
-    attorney_id: Annotated[str, Depends(_attorney_dep)] = ...,
 ):
     """사건 문서 업로드 (C3, §3.3 POST /cases/{case_id}/documents).
 
@@ -1235,6 +1235,14 @@ async def upload_case_document(
             400,
             f"document_type 허용값: {sorted(_DOC_TYPE_VALUES)}",
         )
+
+    # ── filed_at 형식 검증 (빈 문자열 → NULL, 잘못된 형식 → 400) ─────────────
+    if filed_at is not None and filed_at.strip():
+        if not _re.match(r"^\d{4}-\d{2}-\d{2}$", filed_at.strip()):
+            raise HTTPException(400, "filed_at 은 YYYY-MM-DD 형식이어야 합니다.")
+        filed_at = filed_at.strip()
+    else:
+        filed_at = None  # 빈 문자열 → NULL
 
     # ── 파일명 정제 (CISO — path traversal 차단) ──────────────────────────────
     original_name = file.filename or "upload"
