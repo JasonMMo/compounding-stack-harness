@@ -88,6 +88,13 @@ class Settings:
     In prod mode FastAPI auto-docs (/docs, /redoc, /openapi.json) are disabled.
     Set via LEGAL_RAG_ENV environment variable."""
 
+    # ── Document storage (C3) ─────────────────────────────────────────────────
+    storage_root: str
+    """Absolute path to the root directory for attorney-uploaded case documents.
+    Upload endpoint rejects any path that resolves outside this directory (path-traversal guard).
+    Empty string = not configured; endpoint returns 500 if invoked without setting this.
+    Set via LEGAL_RAG_STORAGE_ROOT. Import-time fail-fast is intentionally disabled."""
+
 
 def _load_min_relevance() -> float:
     """Parse LEGAL_RAG_SEARCH_MIN_RELEVANCE; validate [0.0, 1.0]. Default 0.0."""
@@ -126,4 +133,5 @@ def load() -> Settings:
         jwt_secret=_require("LEGAL_RAG_JWT_SECRET"),
         service_token=_require("LEGAL_RAG_SERVICE_TOKEN"),
         env=_optional("LEGAL_RAG_ENV", "dev").lower(),
+        storage_root=_optional("LEGAL_RAG_STORAGE_ROOT", ""),
     )
