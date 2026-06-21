@@ -46,7 +46,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // base=/pro/ ensures all asset hrefs are rooted at /pro/ when served
+    // by FastAPI StaticFiles at /pro.  Must match BrowserRouter basename in main.tsx.
   },
+  base: '/pro/',
   test: {
     environment: 'node',
     globals: true,
