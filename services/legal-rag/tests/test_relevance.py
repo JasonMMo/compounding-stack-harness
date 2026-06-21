@@ -39,14 +39,16 @@ def _make_chunk_row(chunk_id: str) -> tuple:
 
 
 def _build_mock_conn(fts_ids: list[str], ann_rows: list[tuple], chunk_rows: list[tuple]):
-    """Build async conn mock that returns correct data per execute() call.
+    """Build async conn mock that dispatches by SQL content.
 
-    execute() call sequence (matching hybrid_search):
-      1st → FTS cursor  (fetchall → [(id,), ...])
-      2nd → ANN cursor  (fetchall → [(id, distance), ...])
-      3rd → FETCH_CHUNKS cursor (fetchall → chunk rows)
+    Handles variable call sequences depending on whether _BIGM_AVAILABLE is cached:
+      - pg_bigm probe SQL  → [(False,)]  (pg_bigm absent → OR-tsquery path)
+      - SET LOCAL          → []          (no-op response)
+      - FTS SQL (to_tsquery / bigm)  → fts_result
+      - ANN SQL (embedding <=>)      → ann_rows
+      - FETCH_CHUNKS SQL (ANY)       → chunk_rows
+    Dispatch by SQL keyword avoids fragility to call-count order changes.
     """
-    call_count = 0
     fts_result = [(row,) for row in fts_ids]  # 1-column tuples
 
     class _Cur:
@@ -57,14 +59,22 @@ def _build_mock_conn(fts_ids: list[str], ann_rows: list[tuple], chunk_rows: list
             return self._rows
 
     async def _execute(sql, params=None):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return _Cur(fts_result)
-        elif call_count == 2:
+        sql_strip = sql.strip().upper()
+        if "PG_EXTENSION" in sql_strip:
+            # pg_bigm probe — return False so OR-tsquery path is used
+            return _Cur([(False,)])
+        elif sql_strip.startswith("SET"):
+            # SET LOCAL pg_bigm.similarity_limit — no-op
+            return _Cur([])
+        elif "EMBEDDING <=>" in sql_strip:
+            # ANN stage
             return _Cur(ann_rows)
-        else:
+        elif "ANY(" in sql_strip:
+            # FETCH_CHUNKS stage
             return _Cur(chunk_rows)
+        else:
+            # FTS stage (to_tsquery OR bigm)
+            return _Cur(fts_result)
 
     conn = MagicMock()
     conn.execute = _execute
