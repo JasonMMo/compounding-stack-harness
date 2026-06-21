@@ -8,7 +8,7 @@ import './tokens/tokens.gen.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/pro">
       <App />
     </BrowserRouter>
   </React.StrictMode>,
