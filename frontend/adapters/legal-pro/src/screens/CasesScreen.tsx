@@ -147,15 +147,27 @@ export default function CasesScreen() {
   // ── S-09/S-10: 로딩 및 정상 ─────────────────────────────────────────────
   return (
     <main className="page-main" style={{ padding: 0, flex: 1 }}>
-      <div className="page-title-bar">
-        사건 현황
-        {!loading && total > 0 && (
-          <span
-            style={{ fontWeight: 400, fontSize: 'var(--text-meta-size)', color: 'var(--color-text-3)', marginLeft: 8 }}
-          >
-            총 {total}건
-          </span>
-        )}
+      <div className="page-title-bar" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span>
+          사건 현황
+          {!loading && total > 0 && (
+            <span
+              style={{ fontWeight: 400, fontSize: 'var(--text-meta-size)', color: 'var(--color-text-3)', marginLeft: 8 }}
+            >
+              총 {total}건
+            </span>
+          )}
+        </span>
+        {/* G-2 C1 진입점: [새 사건 등록] -> /cases/new (기존 렌더 로직 불변) */}
+        <button
+          type="button"
+          className="btn btn--primary btn--sm"
+          onClick={() => navigate('/cases/new')}
+          aria-label="새 사건 등록"
+          style={{ marginLeft: 'auto' }}
+        >
+          새 사건 등록
+        </button>
       </div>
 
       <div className="case-table-section">
