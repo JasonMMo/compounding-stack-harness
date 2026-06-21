@@ -669,6 +669,7 @@ async def search(
                 rrf_k=settings.rrf_k,
                 min_relevance=settings.search_min_relevance,
                 match_mode=req.match_mode,
+                case_id=req.case_id,
             )
             citations = await citation_mod.resolve_citations(
                 conn=conn,
