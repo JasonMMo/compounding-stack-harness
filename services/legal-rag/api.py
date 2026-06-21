@@ -303,6 +303,59 @@ class CaseDetailResponse(BaseModel):
     opened_at: str | None = None
     closed_at: str | None = None
     documents: list[CaseDocumentItem]
+    parties: list["CasePartyOut"] = []
+
+
+# G-2 C2 — 당사자 모델 (CaseDetailResponse 에서 forward-ref 로 참조하므로 바로 뒤에 정의)
+# DDL CHECK: plaintiff/defendant/witness/opposing-counsel/expert-witness
+_PARTY_ROLE_VALUES = {
+    "plaintiff", "defendant", "witness", "opposing-counsel", "expert-witness"
+}
+
+
+class CasePartyOut(BaseModel):
+    """GET /cases/{case_id} 응답 + POST/PATCH /cases/{id}/parties 응답."""
+    party_id: str
+    case_id: str
+    role: str
+    name: str
+    notes: str | None = None
+
+
+class CasePartyCreateIn(BaseModel):
+    """POST /cases/{case_id}/parties 요청 바디 — §3.2 C2.
+
+    name/notes 최대 255자 (DDL VARCHAR(255) 진실 — spec §3.2 256/2000 은 DDL 에 의해 대체).
+    contact_id 는 v1 미노출; 클라이언트 제출 무시.
+    """
+    role: str = Field(
+        ...,
+        description=f"당사자 역할. 허용값: {sorted(_PARTY_ROLE_VALUES)}.",
+    )
+    name: str = Field(..., max_length=255, description="당사자명 (최대 255자)")
+    notes: str | None = Field(None, max_length=255, description="메모 (최대 255자)")
+
+    def model_post_init(self, __context) -> None:  # noqa: ANN001
+        if self.role not in _PARTY_ROLE_VALUES:
+            raise ValueError(f"role 허용값: {sorted(_PARTY_ROLE_VALUES)}")
+
+
+class CasePartyUpdateIn(BaseModel):
+    """PATCH /cases/{case_id}/parties/{party_id} 요청 바디 — §3.2 C2 (partial).
+
+    contact_id 클라이언트 제출 무시.
+    """
+    role: str | None = Field(None, description=f"당사자 역할. 허용값: {sorted(_PARTY_ROLE_VALUES)}.")
+    name: str | None = Field(None, max_length=255, description="당사자명 (최대 255자)")
+    notes: str | None = Field(None, max_length=255, description="메모 (최대 255자)")
+
+    def model_post_init(self, __context) -> None:  # noqa: ANN001
+        if self.role is not None and self.role not in _PARTY_ROLE_VALUES:
+            raise ValueError(f"role 허용값: {sorted(_PARTY_ROLE_VALUES)}")
+
+
+# CaseDetailResponse uses CasePartyOut as a forward ref — rebuild model after definition.
+CaseDetailResponse.model_rebuild()
 
 
 # G-2 C1 — 사건 생성/수정 요청 모델
@@ -592,6 +645,23 @@ async def get_case(
             )
             doc_rows = await dcur.fetchall()
 
+            # Party list for this case — OQ-11 CTO判定: embedded in CaseDetailResponse
+            pcur = await conn.execute(
+                """
+                SELECT
+                  id::text,
+                  case_id::text,
+                  role,
+                  name,
+                  notes
+                FROM legal_case_party
+                WHERE case_id = %s
+                ORDER BY created_at, id
+                """,
+                (case_id,),
+            )
+            party_rows = await pcur.fetchall()
+
     documents = [
         CaseDocumentItem(
             doc_id=dr[0],
@@ -600,6 +670,17 @@ async def get_case(
             ingest_status=dr[3],
         )
         for dr in doc_rows
+    ]
+
+    parties = [
+        CasePartyOut(
+            party_id=pr[0],
+            case_id=pr[1],
+            role=pr[2],
+            name=pr[3],
+            notes=pr[4],
+        )
+        for pr in party_rows
     ]
 
     return CaseDetailResponse(
@@ -612,6 +693,7 @@ async def get_case(
         opened_at=opened_at,
         closed_at=closed_at,
         documents=documents,
+        parties=parties,
     )
 
 
@@ -781,6 +863,23 @@ async def update_case(
             )
             doc_rows = await dcur.fetchall()
 
+            # Party list for response — OQ-11 CTO判定: embedded in CaseDetailResponse
+            pcur = await conn.execute(
+                """
+                SELECT
+                  id::text,
+                  case_id::text,
+                  role,
+                  name,
+                  notes
+                FROM legal_case_party
+                WHERE case_id = %s
+                ORDER BY created_at, id
+                """,
+                (case_id,),
+            )
+            party_rows = await pcur.fetchall()
+
     documents = [
         CaseDocumentItem(
             doc_id=dr[0],
@@ -789,6 +888,17 @@ async def update_case(
             ingest_status=dr[3],
         )
         for dr in doc_rows
+    ]
+
+    parties = [
+        CasePartyOut(
+            party_id=pr[0],
+            case_id=pr[1],
+            role=pr[2],
+            name=pr[3],
+            notes=pr[4],
+        )
+        for pr in party_rows
     ]
 
     return CaseDetailResponse(
@@ -801,6 +911,158 @@ async def update_case(
         opened_at=filed_date,
         closed_at=closed_at,
         documents=documents,
+        parties=parties,
+    )
+
+
+@app.post(
+    "/cases/{case_id}/parties",
+    response_model=CasePartyOut,
+    status_code=201,
+    tags=["cases"],
+)
+async def create_party(
+    case_id: str,
+    req: CasePartyCreateIn,
+    attorney_id: Annotated[str, Depends(_attorney_dep)],
+):
+    """당사자 등록 (C2, §3.2 POST /cases/{case_id}/parties).
+
+    RLS INSERT 정책(rls_legal_case_party_insert): EXISTS(SELECT 1 FROM legal_case WHERE id=case_id
+    AND attorney). 부모 사건이 없거나 접근 불가 → RLS WITH CHECK 위반 → 404 (존재 은폐).
+    contact_id 는 서버 NULL 고정 (v1 미노출, OQ-6).
+
+    오류: 401(JWT), 400(UUID 형식), 404(사건 미존재 또는 접근 불가), 422(검증).
+    """
+    try:
+        uuid.UUID(case_id)
+    except ValueError:
+        raise HTTPException(400, f"case_id is not a valid UUID: {case_id!r}")
+
+    pool = _get_pool()
+
+    async with pool.connection() as conn:
+        async with database.rls_session(conn, attorney_id):
+            try:
+                cur = await conn.execute(
+                    """
+                    INSERT INTO legal_case_party (
+                        id, created_at, updated_at,
+                        case_id, role, name, notes, contact_id
+                    ) VALUES (
+                        gen_random_uuid(), now(), now(),
+                        %s::uuid, %s, %s, %s, NULL
+                    )
+                    RETURNING
+                        id::text,
+                        case_id::text,
+                        role,
+                        name,
+                        notes
+                    """,
+                    (case_id, req.role, req.name, req.notes),
+                )
+                row = await cur.fetchone()
+            except Exception as exc:
+                exc_str = str(exc)
+                # RLS WITH CHECK 위반 (부모 사건 없거나 타 변호사 사건) → 404 존재 은폐
+                if (
+                    "rls" in exc_str.lower()
+                    or "policy" in exc_str.lower()
+                    or "check" in exc_str.lower()
+                    or "permission" in exc_str.lower()
+                ):
+                    raise HTTPException(status_code=404, detail="사건을 찾을 수 없습니다.") from exc
+                raise
+
+    if row is None:
+        raise HTTPException(status_code=500, detail="당사자 등록 후 행을 읽지 못했습니다.")
+
+    return CasePartyOut(
+        party_id=row[0],
+        case_id=row[1],
+        role=row[2],
+        name=row[3],
+        notes=row[4],
+    )
+
+
+@app.patch(
+    "/cases/{case_id}/parties/{party_id}",
+    response_model=CasePartyOut,
+    tags=["cases"],
+)
+async def update_party(
+    case_id: str,
+    party_id: str,
+    req: CasePartyUpdateIn,
+    attorney_id: Annotated[str, Depends(_attorney_dep)],
+):
+    """당사자 수정 (C2, §3.2 PATCH /cases/{case_id}/parties/{party_id}).
+
+    Partial PATCH: 제출된 필드만 SET. RLS UPDATE USING(존재) + WITH CHECK(소유권).
+    0행 업데이트(행 없거나 RLS 격리) → 404 (존재 은폐).
+    contact_id 필드는 클라이언트 제출해도 무시.
+
+    오류: 401(JWT), 400(UUID), 404(미존재 또는 타 변호사 사건 당사자), 422(검증).
+    """
+    try:
+        uuid.UUID(case_id)
+    except ValueError:
+        raise HTTPException(400, f"case_id is not a valid UUID: {case_id!r}")
+    try:
+        uuid.UUID(party_id)
+    except ValueError:
+        raise HTTPException(400, f"party_id is not a valid UUID: {party_id!r}")
+
+    # 제출된 필드만 SET (partial PATCH)
+    updates: dict[str, object] = {}
+    if req.role is not None:
+        updates["role"] = req.role
+    if req.name is not None:
+        updates["name"] = req.name
+    if req.notes is not None:
+        updates["notes"] = req.notes
+
+    pool = _get_pool()
+
+    async with pool.connection() as conn:
+        async with database.rls_session(conn, attorney_id):
+            if updates:
+                set_parts = ", ".join(f"{col} = %s" for col in updates)
+                set_parts += ", updated_at = now()"
+                values = list(updates.values()) + [case_id, party_id]
+                await conn.execute(
+                    f"UPDATE legal_case_party SET {set_parts} WHERE case_id = %s AND id = %s",  # noqa: S608
+                    values,
+                )
+
+            # 업데이트 후 최신 상태 읽기 (RLS SELECT 정책으로 격리)
+            cur = await conn.execute(
+                """
+                SELECT
+                  id::text,
+                  case_id::text,
+                  role,
+                  name,
+                  notes
+                FROM legal_case_party
+                WHERE case_id = %s AND id = %s
+                """,
+                (case_id, party_id),
+            )
+            row = await cur.fetchone()
+
+    if row is None:
+        # RLS 격리(타 변호사 사건) 또는 미존재 — 동일 404 존재 은폐
+        raise HTTPException(status_code=404, detail="당사자를 찾을 수 없습니다.")
+
+    return CasePartyOut(
+        party_id=row[0],
+        case_id=row[1],
+        role=row[2],
+        name=row[3],
+        notes=row[4],
     )
 
 
