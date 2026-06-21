@@ -110,7 +110,7 @@ G-2 에서 추가할 쓰기 엔드포인트는 백엔드 미구현 상태다. en
 |---|---|---|---|
 | `case_number` | `str` | Y | 최대 64자, 공백 불가 |
 | `title` | `str` | Y | 최대 512자 |
-| `case_type` | `str \| null` | N | enum: civil/criminal/administrative/family/commercial/other. null 허용 |
+| `case_type` | `str \| null` | N | enum: civil/criminal/administrative/family/commercial (DDL CHECK 기준 — `other` 없음, OQ-12). null 허용 |
 | `status` | `str` | Y (default: `intake`) | enum: intake/active/trial/appeal/closed/withdrawn |
 | `description` | `str \| null` | N | 최대 4000자 |
 | `opened_at` | `str \| null` | N | ISO date string `YYYY-MM-DD`. null 허용 |
@@ -294,7 +294,7 @@ G-2 에서 추가할 쓰기 엔드포인트는 백엔드 미구현 상태다. en
 |---|---|---|---|---|
 | 사건번호 입력 | `case_number` | `str` | `"2026가합99001"` | 수정 폼에서 readonly |
 | 사건명 입력 | `title` | `str` | `"손해배상"` | |
-| 사건유형 SELECT | `case_type` | `str \| null` | `"civil"` | civil/criminal/administrative/family/commercial/other |
+| 사건유형 SELECT | `case_type` | `str \| null` | `"civil"` | civil/criminal/administrative/family/commercial (DDL CHECK, `other` 없음) |
 | 사건상태 SELECT | `status` | `str` | `"intake"` | intake/active/trial/appeal/closed/withdrawn |
 | 사건개요 textarea | `description` | `str \| null` | `"..."` | |
 | 접수일 date input | `opened_at` | `str \| null` | `"2026-06-22"` | |
@@ -476,4 +476,5 @@ TypeScript 컴파일 에러 0건, pytest 전체 PASS. G-2 신규 코드 포함.
 | OQ-8 | CISO | 업로드 파일 mime/size 컬럼 (`legal_case_document` 에 추가 여부). 감사 이력용. 현재 DDL 없음. 필요 시 DBA augment 의뢰 | CISO | C3 DDL 변경 여부 |
 | OQ-9 | 인프라 | BackgroundTasks 비동기 ingest 중 컨테이너 재시작 시 pending 상태 잔류 처리. ingest 재시작 훅(startup 에서 pending 재처리) 필요 여부 | CTO | 운영 안정성 |
 | OQ-10 | phase 2 | `content_text` 컬럼 보강 — ingest.py 에서 현재 미기록. G-3 원문 보기 대비 이 값이 필요. ingest.py 수정은 G-3 스펙에서 처리 | CTO | G-3 의존 |
-| OQ-11 | phase 2 | `GET /cases/{id}/parties` 읽기 전용 엔드포인트 — Phase B 에서 party 목록이 CaseDetailResponse 에 없음. C2 구현 시 CaseDetailResponse 확장 또는 별도 엔드포인트 추가 결정 필요 | CTO | C2 응답 계약 |
+| OQ-11 | C2 결정 | party 목록이 `CaseDetailResponse` 에 없음. **CTO 판정(2026-06-22): C2 에서 `parties: list[CasePartyOut]` 를 CaseDetailResponse 에 가산(additive·open-closed, `documents` 와 동일 패턴)** — 별도 엔드포인트 대신 임베드 | CTO | C2 응답 계약 |
+| OQ-12 | DDL 정합 | `case_type` enum 에서 `other` 제거됨 — 라이브 DDL CHECK 가 civil/criminal/administrative/family/commercial 만 허용. `other` 가 필요하면 DBA augment(CHECK 확장)로 별도 처리. C1 은 DDL 을 진실로 구현 | DBA | 향후 enum 확장 |
