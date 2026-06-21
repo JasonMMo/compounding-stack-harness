@@ -81,6 +81,45 @@ export interface HealthResponse {
   embed_sidecar?: string
 }
 
+// Cases — list
+export interface CaseSummary {
+  case_id: string
+  case_number: string
+  title: string
+  status: string
+  doc_total: number
+  doc_indexed: number
+  doc_pending: number
+  doc_failed: number
+}
+
+export interface CasesResponse {
+  cases: CaseSummary[]
+  total: number
+  limit: number
+  offset: number
+}
+
+// Cases — detail
+export interface CaseDocumentItem {
+  doc_id: string
+  title: string | null
+  document_type: string | null
+  ingest_status: string | null
+}
+
+export interface CaseDetailResponse {
+  case_id: string
+  case_number: string
+  title: string
+  status: string
+  case_type: string | null
+  description: string | null
+  opened_at: string | null
+  closed_at: string | null
+  documents: CaseDocumentItem[]
+}
+
 // ── Core request ──────────────────────────────────────────────────────────
 
 async function legalRequest<T>(
@@ -218,4 +257,17 @@ export async function apiSearch(req: SearchRequest): Promise<WireResult<SearchRe
 
 export async function apiHealth(): Promise<WireResult<HealthResponse>> {
   return legalRequest<HealthResponse>('GET', LEGAL_RAG_ENDPOINTS.health)
+}
+
+export async function apiListCases(
+  limit: number,
+  offset: number,
+): Promise<WireResult<CasesResponse>> {
+  const url = `${LEGAL_RAG_ENDPOINTS.cases_list}?limit=${limit}&offset=${offset}`
+  return legalRequest<CasesResponse>('GET', url)
+}
+
+export async function apiGetCase(caseId: string): Promise<WireResult<CaseDetailResponse>> {
+  const url = LEGAL_RAG_ENDPOINTS.case_read.replace(':case_id', encodeURIComponent(caseId))
+  return legalRequest<CaseDetailResponse>('GET', url)
 }
