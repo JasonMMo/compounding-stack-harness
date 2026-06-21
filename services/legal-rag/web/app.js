@@ -520,6 +520,41 @@ function renderSkeletons() {
   }
 }
 
+/**
+ * expandQueryTermsForHighlight(query) → string[]
+ *
+ * 공백 토큰 + 다문자 토큰의 2-gram을 합쳐 강조 후보 집합을 반환한다.
+ * 예) "계약해지 손해배상" →
+ *     ["계약해지", "계약", "약해", "해지", "손해배상", "손해", "해배", "배상"]
+ *
+ * 규칙:
+ *  - 한글 음절(가-힣)과 ASCII 영숫자(\\w)만 남기고 sanitize.
+ *  - 길이 1 토큰은 bigram 분해 대상에서 제외 (노이즈 방지).
+ *  - 중복 제거 후 반환.
+ *  - 정규식 이스케이프는 highlightText() 에서 수행 (이 함수는 raw string 반환).
+ */
+function expandQueryTermsForHighlight(query) {
+  const rawTokens = query.split(/\s+/).filter(Boolean);
+  const terms = new Set();
+
+  rawTokens.forEach((tok) => {
+    // sanitize: 한글 + ASCII 영숫자만 유지
+    const clean = tok.replace(/[^\w가-힣]/g, "");
+    if (!clean) return;
+
+    terms.add(clean);
+
+    // 2-gram 분해: 2글자 이상 토큰만
+    if (clean.length >= 2) {
+      for (let i = 0; i < clean.length - 1; i++) {
+        terms.add(clean.slice(i, i + 2));
+      }
+    }
+  });
+
+  return Array.from(terms).filter(Boolean);
+}
+
 // 검색어 강조: textContent 기반 안전 DOM 조작 (XSS 방지)
 // terms를 이스케이프 없이 TextNode로 처리한 뒤 mark 노드 삽입
 function highlightText(container, fullText, queryTerms) {
@@ -747,8 +782,8 @@ async function doSearch() {
 
     setResultsState("results");
 
-    // 검색어를 공백으로 분리해 강조에 사용
-    const queryTerms = query.split(/\s+/).filter(Boolean);
+    // 검색어 강조 후보: 공백 토큰 + 2-gram (bigram 분해로 붙여쓰기 복합어 대응)
+    const queryTerms = expandQueryTermsForHighlight(query);
 
     resultsList.innerHTML = "";
     results.forEach((cit) => {
