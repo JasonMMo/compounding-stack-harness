@@ -191,6 +191,11 @@ class SearchRequest(BaseModel):
         None, description="Optional: scope search to a specific case."
     )
     top_k: int | None = Field(None, ge=1, le=50, description="Override default top-k.")
+    match_mode: str = Field(
+        "or",
+        pattern="^(or|and)$",
+        description="'or'=any term (default, high recall), 'and'=all terms (precise).",
+    )
 
 
 class CitationOut(BaseModel):
@@ -661,6 +666,7 @@ async def search(
                 ann_limit=settings.ann_candidate_limit,
                 rrf_k=settings.rrf_k,
                 min_relevance=settings.search_min_relevance,
+                match_mode=req.match_mode,
             )
             citations = await citation_mod.resolve_citations(
                 conn=conn,
