@@ -498,3 +498,19 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **검증/진단**: **pytest tests/ 211 passed/11 skipped (CTO 독립 재현, 0 실패)**, 11 skip=postgres-mark DSN 게이트. Pyright "offset/limit 인자 누락"(api.py 444/720/722/742)은 **stale-line FP** — 실 construction site `CasesResponse(cases,total,limit,offset)`(464)·`SearchResponse(...,offset=eff_offset)`(758)은 전 필드 명시, 모델은 `Field(0)`/`Field(50)` 기본값 보유(필수는 total). 진단 라인은 engineer 편집 중간상태 기준(720/722/742는 현재 log_query/CitationOut 위치). 테스트의 possibly-unbound FP 는 기존 lazy-import 패턴. embed-adapter 수집에러는 무관 기존파일(9bfaa12).
 - **문서 환류**: D2 §9 갭표 동기화 후속(G-1 기구현·G-3 no-gap·G-4 해소·G-2 Q-1 보류) — 소규모 follow-up. 메모리 [[legal-unified-product-docs]].
 - **Open loops**: G-2 쓰기(`POST/PATCH /cases`)=Q-1 사건 CRUD 범위 PM/founder 확정 선행 · legal-pro Phase B 사건화면(읽기 endpoint 준비됨, 프런트 위임 가능) · 페이지네이션 RLS 격리 라이브 실행=founder(postgres-mark) · D2 갭표 동기화. [[legal-rag-mvp-build]]
+
+## Growth-104 — legal-pro Phase B 사건관리 read 화면 (기획 스펙 → 구현)
+
+**맥락**: founder 가 A안(Phase B 프런트) 택함 + "legal-rag 때 적용한 기획단계 문서 작성하고 진행". D1~D5(제품 전체)는 이미 있어 0부터 재생성은 낭비 → **Phase B 구현 슬라이스용 빌드 스펙**을 PM 산출(D1~D5 관련 단면을 구현 계약으로 응축).
+
+**기획 (PM, e101cbd)**: `docs/projects/legal/phase-b-spec.md` — CasesScreen(목록·페이지네이션) + CaseDetailScreen(상세·문서목록) read-only. 데이터 바인딩 표를 라이브 `api.py` CaseOut(8필드)/CaseDetailResponse(9필드)/CaseDocumentItem(4필드)와 1:1 정합(**CTO 독립검증 — 추측 0**). 생성/수정(G-2)은 Q-1 보류 out-of-scope 명시. 보존계약 4종(RLS·G-4·citation 1:1·middle 읽기전용) + AC-01~10. README §5 Phase B 를 read(차단해소·구현중)/write(Q-1보류) 분리(e9c4b9e).
+
+**CTO 가 OQ 확정**: page size limit=20 / 전체 라우트 전환 / `?case_id=` query-param / 파트너캡션 제외(JWT claim 부재).
+
+**구현 (engineer, 45c2bb9..a3057c8, 5커밋)**: wire.ts(apiListCases/apiGetCase) · CasesScreen · CaseDetailScreen · App.tsx(라우트·탭) · PrecedentSearchScreen(`?case_id=` 최소연결). L3 `npm run build` PASS(40 modules, CTO 재현 807ms). AC-01~10 코드 충족.
+
+**가드 발동 — stale 진단 + 눈속임 의심 2건 다 CTO 직접 기각**:
+1. 빌드 직후 LSP 가 App.tsx(CasesScreen/CaseDetailScreen/useLocation never read)·PrecedentSearchScreen(useSearchParams/selectedCaseId never read) 5건 "unused" 경보 → **소스 직접 읽어 전부 사용 확인**(144/152/50행, 244/299행). 편집 중간 스냅샷 stale FP. [[subagent-cross-service-verify]] 패턴 재현.
+2. case_id 연동이 프런트만이고 백엔드 미필터면 "사건필터" 뱃지가 눈속임일 위험 → `api.py:712` 가 `hybrid_search(case_id=req.case_id)` 로 **검색 자체를 사건범위로 필터**(로그도 727행 기록) 확인. 연동 실제.
+
+**revenue**: M3(법무 첫 버티컬) flagship 진전. **cost**: API 미사용(로컬 build·소스검증만). 잔여: L4 라이브(dist→Coolify 배포), 페이지네이션 라이브 단언(시드 ~6건/변호사라 20페이지서 미발화), G-2 write=Q-1 선행, 원문 drawer=G-3.
