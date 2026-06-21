@@ -31,8 +31,11 @@ services:
   # pg_bigm enables Korean bigram FTS: 01_extensions.sql DO-block activates it automatically.
   # Data volume (legal-rag-pgdata) is preserved across rebuilds — pg16→pg16, no migration needed.
   db:
+    # context is repo-root-relative (see header) — Coolify resolves build.context
+    # against --project-directory (clone root), NOT the compose file dir.
+    # Matches the embed service convention (self-contained sub-dir context).
     build:
-      context: ./postgres-bigm
+      context: deploy/preview/postgres-bigm
       dockerfile: Dockerfile
     image: legal-rag-postgres-bigm:pg16
     environment:
