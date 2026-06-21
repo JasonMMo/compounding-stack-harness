@@ -506,9 +506,11 @@ class TestExistingModelsUnchanged:
 
     def test_case_detail_response_fields_unchanged(self):
         fields = set(CaseDetailResponse.model_fields.keys())
+        # G-2 C2 additive: 'parties' 가산 (OQ-11 CTO判定 — open-closed, documents 동일 패턴)
         assert fields == {
             "case_id", "case_number", "title", "status",
             "case_type", "description", "opened_at", "closed_at", "documents",
+            "parties",
         }, f"CaseDetailResponse 필드 변경 감지: {fields}"
 
     def test_case_document_item_fields_unchanged(self):
