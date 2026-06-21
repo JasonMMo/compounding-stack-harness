@@ -386,7 +386,8 @@ class TestSearchContractUnchanged:
         import inspect
 
         sr_fields = set(SearchResponse.model_fields.keys())
-        expected_sr = {"query_log_id", "total_results", "results", "note"}
+        # G-4 pagination: `offset` added to SearchResponse (intentional extension)
+        expected_sr = {"query_log_id", "total_results", "offset", "results", "note"}
         assert expected_sr == sr_fields, f"SearchResponse 필드 변경 감지: {sr_fields}"
 
         co_fields = set(CitationOut.model_fields.keys())
