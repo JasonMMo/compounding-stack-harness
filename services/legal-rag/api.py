@@ -305,6 +305,65 @@ class CaseDetailResponse(BaseModel):
     documents: list[CaseDocumentItem]
 
 
+# G-2 C1 — 사건 생성/수정 요청 모델
+# DDL CHECK 기준 (hsqldb-schema.sql §384-385):
+#   case_type: ('civil','criminal','administrative','family','commercial')   ← 'other' 없음
+#   status:    ('intake','active','trial','appeal','closed','withdrawn')
+# 스펙 §4.1 에 case_type 'other' 가 있으나 DDL에 없음 → DDL 진실 적용, CTO 에 보고 요망.
+_CASE_TYPE_VALUES = {"civil", "criminal", "administrative", "family", "commercial"}
+_STATUS_VALUES = {"intake", "active", "trial", "appeal", "closed", "withdrawn"}
+
+
+class CaseCreateIn(BaseModel):
+    """POST /cases 요청 바디 — §3.1."""
+    case_number: str = Field(..., max_length=64, description="사건번호 (최대 64자, 공백 포함 안 됨)")
+    title: str = Field(..., max_length=512, description="사건명 (최대 512자)")
+    case_type: str | None = Field(
+        None,
+        description=f"사건 유형. 허용값: {sorted(_CASE_TYPE_VALUES)}. null 허용.",
+    )
+    status: str = Field(
+        "intake",
+        description=f"사건 상태. 허용값: {sorted(_STATUS_VALUES)}. 기본값: intake.",
+    )
+    description: str | None = Field(None, max_length=4000, description="사건 개요 (최대 4000자)")
+    opened_at: str | None = Field(None, description="접수일 (YYYY-MM-DD). null 허용.")
+
+    def model_post_init(self, __context) -> None:  # noqa: ANN001
+        if " " in self.case_number:
+            raise ValueError("case_number 에 공백을 포함할 수 없습니다.")
+        if self.case_type is not None and self.case_type not in _CASE_TYPE_VALUES:
+            raise ValueError(f"case_type 허용값: {sorted(_CASE_TYPE_VALUES)}")
+        if self.status not in _STATUS_VALUES:
+            raise ValueError(f"status 허용값: {sorted(_STATUS_VALUES)}")
+        if self.opened_at is not None:
+            import re
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", self.opened_at):
+                raise ValueError("opened_at 형식: YYYY-MM-DD")
+
+
+class CaseUpdateIn(BaseModel):
+    """PATCH /cases/{case_id} 요청 바디 — §3.1 (partial, immutable 필드 무시)."""
+    title: str | None = Field(None, max_length=512)
+    case_type: str | None = Field(None)
+    status: str | None = Field(None)
+    description: str | None = Field(None, max_length=4000)
+    opened_at: str | None = Field(None)
+    closed_at: str | None = Field(None)
+
+    def model_post_init(self, __context) -> None:  # noqa: ANN001
+        if self.case_type is not None and self.case_type not in _CASE_TYPE_VALUES:
+            raise ValueError(f"case_type 허용값: {sorted(_CASE_TYPE_VALUES)}")
+        if self.status is not None and self.status not in _STATUS_VALUES:
+            raise ValueError(f"status 허용값: {sorted(_STATUS_VALUES)}")
+        import re
+        _date_pat = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+        if self.opened_at is not None and not _date_pat.fullmatch(self.opened_at):
+            raise ValueError("opened_at 형식: YYYY-MM-DD")
+        if self.closed_at is not None and not _date_pat.fullmatch(self.closed_at):
+            raise ValueError("closed_at 형식: YYYY-MM-DD")
+
+
 # ── Login helper ──────────────────────────────────────────────────────────────
 
 _LOGIN_FAIL_MSG = "이메일 또는 비밀번호가 올바르지 않습니다."
@@ -551,6 +610,195 @@ async def get_case(
         case_type=case_type,
         description=description,
         opened_at=opened_at,
+        closed_at=closed_at,
+        documents=documents,
+    )
+
+
+@app.post("/cases", response_model=CaseOut, status_code=201, tags=["cases"])
+async def create_case(
+    req: CaseCreateIn,
+    attorney_id: Annotated[str, Depends(_attorney_dep)],
+):
+    """사건 생성 (C1, §3.1 POST /cases).
+
+    RLS INSERT 정책: assigned_attorney_id 는 JWT sub(current_user_id) 로 서버 주입.
+    클라이언트 제출 값 무시. DB RLS WITH CHECK 가 최종 강제.
+
+    오류: 401(JWT), 409(case_number unique 충돌), 422(검증).
+    """
+    pool = _get_pool()
+
+    async with pool.connection() as conn:
+        async with database.rls_session(conn, attorney_id):
+            try:
+                cur = await conn.execute(
+                    """
+                    INSERT INTO legal_case (
+                        id, created_at, updated_at,
+                        case_number, title, case_type, status,
+                        summary, filed_date,
+                        assigned_attorney_id
+                    ) VALUES (
+                        gen_random_uuid(), now(), now(),
+                        %s, %s, %s, %s,
+                        %s, %s::date,
+                        current_setting('app.current_user_id', true)::uuid
+                    )
+                    RETURNING
+                        id::text,
+                        case_number,
+                        title,
+                        status
+                    """,
+                    (
+                        req.case_number,
+                        req.title,
+                        req.case_type,
+                        req.status,
+                        req.description,
+                        req.opened_at,
+                    ),
+                )
+                row = await cur.fetchone()
+            except Exception as exc:
+                exc_str = str(exc)
+                # unique 제약 위반 → 409
+                if "unique" in exc_str.lower() or "duplicate" in exc_str.lower():
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"case_number '{req.case_number}' 가 이미 존재합니다.",
+                    ) from exc
+                # RLS WITH CHECK 위반 → 403
+                if "rls" in exc_str.lower() or "policy" in exc_str.lower() or "check" in exc_str.lower():
+                    raise HTTPException(
+                        status_code=403,
+                        detail="RLS 정책 위반: 사건 생성이 거부되었습니다.",
+                    ) from exc
+                raise
+
+    if row is None:
+        raise HTTPException(status_code=500, detail="사건 생성 후 행을 읽지 못했습니다.")
+
+    case_id_str, case_number, title, status = row
+    return CaseOut(
+        case_id=case_id_str,
+        case_number=case_number,
+        title=title,
+        status=status,
+        doc_total=0,
+        doc_indexed=0,
+        doc_pending=0,
+        doc_failed=0,
+    )
+
+
+@app.patch("/cases/{case_id}", response_model=CaseDetailResponse, tags=["cases"])
+async def update_case(
+    case_id: str,
+    req: CaseUpdateIn,
+    attorney_id: Annotated[str, Depends(_attorney_dep)],
+):
+    """사건 수정 (C1, §3.1 PATCH /cases/{case_id}).
+
+    case_number / assigned_attorney_id / partner_id 는 immutable (무시).
+    RLS UPDATE USING: 담당 변호사 또는 파트너 변호사만 수정 가능.
+    타 변호사 사건 PATCH 시도 → 404 (존재 은폐).
+
+    응답: 200 + CaseDetailResponse (기존 모델 재사용).
+    오류: 401(JWT), 404(미존재 또는 타 변호사 사건), 422(검증).
+    """
+    try:
+        uuid.UUID(case_id)
+    except ValueError:
+        raise HTTPException(400, f"case_id is not a valid UUID: {case_id!r}")
+
+    # 제출된 필드만 SET 절 구성 (partial PATCH)
+    updates: dict[str, object] = {}
+    if req.title is not None:
+        updates["title"] = req.title
+    if req.case_type is not None:
+        updates["case_type"] = req.case_type
+    if req.status is not None:
+        updates["status"] = req.status
+    if req.description is not None:
+        updates["summary"] = req.description          # DB 컬럼명: summary
+    if req.opened_at is not None:
+        updates["filed_date"] = req.opened_at         # DB 컬럼명: filed_date
+    if req.closed_at is not None:
+        updates["closed_at"] = req.closed_at
+
+    pool = _get_pool()
+
+    async with pool.connection() as conn:
+        async with database.rls_session(conn, attorney_id):
+            if updates:
+                set_parts = ", ".join(f"{col} = %s" for col in updates)
+                set_parts += ", updated_at = now()"
+                values = list(updates.values()) + [case_id]
+                await conn.execute(
+                    f"UPDATE legal_case SET {set_parts} WHERE id = %s",  # noqa: S608
+                    values,
+                )
+
+            # 업데이트 후 최신 상태 읽기 (RLS SELECT 정책으로 자동 격리)
+            cur = await conn.execute(
+                """
+                SELECT
+                    id::text,
+                    case_number,
+                    title,
+                    status,
+                    case_type,
+                    summary,
+                    filed_date::text,
+                    closed_at::text
+                FROM legal_case
+                WHERE id = %s
+                """,
+                (case_id,),
+            )
+            row = await cur.fetchone()
+
+            if row is None:
+                # RLS 가 숨겼거나 미존재 — 동일 404 (존재 은폐)
+                raise HTTPException(status_code=404, detail="사건을 찾을 수 없습니다.")
+
+            (
+                _case_id, case_number, title, status,
+                case_type, summary, filed_date, closed_at,
+            ) = row
+
+            # Document list for response
+            dcur = await conn.execute(
+                """
+                SELECT id::text, title, document_type, ingest_status
+                FROM legal_case_document
+                WHERE case_id = %s
+                ORDER BY filed_at NULLS LAST, id
+                """,
+                (case_id,),
+            )
+            doc_rows = await dcur.fetchall()
+
+    documents = [
+        CaseDocumentItem(
+            doc_id=dr[0],
+            title=dr[1],
+            document_type=dr[2],
+            ingest_status=dr[3],
+        )
+        for dr in doc_rows
+    ]
+
+    return CaseDetailResponse(
+        case_id=_case_id,
+        case_number=case_number,
+        title=title,
+        status=status,
+        case_type=case_type,
+        description=summary,
+        opened_at=filed_date,
         closed_at=closed_at,
         documents=documents,
     )
