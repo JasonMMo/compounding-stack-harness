@@ -514,3 +514,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 2. case_id 연동이 프런트만이고 백엔드 미필터면 "사건필터" 뱃지가 눈속임일 위험 → `api.py:712` 가 `hybrid_search(case_id=req.case_id)` 로 **검색 자체를 사건범위로 필터**(로그도 727행 기록) 확인. 연동 실제.
 
 **revenue**: M3(법무 첫 버티컬) flagship 진전. **cost**: API 미사용(로컬 build·소스검증만). 잔여: L4 라이브(dist→Coolify 배포), 페이지네이션 라이브 단언(시드 ~6건/변호사라 20페이지서 미발화), G-2 write=Q-1 선행, 원문 drawer=G-3.
+
+## Growth-105 — legal-pro L4 배포 준비 (전략 A: /pro 동일오리진) + Dockerfile 결함 가드
+
+**맥락**: founder "배포부터". DevOps 가 서빙전략 + 설정 산출.
+
+**전략 A (DevOps 권고·CTO 승인)**: legal-rag FastAPI 가 `/pro` 에 legal-pro dist 를 StaticFiles 로 추가 서빙(api.py:880 조건부 `if os.path.isdir`, 기존 `/app` 패턴과 일관). **동일 오리진 → CORS 0**, 새 서브도메인·Traefik 라우터 불필요. vite `base=/pro/` + BrowserRouter `basename=/pro` 정렬. multi-stage Dockerfile(Node20 build stage → dist 를 web/pro 로 COPY).
+
+**가드 발동 — 배포 깨질 결함 CTO 적발**: DevOps 1차 산출(5커밋)이 **build 재검증 없이** 끝났고, Dockerfile Stage 1 이 어댑터를 `/src` 에 직접 COPY → prebuild(codegen/build-tokens)의 `REPO_ROOT=resolve(__dirname,'..'×4)` 가 `/` 로 해석 → `/middle`·`/presets`·`/services/legal-rag/web/styles` 부재 → **컨테이너 빌드 실패**. 로컬 `npm run build` 는 PASS(repo 경로 존재)라 founder 가 Redeploy 눌렀을 때만 깨지는 함정. CTO 가 REPO_ROOT 손계산 + prebuild 경로참조 grep 으로 근본원인 확정 → DevOps 에 repo-레이아웃 보존 COPY 구조 지시 → 수정(6aae618: 어댑터를 `/src/frontend/adapters/legal-pro` 에 두고 REPO_ROOT→`/src`, 의존 서브트리 3종 COPY). .dockerignore 가 그 경로 미배제 확인. 교훈: **빌드설정 변경은 변경한 환경(컨테이너)에서 재현해야 — 로컬 PASS 가 컨테이너 PASS 를 보장 안 함**. [[subagent-cross-service-verify]] 의 "thin wrapper 보고 단정 금지" 와 짝.
+
+**라이브 트리거 경계**: 외부 API/SSH 금지(founder 룰) → DevOps 산출 = 로컬설정+절차문서+커밋까지, 실제 Coolify Redeploy 는 founder 실행. 절차: `deploy/preview/legal-pro.md`. **cost**: API 미사용. **revenue**: M3 flagship 데모 라이브화 직전. 잔여: founder Redeploy → `/pro` 스모크(7항목) → 통과 시 L4 종결.
