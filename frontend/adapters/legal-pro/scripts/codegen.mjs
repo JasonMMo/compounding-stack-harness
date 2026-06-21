@@ -45,6 +45,8 @@ const LEGAL_RAG_ENDPOINTS = {
   // G-2 C2 — 당사자 쓰기 경로 상수 (기존 상수 수정 금지 §5.2)
   party_create:  '/cases/:case_id/parties',
   party_update:  '/cases/:case_id/parties/:party_id',
+  // G-2 C3 — 문서 업로드 경로 상수 (기존 상수 수정 금지 §5.2)
+  document_upload: '/cases/:case_id/documents',
 }
 
 // ── Build TS content ────────────────────────────────────────────────────────
