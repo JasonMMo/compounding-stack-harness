@@ -23,6 +23,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { apiSearch, apiHealth, type CitationOut, type WireError } from '../api/wire'
+import DocDrawer from '../components/DocDrawer'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -123,9 +124,10 @@ interface CitationCardProps {
   cit: CitationOut
   queryTerms: string[]
   lastQuery: string
+  onOpenDrawer: (sourceType: string, sourceId: string) => void
 }
 
-function CitationCard({ cit, queryTerms, lastQuery }: CitationCardProps) {
+function CitationCard({ cit, queryTerms, lastQuery, onOpenDrawer }: CitationCardProps) {
   const isPrecedent = cit.source_type === 'precedent'
   const typeClass = isPrecedent ? 'citation-card--precedent' : 'citation-card--document'
 
@@ -220,15 +222,12 @@ function CitationCard({ cit, queryTerms, lastQuery }: CitationCardProps) {
           </details>
         )}
 
-        {/* 원문 보기 — Phase B TODO: implement slide-over drawer (openDocDrawer) */}
+        {/* 원문 보기 — 슬라이드오버 드로어 오픈 */}
         <button
           type="button"
           className="citation-card__link"
           aria-label={`원문 보기: ${isPrecedent ? (cit.case_number ?? cit.citation ?? '판례') : (cit.document_title ?? '사건문서')}`}
-          onClick={() => {
-            /* Phase B TODO: open doc drawer with cit.source_type + cit.source_id */
-            alert(`원문 보기 기능은 Phase B 예정입니다.\nsource_id: ${cit.source_id}`)
-          }}
+          onClick={() => onOpenDrawer(cit.source_type, cit.source_id)}
         >
           원문 보기 →
         </button>
@@ -257,6 +256,17 @@ export default function PrecedentSearchScreen() {
   const [note, setNote] = useState<string | null>(null)
   const [healthMsg, setHealthMsg] = useState<{ severity: 'warn' | 'down'; text: string } | null>(null)
   const queryTermsRef = useRef<string[]>([])
+
+  // 원문보기 드로어 state
+  const [drawerTarget, setDrawerTarget] = useState<{ sourceType: string; sourceId: string } | null>(null)
+
+  function openDrawer(sourceType: string, sourceId: string) {
+    setDrawerTarget({ sourceType, sourceId })
+  }
+
+  function closeDrawer() {
+    setDrawerTarget(null)
+  }
 
   // Health polling (30s interval, matches app.js behavior)
   const checkHealth = useCallback(async () => {
@@ -478,11 +488,21 @@ export default function PrecedentSearchScreen() {
                 cit={cit}
                 queryTerms={queryTermsRef.current}
                 lastQuery={lastQuery}
+                onOpenDrawer={openDrawer}
               />
             ))}
           </ul>
         )}
       </div>
+
+      {/* 원문보기 드로어 — 판례/사건문서 양쪽 source_type 지원 */}
+      {drawerTarget && (
+        <DocDrawer
+          sourceType={drawerTarget.sourceType}
+          sourceId={drawerTarget.sourceId}
+          onClose={closeDrawer}
+        />
+      )}
     </main>
   )
 }
