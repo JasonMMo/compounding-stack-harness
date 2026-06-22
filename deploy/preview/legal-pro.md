@@ -120,3 +120,30 @@ REPO_ROOT 손계산: `__dirname=/src/frontend/adapters/legal-pro/scripts`, `reso
 - 서브도메인: `legal-rag.n9n.co.kr/pro` (경로 기반 — 서브도메인 추가 없음)
 - 서비스: legal-pro React SPA, legal-rag 동일 Coolify 서비스에 포함
 - 상태: preview (고객 데모용)
+
+## 9. G-2 C3 문서업로드 배포 추가요건 (Growth-108)
+
+C3(`POST /cases/{id}/documents` 비동기 ingest)는 업로드 파일을 디스크에 영구 저장한다.
+아래 3건은 **founder/DevOps 가 Coolify 에서 설정**해야 업로드가 동작·존속한다.
+
+### 9-1. 환경변수 (필수)
+- `LEGAL_RAG_STORAGE_ROOT` — 업로드 파일 저장 루트 절대경로 (예: `/data/legal-storage`).
+  미설정 시 업로드 엔드포인트가 500 반환(`config.py` storage_root 빈문자열 가드). Coolify env 에 추가.
+
+### 9-2. 영구 볼륨 (AC-12 — 필수)
+- `LEGAL_RAG_STORAGE_ROOT` 가 가리키는 경로를 **Coolify persistent volume** 으로 마운트.
+  미마운트 시 Redeploy/재시작마다 업로드 파일 소멸(컨테이너 레이어는 휘발). 비동기 ingest 가
+  파일을 읽기 전 재배포되면 status=error.
+- `legal-rag.compose.yml` 의 `app` 서비스에 volume 매핑 추가 후 Coolify 동기화.
+
+### 9-3. 업스트림 바디 크기 제한 (CISO CAVEAT-A — 권고)
+- 앱은 `content = await file.read()` 후 20MiB 검사 → 업스트림 limit 부재 시 거대 업로드가
+  메모리에 먼저 적재되어 OOM 위험. **Traefik/nginx 에서 `client_max_body_size`(nginx) 또는
+  Traefik `maxRequestBodyBytes` 를 22m(≈23068672)** 로 설정해 앱 도달 전 차단 권고.
+  단일테넌트 preview 티어에서는 BLOCK 아님(CISO PASS), 프로덕션 인도 전 적용.
+
+### 9-4. C3 스모크 추가 항목 (§6 체크리스트 이후)
+8. `/pro/cases/<id>` → 문서 업로드 패널에서 .pdf/.txt 첨부 → 201, 뱃지 "대기중"(pending)
+9. 5~60초 후 폴링으로 뱃지 "색인완료"(done) 전환 확인 (비동기 ingest 동작)
+10. `.exe` 첨부 시도 → 400 거부 (확장자 allowlist)
+11. Redeploy 후 업로드 파일 잔존 확인 (9-2 영구볼륨 검증)
