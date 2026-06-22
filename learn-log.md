@@ -599,3 +599,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - engineer 보고 KILLER_APP_URL 후보가 루트(`/`)였으나 CTO가 killer app 실체=legal-pro `/pro`로 정정 배선.
 - **founder 액션**: lawfirm-demo Coolify Redeploy → 배너/사이드바 라이브. (env는 compose에 배선됨 — 수동 입력 불요)
 - §6 rollup: [Growth-113] lawfirm-demo killer-app 크로스링크(B2) — env(KILLER_APP_URL) 구동 배너+사이드바 양쪽, legal-pro /pro 연결. B2 종결, D1~D5 문서 단계 진입 대기.
+
+## Growth-114 — lawfirm-demo D1~D5 문서 5종 + DFD 검증(결함 1 적발, BLK-D5-8)
+
+- **D1~D5 전 문서 완성**(docs/projects/lawfirm-demo/): D1 기능명세(402)·D2 유저플로우(503)·D3 와이어프레임(439)·D4 ERD(552)·D5 DFD(724). 전부 **실제 시드 데이터 + 실제 server.py 라우트 + 실제 out DDL 기준**, killer-app 경계(별개 DB·SSO없음) 정직 표기. 3중용도(영업·인도물·구현입력).
+- **CTO 독립 게이트 전건 수행**: D2 라우트 ↔ server.py 1:1, D4 ERD의 FK·ON DELETE 정책 ↔ out DDL **정확 일치**(assigned_attorney_id RESTRICT, principal_id/subject_id 다형+UNIQUE/인덱스, CASCADE/RESTRICT/SET NULL), D3 셸 ↔ base.html(g_killer_app 조건부) 정합. 날조 0.
+- **DFD 검증(QA)**: D5 34 검증포인트 정적 감사(seed↔DDL). scripts/demo/dfd_verify.py(160줄, 외부DB 불요 import 검증) rc=0, 시드 FK 무결성 전항목 OK. 25 PASS / 1 FAIL / 9 N-A(인증·런타임 → founder 라이브검증 이관).
+- **DEFECT-1(CTO 확인)**: `presets/ddl/catalog.yaml:1349` approval-decision.step_id `on_delete: restrict` ↔ 부모 체인(approval-step.request_id cascade:1309, approver.step_id cascade:1329) 불일치 → decision 존재하는 결재요청 삭제 시 cascade가 RESTRICT 리프에서 막혀 FK 위반. generic baseline catalog 결함. **수정 방향은 설계 판단**(cascade-all 단순화 vs decision 불변성 audit). 데모엔 cascade 권장(1줄+regen). QA BLOCK 정당.
+- **flaky 교훈**: design-agent 대용량 단일 Write 2회 stream-idle timeout → 읽기 2개 한정+≤350줄 집약 지시로 3회차 성공(439줄). 큰 산출 서브에이전트는 입력·분량 타이트 제약이 안정적.
+- **founder 액션**: ① DEFECT-1 수정 방향 결정 ② demo-portal/lawfirm-demo Redeploy ③ 시드 라이브 적용. 잔여: DEFECT-1 fix+regen, 패키징(영업/인도물).
+- §6 rollup: [Growth-114] lawfirm-demo D1~D5 문서 5종 완성(실데이터 기준·CTO 게이트 전건) + DFD 정적검증(dfd_verify.py, 25P/1F/9NA) — DEFECT-1(approval cascade 불일치, catalog:1349) 적발·BLOCK. 패키징·fix 대기.
