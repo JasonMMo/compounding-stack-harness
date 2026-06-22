@@ -127,8 +127,8 @@ C3(`POST /cases/{id}/documents` 비동기 ingest)는 업로드 파일을 디스�
 아래 3건은 **founder/DevOps 가 Coolify 에서 설정**해야 업로드가 동작·존속한다.
 
 ### 9-1. 환경변수 (필수)
-- `LEGAL_RAG_STORAGE_ROOT` — 업로드 파일 저장 루트 절대경로 (예: `/data/legal-storage`).
-  미설정 시 업로드 엔드포인트가 500 반환(`config.py` storage_root 빈문자열 가드). Coolify env 에 추가.
+- `LEGAL_RAG_STORAGE_ROOT` — 업로드 파일 저장 루트 절대경로 (예: `/data/legal-docs/case-uploads` — 영구 bind-mount `/data/legal-docs` 하위; 구 예시 `/data/legal-storage` 는 영구볼륨 밖이라 Redeploy 시 소멸 위험이므로 사용 금지).
+  미설정 시 업로드 엔드포인트가 500 반환(`config.py` storage_root 빈문자열 가드). **Coolify 환경변수 패널에 값을 추가하는 것만으로는 부족하다 — `legal-rag.compose.yml` 의 `app` 서비스 `environment:` 블록에 `LEGAL_RAG_STORAGE_ROOT: ${LEGAL_RAG_STORAGE_ROOT}` 매핑이 명시되어야 컨테이너로 주입된다** (Growth-109 수정 완료).
 
 ### 9-2. 영구 볼륨 (AC-12 — 필수)
 - `LEGAL_RAG_STORAGE_ROOT` 가 가리키는 경로를 **Coolify persistent volume** 으로 마운트.
