@@ -573,3 +573,10 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - 환류: 런북 deploy/preview/legal-pro.md §9 재구성(b6353c4). compose 패스스루 e5d7dd9/3eae1a3.
 - 결과: founder 4건 전부 라이브 PASS. 문서 pending→done(폴링 5회=정상). 인격: CTO 진단·integrator, DevOps 런북·compose(위임), CISO 0777 preview-caveat.
 - §6 rollup: [Growth-110] G-2 C3 라이브 3갭(grant/compose-env/bind-perm) 해소 → 문서업로드 LIVE. → docs/learn-logs/{devops,security}.md
+
+## Growth-111 — legal-pro G-3 판례 원문보기 라이브 스모크 PASS (phase 2 종결)
+- 트리거: founder Redeploy 후 `/pro/search` 판례검색 → [원문 보기] 라이브 확인 = "정상적으로 보인다". Growth-109 React 재배선(DocDrawer/wire/PrecedentSearchScreen)이 실배포에서 동작 확증.
+- 결과: **phase 2 G-3 end-to-end 종결** — 판례(full_text) 드로어 즉시 표시 = 구 vanilla `/app openDocDrawer` 기능 React 어댑터(`/pro`)에서 완전 회복. 사건문서(content_text) 본문은 설계대로 OQ-10(content_text 충전) 의존 보류, DocDrawer 안내문 표시.
+- 라이브 검증 0추가 코드 — Growth-109 재배선 + Growth-110 동반 Redeploy로 이미 반영. founder 스모크가 최종 게이트.
+- 잔여(후속·founder 게이트): 라이브 RLS AC(AC-08/10, founder DSN @pytest.mark.postgres)·STEP3 Traefik 바디제한(CAVEAT-A, prod 전 필수)·OQ-10 case_document content_text 충전·prod bind-mount 하드닝(chmod 0777→chown UID+0750).
+- §6 rollup: [Growth-111] G-3 원문보기 `/pro` 라이브 PASS → 통합 법무제품(G-2 쓰기 + G-3 원문보기 + 판례 RAG검색) end-to-end LIVE.
