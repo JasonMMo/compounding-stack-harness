@@ -43,6 +43,14 @@ from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+try:
+    import psycopg.errors as _psycopg_errors  # psycopg v3 — runtime only (not installed in test env without DB)
+    _PsycopgUniqueViolation = _psycopg_errors.UniqueViolation
+    _PsycopgInsufficientPrivilege = _psycopg_errors.InsufficientPrivilege
+except ModuleNotFoundError:  # pragma: no cover — psycopg always present in prod
+    _PsycopgUniqueViolation = type("_Stub_UniqueViolation", (Exception,), {})
+    _PsycopgInsufficientPrivilege = type("_Stub_InsufficientPrivilege", (Exception,), {})
+
 import auth as auth_mod
 import config as cfg
 import db as database
@@ -812,21 +820,16 @@ async def create_case(
                     ),
                 )
                 row = await cur.fetchone()
-            except Exception as exc:
-                exc_str = str(exc)
-                # unique 제약 위반 → 409
-                if "unique" in exc_str.lower() or "duplicate" in exc_str.lower():
-                    raise HTTPException(
-                        status_code=409,
-                        detail=f"case_number '{req.case_number}' 가 이미 존재합니다.",
-                    ) from exc
-                # RLS WITH CHECK 위반 → 403
-                if "rls" in exc_str.lower() or "policy" in exc_str.lower() or "check" in exc_str.lower():
-                    raise HTTPException(
-                        status_code=403,
-                        detail="RLS 정책 위반: 사건 생성이 거부되었습니다.",
-                    ) from exc
-                raise
+            except _PsycopgUniqueViolation as exc:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"case_number '{req.case_number}' 가 이미 존재합니다.",
+                ) from exc
+            except _PsycopgInsufficientPrivilege as exc:  # SQLSTATE 42501 — RLS WITH CHECK 위반 또는 grant 부재
+                raise HTTPException(
+                    status_code=403,
+                    detail="RLS 정책 위반: 사건 생성이 거부되었습니다.",
+                ) from exc
 
     if row is None:
         raise HTTPException(status_code=500, detail="사건 생성 후 행을 읽지 못했습니다.")
@@ -1032,17 +1035,8 @@ async def create_party(
                     (case_id, req.role, req.name, req.notes),
                 )
                 row = await cur.fetchone()
-            except Exception as exc:
-                exc_str = str(exc)
-                # RLS WITH CHECK 위반 (부모 사건 없거나 타 변호사 사건) → 404 존재 은폐
-                if (
-                    "rls" in exc_str.lower()
-                    or "policy" in exc_str.lower()
-                    or "check" in exc_str.lower()
-                    or "permission" in exc_str.lower()
-                ):
-                    raise HTTPException(status_code=404, detail="사건을 찾을 수 없습니다.") from exc
-                raise
+            except _PsycopgInsufficientPrivilege as exc:  # SQLSTATE 42501 — RLS WITH CHECK 위반(부모 사건 없거나 타 변호사) → 존재 은폐
+                raise HTTPException(status_code=404, detail="사건을 찾을 수 없습니다.") from exc
 
     if row is None:
         raise HTTPException(status_code=500, detail="당사자 등록 후 행을 읽지 못했습니다.")
@@ -1327,13 +1321,10 @@ async def upload_case_document(
                     ),
                 )
                 row = await cur.fetchone()
-            except Exception as exc:
-                exc_str = str(exc).lower()
-                if any(kw in exc_str for kw in ("policy", "check", "permission", "rls")):
-                    raise HTTPException(
-                        status_code=404, detail="사건을 찾을 수 없습니다."
-                    ) from exc
-                raise
+            except _PsycopgInsufficientPrivilege as exc:  # SQLSTATE 42501 — RLS WITH CHECK 위반 → 존재 은폐
+                raise HTTPException(
+                    status_code=404, detail="사건을 찾을 수 없습니다."
+                ) from exc
 
     if row is None:
         raise HTTPException(500, "문서 등록 후 행을 읽지 못했습니다.")
