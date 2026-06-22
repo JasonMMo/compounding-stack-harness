@@ -4,7 +4,8 @@ scripts/demo/setup_lawfirm.py — DB initializer for lawfirm-demo A안.
 Actions (idempotent — safe to re-run):
   1. Creates all tables from out/lawfirm-demo/ddl/postgres.sql
   2. Adds tsvector GIN index on legal_precedent for Korean full-text search
-  3. Inserts seed data: 1 department, 3 employees, 5 precedents, 3 legal cases
+  3. Inserts baseline seed data: 1 dept / 3 employees / 5 precedents / 3 cases
+  4. Calls seed_lawfirm_full.seed_full() for full demo data (all 14 tables)
 
 Usage:
     python scripts/demo/setup_lawfirm.py
@@ -40,6 +41,20 @@ except ImportError:
     sys.exit(
         "psycopg2 not found. Install with: pip install psycopg2-binary"
     )
+
+# Full demo seed (all 14 tables) — imported here to keep baseline file lean
+try:
+    import importlib.util as _ilu
+    _seed_spec = _ilu.spec_from_file_location(
+        "seed_lawfirm_full",
+        pathlib.Path(__file__).resolve().parent / "seed_lawfirm_full.py",
+    )
+    _seed_mod = _ilu.module_from_spec(_seed_spec)
+    _seed_spec.loader.exec_module(_seed_mod)
+    seed_full = _seed_mod.seed_full
+except Exception as _e:
+    seed_full = None
+    print(f"[warn] seed_lawfirm_full not loaded: {_e}")
 
 # ---------------------------------------------------------------------------
 # Config
@@ -434,13 +449,23 @@ def main() -> None:
                 _upsert_case(cur, c)
             conn.commit()
 
-            print("\nSetup complete.")
+            print("\nBaseline seed complete.")
             print(f"  Departments : {len(DEPARTMENTS)}")
             print(f"  Employees   : {len(EMPLOYEES)}")
             print(f"  Precedents  : {len(PRECEDENTS)}")
             print(f"  Legal cases : {len(CASES)}")
-            print("\nVerify with:")
-            print("  SELECT citation, case_type FROM legal_precedent;")
+
+        # Full demo seed runs outside the baseline `with conn:` block
+        # so each domain commits independently (same conn, auto-commit per section)
+        if seed_full is not None:
+            print("\nStep 4: full demo seed (all 14 tables) ...")
+            seed_full(conn)
+        else:
+            print("\n[skip] seed_lawfirm_full not available — only baseline data inserted.")
+
+        print("\nAll done. Verify with:")
+        print("  SELECT citation, case_type FROM legal_precedent;")
+        print("  SELECT case_number, status FROM legal_case;")
     finally:
         conn.close()
 
