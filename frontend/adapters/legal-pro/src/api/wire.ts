@@ -238,6 +238,9 @@ async function legalRequest<T>(
       code = 'UNAUTHORIZED'
       koMsg = '인증이 만료되었습니다. 다시 로그인하세요.'
       clearToken()
+    } else if (response.status === 404) {
+      code = 'NOT_FOUND'
+      koMsg = typeof errEnv === 'string' ? errEnv : getMessageKo('NOT_FOUND')
     } else if (typeof errEnv === 'string') {
       koMsg = errEnv
     }
@@ -447,6 +450,39 @@ export async function apiUploadDocument(
   }
 
   return { data: payload as unknown as CaseDocumentUploadOut, error: null }
+}
+
+// ── G-2 phase2 — 원문보기 드로어 타입 및 API ─────────────────────────────────
+
+// Mirrors DocumentResponse (api.py line 283)
+export interface DocumentReadOut {
+  source_type: string
+  source_id: string
+  title: string | null
+  citation: string | null
+  court: string | null
+  decided_date: string | null
+  case_type: string | null
+  keywords: string | null
+  document_type: string | null
+  filed_at: string | null
+  body: string | null
+  body_is_holding_fallback: boolean
+}
+
+/**
+ * GET /documents/:source_type/:source_id (Bearer JWT)
+ *
+ * 404 → error.code 'NOT_FOUND', messageKo '원문을 찾을 수 없습니다.'
+ */
+export async function apiGetDocument(
+  sourceType: string,
+  sourceId: string,
+): Promise<WireResult<DocumentReadOut>> {
+  const url = LEGAL_RAG_ENDPOINTS.document_read
+    .replace(':source_type', encodeURIComponent(sourceType))
+    .replace(':source_id', encodeURIComponent(sourceId))
+  return legalRequest<DocumentReadOut>('GET', url)
 }
 
 // ── G-2 C2 — 당사자 등록/수정 API ───────────────────────────────────────────
