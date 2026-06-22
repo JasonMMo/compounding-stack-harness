@@ -40,6 +40,11 @@ services:
       CONTRACT_DIR: "/app/middle/contract"
       PROFILE_MANIFEST: "/data/manifest/screen-manifest.json"
       PYTHONIOENCODING: "utf-8"
+      # Killer-app cross-link (B2): surfaces "AI 판례검색" banner + sidebar link
+      # pointing to the legal-pro React app. Separate deployment/login (not SSO).
+      KILLER_APP_URL: "https://legal-rag.n9n.co.kr/pro"
+      KILLER_APP_LABEL: "AI 판례검색"
+      KILLER_APP_DESC: "RAG 기반 판례 원문 검색 — 변호사용"
       # SECRET_KEY injected via Coolify environment variables (not in compose file)
     volumes:
       # Persistent manifest file — scp'd to server before deploy
