@@ -126,23 +126,91 @@ REPO_ROOT 손계산: `__dirname=/src/frontend/adapters/legal-pro/scripts`, `reso
 C3(`POST /cases/{id}/documents` 비동기 ingest)는 업로드 파일을 디스크에 영구 저장한다.
 아래 3건은 **founder/DevOps 가 Coolify 에서 설정**해야 업로드가 동작·존속한다.
 
-### 9-1. 환경변수 (필수)
-- `LEGAL_RAG_STORAGE_ROOT` — 업로드 파일 저장 루트 절대경로 (예: `/data/legal-docs/case-uploads` — 영구 bind-mount `/data/legal-docs` 하위; 구 예시 `/data/legal-storage` 는 영구볼륨 밖이라 Redeploy 시 소멸 위험이므로 사용 금지).
-  미설정 시 업로드 엔드포인트가 500 반환(`config.py` storage_root 빈문자열 가드). **Coolify 환경변수 패널에 값을 추가하는 것만으로는 부족하다 — `legal-rag.compose.yml` 의 `app` 서비스 `environment:` 블록에 `LEGAL_RAG_STORAGE_ROOT: ${LEGAL_RAG_STORAGE_ROOT}` 매핑이 명시되어야 컨테이너로 주입된다** (Growth-109 수정 완료).
+> **전제**: 9-1 ~ 9-3 이 모두 충족되어야 §9-4 스모크(항목 8~11)가 통과한다.
+> 라이브 첫 테스트(2026-06-22)에서 3건 모두 설정 갭으로 드러남 — 코드는 정상이었고 전부 배포환경 문제였다.
 
-### 9-2. 영구 볼륨 (AC-12 — 필수)
-- `LEGAL_RAG_STORAGE_ROOT` 가 가리키는 경로를 **Coolify persistent volume** 으로 마운트.
-  미마운트 시 Redeploy/재시작마다 업로드 파일 소멸(컨테이너 레이어는 휘발). 비동기 ingest 가
+### 9-1. 환경변수 + compose passthrough (필수)
+
+두 단계가 **모두** 필요하다. 한쪽만 해도 컨테이너 미주입 → 500.
+
+1. **Coolify 환경변수 패널** — `LEGAL_RAG_STORAGE_ROOT` 값 입력 (예: `/data/legal-docs/case-uploads`).
+   구 예시 `/data/legal-storage` 는 영구볼륨 밖이라 Redeploy 시 소멸 위험이므로 사용 금지.
+2. **compose 매핑 확인** — `legal-rag.compose.yml` 의 `app` 서비스 `environment:` 블록에
+   `LEGAL_RAG_STORAGE_ROOT: ${LEGAL_RAG_STORAGE_ROOT}` 가 있어야 컨테이너로 주입된다
+   (커밋 e5d7dd9 에서 반영 완료).
+3. **적용 확인** — Redeploy 후 **app 컨테이너** 터미널(Coolify → app 서비스 → Terminal)에서:
+   ```
+   printenv LEGAL_RAG_STORAGE_ROOT
+   ```
+   값이 출력되어야 한다. 빈 출력이면 패널 값 저장 또는 compose 매핑을 다시 확인.
+
+미설정 시 증상: 업로드 엔드포인트 500 ("문서 저장소가 설정되지 않았습니다", api.py:1271-1273).
+
+### 9-2. 영구 볼륨 + 호스트 디렉터리 쓰기권한 (필수)
+
+두 단계가 **모두** 필요하다.
+
+#### 9-2-a. Coolify persistent volume (bind-mount)
+- `LEGAL_RAG_STORAGE_ROOT` 가 가리키는 경로를 영구 bind-mount 로 마운트.
+  미마운트 시 Redeploy/재시작마다 업로드 파일 소멸(컨테이너 레이어 휘발). 비동기 ingest 가
   파일을 읽기 전 재배포되면 status=error.
 - `legal-rag.compose.yml` 의 `app` 서비스에 volume 매핑 추가 후 Coolify 동기화.
 
-### 9-3. 업스트림 바디 크기 제한 (CISO CAVEAT-A — 권고)
+#### 9-2-b. 호스트 디렉터리 쓰기권한 (bind-mount 사용 시 필수)
+- app 컨테이너는 non-root `appuser`(Dockerfile:67)로 실행된다. 호스트 디렉터리가 root
+  소유인 상태로 bind-mount 되면 `appuser` 가 파일을 쓰지 못해 500("파일 저장에 실패했습니다", api.py:1338-1355 except).
+- **호스트(VPS)에서 디렉터리 사전 생성 + 권한 설정** (SSH 또는 Coolify db Terminal 아님 — VPS shell):
+  ```bash
+  # preview 티어 (단일테넌트): chmod 0777 허용
+  mkdir -p /data/legal-rag/ingest/case-uploads
+  chmod 0777 /data/legal-rag/ingest/case-uploads
+
+  # 프로덕션: appuser UID 확인 후 chown (보안 우선)
+  # docker exec <app-container> id appuser   → uid=XXXX
+  # chown XXXX /data/legal-rag/ingest/case-uploads && chmod 0750 .../case-uploads
+  ```
+- 호스트 디렉터리 권한 변경은 **Redeploy 없이 즉시·존속**한다 (bind-mount 특성).
+- 확인: Coolify app Terminal → `ls -la /data/legal-docs/case-uploads/` 권한 확인.
+
+### 9-3. 라이브 DB grant 적용 (필수)
+
+`presets/ddl/augments/legal/09_grants.sql` 의 INSERT/UPDATE grant 가 라이브 postgres 에
+**미반영 상태일 수 있다** — Coolify Redeploy 는 DDL 을 재실행하지 않는다 (DDL-in-repo ≠ live-DB).
+
+**증상**: 사건 생성 403(api.py:828 42501 catch), 당사자 추가 404(api.py:1038), 당사자 수정 500
+(update_party 는 42501 catch 없음).
+
+**grant 적용 확인** — Coolify db 서비스 Terminal 에서:
+```sql
+SELECT grantee, table_name, privilege_type
+FROM information_schema.role_table_grants
+WHERE grantee = 'app_user'
+  AND table_name IN ('cases','case_parties','case_documents');
+```
+`cases`/`case_parties`/`case_documents` 각각 INSERT·UPDATE 6행이 모두 있어야 한다.
+누락 시 아래 절차로 재적용.
+
+**grant 재적용 절차** (SSH 키 불가 시 Coolify db 서비스 Terminal 사용):
+- Coolify → db 서비스 → Terminal → `psql -U "$POSTGRES_USER" -d legaldb`
+- 웹터미널에서 heredoc(`<<EOF`)은 깨지므로 **한 줄씩** 실행:
+  ```sql
+  GRANT INSERT, UPDATE ON TABLE cases TO app_user;
+  GRANT INSERT, UPDATE ON TABLE case_parties TO app_user;
+  GRANT INSERT, UPDATE ON TABLE case_documents TO app_user;
+  ```
+- 멱등(이미 적용된 grant 재실행은 무해). 재적용 후 앱 재시작 불필요.
+- 09_grants.sql 전체를 일괄 실행할 경우: `psql -U "$POSTGRES_USER" -d legaldb -f /path/to/09_grants.sql` (파일이 컨테이너 내 마운트된 경우).
+
+### 9-4. 업스트림 바디 크기 제한 (CISO CAVEAT-A — 권고)
 - 앱은 `content = await file.read()` 후 20MiB 검사 → 업스트림 limit 부재 시 거대 업로드가
   메모리에 먼저 적재되어 OOM 위험. **Traefik/nginx 에서 `client_max_body_size`(nginx) 또는
   Traefik `maxRequestBodyBytes` 를 22m(≈23068672)** 로 설정해 앱 도달 전 차단 권고.
   단일테넌트 preview 티어에서는 BLOCK 아님(CISO PASS), 프로덕션 인도 전 적용.
 
-### 9-4. C3 스모크 추가 항목 (§6 체크리스트 이후)
+### 9-5. C3 스모크 추가 항목 (§6 체크리스트 이후)
+
+> 9-1(환경변수+compose) · 9-2(볼륨+권한) · 9-3(grant) 가 모두 완료되어야 아래 항목이 통과한다.
+
 8. `/pro/cases/<id>` → 문서 업로드 패널에서 .pdf/.txt 첨부 → 201, 뱃지 "대기중"(pending)
 9. 5~60초 후 폴링으로 뱃지 "색인완료"(done) 전환 확인 (비동기 ingest 동작)
 10. `.exe` 첨부 시도 → 400 거부 (확장자 allowlist)
