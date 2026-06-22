@@ -589,3 +589,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - 라이브 적용은 founder(`DATABASE_URL=... python scripts/demo/setup_lawfirm.py`, no-SSH/API 경계).
 - 다음: B2 killer-app 링크(배너+메뉴) → D1~D5 문서(데이터 기준) → DFD 검증 → 영업/인도물 패키징.
 - §6 rollup: [Growth-112] lawfirm-demo 메인 데모화 — 4도메인 가상데이터 시드 + 포털 카드 강화(killer app legal-pro 부각).
+
+## Growth-113 — lawfirm-demo killer-app 크로스링크(B2): env 구동 배너+사이드바 양쪽
+
+- **B2 완료**: lawfirm-demo 화면 상단 배너 + 좌측 메뉴 양쪽에 "AI 판례검색 ↗" 링크 → legal-pro(`legal-rag.n9n.co.kr/pro`). founder "양쪽" 요구 충족.
+- **개방-폐쇄 설계**: base.html(전 데모 공유) 하드코딩 대신 `KILLER_APP_URL` env 구동 조건부(기존 MASTER_DETAIL_ENTITIES env 패턴 답습). lawfirm-demo compose env에만 배선 → 그 데모에만 노출, 타 데모 무영향. 향후 타 프로파일도 env 한 줄 재사용. 4커밋(server 59e20da/base cbf8953/css d5c13c6/compose 602c6b9).
+- **정직 표기**: target=_blank rel=noopener + "외부 시스템 · 별도 로그인 필요"(SSO 아님 — 물리적 별개 배포·DB·로그인).
+- **CTO 게이트**: engineer 산출 독립 검증 — server.py g_killer_app(인증 한정·미설정 None) 정확, base.html 삽입 위치 정확, app.css 참조 토큰 전부 tokens.css 실존 확인(--color-primary-subtle/--color-text-on-primary 등), AST+Jinja PASS. 표시된 Pyright 진단은 기존 Flask 타입 쿼크(무관).
+- engineer 보고 KILLER_APP_URL 후보가 루트(`/`)였으나 CTO가 killer app 실체=legal-pro `/pro`로 정정 배선.
+- **founder 액션**: lawfirm-demo Coolify Redeploy → 배너/사이드바 라이브. (env는 compose에 배선됨 — 수동 입력 불요)
+- §6 rollup: [Growth-113] lawfirm-demo killer-app 크로스링크(B2) — env(KILLER_APP_URL) 구동 배너+사이드바 양쪽, legal-pro /pro 연결. B2 종결, D1~D5 문서 단계 진입 대기.
