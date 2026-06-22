@@ -92,6 +92,8 @@ services:
       LEGAL_RAG_JWT_SECRET: ${LEGAL_RAG_JWT_SECRET}
       LEGAL_RAG_SERVICE_TOKEN: ${LEGAL_RAG_SERVICE_TOKEN}
       LEGAL_RAG_INGEST_ROOT: ${LEGAL_RAG_INGEST_ROOT}
+      # C3 문서업로드 저장 루트 (영구 bind-mount /data/legal-docs 하위). 패널값만으로는 컨테이너 미도달 — 명시 필수.
+      LEGAL_RAG_STORAGE_ROOT: ${LEGAL_RAG_STORAGE_ROOT}
       # Embed sidecar — internal Docker service name (hardening #2: never external URL).
       LEGAL_RAG_EMBED_URL: "http://embed:8080"
       # Deployment mode: disables /docs /redoc /openapi.json.
