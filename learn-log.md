@@ -564,3 +564,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **CTO 통합검증(envelope 독립검증)**: engineer가 "build PASS"라 보고했고 IDE 진단은 `onOpenDrawer` 미배선/미사용을 표시(stale, 편집 중 스냅샷 — 라인번호도 최종본과 불일치). **직접 4중 확인**: ① 실제 파일 read로 렌더구역 배선 확인(491·499-505) ② `npm run build` 재실행 → tsc 0 err·vite 43 modules PASS ③ 백엔드 DocumentResponse 12필드 ↔ DocumentReadOut 1:1 grep 대조 ④ `.doc-drawer__*` 13클래스 tokens.gen.css 실존 grep 확인. 전부 정합. [[subagent-cross-service-verify]] 적용 — envelope "build PASS"도 stale 진단과 충돌 시 재현 필수.
 - **결과**: 판례(full_text) 즉시 동작 = "원래 되던 기능" 회복. 사건문서(content_text) 원문은 OQ-10(content_text 충전) 의존 보류 — DocDrawer는 양 source_type 일반화, case_document 빈본문 시 안내문. CaseDetailScreen 사건문서 버튼(aria-disabled) 미변경.
 - 다음: 라이브 검증은 founder Coolify Redeploy(C3+G-3 동반 반영, STORAGE_ROOT=/data/legal-docs/case-uploads 기존 영구마운트 하위로 설정 완료) 후 `/pro/search` 원문보기 스모크. C3 라이브 RLS AC·STEP3 업스트림 바디제한(Traefik buffering, CAVEAT-A)은 founder/후속.
+
+## Growth-110 — legal G-2 C3 라이브 첫 배포 3갭 해소 (문서업로드 end-to-end LIVE)
+- 트리거: founder 라이브(/pro) 테스트에서 G-2 쓰기 4건 실패 → CTO 코드 핑거프린트 진단. **코드는 정상, 전부 배포환경 갭 3개**.
+- 갭1 **DB grant 미적용**: 09_grants.sql INSERT/UPDATE(L27-29) 라이브 미반영(앱 Redeploy는 DDL 미실행 — DDL-in-repo≠live-DB). 증상 사건생성403(api.py:828)/당사자추가404(1038)/당사자수정500(update_party는 42501 catch 無). 확증: role_table_grants에 app_user의 query_log INSERT만 존재. 수정: Coolify db Terminal서 GRANT 6줄 한줄씩 재적용(웹터미널 heredoc 깨짐 → -c 분리).
+- 갭2 **compose passthrough 누락**: app environment에 LEGAL_RAG_STORAGE_ROOT 매핑 부재 → 컨테이너 미주입 → 500(api.py:1273). 수정 커밋 e5d7dd9.
+- 갭3 **bind-mount 비-root 쓰기**: appuser(Dockerfile:67) vs root소유 /data/legal-rag/ingest → 파일쓰기 except 500(api.py:1338-1355). 수정: 호스트 `mkdir+chmod 0777 case-uploads`(preview; prod는 chown UID+0750). redeploy 불요·존속.
+- 환류: 런북 deploy/preview/legal-pro.md §9 재구성(b6353c4). compose 패스스루 e5d7dd9/3eae1a3.
+- 결과: founder 4건 전부 라이브 PASS. 문서 pending→done(폴링 5회=정상). 인격: CTO 진단·integrator, DevOps 런북·compose(위임), CISO 0777 preview-caveat.
+- §6 rollup: [Growth-110] G-2 C3 라이브 3갭(grant/compose-env/bind-perm) 해소 → 문서업로드 LIVE. → docs/learn-logs/{devops,security}.md
