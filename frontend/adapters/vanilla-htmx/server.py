@@ -76,6 +76,14 @@ _MODAL_ENTITIES: set[str] = {
     e.strip() for e in os.environ.get("MODAL_ENTITIES", "").split(",") if e.strip()
 }
 
+# Killer-app cross-link (env-driven, generic — any profile can set these)
+# KILLER_APP_URL: empty string = feature disabled (default off)
+# KILLER_APP_LABEL: button / nav label (default: "AI 판례검색")
+# KILLER_APP_DESC: optional sub-caption shown in banner (default: empty)
+KILLER_APP_URL: str = os.environ.get("KILLER_APP_URL", "").strip()
+KILLER_APP_LABEL: str = os.environ.get("KILLER_APP_LABEL", "AI 판례검색").strip()
+KILLER_APP_DESC: str = os.environ.get("KILLER_APP_DESC", "").strip()
+
 
 # ---------------------------------------------------------------------------
 # Template context processor — inject manifest globals into every template
@@ -103,15 +111,24 @@ def _inject_manifest_globals() -> dict:
     if authenticated:
         domains = manifest.domains()
         entity_keys = manifest.entity_keys() if not domains else []
+        # Killer-app cross-link: only expose to authenticated users and only when URL is set.
+        # Unauthenticated pages (login screen) never see g_killer_app.
+        g_killer_app = (
+            {"url": KILLER_APP_URL, "label": KILLER_APP_LABEL, "desc": KILLER_APP_DESC}
+            if KILLER_APP_URL
+            else None
+        )
     else:
         domains = []
         entity_keys = []
+        g_killer_app = None
     return {
         "g_customer_display": manifest.customer_display(),
         "g_feedback_url": manifest.feedback_url(),
         "g_domains": domains,
         "g_entity_keys": entity_keys,
         "g_authenticated": authenticated,
+        "g_killer_app": g_killer_app,
         "ui_theme": UI_THEME,
     }
 
