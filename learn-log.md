@@ -580,3 +580,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - 라이브 검증 0추가 코드 — Growth-109 재배선 + Growth-110 동반 Redeploy로 이미 반영. founder 스모크가 최종 게이트.
 - 잔여(후속·founder 게이트): 라이브 RLS AC(AC-08/10, founder DSN @pytest.mark.postgres)·STEP3 Traefik 바디제한(CAVEAT-A, prod 전 필수)·OQ-10 case_document content_text 충전·prod bind-mount 하드닝(chmod 0777→chown UID+0750).
 - §6 rollup: [Growth-111] G-3 원문보기 `/pro` 라이브 PASS → 통합 법무제품(G-2 쓰기 + G-3 원문보기 + 판례 RAG검색) end-to-end LIVE.
+
+## Growth-112 — lawfirm-demo 메인 데모 격상: 4도메인 가상 데이터 + 포털 카드 재포지셔닝
+- 방향(founder): lawfirm-demo(법무법인 전반 업무 메뉴)를 **메인 데모**로, legal-pro(`/pro` RAG)는 **killer app 링크**로. 포털 법무 카드 1장 + lawfirm-demo 내부 양쪽(배너+메뉴) 크로스링크. 두 앱은 물리적 별개(다른 배포·DB·로그인)임을 정직 표기.
+- 포털 카드: 이미 repo 커밋됨(8dcbf8d)이나 demo-portal 미배포로 라이브 부재 → 문구 강화(통합 업무관리+AI 판례검색 부각, 358e52e). founder Redeploy 시 반영.
+- B1 데이터(DBA 위임): 14테이블 4도메인(legal/hr/document/approval) 스키마 전부 존재·데이터만 공백 확인. 가명 30인 법무법인 증분 시드 `scripts/demo/seed_lawfirm_full.py`(신규 1083줄) + setup_lawfirm.py importlib 연동. 부서5/직원14/판례12/사건10/당사자28/사건문서22/카테고리6/문서10/버전14/접근규칙8/결재요청7/단계13/결재자14/결정10. 멱등(ON CONFLICT DO NOTHING), 컬럼은 out DDL 1:1.
+- **CTO 게이트 결함 적발**: DBA가 `py_compile PASS`로 보고했으나 Pyright 진단이 `_E3` 미정의 노출. py_compile은 문법만 검사 → module-level dict 평가 시 NameError로 시드 전멸. `_E3`→`_EMP3`(베이스 직원) 수정 + **실제 import 검증**(모든 모듈스코프 리터럴 평가) 재게이트 통과. 교훈: 시드/리터럴 스크립트 검증은 py_compile 불충분 → import 실행 필수. [[subagent-cross-service-verify]] 연장.
+- 라이브 적용은 founder(`DATABASE_URL=... python scripts/demo/setup_lawfirm.py`, no-SSH/API 경계).
+- 다음: B2 killer-app 링크(배너+메뉴) → D1~D5 문서(데이터 기준) → DFD 검증 → 영업/인도물 패키징.
+- §6 rollup: [Growth-112] lawfirm-demo 메인 데모화 — 4도메인 가상데이터 시드 + 포털 카드 강화(killer app legal-pro 부각).
