@@ -89,6 +89,28 @@
   </header>
   {% endblock %}
 
+  {# ── killer-app 배너: URL 설정 시 인증 후에만 노출 ─────────────────────── #}
+  {% if g_killer_app %}
+  <div class="killer-app-banner" role="complementary" aria-label="연동 서비스">
+    <div class="killer-app-banner__body">
+      <span class="killer-app-banner__icon" aria-hidden="true">⚖️</span>
+      <div class="killer-app-banner__text">
+        <span class="killer-app-banner__label">{{ g_killer_app.label }}</span>
+        {% if g_killer_app.desc %}
+        <span class="killer-app-banner__desc">{{ g_killer_app.desc }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <a href="{{ g_killer_app.url }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="killer-app-banner__cta btn btn-sm"
+       title="{{ g_killer_app.label }} — 외부 시스템 · 별도 로그인 필요">
+      바로가기 ↗
+    </a>
+  </div>
+  {% endif %}
+
   {# ── 인증 바디: 사이드바 + 메인 ─────────────────────────────────────── #}
   <div class="app-body" id="app-body">
 
@@ -100,6 +122,18 @@
           <span class="sidebar-nav__link-text">홈 (인트로)</span>
         </a>
       </div>
+      {% if g_killer_app %}
+      <div class="sidebar-killer-app">
+        <a href="{{ g_killer_app.url }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="sidebar-nav__link killer-app-navlink"
+           title="{{ g_killer_app.label }} — 외부 시스템 · 별도 로그인 필요">
+          <span class="sidebar-nav__link-initial" aria-hidden="true">✨</span>
+          <span class="sidebar-nav__link-text">{{ g_killer_app.label }} ↗</span>
+        </a>
+      </div>
+      {% endif %}
       {% set domains = g_domains if g_domains else [] %}
       {% if domains %}
       {% for domain in domains %}
