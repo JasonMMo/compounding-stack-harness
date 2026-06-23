@@ -33,6 +33,10 @@
   {% endif %}
   <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}"
      class="btn btn-primary btn-sm">+ 추가</a>
+  {% if board_enabled is defined and board_enabled %}
+  <a href="{{ url_for('entity_board', entity_type=entity_type) }}"
+     class="btn btn-secondary btn-sm">보드 보기</a>
+  {% endif %}
 </form>
 
 {# Table #}
