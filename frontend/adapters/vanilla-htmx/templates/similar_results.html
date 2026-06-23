@@ -1,0 +1,55 @@
+{#
+  similar_results.html — htmx fragment for similar-task search results.
+
+  Context vars:
+    mode   : "semantic" | "lexical" | None
+    items  : list of task dicts {id, name, status, score, ...}
+    query  : str — the search term the user typed
+    error  : str | None — backend error message (graceful failure path)
+
+  Honesty contract (MUST NOT violate):
+    mode="semantic" → badge "AI 의미검색"  (vector similarity, accent color)
+    mode="lexical"  → badge "키워드 검색"  (keyword fallback, muted color)
+    Never label a lexical result as "AI" or "의미검색".
+#}
+
+{% if error %}
+<div class="error-banner" role="alert">{{ error }}</div>
+{% elif not query %}
+<p class="similar-empty">검색어를 입력하세요.</p>
+{% elif not items %}
+<p class="similar-empty">유사한 태스크가 없습니다.</p>
+{% else %}
+<div class="similar-results" role="region" aria-label="유사 태스크 검색 결과">
+
+  {# Honesty badge — mode must be surfaced, never hidden #}
+  {% if mode == "semantic" %}
+  <span class="similar-badge similar-badge--semantic" aria-label="AI 의미검색 결과">AI 의미검색</span>
+  {% elif mode == "lexical" %}
+  <span class="similar-badge similar-badge--lexical" aria-label="키워드 검색 결과">키워드 검색</span>
+  {% endif %}
+
+  <ul class="similar-list" role="list">
+    {% for item in items %}
+    {% set item_id = item.get('id', '') %}
+    {% set score_pct = (item.get('score', 0) * 100) | round | int %}
+    <li class="similar-row">
+      <div class="similar-row__main">
+        <a href="{{ url_for('entity_detail', entity_type='task', entity_id=item_id) }}"
+           class="similar-row__name">{{ item.get('name', item_id) }}</a>
+        {% if item.get('status') %}
+        <span class="similar-row__status">{{ item.get('status') }}</span>
+        {% endif %}
+      </div>
+      <div class="similar-row__score" title="{{ score_pct }}% 유사도">
+        <span class="similar-score-label">{{ score_pct }}%</span>
+        <div class="similar-score-bar" role="progressbar"
+             aria-valuenow="{{ score_pct }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="similar-score-bar__fill" style="width: {{ score_pct }}%"></div>
+        </div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
