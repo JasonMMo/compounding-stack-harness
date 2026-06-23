@@ -27,7 +27,7 @@ except ImportError:
 
 from fastapi import FastAPI
 
-from routers import auth, entity, legal, status
+from routers import auth, entity, legal, status, task_search
 
 app = FastAPI(
     title="compounding-stack backend adapter — fastapi",
@@ -42,6 +42,7 @@ app.include_router(auth.router)
 app.include_router(entity.router)
 app.include_router(legal.router)
 app.include_router(status.router)
+app.include_router(task_search.router)
 
 
 if __name__ == "__main__":
