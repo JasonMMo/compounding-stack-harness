@@ -651,3 +651,26 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **검증 비파괴 원칙**: P5-04는 라이브 시드 훼손 회피 위해 store.patch 소스 의미론으로 검증(throwaway 레코드 주입 회피). founder가 막 데모 가동한 환경 존중.
 - **lawfirm-demo 메인데모 트랙 완전 종결**: 정적 35 PASS + 라이브 7 PASS, 미해결 결함 0. D1~D5 문서·DFD·DEFECT-1 fix·패키징(README/원페이저)·라이브 시드·라이브검증 전부 완료. M1 generic harness baseline 기여.
 - §6 rollup: [Growth-118] lawfirm-demo 라이브 종결 — Redeploy 후 9 N-A 라이브검증 7 PASS/2 N-A(워크플로 범위). 시드 라이브 확증(case10·approval7). 메인데모 트랙 완전 종결, 미해결 결함 0.
+
+## Growth-119 — legal-rag pg_bigm 라이브 활성화 → OR `=%` 퇴행 적발·DROP 롤백 → OR→LIKE 재배선 + 테스트 사각 폐쇄
+
+- **활성화 시도→퇴행 적발**: founder가 pg_bigm `CREATE EXTENSION`+인덱스+Redeploy 했더니 검색 키워드 뱃지가 **사라짐**. CTO 라이브 진단(psql): `chunk_text =% '손해배상'`(sim_limit 0.1)=**0행** vs tsquery=**22행**. 근본: retrieve.py OR+bigm이 `=%`(문자열 **전체** 유사도)를 써서 짧은쿼리 vs 긴 500토큰 청크에 구조적 0 → pg_bigm 켜면 OR이 tsquery보다 **퇴행**. Growth-99의 "한계효용 낮음" 경고가 실측으로 확인.
+- **즉시 롤백**: founder `DROP EXTENSION pg_bigm CASCADE` + Redeploy → probe=False → tsquery 복귀(손해배상 22건·뱃지 회복). 볼륨 보존이라 extension 재생성 쉬움.
+- **꼼꼼한 수정(engineer)**: OR/AND bigm 분기를 단일 `if use_bigm`으로 병합, 둘 다 `_build_bigm_like(query, op)`의 **LIKE 부분문자열 + bigm_similarity 랭킹** 사용(AND 분기가 이미 정답 템플릿이었음). LIKE는 한국어 토큰내부 부분문자열(손해배상금→손해배상)까지 잡아 tsquery보다 우위. 죽은 `_FTS_BIGM_SQL`·`_BIGM_SIMILARITY_LIMIT`·`SET LOCAL` 제거. 3커밋 df8862e/48ba7a2/32e446f 푸시.
+- **★ 테스트 사각 폐쇄(핵심 교훈)**: `test_case_scoped_search`가 pg_bigm=False 강제라 **hybrid_search의 bigm 경로가 단위에서 한 번도 안 돌아** `=%%` 이스케이프(1차)·`=%` 의미론 퇴행(2차)을 둘 다 놓쳤다. ① `test_bigm_search_path.py`(신규) — `_BIGM_AVAILABLE=True` 패치+conn mock으로 OR/AND FTS SQL에 LIKE 포함·`=%` 부재 assert(8케이스, 회귀가드) ② `test_postgres_integration.py` — DSN 게이트 실 bigm LIKE OR ≥1행 검증. **mock-only 테스트는 라이브 경로를 못 잡는다 → 통합테스트로 실경로 게이트 필수**.
+- **CTO 게이트(envelope 불신, 직접 재실행)**: retrieve.py 정독(병합분기 LIKE 정확·`=%` 실행코드 0=주석만), Pyright `_FTS_BIGM_SQL undefined` 진단은 stale(병합 중간상태) 확인, 단위 **321 passed/0 failed**, postgres 20 skip 클린(psycopg false-positive). `_build_or_tsquery` 잔존은 test_fts_or_tsquery가 import(죽은코드 아님).
+- **인프라 함정**: 서브에이전트 pytest가 cwd≠repo root라 Bash 훅(상대경로 scripts/hooks) 데드락 → PowerShell 툴로 우회([[subagent-cwd-hook-fragility]]).
+- **정직 한계**: "계약해지"↔"계약 해지"(띄어쓰기 복합어)는 LIKE로도 안 풀림(literal 부재) — 정규화 또는 ANN 영역. pg_bigm은 substring-in-token만 개선. 활성화 ROI는 Growth-99 판단대로 제한적.
+- **잔여(founder 배포)**: extension 재생성(`CREATE EXTENSION pg_bigm`+인덱스) → legal-rag app Redeploy(코드변경=재빌드 필요) → OR "손해배상" 뱃지 회복+substring 우위 확인.
+- §6 rollup: [Growth-119] legal-rag pg_bigm OR `=%` 퇴행(라이브 0 vs tsquery 22) 적발·DROP 롤백·OR→LIKE 재배선 수정 + mock 사각 폐쇄(bigm-path 단위+postgres 통합테스트). 321 passed. founder 재배포 대기. Growth-99 한계효용 경고 실증.
+
+## Growth-120 — 큐드 태스크 관리 프리셋 3-Phase (협업 코어 + 칸반 + Lite-AI), 14커밋
+
+- **발단**: 패션 인바운드發 큐드 결정([[queued-task-mgmt-preset]]) 착수. gate(deep-research salvage) clear. CTO 발견 — **greenfield 아님**: catalog `project` 도메인(task 상태머신·assignee·subtask 이미 존재) **확장**. founder 가 차별화 3레이어(칸반+활동로그+Lite-AI) 전부 선택.
+- **P1 복리 코어**: catalog 협업 5엔티티(task-comment/attachment/label/label-link/activity)+task.priority(DBA, 타입드 FK·polymorphic 회피) → seed v1.1 환류(칸반 상태머신 선환류) → `taskflow-demo.yaml` 프로파일. scaffold rc=0 10테이블. **교훈: render는 profile entities만 emit → M:N 조인은 화면 없어도 profile에 명시해야 DDL 완결(FK-closure로 안 잡힘, link→label 방향).**
+- **P2 칸반 보드(차별화)**: `board_descriptor`(status enum 자동 board-enabled, per-entity 하드코딩 0=open-closed) + `/board` 라우트 + `_TASK_STATUS_MACHINE`(seed 1:1) + board.html(HTML5 DnD+htmx, var(--*)만) + 보드토글. 26테스트(무효전이 422). 기존 화면 무회귀.
+- **P3 Lite-AI(스코프 레퍼런스, founder 택)**: `search-similar` 서비스 — EmbeddingProvider Protocol + LocalEmbeddingProvider(TASKFLOW_EMBED_URL env·stdlib urllib·**클라우드 URL 하드코딩/폴백 0**) + trigram Jaccard 렉시컬 폴백(순수 python) + 순수 python 코사인. 응답 `mode` 명시=정직 라벨링. 30테스트. **전역룰(api 미사용·$0) 준수**, [[product-two-tier-selfhost-ai]] Lite 티어 정렬.
+- **CTO 게이트(envelope 불신, 매 Phase 직접 재실행)**: catalog FK 9건 실존, board 상태머신 seed 대조, P3 클라우드 호출 0 grep + board 26/search 30 테스트 독립 재실행. Pyright 신규진단 전건 기존 false-positive(@app.context_processor 등) 판별.
+- **인프라 함정 재발·해법**: `cd vanilla-htmx` 가 Bash·PowerShell **공유 cwd** 둘 다 오염 → 훅 deadlock. PowerShell `Set-Location` 절대경로 복구, 이후 pytest는 `(cd … && pytest)` 서브셸 또는 Push/Pop-Location 격리. [[subagent-cwd-hook-fragility]] 강화.
+- **잔여(비차단)**: 프론트 search-similar mode 뱃지 surface(CDO) · `project.search-similar` middle contract 와이어키 등록 · 보드 컬럼색상 토큰(CDO)·모바일 터치 DnD·fragment 부분재렌더 · taskflow SEED_FILE 데모데이터 · TEI 라이브 검증(founder DSN 게이트, legal-rag TEI 재사용).
+- §6 rollup: [Growth-120] 큐드 태스크 관리 프리셋 3-Phase — P1 협업 코어(catalog 5엔티티+seed+프로파일, render=profile-scope 교훈), P2 칸반 보드(open-closed board view-kind+상태머신, 26테스트), P3 Lite-AI search-similar(로컬임베딩+렉시컬폴백, 클라우드0·$0, 30테스트). 14커밋 푸시. CTO 매-Phase 독립검증. 기존 project 도메인 확장(복리), 신규 도메인 날조 0.
