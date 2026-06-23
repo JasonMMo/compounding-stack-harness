@@ -13,8 +13,19 @@
 #       --entities legal-case,precedent,case-party,case-document
 #   Run inside a throwaway python:3.11-slim container to avoid host-pyyaml dependency.
 #
-# pg_bigm NOTE: pgvector:pg16 image does NOT include pg_bigm.
-#   01_extensions.sql auto-degrades to plainto_tsquery (preview option A). No manual skip needed.
+# pg_bigm ACTIVATION LEVER (deferred by founder 2026-06-23 — run when needed):
+#   The live db runs the custom legal-rag-postgres-bigm:pg16 image — pg_bigm binary
+#   IS available (confirmed: pg_available_extensions returned pg_bigm, 2026-06-23),
+#   but the extension is intentionally NOT created (live FTS = tsquery, working).
+#   Running THIS script activates it: 01_extensions.sql does CREATE EXTENSION pg_bigm
+#   (pg_available_extensions guard) + 06_legal_document_chunk.sql creates the
+#   idx_legal_chunk_bigm (gin_bigm_ops) index; step 9 verifies PRESENT + index.
+#   AFTER running: Redeploy the legal-rag *app* so retrieve.py re-probes pg_bigm=True
+#   and uses the LIKE substring path (NOT =% — see retrieve.py df8862e; =% regressed
+#   OR recall: live =% '손해배상'=0 rows vs tsquery=22, Growth-119).
+#   To DEACTIVATE: psql `DROP EXTENSION pg_bigm CASCADE` + app redeploy → tsquery.
+#   Both PRESENT and ABSENT are valid PASS states (step 9). pgvector-only image would
+#   auto-degrade to plainto_tsquery — but this preview is on the bigm image.
 #
 # USAGE: bash deploy/preview/legal-rag.apply-schema.sh [db-container-name]
 #   Run from repo root. Container name is auto-discovered if not provided.
