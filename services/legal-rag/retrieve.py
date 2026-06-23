@@ -16,17 +16,21 @@ Case scoping (case_id param):
   None      — existing behaviour: all accessible chunks (precedent + all cases).
 
 Korean FTS — dual-path:
-  pg_bigm present:  bigm_similarity() scan (handles compound Korean, subword match).
-                    OR mode: =% full-similarity scan with SET LOCAL similarity_limit.
-                    AND mode: per-token LIKE AND-chain (gin_bigm_ops accelerated).
+  pg_bigm present:  per-token LIKE chain (gin_bigm_ops accelerated, substring match).
+                    OR  mode: (chunk_text LIKE %tok1% OR  chunk_text LIKE %tok2%) — high recall.
+                    AND mode: (chunk_text LIKE %tok1% AND chunk_text LIKE %tok2%) — precise.
+                    NOTE: =% full-similarity was removed — it scores short-query vs long-chunk
+                    structurally near 0 (live: =% '손해배상' = 0 rows, tsquery = 22 rows).
+                    LIKE is the correct pg_bigm use: substring match including inside larger
+                    Korean tokens (e.g. '손해배상' matches '손해배상금').
   pg_bigm absent:   tsquery fallback via _build_tsquery():
                     OR mode: joins tokens with ' | '.
                     AND mode: joins tokens with ' & '.
                     Single-term: passes through as-is (no ambiguity).
 
 match_mode parameter (hybrid_search):
-  'or'  — default; any-term match; high recall (existing live behaviour, no regression).
-  'and' — all-term match; precise; caller-controlled per request.
+  'or'  — default; any-term match via LIKE OR-chain (bigm) or tsquery OR (fallback).
+  'and' — all-term match via LIKE AND-chain (bigm) or tsquery AND (fallback).
 """
 from __future__ import annotations
 
@@ -42,10 +46,6 @@ logger = logging.getLogger(__name__)
 # Written once per process; reads are unsynchronized (benign race: worst case
 # two probes fire concurrently, both write the same value).
 _BIGM_AVAILABLE: bool | None = None
-
-# Tuning point: lower = more recall, higher = fewer false positives.
-# 0.1 is permissive; raise to 0.2–0.3 if noise is a problem.
-_BIGM_SIMILARITY_LIMIT: float = 0.1
 
 
 async def _probe_bigm(conn) -> bool:
@@ -192,23 +192,6 @@ def rrf_merge(
 
 # ── SQL templates ──────────────────────────────────────────────────────────────
 
-# Stage 1-A: FTS via pg_bigm similarity scan.
-# =% is the pg_bigm similarity operator (requires gin_bigm_ops index).
-# NOTE: the operator's literal '%' MUST be doubled (=%%) under psycopg's
-# parameterized (pyformat) mode, else psycopg mis-parses it as a placeholder
-# and raises at runtime. Unit tests mock conn.execute so they don't catch this.
-# SET LOCAL pg_bigm.similarity_limit before executing to control recall.
-# {case_filter} is replaced at call time with either "" or "AND case_id = %s::uuid".
-# Params: (query_text, query_text, [case_id,] fts_limit)
-_FTS_BIGM_SQL = """
-SELECT id::text, bigm_similarity(chunk_text, %s) AS sim
-FROM legal_document_chunk
-WHERE chunk_text =%% %s
-  AND embedding IS NOT NULL {case_filter}
-ORDER BY sim DESC
-LIMIT %s
-"""
-
 # Stage 1-B: FTS via OR-tsquery (pg_bigm absent).
 # to_tsquery is used (not plainto_tsquery) because OR-joining is manual.
 # _build_or_tsquery() produces the 'a | b | c' string; caller must not pass
@@ -282,9 +265,12 @@ async def hybrid_search(
         min_relevance:   Minimum cosine relevance threshold [0.0, 1.0].
                          Results with no FTS match and relevance < min_relevance
                          are discarded. Default 0.0 = filter OFF.
-        match_mode:      'or'  — any-term match (default, high recall, existing behaviour).
-                         'and' — all-term match (precise; bigm: per-token LIKE AND-chain;
-                                 tsquery fallback: ' & ' operator).
+        match_mode:      'or'  — any-term match (default, high recall).
+                                 bigm: per-token LIKE OR-chain (gin_bigm_ops accelerated).
+                                 tsquery fallback: ' | ' operator.
+                         'and' — all-term match (precise).
+                                 bigm: per-token LIKE AND-chain (gin_bigm_ops accelerated).
+                                 tsquery fallback: ' & ' operator.
         case_id:         UUID string to scope search to a single case's chunks.
                          None (default) — all accessible chunks (existing behaviour).
                          Provided — FTS + ANN WHERE adds AND case_id = %s::uuid;
@@ -317,26 +303,18 @@ async def hybrid_search(
     use_bigm = await _probe_bigm(conn)
     fts_ids: list[str] = []
 
-    if use_bigm and match_mode == "or":
-        # Path A-OR: pg_bigm =% full-similarity scan (existing live behaviour).
-        # Lower similarity_limit for high recall; tune _BIGM_SIMILARITY_LIMIT as needed.
-        await conn.execute(
-            f"SET LOCAL pg_bigm.similarity_limit = {_BIGM_SIMILARITY_LIMIT}"
-        )
-        fts_cur = await conn.execute(
-            _FTS_BIGM_SQL.format(case_filter=case_filter),
-            (query_text, query_text, *case_params, fts_limit),
-        )
-        fts_rows = await fts_cur.fetchall()
-        fts_ids = [r[0] for r in fts_rows]
-        logger.debug("FTS stage (bigm OR): %d candidates", len(fts_ids))
-
-    elif use_bigm and match_mode == "and":
-        # Path A-AND: per-token LIKE AND-chain (gin_bigm_ops index accelerated).
-        # SET LOCAL similarity_limit is not needed — LIKE filter replaces =% scan.
-        built = _build_bigm_like(query_text, "AND")
+    if use_bigm:
+        # Path A: per-token LIKE chain (gin_bigm_ops accelerated). operator from match_mode.
+        # OR  → (chunk_text LIKE %계약% OR  chunk_text LIKE %해지%)  high recall
+        # AND → (chunk_text LIKE %계약% AND chunk_text LIKE %해지%)  precise
+        # =% full-similarity was removed: it scores short-query-vs-long-chunk ~0 (regressed
+        # OR recall below tsquery; live: =% '손해배상' = 0 rows vs tsquery = 22). LIKE is the
+        # correct pg_bigm use — substring match incl. inside larger Korean tokens
+        # (e.g. '손해배상' matches '손해배상금', which tsquery 'simple' tokenization misses).
+        op = "AND" if match_mode == "and" else "OR"
+        built = _build_bigm_like(query_text, op)
         if built is None:
-            logger.debug("FTS stage (bigm AND) skipped: no valid tokens in %r", query_text)
+            logger.debug("FTS stage (bigm %s) skipped: no valid tokens in %r", op, query_text)
         else:
             frag, like_params = built
             sql = (
@@ -350,7 +328,7 @@ async def hybrid_search(
             )
             fts_rows = await fts_cur.fetchall()
             fts_ids = [r[0] for r in fts_rows]
-            logger.debug("FTS stage (bigm AND): %d candidates", len(fts_ids))
+            logger.debug("FTS stage (bigm %s): %d candidates", op, len(fts_ids))
 
     else:
         # Path B: tsquery fallback (pg_bigm absent).
