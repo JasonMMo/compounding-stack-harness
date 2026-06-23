@@ -642,3 +642,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈**: manager_id/current_version_id처럼 **postgres POST-INSERT UPDATE로 채우는 값은 in-memory 스토어(UPDATE 없음)에선 최초 로드 시점에 backfill** 필수. postgres 시드 ≠ in-memory 시드(스토어 의미론 차이). [[subagent-cross-service-verify]]대로 FK 무결성·store 호환을 CTO가 직접 재현.
 - **잔여**: founder lawfirm-demo Coolify Redeploy → 4도메인 라이브 데이터 확인 → 9 N-A 라이브검증.
 - §6 rollup: [Growth-117] lawfirm-demo 라이브 시드 배선 — stale 가정(setup_lawfirm postgres) 적발·정정, Option A(SEED_FILE in-memory) 채택(B는 killer-app 중복 생략). 생성기+173건 json+compose env, CTO 게이트 FK 11종 dangling0·store dry-run 무경고. founder Redeploy 대기.
+
+## Growth-118 — lawfirm-demo 라이브 종결: Redeploy + 9 N-A 라이브검증
+
+- **founder Redeploy 완료**: 4도메인 라이브 데이터 렌더·legal-pro 링크 동작 확인. SEED_FILE 자동 적재 확증(CTO probe: /entities/legal-case 10행·/entities/approval-request 7행 approved4/in-progress1/pending1/rejected1).
+- **9 N-A 라이브검증(CTO HTTP probe, demo/demo)**: 7 PASS — VP-P1-01 틀린비번 401+한글, P1-02 무세션 302, P1-03(proxy) 무효토큰 302, P1-04 로그아웃후 옛쿠키 302(서버세션무효화), P1-05 4도메인14엔티티+killer배너, P3-03 없는키워드 200+"결과없음"(에러아님), P5-04 ingest done→pending store.patch 무가드 허용(비파괴 소스검증). **2 N-A 유지**: P8-08/09 결재 워크플로 자동전이 — **generic CRUD에 상태머신 부재**(status 수동필드), 결함 아니라 business-system 산출물 범위. DFD 작성자 "app layer runtime" N-A와 일치.
+- **정직 고지**: 실 결재 워크플로 전이 원하면 백엔드 커스텀 로직(별도 기능). 시드 다양상태로 데모 화면은 사실적.
+- **검증 비파괴 원칙**: P5-04는 라이브 시드 훼손 회피 위해 store.patch 소스 의미론으로 검증(throwaway 레코드 주입 회피). founder가 막 데모 가동한 환경 존중.
+- **lawfirm-demo 메인데모 트랙 완전 종결**: 정적 35 PASS + 라이브 7 PASS, 미해결 결함 0. D1~D5 문서·DFD·DEFECT-1 fix·패키징(README/원페이저)·라이브 시드·라이브검증 전부 완료. M1 generic harness baseline 기여.
+- §6 rollup: [Growth-118] lawfirm-demo 라이브 종결 — Redeploy 후 9 N-A 라이브검증 7 PASS/2 N-A(워크플로 범위). 시드 라이브 확증(case10·approval7). 메인데모 트랙 완전 종결, 미해결 결함 0.
