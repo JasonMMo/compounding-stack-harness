@@ -3,7 +3,8 @@ document: DFD-VERIFICATION-REPORT
 title: D5 DFD verification report -- lawfirm-demo
 auditor: CQO
 date: 2026-06-23
-status: BLOCK (BLK-D5-8)
+status: PASS (BLK-D5-8 RESOLVED 2026-06-23)
+resolution: "DEFECT-1 수정 -- catalog approval-decision step_id+approver_id 모두 CASCADE, DDL regen, dfd_verify 재실행 PASS"
 ---
 
 # D5 DFD 검증 보고서 -- lawfirm-demo
@@ -97,41 +98,50 @@ D5 DFD 34개 VP + 8개 BLOCK 조건을 시드 데이터 + DDL 정적 분석으�
 | VP-P8-04 | PASS | 14개 approver (step_id, employee_id) 중복 없음 |
 | VP-P8-05 | PASS | 10개 decision 전부 approved/rejected |
 | VP-P8-06 | PASS | 10개 decision (step_id, approver_id) 중복 없음 |
-| VP-P8-07 | **FAIL** | approval_decision.step_id RESTRICT로 approval_request 삭제 CASCADE 차단 |
+| VP-P8-07 | PASS | approval_decision.step_id+approver_id 모두 CASCADE -- request 삭제 체인 무결 (DEFECT-1 수정 후) |
 | VP-P8-08 | N-A | 상태전이 pending->in-progress -- 앱 레이어 runtime |
 | VP-P8-09 | N-A | 상태전이 in-progress->approved -- 앱 레이어 runtime |
 | VP-P8-10 | PASS | AQ5 req=in-progress s1=approved s2=active responded_at=None |
 
 ## 발견 결함
 
-### DEFECT-1 (VP-P8-07 / BLK-D5-8): approval_decision CASCADE 누락
+### DEFECT-1 (VP-P8-07 / BLK-D5-8): approval_decision CASCADE 누락 -- RESOLVED (2026-06-23)
 
-**파일**: `out/lawfirm-demo/ddl/postgres.sql` -- approval_decision CREATE TABLE
+**근본 원인 위치**: `presets/ddl/catalog.yaml` approval-decision 엔티티 (단일 진실).
+out DDL 은 catalog 에서 regen 되므로 DDL 직접수정이 아니라 catalog 를 고친다 (복리식 축적 원칙 -- 전 프로파일 재발 방지).
 
-**현행 DDL (문제)**:
+**최초 진단 (문제)**:
+```
+approval_request --(CASCADE)--> approval_step       OK
+approval_step    --(CASCADE)--> approval_approver    OK
+approval_step    --(RESTRICT)-> approval_decision    BLOCK!  (step_id)
+```
+결재 결정이 존재하는 approval_step 삭제 시 FK RESTRICT 위반 -> approval_request 삭제 전체 실패.
+
+**CTO 게이트 정정 (최초 QA 권고 보강)**: 초안 권고는 "step_id 만 CASCADE, approver_id 는 RESTRICT 유지"였으나,
+이는 체인을 완전히 풀지 못한다. catalog 정의순서상 approval_approver 가 approval_decision 보다 먼저 생성되어,
+PG 가 approval_step 삭제를 cascade 할 때 **approval_approver 를 먼저 삭제**한다. 그 시점에 아직 살아있는
+approval_decision.approver_id RESTRICT 가 즉시 발동 -> 체인이 다시 깨진다. 따라서 **두 FK 모두 CASCADE** 가 정답.
+(CTO 원안 "cascade 로 통일"과 일치.)
+
+**적용 수정** (`presets/ddl/catalog.yaml` approval-decision):
+```yaml
+# Before:
+step_id:     { ... on_delete: restrict }
+approver_id: { ... on_delete: restrict }
+# After:
+step_id:     { ... on_delete: cascade }
+approver_id: { ... on_delete: cascade }
+```
+regen 후 DDL:
 ```sql
-FOREIGN KEY ("step_id") REFERENCES "approval_step" ("id") ON DELETE RESTRICT,
+FOREIGN KEY ("step_id")     REFERENCES "approval_step"     ("id") ON DELETE CASCADE,
+FOREIGN KEY ("approver_id") REFERENCES "approval_approver" ("id") ON DELETE CASCADE
 ```
 
-**CASCADE 체인 분석**:
-```
-approval_request --(CASCADE)--> approval_step      OK
-approval_step    --(CASCADE)--> approval_approver   OK
-approval_step    --(RESTRICT)-> approval_decision   BLOCK!
-```
-
-결재 결정이 존재하는 approval_step 삭제 시 FK RESTRICT 위반.
-approval_request 삭제 전체가 실패한다.
-BLK-D5-8 기대: step -> approver -> 연쇄 삭제 -- 실제: decision 있는 step에서 차단.
-
-**수정 방향** (`out/lawfirm-demo/ddl/postgres.sql`):
-```sql
--- Before:
-FOREIGN KEY ("step_id") REFERENCES "approval_step" ("id") ON DELETE RESTRICT,
--- After:
-FOREIGN KEY ("step_id") REFERENCES "approval_step" ("id") ON DELETE CASCADE,
-```
-approval_decision.approver_id RESTRICT는 유지 (approver 단독 삭제 방지 목적).
+**회귀 가드 보강**: dfd_verify.py VP-P8-07 검사가 약했다 (`'ON DELETE CASCADE' in DDL` 부분일치 -> 최초 결함을 못 잡음).
+approval_decision CREATE TABLE 블록을 파싱해 step_id+approver_id 두 FK 모두 CASCADE 인지 직접 확인하도록 교체.
+재실행 결과 VP-P8-07 PASS.
 
 ## BLK 조건 충족 여부
 
@@ -144,7 +154,7 @@ approval_decision.approver_id RESTRICT는 유지 (approver 단독 삭제 방지 
 | BLK-D5-5 | VP-P6-02 RESTRICT FAIL | CLEAR (PASS) |
 | BLK-D5-6 | VP-P7-04 UNIQUE FAIL | CLEAR (PASS) |
 | BLK-D5-7 | VP-P8-06 UNIQUE FAIL | CLEAR (PASS) |
-| BLK-D5-8 | VP-P8-07 CASCADE FAIL | **BLOCK** (DDL 결함) |
+| BLK-D5-8 | VP-P8-07 CASCADE FAIL | CLEAR (PASS, DEFECT-1 수정 후 2026-06-23) |
 
 ## 추가 FK 무결성 탐색
 
@@ -180,11 +190,11 @@ D1 모듈 A~F 전부 DFD 프로세스에 커버됨. D2 시나리오 1~4 모두 �
 
 ## 종합 판정
 
-**BLOCK -- BLK-D5-8 위반**
+**PASS -- BLK-D5-8 RESOLVED (2026-06-23)**
 
-DEFECT-1 수정 후 재검증 필요.
-수정 위치: `out/lawfirm-demo/ddl/postgres.sql` approval_decision.step_id FK RESTRICT -> CASCADE.
-정적 검증 범위 내 나머지 25개 VP: 전부 PASS.
+DEFECT-1 수정 완료: `presets/ddl/catalog.yaml` approval-decision step_id+approver_id 모두 CASCADE -> DDL regen -> dfd_verify 재실행.
+정적 검증 범위 전 VP PASS (FAIL 0). VP-P8-07 회귀 가드 강화 적용.
+잔여 9 N-A 는 인증/런타임 항목으로 founder 라이브 검증 이관 (변동 없음).
 9개 N-A: founder 라이브 검증 이관.
 
 ---
