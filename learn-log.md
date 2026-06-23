@@ -621,3 +621,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **guard 노트**: diagnose.py G-8/G-9/G-12 FAIL 은 선존(G-12 위반=document-chunk/rag-query-log 엔티티, approval 무관). 내 변경은 fk 마커 보존·on_delete 값만 변경 → G-12 무영향 확인.
 - **잔여**: 패키징(PM/CMO 영업·인도물), 9 N-A 라이브검증(founder Redeploy 후).
 - §6 rollup: [Growth-115] DEFECT-1 수정 — catalog approval-decision 두 FK CASCADE 통일(QA 초안권고 CTO 정정: approver_id 도 cascade라야 체인 무결) + VP-P8-07 회귀가드 강화. dfd_verify rc=0/35P·0F. BLK-D5-8 RESOLVED.
+
+## Growth-116 — lawfirm-demo 패키징: 인도 README + 영업 원페이저 (PM/CMO 병렬)
+
+- **잔여 1 패키징 종결**: lawfirm-demo 메인데모 인도 패키지 2종 산출. PM/CMO 병렬 위임(다른 파일 → 충돌 없음).
+- **PM**: `docs/projects/lawfirm-demo/README.md` — D1~D5+검증보고서 6문서 인덱스 표, 3페르소나(CEO/업무담당자/IT)별 관심문서 안내, 메인데모↔legal-pro 관계도(ASCII)+정직성 경계(별개 배포·DB·SSO아님), 구 `docs/delivery/lawfirm-demo/`(FTS 단독) 포함·확장 관계, founder Redeploy 잔여액션, 보안경고(CAVEAT-A Traefik 바디제한).
+- **CMO**: `docs/projects/lawfirm-demo/sales-onepager.md` — 핵심 가치제안, 페르소나별 베네핏, self-host vs SaaS 비교표, 5분 영업 데모 스크립트(4도메인 순회→killer-app 핸드오프), 정직 고지 인라인(생성형 아님·SSO 미지원).
+- **CTO 게이트(독립 소스검증)**: ① README D1~D5+검증보고서 링크 6건 전부 실존 ② 시드 수치·DFD결과(PASS=35/FAIL=0/N-A=9) 정확 ③ CMO 마케팅 주장 `GET /health` 의심→`frontend/adapters/vanilla-htmx/server.py:735` 실존 확인(날조 아님) ④ 판례 드로어·하이브리드 검색 모두 기실현 기능. 날조 0.
+- **교훈**: 마케팅 산출물의 기능 주장은 [[subagent-cross-service-verify]]대로 CTO가 소스 1건씩 확인(/health 실존 검증). 영업 카피라도 검증가능성이 신뢰자산.
+- **잔여**: 9 N-A 라이브검증(인증·런타임) — founder가 demo-portal/lawfirm-demo Redeploy + 시드 라이브 적용 후. (코드/문서 측 lawfirm-demo 메인데모 트랙 종결, 이후는 founder 게이트)
+- §6 rollup: [Growth-116] lawfirm-demo 패키징 종결 — 인도 README(PM)+영업 원페이저(CMO) 병렬 산출, CTO 게이트 전건(링크 실존·시드수치·/health 소스확인). 잔여=founder Redeploy 후 9 N-A 라이브검증.
