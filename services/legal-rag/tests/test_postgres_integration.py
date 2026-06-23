@@ -186,3 +186,83 @@ async def test_gp19_app_user_denied_legal_attorney(pg_conn):
         await pg_conn.execute("SET LOCAL ROLE app_user")
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
             await pg_conn.execute("SELECT 1 FROM legal_attorney LIMIT 1")
+
+
+# ── G-P20: bigm LIKE OR-chain 실 실행 — =% 퇴행 가드 ─────────────────────────
+
+async def test_gp20_bigm_like_or_returns_rows(pg_conn, stub_embed_client):
+    """pg_bigm LIKE OR-chain이 실 DB에서 행을 반환하는지 검증 (=% 퇴행 방지 게이트).
+
+    확인 내용:
+      1. hybrid_search(match_mode='or')가 pg_bigm LIKE 경로를 탔을 때 ≥1 rows 반환.
+         과거 =% 경로는 짧은 쿼리 vs 긴 청크에서 구조적으로 0 rows를 반환했음
+         (라이브 실측: =% '손해배상' = 0행, tsquery = 22행).
+      2. match_mode='and'도 동일하게 ≥1 rows 반환 (AND-chain 무회귀).
+
+    시드 전제: legal_document_chunk 테이블에 '손해배상' 텍스트를 포함한 행이 ≥1개
+    존재해야 한다 (미리뷰 DB seed 기준 충족). 시드 없이 실행 시 SKIP 처리.
+
+    Substring-in-token 우위 (LIKE vs tsquery):
+      "손해배상"이 "손해배상금" 포함 청크를 잡는지(LIKE 우위)는 시드 텍스트에
+      '손해배상금'이 있을 때만 검증 가능. 현재 seed에 해당 텍스트 없으면 이 항목은
+      주석으로 유지하고 SKIP — 날조 금지.
+      # TODO: '손해배상금' 포함 시드 청크 추가 후 아래 주석 해제
+      # assert any("손해배상금" in r.chunk_text for r in results_or), ...
+    """
+    from conftest import DUMMY_VEC
+    from db import rls_session
+    import retrieve as _retrieve
+
+    # pg_bigm 실제 설치 여부 확인 — 미설치 시 LIKE 경로 진입 불가, SKIP
+    cur = await pg_conn.execute(
+        "SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname='pg_bigm')"
+    )
+    bigm_installed = (await cur.fetchone())[0]
+    if not bigm_installed:
+        pytest.skip("pg_bigm extension not installed — bigm LIKE path not active")
+
+    # 시드 데이터 존재 확인 ('손해배상' 포함 청크 최소 1개)
+    cur = await pg_conn.execute(
+        "SELECT COUNT(*) FROM legal_document_chunk WHERE chunk_text LIKE %s",
+        ("%손해배상%",),
+    )
+    seed_count = (await cur.fetchone())[0]
+    if seed_count == 0:
+        pytest.skip(
+            "'손해배상' 포함 청크가 DB에 없음 — 시드 없이는 LIKE 경로 검증 불가"
+        )
+
+    # _BIGM_AVAILABLE 캐시 리셋 (이 테스트는 실 probe를 통해야 한다)
+    original_cache = _retrieve._BIGM_AVAILABLE
+    _retrieve._BIGM_AVAILABLE = None
+    try:
+        async with rls_session(pg_conn, _ATTORNEY_이준호):
+            # OR 모드: LIKE OR-chain → ≥1 rows 기대
+            results_or = await _retrieve.hybrid_search(
+                conn=pg_conn,
+                query_text="손해배상",
+                query_embedding=DUMMY_VEC,
+                top_k=10,
+                match_mode="or",
+            )
+            assert len(results_or) >= 1, (
+                "bigm LIKE OR-chain: '손해배상' 검색이 0 rows 반환 — "
+                "=% 퇴행 또는 인덱스 문제. "
+                f"seed_count={seed_count}, fts_ids가 ANN에 묻혔을 가능성 포함."
+            )
+
+            # AND 모드: 단일 토큰이므로 OR과 동일 결과 기대 (≥1)
+            results_and = await _retrieve.hybrid_search(
+                conn=pg_conn,
+                query_text="손해배상",
+                query_embedding=DUMMY_VEC,
+                top_k=10,
+                match_mode="and",
+            )
+            assert len(results_and) >= 1, (
+                "bigm LIKE AND-chain: '손해배상' 단일토큰 검색이 0 rows 반환 — "
+                "AND-chain 퇴행. "
+                f"seed_count={seed_count}."
+            )
+    finally:
+        _retrieve._BIGM_AVAILABLE = original_cache
