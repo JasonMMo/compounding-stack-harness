@@ -845,6 +845,65 @@ def entity_board_move(entity_type: str, entity_id: str):
 
 
 # ---------------------------------------------------------------------------
+# Similar-task search  (task vertical — Lite-AI search surface)
+# ---------------------------------------------------------------------------
+
+@app.get("/tasks/similar")
+@_require_login
+def tasks_similar():
+    """
+    Server-rendered htmx fragment for similar-task search.
+
+    Proxies to GET /api/project/search-similar and renders
+    templates/similar_results.html — never returns raw JSON.
+
+    Honesty contract: 'mode' from backend is surfaced as a badge.
+    mode=semantic → "AI 의미검색" (vector similarity)
+    mode=lexical  → "키워드 검색"  (keyword fallback — NEVER labelled AI)
+    """
+    q = request.args.get("q", "").strip()
+    exclude_id = request.args.get("exclude_id", "").strip() or None
+    top_n_raw = request.args.get("top_n", "5").strip()
+    try:
+        top_n = max(1, min(20, int(top_n_raw)))
+    except (ValueError, TypeError):
+        top_n = 5
+
+    if not q:
+        return render_template("similar_results.html", mode=None, items=[], query="")
+
+    params: dict = {"query_text": q, "top_n": top_n}
+    if exclude_id:
+        params["exclude_id"] = exclude_id
+
+    payload, status = _proxy_request(
+        "GET",
+        "/api/project/search-similar",
+        params=params,
+        token=_current_token(),
+    )
+
+    if status != 200 or payload.get("error"):
+        err = payload.get("error") or {}
+        code = err.get("code", "INTERNAL")
+        msg = loader.message_ko(code)
+        return render_template(
+            "similar_results.html",
+            mode=None,
+            items=[],
+            query=q,
+            error=msg,
+        )
+
+    return render_template(
+        "similar_results.html",
+        mode=payload.get("mode"),
+        items=payload.get("items", []),
+        query=q,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Legal precedent search  (law-firm vertical — A안)
 # ---------------------------------------------------------------------------
 
