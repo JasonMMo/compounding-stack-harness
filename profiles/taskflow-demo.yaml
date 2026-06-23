@@ -1,0 +1,76 @@
+version: 1
+
+customer:
+  slug: taskflow-demo
+  display: "팀 태스크 관리 (제너릭 데모)"
+  status: draft
+  industry: generic
+
+stack:
+  frontend: vanilla-htmx
+  backend: fastapi
+  ui_theme: saas
+
+ddl:
+  dialect: postgres
+  schema: taskflow_demo
+
+auth:
+  method: local
+
+domains:
+  - slug: project
+    display: 업무·태스크 관리
+    entities:
+      - project
+      - task
+      - milestone
+      - task-comment
+      - task-attachment
+      - task-label
+      - task-label-link
+      - task-activity
+    seen_at: 2026-06-23
+    entity_labels:
+      project: 프로젝트
+      task: 태스크
+      milestone: 마일스톤
+      task-comment: 댓글
+      task-attachment: 첨부파일
+      task-label: 라벨
+      task-label-link: 라벨 연결
+      task-activity: 활동 이력
+
+  - slug: hr
+    display: 팀원 관리
+    entities: [employee, department]
+    seen_at: 2026-06-23
+    entity_labels:
+      employee: 직원
+      department: 부서
+
+datasource:
+  username: ${TASKFLOW_DEMO_DB_USER}
+  password: ${TASKFLOW_DEMO_DB_PASS}
+  url_template: "postgresql://{host}:{port}/{db}"
+  host: localhost
+  port: 5432
+  db: taskflow_demo
+
+overlay:
+  shell_app_id: taskflow-demo-portal
+  vault_agent: false
+  sso_keycloak: false
+  feedback_url: https://intake.n9n.co.kr/
+
+defaults:
+  locale: ko-KR
+  timezone: Asia/Seoul
+
+billing:
+  setup_cost_krw: TBD
+  llm_budget_usd_per_month: TBD
+  prepaid_credits_usd: 0
+
+notes:
+  - "큐드 태스크 관리 프리셋 — 패션 인바운드發 제너릭 self-host 팀 태스크툴. Phase 1 (협업 코어). 후속: 칸반 보드(P2)·Lite-AI 검색(P3)."
