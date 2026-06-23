@@ -1,5 +1,5 @@
 version: "1.0"
-# DDL Catalog — 56 entities (14 domains x 4).
+# DDL Catalog — 61 entities (14 domains x 4, project 도메인은 팀 태스크툴 featured product 라 4-대칭에서 벗어남).
 # Dialect-neutral schema; render.py + dialects/<d>.yaml emit target DDL.
 # Multi-tenancy (tenant_id / RLS) is M5-gated — NOT present here.
 # Type vocabulary: uuid | string | text | integer | decimal | boolean | date | timestamp | enum
@@ -1007,11 +1007,13 @@ entities:
       estimated_hours: { type: decimal, precision: 8, scale: 2, nullable: true }
       actual_hours:    { type: decimal, precision: 8, scale: 2, nullable: true }
       progress_pct:    { type: integer, nullable: false }
+      priority:        { type: enum,    values: [low, normal, high, urgent], nullable: false }
     constraints:
       - { type: check, expr: "progress_pct >= 0 AND progress_pct <= 100" }
     indexes:
       - { columns: [project_id] }
       - { columns: [status] }
+      - { columns: [priority] }
     # DDL notes:
     #   Circular parent-task — application layer.
     #   done → progress_pct == 100 — application layer.
@@ -1062,6 +1064,108 @@ entities:
     indexes:
       - { columns: [project_id] }
       - { columns: [employee_id] }
+
+  task-comment:
+    domain: project
+    table: project_task_comment
+    label_ko: 댓글
+    primary_key: id
+    columns:
+      id:         { type: uuid,      nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      task_id:    { type: uuid,      nullable: false,
+                    fk: { entity: task,     column: id, on_delete: cascade } }
+      author_id:  { type: uuid,      nullable: false,
+                    fk: { entity: employee, column: id, on_delete: restrict } }
+      body:       { type: text,      nullable: false }
+      edited_at:  { type: timestamp, nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [task_id] }
+      - { columns: [task_id, created_at] }
+
+  task-attachment:
+    domain: project
+    table: project_task_attachment
+    label_ko: 첨부파일
+    primary_key: id
+    columns:
+      id:           { type: uuid,    nullable: false }
+      created_at:   { type: timestamp, nullable: false }
+      updated_at:   { type: timestamp, nullable: false }
+      task_id:      { type: uuid,    nullable: false,
+                      fk: { entity: task,     column: id, on_delete: cascade } }
+      uploader_id:  { type: uuid,    nullable: false,
+                      fk: { entity: employee, column: id, on_delete: restrict } }
+      filename:     { type: string,  nullable: false }
+      content_type: { type: string,  length: 128, nullable: false }
+      byte_size:    { type: integer, nullable: false }
+      storage_key:  { type: string,  nullable: false }
+    constraints:
+      - { type: check, expr: "byte_size > 0" }
+    indexes:
+      - { columns: [task_id] }
+
+  task-label:
+    domain: project
+    table: project_task_label
+    label_ko: 라벨
+    primary_key: id
+    columns:
+      id:         { type: uuid,    nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      project_id: { type: uuid,    nullable: false,
+                    fk: { entity: project, column: id, on_delete: cascade } }
+      name:       { type: string,  nullable: false }
+      color:      { type: string,  length: 16, nullable: false }
+    constraints:
+      - { type: unique, columns: [project_id, name] }
+    indexes:
+      - { columns: [project_id] }
+
+  task-label-link:
+    domain: project
+    table: project_task_label_link
+    label_ko: 라벨 연결
+    primary_key: id
+    columns:
+      id:         { type: uuid,    nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      task_id:    { type: uuid,    nullable: false,
+                    fk: { entity: task,       column: id, on_delete: cascade } }
+      label_id:   { type: uuid,    nullable: false,
+                    fk: { entity: task-label, column: id, on_delete: cascade } }
+    constraints:
+      - { type: unique, columns: [task_id, label_id] }
+    indexes:
+      - { columns: [task_id] }
+      - { columns: [label_id] }
+
+  task-activity:
+    domain: project
+    table: project_task_activity
+    label_ko: 활동 이력
+    primary_key: id
+    columns:
+      id:         { type: uuid,    nullable: false }
+      created_at: { type: timestamp, nullable: false }
+      updated_at: { type: timestamp, nullable: false }
+      task_id:    { type: uuid,    nullable: false,
+                    fk: { entity: task,     column: id, on_delete: cascade } }
+      actor_id:   { type: uuid,    nullable: false,
+                    fk: { entity: employee, column: id, on_delete: restrict } }
+      action:     { type: enum,    values: [created, updated, status-changed, assigned, commented, label-changed], nullable: false }
+      field:      { type: string,  nullable: true }
+      old_value:  { type: string,  nullable: true }
+      new_value:  { type: string,  nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [task_id, created_at] }
+    # DDL notes:
+    #   불변(append-only) audit 로그 — application layer.
 
   # ─────────────────────────────────────────────
   # ASSET
