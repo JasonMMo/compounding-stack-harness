@@ -609,3 +609,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **flaky 교훈**: design-agent 대용량 단일 Write 2회 stream-idle timeout → 읽기 2개 한정+≤350줄 집약 지시로 3회차 성공(439줄). 큰 산출 서브에이전트는 입력·분량 타이트 제약이 안정적.
 - **founder 액션**: ① DEFECT-1 수정 방향 결정 ② demo-portal/lawfirm-demo Redeploy ③ 시드 라이브 적용. 잔여: DEFECT-1 fix+regen, 패키징(영업/인도물).
 - §6 rollup: [Growth-114] lawfirm-demo D1~D5 문서 5종 완성(실데이터 기준·CTO 게이트 전건) + DFD 정적검증(dfd_verify.py, 25P/1F/9NA) — DEFECT-1(approval cascade 불일치, catalog:1349) 적발·BLOCK. 패키징·fix 대기.
+
+## Growth-115 — DEFECT-1 수정: approval-decision CASCADE 통일 + 회귀 가드 강화 (BLK-D5-8 RESOLVED)
+
+- **founder 승인**: "CTO 의견에 동의" → DEFECT-1 cascade 수정 착수.
+- **근본 위치는 catalog**: out DDL 직접수정이 아니라 `presets/ddl/catalog.yaml` approval-decision 엔티티 수정(단일 진실, regen 산출). 복리식 축적 — 전 프로파일 재발 방지.
+- **CTO 게이트가 최초 QA 권고를 정정**: D5 보고서 초안 권고는 "step_id 만 CASCADE, approver_id 는 RESTRICT 유지(approver 단독삭제 방지)"였으나 **체인을 완전히 못 푼다**. catalog 정의순서상 approval_approver 가 approval_decision 보다 먼저 생성 → PG 가 approval_step cascade 시 approver 를 먼저 삭제 → 그 시점 살아있는 decision.approver_id RESTRICT 즉시 발동 → 재차단. 따라서 **두 FK 모두 CASCADE**(CTO 원안 "cascade 로 통일"과 일치). 서브에이전트(QA)/문서의 권고도 CTO 독립검증 대상이라는 [[subagent-cross-service-verify]] 패턴 재확인.
+- **수정 3파일**: ① catalog.yaml step_id+approver_id restrict→cascade(5639a8f) ② dfd_verify.py VP-P8-07 가드 강화(0faaae4) ③ DFD 보고서 BLOCK→PASS(99e7433). out DDL 은 scaffold.py regen(gitignored).
+- **회귀 가드 교훈**: 기존 VP-P8-07 은 `'ON DELETE CASCADE' in DDL` 부분일치 → DEFECT-1 을 **스크립트가 못 잡았다**(보고서 FAIL 은 QA 수동판정). approval_decision CREATE TABLE 블록 파싱해 두 FK 모두 CASCADE 직접확인하도록 교체. 약한 substring 가드 = false PASS 위험 패턴.
+- **재검증**: `dfd_verify.py` rc=0, RESULT PASS=35 / FAIL=0 / N-A=9. VP-P8-07 PASS.
+- **guard 노트**: diagnose.py G-8/G-9/G-12 FAIL 은 선존(G-12 위반=document-chunk/rag-query-log 엔티티, approval 무관). 내 변경은 fk 마커 보존·on_delete 값만 변경 → G-12 무영향 확인.
+- **잔여**: 패키징(PM/CMO 영업·인도물), 9 N-A 라이브검증(founder Redeploy 후).
+- §6 rollup: [Growth-115] DEFECT-1 수정 — catalog approval-decision 두 FK CASCADE 통일(QA 초안권고 CTO 정정: approver_id 도 cascade라야 체인 무결) + VP-P8-07 회귀가드 강화. dfd_verify rc=0/35P·0F. BLK-D5-8 RESOLVED.
