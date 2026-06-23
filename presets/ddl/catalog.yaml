@@ -1346,9 +1346,9 @@ entities:
       created_at:  { type: timestamp, nullable: false }
       updated_at:  { type: timestamp, nullable: false }
       step_id:     { type: uuid,      nullable: false,
-                     fk: { entity: approval-step, column: id, on_delete: restrict } }
+                     fk: { entity: approval-step, column: id, on_delete: cascade } }
       approver_id: { type: uuid,      nullable: false,
-                     fk: { entity: approver,      column: id, on_delete: restrict } }
+                     fk: { entity: approver,      column: id, on_delete: cascade } }
       decision:    { type: enum,      values: [approved, rejected], nullable: false }
       comment:     { type: string,    nullable: true }
       decided_at:  { type: timestamp, nullable: false }
