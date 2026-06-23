@@ -631,3 +631,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈**: 마케팅 산출물의 기능 주장은 [[subagent-cross-service-verify]]대로 CTO가 소스 1건씩 확인(/health 실존 검증). 영업 카피라도 검증가능성이 신뢰자산.
 - **잔여**: 9 N-A 라이브검증(인증·런타임) — founder가 demo-portal/lawfirm-demo Redeploy + 시드 라이브 적용 후. (코드/문서 측 lawfirm-demo 메인데모 트랙 종결, 이후는 founder 게이트)
 - §6 rollup: [Growth-116] lawfirm-demo 패키징 종결 — 인도 README(PM)+영업 원페이저(CMO) 병렬 산출, CTO 게이트 전건(링크 실존·시드수치·/health 소스확인). 잔여=founder Redeploy 후 9 N-A 라이브검증.
+
+## Growth-117 — lawfirm-demo 라이브 시드 배선: SEED_FILE 경로(in-memory 백엔드 적재)
+
+- **stale 가정 적발(CTO probe)**: "#3 시드 라이브 적용 = `DATABASE_URL=... setup_lawfirm.py`"는 부정확. 소스 확인 결과 라이브 lawfirm-demo(Coolify)는 저장소 2분리 — business 엔티티(사건/문서/결재)=백엔드 `InMemoryEntityStore`(SEED_FILE json 또는 wire), 판례검색=`legal.py`→postgres. **라이브 compose엔 postgres·DATABASE_URL·SEED_FILE 전무.** demo/demo 직접 로그인 probe로 `/entities/legal-case` 0건·`/legal/search` "결과없음" = 양 스토어 빈 셸 확정. founder가 Coolify Environment 탭 확인 → DATABASE_URL/SEED_FILE 미설정 교차확인.
+- **경로 결정**: Option A(SEED_FILE) 채택. B(lawfirm-demo 자체 postgres 판례 FTS)는 **killer-app(legal-pro, LIVE)이 AI 판례검색을 이미 커버 → 중복**이라 생략. 데모 흐름의 판례검색=legal-pro 핸드오프.
+- **기존 인프라 재사용**: `seed-data/*.json`(7개 데모 선례) + Dockerfile이 `seed-data/`→`/app/seed-data/` 굽음(line33) + `store._load_seed_file`(SEED_FILE env). **빠진 건 lawfirm-demo.json 하나뿐.** scp·bind-mount 불요(이미지 빌드시 베이크) → founder Redeploy만.
+- **engineer 산출(3파일)**: ① `scripts/demo/gen_seed_lawfirm_json.py` 생성기(base+new 14엔티티 직렬화, 건수 self-assert, 멱등, 실제 import 검증) ② `seed-data/lawfirm-demo.json` 173건 ③ compose backend `SEED_FILE` env. 6ad481c/c09b018/10b8c2c.
+- **CTO 게이트(독립 검증, envelope 불신)**: entity_type 키 manifest 14개 1:1, id 전건 유니크, 레코드 필드 manifest 부합, **FK 무결성 11종 dangling 0**(legal-case.assigned_attorney_id·case-party.case_id·approver.step_id·approval-decision.approver_id·document.current_version_id 등), `store._load_seed_file` 독립 dry-run 173건 무경고. Pyright 진단 4건(importlib Optional None-access)→`sys.path` import 패턴(dfd_verify 동일)으로 정리.
+- **교훈**: manager_id/current_version_id처럼 **postgres POST-INSERT UPDATE로 채우는 값은 in-memory 스토어(UPDATE 없음)에선 최초 로드 시점에 backfill** 필수. postgres 시드 ≠ in-memory 시드(스토어 의미론 차이). [[subagent-cross-service-verify]]대로 FK 무결성·store 호환을 CTO가 직접 재현.
+- **잔여**: founder lawfirm-demo Coolify Redeploy → 4도메인 라이브 데이터 확인 → 9 N-A 라이브검증.
+- §6 rollup: [Growth-117] lawfirm-demo 라이브 시드 배선 — stale 가정(setup_lawfirm postgres) 적발·정정, Option A(SEED_FILE in-memory) 채택(B는 killer-app 중복 생략). 생성기+173건 json+compose env, CTO 게이트 FK 11종 dangling0·store dry-run 무경고. founder Redeploy 대기.
