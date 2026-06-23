@@ -674,3 +674,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **인프라 함정 재발·해법**: `cd vanilla-htmx` 가 Bash·PowerShell **공유 cwd** 둘 다 오염 → 훅 deadlock. PowerShell `Set-Location` 절대경로 복구, 이후 pytest는 `(cd … && pytest)` 서브셸 또는 Push/Pop-Location 격리. [[subagent-cwd-hook-fragility]] 강화.
 - **잔여(비차단)**: 프론트 search-similar mode 뱃지 surface(CDO) · `project.search-similar` middle contract 와이어키 등록 · 보드 컬럼색상 토큰(CDO)·모바일 터치 DnD·fragment 부분재렌더 · taskflow SEED_FILE 데모데이터 · TEI 라이브 검증(founder DSN 게이트, legal-rag TEI 재사용).
 - §6 rollup: [Growth-120] 큐드 태스크 관리 프리셋 3-Phase — P1 협업 코어(catalog 5엔티티+seed+프로파일, render=profile-scope 교훈), P2 칸반 보드(open-closed board view-kind+상태머신, 26테스트), P3 Lite-AI search-similar(로컬임베딩+렉시컬폴백, 클라우드0·$0, 30테스트). 14커밋 푸시. CTO 매-Phase 독립검증. 기존 project 도메인 확장(복리), 신규 도메인 날조 0.
+
+## Growth-121 — taskflow-demo 데모 라이브化: 선언적 시드(51레코드) + 프론트 search-similar surface, 6커밋
+
+**맥락**: Growth-120 에서 taskflow-demo 3-Phase(협업+칸반+Lite-AI) 코드 완성. founder "데모데이터+프론트 surface 로 라이브 시연 가능하게". 백엔드 search 라우터는 `entity_store.find_all("task")` 에서 라이브 후보를 읽음 → seed_loader 로 들어간 태스크가 그대로 검색대상. 프론트는 `/api/*` 패스스루 프록시 보유(단 JSON → htmx 스왑용 서버렌더 fragment 필요).
+
+- **시드**(`profiles/seed/taskflow-demo.seed.yaml`, 51레코드): smallmfg-demo 스키마 준용 선언적 fixture. 의존순서(dept→emp→project→milestone→label→task→link→comment→activity), FK `{$ref}`, id/타임스탬프 server-set. 칸반 데모용 5상태 전부 분산(todo4·in-progress4·blocked3·done5·cancelled1, progress_pct 상태정합), Lite-AI 데모용 태스크명 4테마(인증/결제/UI/인프라) 클러스터링. dry-run OK 51 refs resolvable.
+- **프론트 surface**(server.py `/tasks/similar` 라우트 + similar_results.html fragment + board.html 검색박스 + app.css `.similar-*` + test_similar.py 11테스트): 백엔드 search-similar 프록시 후 서버렌더. **mode 배지 honesty** — semantic→"AI 의미검색"(accent), lexical→"키워드 검색"(muted) 배타적 분기, lexical 절대 AI 라벨링 안 함. 검색박스 entity_type=='task' 게이팅(보드 제너릭). 빈쿼리 무프록시, non-200 graceful.
+- **CTO 독립검증**: dry-run 51 refs(utf-8 재실행, 내 콘솔 cp949 함정 회피) + 배지 honesty grep + 37테스트(11 similar+26 board 무회귀) + git status 스코프(backend/ 무수정 확인). 6커밋 파일별 푸시.
+- **교훈**: ①프론트 htmx 는 JSON 아닌 HTML 스왑 → 패스스루 프록시 있어도 서버렌더 fragment 라우트 별도 필요(board 패턴 재사용). ②Windows 콘솔 cp949 → seed_loader dry-run 은 `PYTHONIOENCODING=utf-8` 필수(— em-dash 인코딩 실패). ③배지 honesty 는 코드 주석+배타적 Jinja 분기+테스트(lexical 결과에 "AI 의미검색" 부재 단언) 3중으로 박음.
+- **잔여(비차단·founder 런타임 게이트)**: ①라이브 seed_loader 실행(백엔드 :8080 기동 후 POST, founder DSN/런타임) ②TEI 연결시 mode=semantic 실증(현재 env 미설정→lexical) ③search box list 뷰에도 노출 검토 ④`project.search-similar` middle contract 와이어키 등록.
+- §6 rollup: [Growth-121] taskflow-demo 라이브化 — 선언적 시드 51레코드(5상태 분산+4테마 클러스터, dry-run OK) + 프론트 search-similar surface(서버렌더 fragment, mode 배지 honesty 3중 방어, task 게이팅). 6커밋. CTO 독립검증(스코프 backend 무수정+37테스트+배지 grep). 라이브 실행만 founder 런타임 게이트 잔여.
