@@ -1,0 +1,1638 @@
+{
+  "department": [
+    {
+      "id": "11111111-0000-0000-0000-000000000001",
+      "code": "LAW001",
+      "name": "소송부",
+      "parent_id": null,
+      "manager_id": "22222222-0000-0000-0000-000000000001"
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000002",
+      "code": "LAW002",
+      "name": "송무2팀",
+      "parent_id": null,
+      "manager_id": "22222222-0000-0000-0000-000000000004"
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000003",
+      "code": "LAW003",
+      "name": "기업자문팀",
+      "parent_id": null,
+      "manager_id": "22222222-0000-0000-0000-000000000007"
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000004",
+      "code": "LAW004",
+      "name": "가사·형사팀",
+      "parent_id": null,
+      "manager_id": "22222222-0000-0000-0000-000000000010"
+    },
+    {
+      "id": "11111111-0000-0000-0000-000000000005",
+      "code": "SUP001",
+      "name": "지원팀",
+      "parent_id": null,
+      "manager_id": "22222222-0000-0000-0000-000000000012"
+    }
+  ],
+  "employee": [
+    {
+      "id": "22222222-0000-0000-0000-000000000001",
+      "employee_number": "EMP001",
+      "full_name": "김대호",
+      "department_id": "11111111-0000-0000-0000-000000000001",
+      "position_id": null,
+      "hire_date": "2015-03-01",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000002",
+      "employee_number": "EMP002",
+      "full_name": "이수진",
+      "department_id": "11111111-0000-0000-0000-000000000001",
+      "position_id": null,
+      "hire_date": "2018-07-15",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000003",
+      "employee_number": "EMP003",
+      "full_name": "박민우",
+      "department_id": "11111111-0000-0000-0000-000000000001",
+      "position_id": null,
+      "hire_date": "2020-01-10",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000004",
+      "employee_number": "EMP004",
+      "full_name": "최준혁",
+      "department_id": "11111111-0000-0000-0000-000000000002",
+      "position_id": null,
+      "hire_date": "2013-06-01",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000005",
+      "employee_number": "EMP005",
+      "full_name": "정하린",
+      "department_id": "11111111-0000-0000-0000-000000000002",
+      "position_id": null,
+      "hire_date": "2019-04-01",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000006",
+      "employee_number": "EMP006",
+      "full_name": "오세연",
+      "department_id": "11111111-0000-0000-0000-000000000002",
+      "position_id": null,
+      "hire_date": "2022-09-01",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000007",
+      "employee_number": "EMP007",
+      "full_name": "강민서",
+      "department_id": "11111111-0000-0000-0000-000000000003",
+      "position_id": null,
+      "hire_date": "2016-02-15",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000008",
+      "employee_number": "EMP008",
+      "full_name": "윤지호",
+      "department_id": "11111111-0000-0000-0000-000000000003",
+      "position_id": null,
+      "hire_date": "2020-08-10",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000009",
+      "employee_number": "EMP009",
+      "full_name": "신예원",
+      "department_id": "11111111-0000-0000-0000-000000000003",
+      "position_id": null,
+      "hire_date": "2023-03-01",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000010",
+      "employee_number": "EMP010",
+      "full_name": "임도현",
+      "department_id": "11111111-0000-0000-0000-000000000004",
+      "position_id": null,
+      "hire_date": "2014-11-01",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000011",
+      "employee_number": "EMP011",
+      "full_name": "한소율",
+      "department_id": "11111111-0000-0000-0000-000000000004",
+      "position_id": null,
+      "hire_date": "2021-05-03",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000012",
+      "employee_number": "EMP012",
+      "full_name": "배지수",
+      "department_id": "11111111-0000-0000-0000-000000000005",
+      "position_id": null,
+      "hire_date": "2017-07-20",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000013",
+      "employee_number": "EMP013",
+      "full_name": "문채린",
+      "department_id": "11111111-0000-0000-0000-000000000005",
+      "position_id": null,
+      "hire_date": "2023-01-02",
+      "status": "active"
+    },
+    {
+      "id": "22222222-0000-0000-0000-000000000014",
+      "employee_number": "EMP014",
+      "full_name": "권현우",
+      "department_id": "11111111-0000-0000-0000-000000000005",
+      "position_id": null,
+      "hire_date": "2019-10-15",
+      "status": "on-leave"
+    }
+  ],
+  "precedent": [
+    {
+      "id": "33333333-0000-0000-0000-000000000001",
+      "citation": "대법원 2020다12345",
+      "court": "대법원",
+      "decided_date": "2020-05-21",
+      "case_type": "civil",
+      "holding": "불법행위로 인한 손해배상 청구 사건에서 피고의 과실이 인정되고 원고의 손해와 인과관계가 있는 경우 피고는 손해배상 책임을 진다.",
+      "full_text": null,
+      "keywords": "손해배상 불법행위 과실 인과관계"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000002",
+      "citation": "서울고등법원 2019나56789",
+      "court": "서울고등법원",
+      "decided_date": "2019-11-14",
+      "case_type": "civil",
+      "holding": "계약 불이행으로 인한 손해배상에서 채무자의 귀책사유가 존재하면 채권자는 손해배상을 청구할 수 있다. 다만 채권자도 손해 경감 의무가 있다.",
+      "full_text": null,
+      "keywords": "계약불이행 손해배상 귀책사유 채무불이행"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000003",
+      "citation": "대법원 2018다98765",
+      "court": "대법원",
+      "decided_date": "2018-09-07",
+      "case_type": "commercial",
+      "holding": "상사 계약에서 위약금 조항은 손해배상액의 예정으로 유효하며, 당사자 간 합의된 위약금은 원칙적으로 감액하지 않는다.",
+      "full_text": null,
+      "keywords": "위약금 손해배상액예정 상사계약 감액"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000004",
+      "citation": "헌법재판소 2017헌바321",
+      "court": "헌법재판소",
+      "decided_date": "2017-06-29",
+      "case_type": "administrative",
+      "holding": "행정처분에 대한 취소소송에서 처분 당시 법령을 기준으로 적법 여부를 판단하며, 재량권 일탈·남용 여부를 심사한다.",
+      "full_text": null,
+      "keywords": "행정처분 취소소송 재량권 일탈남용"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000005",
+      "citation": "대법원 2021도11111",
+      "court": "대법원",
+      "decided_date": "2021-03-18",
+      "case_type": "criminal",
+      "holding": "형사 사건에서 피고인의 자백은 유죄의 유일한 증거가 될 수 없으며, 보강 증거가 있어야 유죄를 인정할 수 있다.",
+      "full_text": null,
+      "keywords": "자백 보강증거 형사 유죄"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000006",
+      "citation": "대법원 2022므5678",
+      "court": "대법원",
+      "decided_date": "2022-08-25",
+      "case_type": "family",
+      "holding": "이혼 소송에서 유책 배우자의 청구는 원칙적으로 허용되지 않으나, 혼인 관계가 객관적으로 완전히 파탄된 경우 예외적으로 허용될 수 있다.",
+      "full_text": null,
+      "keywords": "이혼 유책배우자 혼인파탄 예외허용 가사"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000007",
+      "citation": "서울가정법원 2021브234",
+      "court": "서울가정법원",
+      "decided_date": "2021-12-10",
+      "case_type": "family",
+      "holding": "친권자 지정 사건에서 자녀의 복리가 최우선 고려 사항이며, 경제적 능력보다 양육 환경의 안정성을 중시한다.",
+      "full_text": null,
+      "keywords": "친권 양육권 자녀복리 양육환경 가사"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000008",
+      "citation": "대법원 2023도8821",
+      "court": "대법원",
+      "decided_date": "2023-04-27",
+      "case_type": "criminal",
+      "holding": "업무상 횡령죄에서 불법영득의사는 주관적 의도로서, 타인의 재물을 자기 또는 제3자의 이익을 위해 임의 처분할 의사가 있으면 인정된다.",
+      "full_text": null,
+      "keywords": "횡령 불법영득의사 업무상 형사 임의처분"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000009",
+      "citation": "서울중앙지방법원 2022가합31111",
+      "court": "서울중앙지방법원",
+      "decided_date": "2022-11-03",
+      "case_type": "commercial",
+      "holding": "주주간 계약에서 의결권 구속 조항은 회사법상 강행 규정에 위반되지 않는 한 유효하며, 위반 시 손해배상 책임이 발생한다.",
+      "full_text": null,
+      "keywords": "주주간계약 의결권 상사 손해배상 강행규정"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000010",
+      "citation": "대법원 2019두44302",
+      "court": "대법원",
+      "decided_date": "2019-07-11",
+      "case_type": "administrative",
+      "holding": "조세 부과처분의 위법 여부는 부과 당시 법령을 기준으로 하고, 과세관청이 입증 책임을 부담하며 납세자의 신뢰보호 원칙도 고려된다.",
+      "full_text": null,
+      "keywords": "조세부과 행정처분 신뢰보호 입증책임 납세자"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000011",
+      "citation": "대법원 2020다77892",
+      "court": "대법원",
+      "decided_date": "2020-12-17",
+      "case_type": "civil",
+      "holding": "부동산 이중매매에서 제2매수인이 제1매매 사실을 알면서 매매계약을 체결하였다면 반사회적 법률행위로서 무효이고, 제1매수인은 소유권 이전 청구권을 가진다.",
+      "full_text": null,
+      "keywords": "이중매매 반사회적법률행위 소유권 부동산 민사"
+    },
+    {
+      "id": "33333333-0000-0000-0000-000000000012",
+      "citation": "서울고등법원 2023나11234",
+      "court": "서울고등법원",
+      "decided_date": "2023-09-14",
+      "case_type": "civil",
+      "holding": "하도급 계약에서 원사업자가 부당 단가 인하를 강요한 경우 하도급법 위반으로 손해배상 책임이 있으며, 법원은 실제 손해액을 인정할 수 있다.",
+      "full_text": null,
+      "keywords": "하도급 부당단가인하 손해배상 민사 계약"
+    }
+  ],
+  "legal-case": [
+    {
+      "id": "44444444-0000-0000-0000-000000000001",
+      "case_number": "CASE-2024-001",
+      "title": "ABC주식회사 손해배상 청구 사건",
+      "case_type": "civil",
+      "status": "active",
+      "filed_date": "2024-01-15",
+      "court": "서울중앙지방법원",
+      "next_hearing_date": "2024-08-20",
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000001",
+      "client_contact_id": null,
+      "summary": "공급 계약 불이행으로 인한 손해배상 청구. 계약금액 5억원 분쟁."
+    },
+    {
+      "id": "44444444-0000-0000-0000-000000000002",
+      "case_number": "CASE-2024-002",
+      "title": "부동산 매매 계약 위반 사건",
+      "case_type": "civil",
+      "status": "intake",
+      "filed_date": "2024-03-10",
+      "court": "수원지방법원",
+      "next_hearing_date": null,
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000002",
+      "client_contact_id": null,
+      "summary": "부동산 매매 계약 해제 및 위약금 반환 청구 사건."
+    },
+    {
+      "id": "44444444-0000-0000-0000-000000000003",
+      "case_number": "CASE-2024-003",
+      "title": "행정 제재처분 취소 청구",
+      "case_type": "administrative",
+      "status": "active",
+      "filed_date": "2024-02-20",
+      "court": "서울행정법원",
+      "next_hearing_date": "2024-09-05",
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000003",
+      "client_contact_id": null,
+      "summary": "영업정지 처분에 대한 취소소송. 재량권 남용 주장."
+    },
+    {
+      "id": "44444444-0000-0000-0000-000000000004",
+      "case_number": "CASE-2024-004",
+      "title": "이혼 및 재산분할 청구 사건",
+      "case_type": "family",
+      "status": "trial",
+      "filed_date": "2024-01-08",
+      "court": "서울가정법원",
+      "next_hearing_date": "2026-07-10",
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000010",
+      "client_contact_id": null,
+      "summary": "혼인 파탄으로 인한 이혼 청구 및 재산분할. 공동재산 추정 8억원."
+    },
+    {
+      "id": "44444444-0000-0000-0000-000000000005",
+      "case_number": "CASE-2024-005",
+      "title": "업무상 횡령 고소 대응 사건",
+      "case_type": "criminal",
+      "status": "active",
+      "filed_date": "2024-04-22",
+      "court": "서울중앙지방법원",
+      "next_hearing_date": "2026-08-14",
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000010",
+      "client_contact_id": null,
+      "summary": "전 임원의 회사 자금 횡령 혐의. 피해액 추정 1억 2천만원."
+    },
+    {
+      "id": "44444444-0000-0000-0000-000000000006",
+      "case_number": "CASE-2024-006",
+      "title": "IT 서비스 계약 분쟁 중재",
+      "case_type": "commercial",
+      "status": "intake",
+      "filed_date": "2024-05-30",
+      "court": null,
+      "next_hearing_date": null,
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000007",
+      "client_contact_id": null,
+      "summary": "SaaS 플랫폼 계약 해지 및 위약금 분쟁. 클라이언트측 손해 주장 3억원."
+    },
+    {
+      "id": "44444444-0000-0000-0000-000000000007",
+      "case_number": "CASE-2024-007",
+      "title": "부동산 이중매매 소유권 이전 청구",
+      "case_type": "civil",
+      "status": "trial",
+      "filed_date": "2023-11-15",
+      "court": "인천지방법원",
+      "next_hearing_date": "2026-07-25",
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000004",
+      "client_contact_id": null,
+      "summary": "제1매수인 권리 보전 위한 소유권 이전 청구. 부동산 감정가 6억원."
+    },
+    {
+      "id": "44444444-0000-0000-0000-000000000008",
+      "case_number": "CASE-2025-001",
+      "title": "조세부과처분 취소청구",
+      "case_type": "administrative",
+      "status": "active",
+      "filed_date": "2025-02-03",
+      "court": "서울행정법원",
+      "next_hearing_date": "2026-09-18",
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000003",
+      "client_contact_id": null,
+      "summary": "세무조사 후 법인세 추가 부과처분. 불복금액 2억 4천만원."
+    },
+    {
+      "id": "44444444-0000-0000-0000-000000000009",
+      "case_number": "CASE-2025-002",
+      "title": "하도급 단가 인하 손해배상",
+      "case_type": "civil",
+      "status": "closed",
+      "filed_date": "2024-06-10",
+      "court": "부산지방법원",
+      "next_hearing_date": null,
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000004",
+      "client_contact_id": null,
+      "summary": "원사업자 부당 단가 인하에 따른 손해배상 청구. 항소심 원고 일부 승소 확정."
+    },
+    {
+      "id": "44444444-0000-0000-0000-000000000010",
+      "case_number": "CASE-2025-003",
+      "title": "주주간 의결권 계약 위반 손해배상",
+      "case_type": "commercial",
+      "status": "appeal",
+      "filed_date": "2025-01-20",
+      "court": "서울고등법원",
+      "next_hearing_date": "2026-10-07",
+      "assigned_attorney_id": "22222222-0000-0000-0000-000000000007",
+      "client_contact_id": null,
+      "summary": "소수주주 의결권 구속 조항 위반. 항소심 진행 중. 손해 주장 5천만원."
+    }
+  ],
+  "case-party": [
+    {
+      "id": "55555555-0000-0000-0000-000000000001",
+      "case_id": "44444444-0000-0000-0000-000000000001",
+      "role": "plaintiff",
+      "name": "주식회사 에이비씨솔루션",
+      "contact_id": null,
+      "notes": "원고 법인, 소가 5억"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000002",
+      "case_id": "44444444-0000-0000-0000-000000000001",
+      "role": "defendant",
+      "name": "대한물류주식회사",
+      "contact_id": null,
+      "notes": "피고 법인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000003",
+      "case_id": "44444444-0000-0000-0000-000000000001",
+      "role": "opposing-counsel",
+      "name": "변호사 조동현",
+      "contact_id": null,
+      "notes": "피고측 대리인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000004",
+      "case_id": "44444444-0000-0000-0000-000000000002",
+      "role": "plaintiff",
+      "name": "홍길동",
+      "contact_id": null,
+      "notes": "매수인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000005",
+      "case_id": "44444444-0000-0000-0000-000000000002",
+      "role": "defendant",
+      "name": "박기영",
+      "contact_id": null,
+      "notes": "매도인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000006",
+      "case_id": "44444444-0000-0000-0000-000000000003",
+      "role": "plaintiff",
+      "name": "주식회사 한빛유통",
+      "contact_id": null,
+      "notes": "처분 대상 법인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000007",
+      "case_id": "44444444-0000-0000-0000-000000000003",
+      "role": "defendant",
+      "name": "서울특별시장",
+      "contact_id": null,
+      "notes": "처분 행정청"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000008",
+      "case_id": "44444444-0000-0000-0000-000000000004",
+      "role": "plaintiff",
+      "name": "김소연",
+      "contact_id": null,
+      "notes": "청구인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000009",
+      "case_id": "44444444-0000-0000-0000-000000000004",
+      "role": "defendant",
+      "name": "정태준",
+      "contact_id": null,
+      "notes": "상대방"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000010",
+      "case_id": "44444444-0000-0000-0000-000000000004",
+      "role": "witness",
+      "name": "이정은",
+      "contact_id": null,
+      "notes": "진술 증인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000011",
+      "case_id": "44444444-0000-0000-0000-000000000005",
+      "role": "plaintiff",
+      "name": "주식회사 미래테크",
+      "contact_id": null,
+      "notes": "피해 법인 고소인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000012",
+      "case_id": "44444444-0000-0000-0000-000000000005",
+      "role": "defendant",
+      "name": "유창호",
+      "contact_id": null,
+      "notes": "전 재무이사"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000013",
+      "case_id": "44444444-0000-0000-0000-000000000005",
+      "role": "expert-witness",
+      "name": "공인회계사 나인규",
+      "contact_id": null,
+      "notes": "회계감정인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000014",
+      "case_id": "44444444-0000-0000-0000-000000000006",
+      "role": "plaintiff",
+      "name": "주식회사 넥스트플로우",
+      "contact_id": null,
+      "notes": "서비스 이용사"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000015",
+      "case_id": "44444444-0000-0000-0000-000000000006",
+      "role": "defendant",
+      "name": "클라우드온주식회사",
+      "contact_id": null,
+      "notes": "SaaS 제공사"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000016",
+      "case_id": "44444444-0000-0000-0000-000000000007",
+      "role": "plaintiff",
+      "name": "송민준",
+      "contact_id": null,
+      "notes": "제1매수인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000017",
+      "case_id": "44444444-0000-0000-0000-000000000007",
+      "role": "defendant",
+      "name": "양재호",
+      "contact_id": null,
+      "notes": "매도인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000018",
+      "case_id": "44444444-0000-0000-0000-000000000007",
+      "role": "defendant",
+      "name": "구은서",
+      "contact_id": null,
+      "notes": "제2매수인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000019",
+      "case_id": "44444444-0000-0000-0000-000000000008",
+      "role": "plaintiff",
+      "name": "주식회사 진성산업",
+      "contact_id": null,
+      "notes": "납세자 법인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000020",
+      "case_id": "44444444-0000-0000-0000-000000000008",
+      "role": "defendant",
+      "name": "서울지방국세청장",
+      "contact_id": null,
+      "notes": "과세처분청"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000021",
+      "case_id": "44444444-0000-0000-0000-000000000009",
+      "role": "plaintiff",
+      "name": "주식회사 세화전기",
+      "contact_id": null,
+      "notes": "수급사업자"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000022",
+      "case_id": "44444444-0000-0000-0000-000000000009",
+      "role": "defendant",
+      "name": "대림건설주식회사",
+      "contact_id": null,
+      "notes": "원사업자"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000023",
+      "case_id": "44444444-0000-0000-0000-000000000009",
+      "role": "opposing-counsel",
+      "name": "변호사 황태성",
+      "contact_id": null,
+      "notes": "피고측 대리"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000024",
+      "case_id": "44444444-0000-0000-0000-000000000010",
+      "role": "plaintiff",
+      "name": "오픈아이주식회사",
+      "contact_id": null,
+      "notes": "소수주주"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000025",
+      "case_id": "44444444-0000-0000-0000-000000000010",
+      "role": "defendant",
+      "name": "매그넘파트너스유한회사",
+      "contact_id": null,
+      "notes": "대주주측 펀드"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000026",
+      "case_id": "44444444-0000-0000-0000-000000000010",
+      "role": "witness",
+      "name": "공인회계사 이창민",
+      "contact_id": null,
+      "notes": "가치평가 감정인"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000027",
+      "case_id": "44444444-0000-0000-0000-000000000001",
+      "role": "witness",
+      "name": "임재현",
+      "contact_id": null,
+      "notes": "계약체결 당시 담당자"
+    },
+    {
+      "id": "55555555-0000-0000-0000-000000000028",
+      "case_id": "44444444-0000-0000-0000-000000000002",
+      "role": "opposing-counsel",
+      "name": "변호사 서명진",
+      "contact_id": null,
+      "notes": "매도인측 대리인"
+    }
+  ],
+  "case-document": [
+    {
+      "id": "66666666-0000-0000-0000-000000000001",
+      "case_id": "44444444-0000-0000-0000-000000000001",
+      "document_type": "complaint",
+      "title": "손해배상 청구 소장",
+      "filed_at": "2024-01-15T09:00:00+00:00",
+      "storage_key": "cases/c1/complaint_001.pdf",
+      "notes": "원심 소장",
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-01-20T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000002",
+      "case_id": "44444444-0000-0000-0000-000000000001",
+      "document_type": "brief",
+      "title": "원고 준비서면 제1호",
+      "filed_at": "2024-04-10T09:00:00+00:00",
+      "storage_key": "cases/c1/brief_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-04-12T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000003",
+      "case_id": "44444444-0000-0000-0000-000000000001",
+      "document_type": "evidence",
+      "title": "공급계약서 사본",
+      "filed_at": "2024-03-05T09:00:00+00:00",
+      "storage_key": "cases/c1/evidence_001.pdf",
+      "notes": "갑 제1호증",
+      "content_text": null,
+      "ingest_status": "pending",
+      "ingested_at": null
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000004",
+      "case_id": "44444444-0000-0000-0000-000000000002",
+      "document_type": "complaint",
+      "title": "매매계약 위반 소장",
+      "filed_at": "2024-03-10T09:00:00+00:00",
+      "storage_key": "cases/c2/complaint_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-03-15T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000005",
+      "case_id": "44444444-0000-0000-0000-000000000002",
+      "document_type": "contract",
+      "title": "부동산 매매계약서",
+      "filed_at": "2024-03-10T09:00:00+00:00",
+      "storage_key": "cases/c2/contract_001.pdf",
+      "notes": "갑 제2호증",
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-03-16T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000006",
+      "case_id": "44444444-0000-0000-0000-000000000003",
+      "document_type": "complaint",
+      "title": "행정처분 취소 소장",
+      "filed_at": "2024-02-20T09:00:00+00:00",
+      "storage_key": "cases/c3/complaint_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-02-25T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000007",
+      "case_id": "44444444-0000-0000-0000-000000000003",
+      "document_type": "court-order",
+      "title": "처분 통지서 사본",
+      "filed_at": "2024-02-20T09:00:00+00:00",
+      "storage_key": "cases/c3/order_001.pdf",
+      "notes": "을 제1호증",
+      "content_text": null,
+      "ingest_status": "error",
+      "ingested_at": null
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000008",
+      "case_id": "44444444-0000-0000-0000-000000000004",
+      "document_type": "complaint",
+      "title": "이혼청구 소장",
+      "filed_at": "2024-01-08T09:00:00+00:00",
+      "storage_key": "cases/c4/complaint_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-01-10T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000009",
+      "case_id": "44444444-0000-0000-0000-000000000004",
+      "document_type": "brief",
+      "title": "재산분할 목록 준비서면",
+      "filed_at": "2024-06-01T09:00:00+00:00",
+      "storage_key": "cases/c4/brief_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-06-03T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000010",
+      "case_id": "44444444-0000-0000-0000-000000000005",
+      "document_type": "evidence",
+      "title": "회계감정 보고서",
+      "filed_at": "2024-07-15T09:00:00+00:00",
+      "storage_key": "cases/c5/evidence_001.pdf",
+      "notes": "갑 제3호증",
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-07-16T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000011",
+      "case_id": "44444444-0000-0000-0000-000000000005",
+      "document_type": "brief",
+      "title": "공소사실 방어 준비서면",
+      "filed_at": "2024-09-10T09:00:00+00:00",
+      "storage_key": "cases/c5/brief_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "pending",
+      "ingested_at": null
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000012",
+      "case_id": "44444444-0000-0000-0000-000000000006",
+      "document_type": "contract",
+      "title": "SaaS 서비스 이용 계약서",
+      "filed_at": "2024-05-30T09:00:00+00:00",
+      "storage_key": "cases/c6/contract_001.pdf",
+      "notes": "계약 원본",
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-06-01T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000013",
+      "case_id": "44444444-0000-0000-0000-000000000006",
+      "document_type": "correspondence",
+      "title": "계약 해지 통보 이메일 출력본",
+      "filed_at": "2024-05-30T09:00:00+00:00",
+      "storage_key": "cases/c6/correspondence_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "pending",
+      "ingested_at": null
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000014",
+      "case_id": "44444444-0000-0000-0000-000000000007",
+      "document_type": "complaint",
+      "title": "소유권이전 청구 소장",
+      "filed_at": "2023-11-15T09:00:00+00:00",
+      "storage_key": "cases/c7/complaint_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2023-11-20T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000015",
+      "case_id": "44444444-0000-0000-0000-000000000007",
+      "document_type": "evidence",
+      "title": "제1매매 계약서 공증 사본",
+      "filed_at": "2023-11-15T09:00:00+00:00",
+      "storage_key": "cases/c7/evidence_001.pdf",
+      "notes": "갑 제1호증",
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2023-11-21T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000016",
+      "case_id": "44444444-0000-0000-0000-000000000008",
+      "document_type": "complaint",
+      "title": "과세처분 취소 소장",
+      "filed_at": "2025-02-03T09:00:00+00:00",
+      "storage_key": "cases/c8/complaint_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2025-02-05T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000017",
+      "case_id": "44444444-0000-0000-0000-000000000008",
+      "document_type": "evidence",
+      "title": "세무조사결과 통지서",
+      "filed_at": "2025-02-03T09:00:00+00:00",
+      "storage_key": "cases/c8/evidence_001.pdf",
+      "notes": "을 제1호증",
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2025-02-05T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000018",
+      "case_id": "44444444-0000-0000-0000-000000000009",
+      "document_type": "complaint",
+      "title": "하도급 손해배상 소장",
+      "filed_at": "2024-06-10T09:00:00+00:00",
+      "storage_key": "cases/c9/complaint_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2024-06-12T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000019",
+      "case_id": "44444444-0000-0000-0000-000000000009",
+      "document_type": "court-order",
+      "title": "항소심 판결문",
+      "filed_at": "2025-03-20T09:00:00+00:00",
+      "storage_key": "cases/c9/order_001.pdf",
+      "notes": "종결 판결",
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2025-03-22T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000020",
+      "case_id": "44444444-0000-0000-0000-000000000010",
+      "document_type": "complaint",
+      "title": "손해배상 항소장",
+      "filed_at": "2025-01-20T09:00:00+00:00",
+      "storage_key": "cases/c10/complaint_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2025-01-22T09:00:00+00:00"
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000021",
+      "case_id": "44444444-0000-0000-0000-000000000010",
+      "document_type": "evidence",
+      "title": "주주간계약서 공증본",
+      "filed_at": "2025-01-20T09:00:00+00:00",
+      "storage_key": "cases/c10/evidence_001.pdf",
+      "notes": "갑 제1호증",
+      "content_text": null,
+      "ingest_status": "pending",
+      "ingested_at": null
+    },
+    {
+      "id": "66666666-0000-0000-0000-000000000022",
+      "case_id": "44444444-0000-0000-0000-000000000010",
+      "document_type": "brief",
+      "title": "항소이유서",
+      "filed_at": "2025-04-01T09:00:00+00:00",
+      "storage_key": "cases/c10/brief_001.pdf",
+      "notes": null,
+      "content_text": null,
+      "ingest_status": "done",
+      "ingested_at": "2025-04-03T09:00:00+00:00"
+    }
+  ],
+  "document-category": [
+    {
+      "id": "77777777-0000-0000-0000-000000000001",
+      "code": "CAT-LAWSUIT",
+      "name": "소송서류",
+      "parent_id": null,
+      "default_retention_days": 3650
+    },
+    {
+      "id": "77777777-0000-0000-0000-000000000002",
+      "code": "CAT-CONTRACT",
+      "name": "계약서",
+      "parent_id": null,
+      "default_retention_days": 3650
+    },
+    {
+      "id": "77777777-0000-0000-0000-000000000003",
+      "code": "CAT-INTERNAL",
+      "name": "내부규정",
+      "parent_id": null,
+      "default_retention_days": 1825
+    },
+    {
+      "id": "77777777-0000-0000-0000-000000000004",
+      "code": "CAT-HR",
+      "name": "인사서류",
+      "parent_id": null,
+      "default_retention_days": 3650
+    },
+    {
+      "id": "77777777-0000-0000-0000-000000000005",
+      "code": "CAT-FINANCE",
+      "name": "회계서류",
+      "parent_id": null,
+      "default_retention_days": 2555
+    },
+    {
+      "id": "77777777-0000-0000-0000-000000000006",
+      "code": "CAT-TEMPLATE",
+      "name": "서식·템플릿",
+      "parent_id": null,
+      "default_retention_days": 365
+    }
+  ],
+  "document": [
+    {
+      "id": "88888888-0000-0000-0000-000000000001",
+      "title": "법인 정관",
+      "category_id": "77777777-0000-0000-0000-000000000003",
+      "owner_id": "22222222-0000-0000-0000-000000000012",
+      "status": "published",
+      "current_version_id": "99999999-0000-0000-0000-000000000002",
+      "retention_date": "2035-01-01"
+    },
+    {
+      "id": "88888888-0000-0000-0000-000000000002",
+      "title": "개인정보처리방침",
+      "category_id": "77777777-0000-0000-0000-000000000003",
+      "owner_id": "22222222-0000-0000-0000-000000000012",
+      "status": "published",
+      "current_version_id": "99999999-0000-0000-0000-000000000004",
+      "retention_date": "2028-01-01"
+    },
+    {
+      "id": "88888888-0000-0000-0000-000000000003",
+      "title": "법률자문 표준 위임계약서",
+      "category_id": "77777777-0000-0000-0000-000000000002",
+      "owner_id": "22222222-0000-0000-0000-000000000007",
+      "status": "published",
+      "current_version_id": "99999999-0000-0000-0000-000000000006",
+      "retention_date": "2030-06-01"
+    },
+    {
+      "id": "88888888-0000-0000-0000-000000000004",
+      "title": "사건 수임 보수 약정서",
+      "category_id": "77777777-0000-0000-0000-000000000002",
+      "owner_id": "22222222-0000-0000-0000-000000000007",
+      "status": "published",
+      "current_version_id": "99999999-0000-0000-0000-000000000007",
+      "retention_date": "2030-06-01"
+    },
+    {
+      "id": "88888888-0000-0000-0000-000000000005",
+      "title": "직원 복무 규정",
+      "category_id": "77777777-0000-0000-0000-000000000004",
+      "owner_id": "22222222-0000-0000-0000-000000000012",
+      "status": "published",
+      "current_version_id": "99999999-0000-0000-0000-000000000009",
+      "retention_date": "2035-01-01"
+    },
+    {
+      "id": "88888888-0000-0000-0000-000000000006",
+      "title": "출장비 정산 지침",
+      "category_id": "77777777-0000-0000-0000-000000000005",
+      "owner_id": "22222222-0000-0000-0000-000000000013",
+      "status": "published",
+      "current_version_id": "99999999-0000-0000-0000-000000000010",
+      "retention_date": "2031-12-31"
+    },
+    {
+      "id": "88888888-0000-0000-0000-000000000007",
+      "title": "2025년 예산안",
+      "category_id": "77777777-0000-0000-0000-000000000005",
+      "owner_id": "22222222-0000-0000-0000-000000000013",
+      "status": "archived",
+      "current_version_id": "99999999-0000-0000-0000-000000000011",
+      "retention_date": "2032-12-31"
+    },
+    {
+      "id": "88888888-0000-0000-0000-000000000008",
+      "title": "소장 작성 표준 서식",
+      "category_id": "77777777-0000-0000-0000-000000000006",
+      "owner_id": "22222222-0000-0000-0000-000000000001",
+      "status": "published",
+      "current_version_id": "99999999-0000-0000-0000-000000000012",
+      "retention_date": null
+    },
+    {
+      "id": "88888888-0000-0000-0000-000000000009",
+      "title": "준비서면 작성 가이드",
+      "category_id": "77777777-0000-0000-0000-000000000006",
+      "owner_id": "22222222-0000-0000-0000-000000000001",
+      "status": "draft",
+      "current_version_id": "99999999-0000-0000-0000-000000000013",
+      "retention_date": null
+    },
+    {
+      "id": "88888888-0000-0000-0000-000000000010",
+      "title": "법인 인사규정",
+      "category_id": "77777777-0000-0000-0000-000000000004",
+      "owner_id": "22222222-0000-0000-0000-000000000012",
+      "status": "published",
+      "current_version_id": "99999999-0000-0000-0000-000000000014",
+      "retention_date": "2035-01-01"
+    }
+  ],
+  "document-version": [
+    {
+      "id": "99999999-0000-0000-0000-000000000001",
+      "document_id": "88888888-0000-0000-0000-000000000001",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000012",
+      "file_name": "법인정관_v1.pdf",
+      "file_size_bytes": 204800,
+      "mime_type": "application/pdf",
+      "storage_key": "docs/doc1/v1.pdf",
+      "checksum": "abc001v1",
+      "is_published": false
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000002",
+      "document_id": "88888888-0000-0000-0000-000000000001",
+      "version_number": "v2.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000012",
+      "file_name": "법인정관_v2.pdf",
+      "file_size_bytes": 215040,
+      "mime_type": "application/pdf",
+      "storage_key": "docs/doc1/v2.pdf",
+      "checksum": "abc001v2",
+      "is_published": true
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000003",
+      "document_id": "88888888-0000-0000-0000-000000000002",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000012",
+      "file_name": "개인정보처리방침_v1.pdf",
+      "file_size_bytes": 102400,
+      "mime_type": "application/pdf",
+      "storage_key": "docs/doc2/v1.pdf",
+      "checksum": "abc002v1",
+      "is_published": false
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000004",
+      "document_id": "88888888-0000-0000-0000-000000000002",
+      "version_number": "v2.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000012",
+      "file_name": "개인정보처리방침_v2.pdf",
+      "file_size_bytes": 112640,
+      "mime_type": "application/pdf",
+      "storage_key": "docs/doc2/v2.pdf",
+      "checksum": "abc002v2",
+      "is_published": true
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000005",
+      "document_id": "88888888-0000-0000-0000-000000000003",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000007",
+      "file_name": "위임계약서_v1.docx",
+      "file_size_bytes": 51200,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "storage_key": "docs/doc3/v1.docx",
+      "checksum": "abc003v1",
+      "is_published": false
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000006",
+      "document_id": "88888888-0000-0000-0000-000000000003",
+      "version_number": "v2.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000007",
+      "file_name": "위임계약서_v2.docx",
+      "file_size_bytes": 55296,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "storage_key": "docs/doc3/v2.docx",
+      "checksum": "abc003v2",
+      "is_published": true
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000007",
+      "document_id": "88888888-0000-0000-0000-000000000004",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000007",
+      "file_name": "보수약정서_v1.docx",
+      "file_size_bytes": 45056,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "storage_key": "docs/doc4/v1.docx",
+      "checksum": "abc004v1",
+      "is_published": true
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000008",
+      "document_id": "88888888-0000-0000-0000-000000000005",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000012",
+      "file_name": "복무규정_v1.pdf",
+      "file_size_bytes": 153600,
+      "mime_type": "application/pdf",
+      "storage_key": "docs/doc5/v1.pdf",
+      "checksum": "abc005v1",
+      "is_published": false
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000009",
+      "document_id": "88888888-0000-0000-0000-000000000005",
+      "version_number": "v2.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000012",
+      "file_name": "복무규정_v2.pdf",
+      "file_size_bytes": 163840,
+      "mime_type": "application/pdf",
+      "storage_key": "docs/doc5/v2.pdf",
+      "checksum": "abc005v2",
+      "is_published": true
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000010",
+      "document_id": "88888888-0000-0000-0000-000000000006",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000013",
+      "file_name": "출장비정산지침_v1.pdf",
+      "file_size_bytes": 81920,
+      "mime_type": "application/pdf",
+      "storage_key": "docs/doc6/v1.pdf",
+      "checksum": "abc006v1",
+      "is_published": true
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000011",
+      "document_id": "88888888-0000-0000-0000-000000000007",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000013",
+      "file_name": "2025예산안_v1.xlsx",
+      "file_size_bytes": 307200,
+      "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "storage_key": "docs/doc7/v1.xlsx",
+      "checksum": "abc007v1",
+      "is_published": false
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000012",
+      "document_id": "88888888-0000-0000-0000-000000000008",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000001",
+      "file_name": "소장서식_v1.docx",
+      "file_size_bytes": 40960,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "storage_key": "docs/doc8/v1.docx",
+      "checksum": "abc008v1",
+      "is_published": true
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000013",
+      "document_id": "88888888-0000-0000-0000-000000000009",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000001",
+      "file_name": "준비서면가이드_v1.docx",
+      "file_size_bytes": 36864,
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "storage_key": "docs/doc9/v1.docx",
+      "checksum": "abc009v1",
+      "is_published": false
+    },
+    {
+      "id": "99999999-0000-0000-0000-000000000014",
+      "document_id": "88888888-0000-0000-0000-000000000010",
+      "version_number": "v1.0",
+      "uploaded_by": "22222222-0000-0000-0000-000000000012",
+      "file_name": "인사규정_v1.pdf",
+      "file_size_bytes": 204800,
+      "mime_type": "application/pdf",
+      "storage_key": "docs/doc10/v1.pdf",
+      "checksum": "abc010v1",
+      "is_published": true
+    }
+  ],
+  "access-rule": [
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000001",
+      "document_id": "88888888-0000-0000-0000-000000000001",
+      "principal_type": "department",
+      "principal_id": "11111111-0000-0000-0000-000000000005",
+      "permission": "read",
+      "expires_at": null
+    },
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000002",
+      "document_id": "88888888-0000-0000-0000-000000000002",
+      "principal_type": "department",
+      "principal_id": "11111111-0000-0000-0000-000000000005",
+      "permission": "admin",
+      "expires_at": null
+    },
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000003",
+      "document_id": "88888888-0000-0000-0000-000000000003",
+      "principal_type": "department",
+      "principal_id": "11111111-0000-0000-0000-000000000003",
+      "permission": "edit",
+      "expires_at": null
+    },
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000004",
+      "document_id": "88888888-0000-0000-0000-000000000005",
+      "principal_type": "department",
+      "principal_id": "11111111-0000-0000-0000-000000000005",
+      "permission": "admin",
+      "expires_at": null
+    },
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000005",
+      "document_id": "88888888-0000-0000-0000-000000000006",
+      "principal_type": "department",
+      "principal_id": "11111111-0000-0000-0000-000000000005",
+      "permission": "read",
+      "expires_at": null
+    },
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000006",
+      "document_id": "88888888-0000-0000-0000-000000000007",
+      "principal_type": "employee",
+      "principal_id": "22222222-0000-0000-0000-000000000001",
+      "permission": "read",
+      "expires_at": "2027-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000007",
+      "document_id": "88888888-0000-0000-0000-000000000008",
+      "principal_type": "department",
+      "principal_id": "11111111-0000-0000-0000-000000000001",
+      "permission": "read",
+      "expires_at": null
+    },
+    {
+      "id": "aaaaaaaa-0000-0000-0000-000000000008",
+      "document_id": "88888888-0000-0000-0000-000000000009",
+      "principal_type": "employee",
+      "principal_id": "22222222-0000-0000-0000-000000000002",
+      "permission": "edit",
+      "expires_at": null
+    }
+  ],
+  "approval-request": [
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000001",
+      "subject_type": "leave",
+      "subject_id": "22222222-0000-0000-0000-000000000002",
+      "requester_id": "22222222-0000-0000-0000-000000000002",
+      "status": "approved",
+      "title": "연차휴가 신청 (2024-08-05~06)",
+      "expires_at": null
+    },
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000002",
+      "subject_type": "expense",
+      "subject_id": "22222222-0000-0000-0000-000000000003",
+      "requester_id": "22222222-0000-0000-0000-000000000003",
+      "status": "approved",
+      "title": "부산 출장비 정산 150,000원",
+      "expires_at": null
+    },
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000003",
+      "subject_type": "contract",
+      "subject_id": "44444444-0000-0000-0000-000000000006",
+      "requester_id": "22222222-0000-0000-0000-000000000006",
+      "status": "approved",
+      "title": "IT 서비스 계약 체결 승인 요청",
+      "expires_at": null
+    },
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000004",
+      "subject_type": "leave",
+      "subject_id": "22222222-0000-0000-0000-000000000011",
+      "requester_id": "22222222-0000-0000-0000-000000000011",
+      "status": "rejected",
+      "title": "연차휴가 신청 (2024-09-02~06)",
+      "expires_at": null
+    },
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000005",
+      "subject_type": "dispatch",
+      "subject_id": "66666666-0000-0000-0000-000000000012",
+      "requester_id": "22222222-0000-0000-0000-000000000007",
+      "status": "in-progress",
+      "title": "SaaS 계약서 의뢰인 외부 발송 승인",
+      "expires_at": "2026-07-31T23:59:59+00:00"
+    },
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000006",
+      "subject_type": "purchase",
+      "subject_id": "11111111-0000-0000-0000-000000000005",
+      "requester_id": "22222222-0000-0000-0000-000000000012",
+      "status": "pending",
+      "title": "사무용 복합기 구매 결의 (340만원)",
+      "expires_at": null
+    },
+    {
+      "id": "bbbbbbbb-0000-0000-0000-000000000007",
+      "subject_type": "contract",
+      "subject_id": "44444444-0000-0000-0000-000000000001",
+      "requester_id": "22222222-0000-0000-0000-000000000001",
+      "status": "approved",
+      "title": "ABC 손해배상 사건 위임계약 서명 승인",
+      "expires_at": null
+    }
+  ],
+  "approval-step": [
+    {
+      "id": "cccccccc-0000-0000-0000-000000000001",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000001",
+      "sequence": 1,
+      "name": "팀장 승인",
+      "status": "approved",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000002",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000002",
+      "sequence": 1,
+      "name": "팀장 승인",
+      "status": "approved",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000003",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000002",
+      "sequence": 2,
+      "name": "지원팀 확인",
+      "status": "approved",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000004",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000003",
+      "sequence": 1,
+      "name": "담당파트너 승인",
+      "status": "approved",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000005",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000003",
+      "sequence": 2,
+      "name": "대표변호사 최종승인",
+      "status": "approved",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000006",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000004",
+      "sequence": 1,
+      "name": "팀장 승인",
+      "status": "rejected",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000007",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000005",
+      "sequence": 1,
+      "name": "담당파트너 승인",
+      "status": "approved",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000008",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000005",
+      "sequence": 2,
+      "name": "대표변호사 최종승인",
+      "status": "active",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000009",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000006",
+      "sequence": 1,
+      "name": "지원팀장 승인",
+      "status": "pending",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000010",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000006",
+      "sequence": 2,
+      "name": "재무 확인",
+      "status": "pending",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000011",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000006",
+      "sequence": 3,
+      "name": "대표 결재",
+      "status": "pending",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000012",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000007",
+      "sequence": 1,
+      "name": "담당파트너 확인",
+      "status": "approved",
+      "requires_all": true
+    },
+    {
+      "id": "cccccccc-0000-0000-0000-000000000013",
+      "request_id": "bbbbbbbb-0000-0000-0000-000000000007",
+      "sequence": 2,
+      "name": "대표변호사 승인",
+      "status": "approved",
+      "requires_all": true
+    }
+  ],
+  "approver": [
+    {
+      "id": "dddddddd-0000-0000-0000-000000000001",
+      "step_id": "cccccccc-0000-0000-0000-000000000001",
+      "employee_id": "22222222-0000-0000-0000-000000000001",
+      "notified_at": "2024-07-25T09:00:00+00:00",
+      "responded_at": "2024-07-25T09:00:00+00:00"
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000002",
+      "step_id": "cccccccc-0000-0000-0000-000000000002",
+      "employee_id": "22222222-0000-0000-0000-000000000001",
+      "notified_at": "2024-06-10T09:00:00+00:00",
+      "responded_at": "2024-06-10T09:00:00+00:00"
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000003",
+      "step_id": "cccccccc-0000-0000-0000-000000000003",
+      "employee_id": "22222222-0000-0000-0000-000000000012",
+      "notified_at": "2024-06-11T09:00:00+00:00",
+      "responded_at": "2024-06-11T09:00:00+00:00"
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000004",
+      "step_id": "cccccccc-0000-0000-0000-000000000004",
+      "employee_id": "22222222-0000-0000-0000-000000000007",
+      "notified_at": "2024-06-20T09:00:00+00:00",
+      "responded_at": "2024-06-21T09:00:00+00:00"
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000005",
+      "step_id": "cccccccc-0000-0000-0000-000000000005",
+      "employee_id": "22222222-0000-0000-0000-000000000001",
+      "notified_at": "2024-06-22T09:00:00+00:00",
+      "responded_at": "2024-06-22T09:00:00+00:00"
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000006",
+      "step_id": "cccccccc-0000-0000-0000-000000000006",
+      "employee_id": "22222222-0000-0000-0000-000000000010",
+      "notified_at": "2024-08-20T09:00:00+00:00",
+      "responded_at": "2024-08-20T09:00:00+00:00"
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000007",
+      "step_id": "cccccccc-0000-0000-0000-000000000007",
+      "employee_id": "22222222-0000-0000-0000-000000000007",
+      "notified_at": "2026-06-20T09:00:00+00:00",
+      "responded_at": "2026-06-21T09:00:00+00:00"
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000008",
+      "step_id": "cccccccc-0000-0000-0000-000000000008",
+      "employee_id": "22222222-0000-0000-0000-000000000001",
+      "notified_at": "2026-06-21T09:00:00+00:00",
+      "responded_at": null
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000009",
+      "step_id": "cccccccc-0000-0000-0000-000000000009",
+      "employee_id": "22222222-0000-0000-0000-000000000012",
+      "notified_at": "2026-06-22T09:00:00+00:00",
+      "responded_at": null
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000010",
+      "step_id": "cccccccc-0000-0000-0000-000000000010",
+      "employee_id": "22222222-0000-0000-0000-000000000013",
+      "notified_at": null,
+      "responded_at": null
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000011",
+      "step_id": "cccccccc-0000-0000-0000-000000000011",
+      "employee_id": "22222222-0000-0000-0000-000000000001",
+      "notified_at": null,
+      "responded_at": null
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000012",
+      "step_id": "cccccccc-0000-0000-0000-000000000012",
+      "employee_id": "22222222-0000-0000-0000-000000000001",
+      "notified_at": "2024-01-13T09:00:00+00:00",
+      "responded_at": "2024-01-13T09:00:00+00:00"
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000013",
+      "step_id": "cccccccc-0000-0000-0000-000000000013",
+      "employee_id": "22222222-0000-0000-0000-000000000004",
+      "notified_at": "2024-01-14T09:00:00+00:00",
+      "responded_at": "2024-01-14T09:00:00+00:00"
+    },
+    {
+      "id": "dddddddd-0000-0000-0000-000000000014",
+      "step_id": "cccccccc-0000-0000-0000-000000000001",
+      "employee_id": "22222222-0000-0000-0000-000000000004",
+      "notified_at": "2024-07-25T09:00:00+00:00",
+      "responded_at": "2024-07-25T09:00:00+00:00"
+    }
+  ],
+  "approval-decision": [
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000001",
+      "step_id": "cccccccc-0000-0000-0000-000000000001",
+      "approver_id": "dddddddd-0000-0000-0000-000000000001",
+      "decision": "approved",
+      "comment": "승인합니다.",
+      "decided_at": "2024-07-25T09:00:00+00:00"
+    },
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000002",
+      "step_id": "cccccccc-0000-0000-0000-000000000002",
+      "approver_id": "dddddddd-0000-0000-0000-000000000002",
+      "decision": "approved",
+      "comment": "확인 후 승인.",
+      "decided_at": "2024-06-10T09:00:00+00:00"
+    },
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000003",
+      "step_id": "cccccccc-0000-0000-0000-000000000003",
+      "approver_id": "dddddddd-0000-0000-0000-000000000003",
+      "decision": "approved",
+      "comment": "지원팀 확인.",
+      "decided_at": "2024-06-11T09:00:00+00:00"
+    },
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000004",
+      "step_id": "cccccccc-0000-0000-0000-000000000004",
+      "approver_id": "dddddddd-0000-0000-0000-000000000004",
+      "decision": "approved",
+      "comment": "계약 내용 검토 완료. 승인.",
+      "decided_at": "2024-06-21T09:00:00+00:00"
+    },
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000005",
+      "step_id": "cccccccc-0000-0000-0000-000000000005",
+      "approver_id": "dddddddd-0000-0000-0000-000000000005",
+      "decision": "approved",
+      "comment": null,
+      "decided_at": "2024-06-22T09:00:00+00:00"
+    },
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000006",
+      "step_id": "cccccccc-0000-0000-0000-000000000006",
+      "approver_id": "dddddddd-0000-0000-0000-000000000006",
+      "decision": "rejected",
+      "comment": "재판 일정 충돌로 반려. 일정 조정 후 재신청 바람.",
+      "decided_at": "2024-08-20T09:00:00+00:00"
+    },
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000007",
+      "step_id": "cccccccc-0000-0000-0000-000000000007",
+      "approver_id": "dddddddd-0000-0000-0000-000000000007",
+      "decision": "approved",
+      "comment": "1차 승인.",
+      "decided_at": "2026-06-21T09:00:00+00:00"
+    },
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000008",
+      "step_id": "cccccccc-0000-0000-0000-000000000012",
+      "approver_id": "dddddddd-0000-0000-0000-000000000012",
+      "decision": "approved",
+      "comment": "위임 계약 내용 확인. 승인.",
+      "decided_at": "2024-01-13T09:00:00+00:00"
+    },
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000009",
+      "step_id": "cccccccc-0000-0000-0000-000000000013",
+      "approver_id": "dddddddd-0000-0000-0000-000000000013",
+      "decision": "approved",
+      "comment": "최종 승인.",
+      "decided_at": "2024-01-14T09:00:00+00:00"
+    },
+    {
+      "id": "eeeeeeee-0000-0000-0000-000000000010",
+      "step_id": "cccccccc-0000-0000-0000-000000000001",
+      "approver_id": "dddddddd-0000-0000-0000-000000000014",
+      "decision": "approved",
+      "comment": null,
+      "decided_at": "2024-07-25T09:00:00+00:00"
+    }
+  ]
+}
