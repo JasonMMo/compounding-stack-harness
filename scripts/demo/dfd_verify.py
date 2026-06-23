@@ -122,8 +122,20 @@ chk('VP-P8-05',not bdd,'violation: {}'.format(bdd) if bdd else 'OK')
 dek=[(d['step_id'],d['approver_id']) for d in S.APPROVAL_DECISIONS]
 ddk=[k for k in set(dek) if dek.count(k)>1]
 chk('VP-P8-06',not ddk,'no dup decision key' if not ddk else 'dup: {}'.format(ddk))
-casc_ar='ON DELETE CASCADE' in DDL and 'approval_request' in DDL
-chk('VP-P8-07',casc_ar,'approval_step CASCADE DDL present')
+# VP-P8-07: approval_request 삭제가 전 서브트리(step->approver/decision)까지
+# 연쇄되려면 approval_decision 의 두 FK(step_id, approver_id)가 모두 CASCADE 여야
+# 한다. step_id 만 CASCADE 이고 approver_id 가 RESTRICT 면, step 삭제 시 PG 가
+# approval_approver 를 먼저 지우는 순간 살아있는 decision.approver_id RESTRICT 가
+# 발동해 체인이 깨진다(DEFECT-1). 두 FK 모두 CASCADE 인지 DDL 에서 직접 확인.
+import re
+_db=re.search(r'CREATE TABLE "approval_decision".*?\n\);', DDL, re.S)
+_dt=_db.group(0) if _db else ''
+casc_step='REFERENCES "approval_step" ("id") ON DELETE CASCADE' in _dt
+casc_appr='REFERENCES "approval_approver" ("id") ON DELETE CASCADE' in _dt
+chk('VP-P8-07',casc_step and casc_appr,
+    'decision step_id+approver_id 모두 CASCADE -> request 삭제 체인 무결'
+    if casc_step and casc_appr
+    else 'CASCADE 누락 step_id={} approver_id={}'.format(casc_step,casc_appr))
 na('VP-P8-08','pending->in-progress -- app layer runtime')
 na('VP-P8-09','in-progress->approved -- app layer runtime')
 AQ5=S._aqid(5)
