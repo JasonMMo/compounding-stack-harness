@@ -1,0 +1,557 @@
+# profiles/seed/taskflow-demo.seed.yaml — Demo seed dataset (schema: seed v1)
+#
+# FICTIONAL DEMO DATA. 모든 인물·조직·태스크·댓글은 가공의 데모용이며 실재하지 않는다.
+# Names, employee numbers, task contents are invented for the GTM demo
+# (n9n 플랫폼팀 소프트웨어 제품 개발 시나리오 — 칸반 보드 + Lite-AI 유사 태스크 검색).
+#
+# Consumed by: scripts/workflow/seed_loader.py
+#   1. login (auth.login: demo/demo)
+#   2. POST each record below in file order via entity.create (wire-v1.yaml)
+#   3. store generates the real UUID id; loader maps `ref:` → that id
+#   4. dependent records reference parents via `$ref: <ref-name>` in fk columns
+#
+# Why `ref:` indirection (design note):
+#   The in-memory store assigns server-side UUIDs on create; the client cannot
+#   set `id`. FK columns are validated against the store (catalog_validator
+#   _check_fk → store.find_by_id). So FKs cannot be static UUIDs baked here —
+#   they must be the ids the store returns. The loader resolves `$ref` at POST
+#   time. This keeps the fixture declarative AND contract-honest (no store edits).
+#
+# Records are listed in dependency order (parents before children) so every
+# `$ref` resolves by the time it is needed. Do not reorder casually.
+#
+# Reusable: any adapter exposing the wire-v1 entity.create key can load this
+#   (fastapi today; springboot tomorrow) — it is not fastapi-specific.
+#
+# Task name themes for Lite-AI "similar task" clustering:
+#   - 인증: OAuth2, JWT, 카카오, 비밀번호 재설정
+#   - 결제: PG사 연동, 재시도 큐, 환불 API, 정기결제
+#   - UI/UX: 대시보드 차트, 반응형, 다크모드
+#   - 인프라: CI 캐시, 도커 경량화, DB 인덱스 튜닝
+
+version: 1
+
+seed:
+  slug: taskflow-demo
+  display: "n9n 플랫폼팀 데모 — 태스크 시드 (가공)"
+  note: "직원 6명, 부서 2, 프로젝트 2, 태스크 20건(전 상태 분포), 마일스톤 3, 레이블 4, 댓글 4, 활동 6."
+
+# Demo login (auth.login stub — M1: demo/demo, same across adapters)
+auth:
+  username: demo
+  password: demo
+
+# ─────────────────────────────────────────────────────────────────────────────
+# records: ordered list. Each item:
+#   entity:  wire entity_type (catalog key)
+#   ref:     symbolic id name (other records reference it via $ref)
+#   data:    field map (catalog columns; id/created_at/updated_at are server-set)
+# FK columns use { $ref: <ref-name> } — loader substitutes the created id.
+# ─────────────────────────────────────────────────────────────────────────────
+records:
+
+  # ── departments ────────────────────────────────────────────────────────────
+  - entity: department
+    ref: dept_dev
+    data:
+      code: "DEV"
+      name: "개발팀"
+
+  - entity: department
+    ref: dept_design
+    data:
+      code: "DESIGN"
+      name: "디자인팀"
+
+  # ── employees ───────────────────────────────────────────────────────────────
+  # 개발팀 4명, 디자인팀 2명. 1명 on-leave(이지아).
+  - entity: employee
+    ref: emp_junho
+    data:
+      employee_number: "EMP-1001"
+      full_name: "김준호"
+      department_id: { $ref: dept_dev }
+      hire_date: "2020-03-02"
+      status: "active"
+
+  - entity: employee
+    ref: emp_jiah
+    data:
+      employee_number: "EMP-1002"
+      full_name: "이지아"
+      department_id: { $ref: dept_dev }
+      hire_date: "2021-07-12"
+      status: "on-leave"
+
+  - entity: employee
+    ref: emp_seungwoo
+    data:
+      employee_number: "EMP-1003"
+      full_name: "박승우"
+      department_id: { $ref: dept_dev }
+      hire_date: "2022-01-10"
+      status: "active"
+
+  - entity: employee
+    ref: emp_hyunji
+    data:
+      employee_number: "EMP-1004"
+      full_name: "최현지"
+      department_id: { $ref: dept_dev }
+      hire_date: "2023-04-03"
+      status: "active"
+
+  - entity: employee
+    ref: emp_minseo
+    data:
+      employee_number: "EMP-2001"
+      full_name: "정민서"
+      department_id: { $ref: dept_design }
+      hire_date: "2021-09-06"
+      status: "active"
+
+  - entity: employee
+    ref: emp_yuna
+    data:
+      employee_number: "EMP-2002"
+      full_name: "오유나"
+      department_id: { $ref: dept_design }
+      hire_date: "2022-11-21"
+      status: "active"
+
+  # ── projects ────────────────────────────────────────────────────────────────
+  - entity: project
+    ref: proj_portal
+    data:
+      code: "PORTAL-2026"
+      name: "고객 포털 리뉴얼"
+      owner_id: { $ref: emp_junho }
+      status: "active"
+      start_date: "2026-04-01"
+      end_date: "2026-09-30"
+      budget: 45000000
+
+  - entity: project
+    ref: proj_payment
+    data:
+      code: "PAY-2026"
+      name: "결제 시스템 고도화"
+      owner_id: { $ref: emp_seungwoo }
+      status: "active"
+      start_date: "2026-05-01"
+      end_date: "2026-10-31"
+      budget: 32000000
+
+  # ── milestones ──────────────────────────────────────────────────────────────
+  - entity: milestone
+    ref: ms_portal_alpha
+    data:
+      project_id: { $ref: proj_portal }
+      name: "포털 알파 배포"
+      due_date: "2026-07-15"
+      status: "pending"
+      description: "인증·대시보드·반응형 UI 완성 후 내부 알파 배포"
+
+  - entity: milestone
+    ref: ms_portal_ux_done
+    data:
+      project_id: { $ref: proj_portal }
+      name: "UX 디자인 확정"
+      due_date: "2026-06-10"
+      status: "achieved"
+      achieved_at: "2026-06-09T14:00:00Z"
+      description: "다크모드 토큰·대시보드 차트 시안 최종 확정"
+
+  - entity: milestone
+    ref: ms_payment_pg
+    data:
+      project_id: { $ref: proj_payment }
+      name: "PG사 연동 완료"
+      due_date: "2026-07-31"
+      status: "pending"
+      description: "결제 모듈 PG사 연동 및 환불 API QA 통과"
+
+  # ── task-labels (project-scoped) ────────────────────────────────────────────
+  - entity: task-label
+    ref: label_bug
+    data:
+      project_id: { $ref: proj_portal }
+      name: "버그"
+      color: "#e11d48"
+
+  - entity: task-label
+    ref: label_feature
+    data:
+      project_id: { $ref: proj_portal }
+      name: "기능"
+      color: "#2563eb"
+
+  - entity: task-label
+    ref: label_urgent
+    data:
+      project_id: { $ref: proj_portal }
+      name: "긴급"
+      color: "#ea580c"
+
+  - entity: task-label
+    ref: label_tech_debt
+    data:
+      project_id: { $ref: proj_portal }
+      name: "기술부채"
+      color: "#7c3aed"
+
+  # ── tasks — proj_portal (인증·UI 테마) ─────────────────────────────────────
+  # 인증 테마
+  - entity: task
+    ref: task_oauth
+    data:
+      project_id: { $ref: proj_portal }
+      name: "로그인 OAuth2 소셜 연동 구현"
+      status: "done"
+      assignee_id: { $ref: emp_junho }
+      due_date: "2026-05-30"
+      estimated_hours: 16
+      actual_hours: 18
+      progress_pct: 100
+      priority: "high"
+
+  - entity: task
+    ref: task_jwt
+    data:
+      project_id: { $ref: proj_portal }
+      name: "JWT 토큰 갱신 로직 버그 수정"
+      status: "done"
+      assignee_id: { $ref: emp_junho }
+      due_date: "2026-06-05"
+      estimated_hours: 8
+      actual_hours: 10
+      progress_pct: 100
+      priority: "urgent"
+
+  - entity: task
+    ref: task_kakao
+    data:
+      project_id: { $ref: proj_portal }
+      name: "카카오 간편 로그인 추가"
+      status: "in-progress"
+      assignee_id: { $ref: emp_seungwoo }
+      due_date: "2026-07-05"
+      estimated_hours: 12
+      progress_pct: 60
+      priority: "normal"
+
+  - entity: task
+    ref: task_pw_reset
+    data:
+      project_id: { $ref: proj_portal }
+      name: "비밀번호 재설정 이메일 발송 구현"
+      status: "todo"
+      assignee_id: { $ref: emp_seungwoo }
+      due_date: "2026-07-20"
+      estimated_hours: 8
+      progress_pct: 0
+      priority: "normal"
+
+  # 하위 태스크: task_kakao의 서브태스크
+  - entity: task
+    ref: task_kakao_sdk
+    data:
+      project_id: { $ref: proj_portal }
+      parent_task_id: { $ref: task_kakao }
+      name: "카카오 SDK 설치 및 앱 키 환경변수 설정"
+      status: "done"
+      assignee_id: { $ref: emp_seungwoo }
+      estimated_hours: 3
+      actual_hours: 2
+      progress_pct: 100
+      priority: "normal"
+
+  # UI 테마
+  - entity: task
+    ref: task_dashboard_chart
+    data:
+      project_id: { $ref: proj_portal }
+      name: "대시보드 차트 UI 리뉴얼"
+      status: "done"
+      assignee_id: { $ref: emp_minseo }
+      due_date: "2026-06-08"
+      estimated_hours: 20
+      actual_hours: 22
+      progress_pct: 100
+      priority: "high"
+
+  - entity: task
+    ref: task_responsive
+    data:
+      project_id: { $ref: proj_portal }
+      name: "모바일 반응형 레이아웃 적용"
+      status: "in-progress"
+      assignee_id: { $ref: emp_yuna }
+      due_date: "2026-07-10"
+      estimated_hours: 16
+      progress_pct: 45
+      priority: "high"
+
+  - entity: task
+    ref: task_darkmode
+    data:
+      project_id: { $ref: proj_portal }
+      name: "다크모드 테마 토큰 정의"
+      status: "done"
+      assignee_id: { $ref: emp_minseo }
+      due_date: "2026-06-07"
+      estimated_hours: 10
+      actual_hours: 9
+      progress_pct: 100
+      priority: "normal"
+
+  - entity: task
+    ref: task_a11y
+    data:
+      project_id: { $ref: proj_portal }
+      name: "접근성 WCAG 2.1 AA 컴포넌트 감사"
+      status: "todo"
+      due_date: "2026-08-01"
+      estimated_hours: 12
+      progress_pct: 0
+      priority: "low"
+
+  # 인프라 테마 (포털)
+  - entity: task
+    ref: task_ci_cache
+    data:
+      project_id: { $ref: proj_portal }
+      name: "CI 파이프라인 빌드 캐시 최적화"
+      status: "blocked"
+      assignee_id: { $ref: emp_hyunji }
+      due_date: "2026-07-25"
+      estimated_hours: 8
+      progress_pct: 30
+      priority: "normal"
+
+  - entity: task
+    ref: task_docker_slim
+    data:
+      project_id: { $ref: proj_portal }
+      name: "도커 이미지 경량화"
+      status: "todo"
+      assignee_id: { $ref: emp_hyunji }
+      due_date: "2026-08-05"
+      estimated_hours: 6
+      progress_pct: 0
+      priority: "low"
+
+  # 하위 태스크: task_ci_cache의 서브태스크
+  - entity: task
+    ref: task_ci_runner
+    data:
+      project_id: { $ref: proj_portal }
+      parent_task_id: { $ref: task_ci_cache }
+      name: "GitHub Actions self-hosted runner 캐시 볼륨 마운트 설정"
+      status: "blocked"
+      assignee_id: { $ref: emp_hyunji }
+      estimated_hours: 4
+      progress_pct: 20
+      priority: "normal"
+
+  # ── tasks — proj_payment (결제 테마) ────────────────────────────────────────
+  - entity: task
+    ref: task_pg
+    data:
+      project_id: { $ref: proj_payment }
+      name: "결제 모듈 PG사 연동"
+      status: "in-progress"
+      assignee_id: { $ref: emp_junho }
+      due_date: "2026-07-20"
+      estimated_hours: 24
+      progress_pct: 50
+      priority: "urgent"
+
+  - entity: task
+    ref: task_retry_queue
+    data:
+      project_id: { $ref: proj_payment }
+      name: "결제 실패 자동 재시도 큐 구현"
+      status: "todo"
+      assignee_id: { $ref: emp_seungwoo }
+      due_date: "2026-08-10"
+      estimated_hours: 16
+      progress_pct: 0
+      priority: "high"
+
+  - entity: task
+    ref: task_refund_api
+    data:
+      project_id: { $ref: proj_payment }
+      name: "환불 처리 API 개발"
+      status: "in-progress"
+      assignee_id: { $ref: emp_seungwoo }
+      due_date: "2026-07-28"
+      estimated_hours: 20
+      progress_pct: 35
+      priority: "high"
+
+  - entity: task
+    ref: task_subscription
+    data:
+      project_id: { $ref: proj_payment }
+      name: "정기결제 스케줄러 구축"
+      status: "todo"
+      due_date: "2026-09-01"
+      estimated_hours: 30
+      progress_pct: 0
+      priority: "normal"
+
+  - entity: task
+    ref: task_db_index
+    data:
+      project_id: { $ref: proj_payment }
+      name: "DB 인덱스 추가 및 쿼리 튜닝"
+      status: "blocked"
+      assignee_id: { $ref: emp_hyunji }
+      due_date: "2026-07-31"
+      estimated_hours: 10
+      progress_pct: 40
+      priority: "high"
+
+  - entity: task
+    ref: task_payment_webhook
+    data:
+      project_id: { $ref: proj_payment }
+      name: "결제 완료 웹훅 수신 및 주문 상태 갱신 처리"
+      status: "cancelled"
+      assignee_id: { $ref: emp_junho }
+      estimated_hours: 12
+      progress_pct: 20
+      priority: "normal"
+
+  - entity: task
+    ref: task_pg_sandbox
+    data:
+      project_id: { $ref: proj_payment }
+      name: "PG사 샌드박스 테스트 환경 구성 및 시나리오 문서화"
+      status: "done"
+      assignee_id: { $ref: emp_junho }
+      due_date: "2026-06-20"
+      estimated_hours: 8
+      actual_hours: 7
+      progress_pct: 100
+      priority: "normal"
+
+  # ── task-label-links ─────────────────────────────────────────────────────────
+  - entity: task-label-link
+    ref: link_jwt_bug
+    data:
+      task_id: { $ref: task_jwt }
+      label_id: { $ref: label_bug }
+
+  - entity: task-label-link
+    ref: link_jwt_urgent
+    data:
+      task_id: { $ref: task_jwt }
+      label_id: { $ref: label_urgent }
+
+  - entity: task-label-link
+    ref: link_kakao_feature
+    data:
+      task_id: { $ref: task_kakao }
+      label_id: { $ref: label_feature }
+
+  - entity: task-label-link
+    ref: link_ci_techdebt
+    data:
+      task_id: { $ref: task_ci_cache }
+      label_id: { $ref: label_tech_debt }
+
+  - entity: task-label-link
+    ref: link_docker_techdebt
+    data:
+      task_id: { $ref: task_docker_slim }
+      label_id: { $ref: label_tech_debt }
+
+  # ── task-comments ─────────────────────────────────────────────────────────
+  - entity: task-comment
+    ref: comment_kakao_1
+    data:
+      task_id: { $ref: task_kakao }
+      author_id: { $ref: emp_seungwoo }
+      body: "카카오 SDK 초기화는 완료했습니다. 이제 인가 코드 교환 → 액세스 토큰 흐름 구현 중입니다. 내일까지 기본 플로우 완성 목표예요."
+
+  - entity: task-comment
+    ref: comment_ci_1
+    data:
+      task_id: { $ref: task_ci_cache }
+      author_id: { $ref: emp_hyunji }
+      body: "self-hosted runner 환경 변수 권한 이슈로 캐시 볼륨 마운트가 안 됩니다. DevOps 쪽 IAM 정책 확인이 필요해서 blocked 처리했어요."
+
+  - entity: task-comment
+    ref: comment_pg_1
+    data:
+      task_id: { $ref: task_pg }
+      author_id: { $ref: emp_junho }
+      body: "토스페이먼츠 연동 문서 기준으로 결제 요청·승인 흐름은 완성했습니다. 가상계좌 콜백 처리 부분이 남아 있어서 이번 주 안에 마무리할 예정입니다."
+
+  - entity: task-comment
+    ref: comment_db_index_1
+    data:
+      task_id: { $ref: task_db_index }
+      author_id: { $ref: emp_hyunji }
+      body: "EXPLAIN ANALYZE 결과 orders 테이블 status+created_at 복합 인덱스 미비로 Seq Scan 발생 중. 운영 DB 락 타임 조율이 필요해서 DBA 컨펌 대기 중입니다."
+
+  # ── task-activities ───────────────────────────────────────────────────────
+  - entity: task-activity
+    ref: act_oauth_created
+    data:
+      task_id: { $ref: task_oauth }
+      actor_id: { $ref: emp_junho }
+      action: "created"
+
+  - entity: task-activity
+    ref: act_oauth_done
+    data:
+      task_id: { $ref: task_oauth }
+      actor_id: { $ref: emp_junho }
+      action: "status-changed"
+      field: "status"
+      old_value: "in-progress"
+      new_value: "done"
+
+  - entity: task-activity
+    ref: act_jwt_urgent
+    data:
+      task_id: { $ref: task_jwt }
+      actor_id: { $ref: emp_junho }
+      action: "status-changed"
+      field: "status"
+      old_value: "todo"
+      new_value: "in-progress"
+
+  - entity: task-activity
+    ref: act_ci_blocked
+    data:
+      task_id: { $ref: task_ci_cache }
+      actor_id: { $ref: emp_hyunji }
+      action: "status-changed"
+      field: "status"
+      old_value: "in-progress"
+      new_value: "blocked"
+
+  - entity: task-activity
+    ref: act_dashboard_done
+    data:
+      task_id: { $ref: task_dashboard_chart }
+      actor_id: { $ref: emp_minseo }
+      action: "status-changed"
+      field: "status"
+      old_value: "in-progress"
+      new_value: "done"
+
+  - entity: task-activity
+    ref: act_pg_assigned
+    data:
+      task_id: { $ref: task_pg }
+      actor_id: { $ref: emp_junho }
+      action: "assigned"
+      field: "assignee_id"
+      old_value: null
+      new_value: "emp_junho"
