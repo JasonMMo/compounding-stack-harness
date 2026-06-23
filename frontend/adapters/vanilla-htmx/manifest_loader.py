@@ -175,6 +175,53 @@ class ManifestLoader:
             return []
         return entry.get("hidden_fields", [])
 
+    def board_descriptor(self, entity_type: str) -> dict | None:
+        """
+        Return a board descriptor for an entity if it is board-enabled.
+
+        An entity is board-enabled when it has a field named 'status' with
+        control='select' and a non-empty options list.  This is determined
+        generically from the manifest fields — no per-entity hardcoding.
+
+        Returns:
+            dict with keys:
+              group_by   — always 'status'
+              columns    — list of option values in manifest order (kanban column order)
+              card_fields — display fields on each card: first 4 non-status, non-hidden
+                            fields that are not FK internals (id, *_id hidden).
+            None when the entity is not board-enabled or manifest is not loaded.
+        """
+        if not self._loaded:
+            return None
+        fields = self.entity_fields(entity_type)
+        if not fields:
+            return None
+
+        # Find the status enum field
+        status_field = next(
+            (f for f in fields if f.get("name") == "status" and f.get("control") == "select"),
+            None,
+        )
+        if status_field is None:
+            return None
+        columns = status_field.get("options") or []
+        if not columns:
+            return None
+
+        # Card fields: up to 4 non-status, non-hidden fields for display
+        hidden = set(self.hidden_fields(entity_type))
+        card_fields = [
+            f["name"]
+            for f in fields
+            if f["name"] != "status" and f["name"] not in hidden
+        ][:4]
+
+        return {
+            "group_by": "status",
+            "columns": columns,
+            "card_fields": card_fields,
+        }
+
 
 # ---------------------------------------------------------------------------
 # Singleton — imported by server.py at startup
