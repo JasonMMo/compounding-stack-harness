@@ -20,6 +20,22 @@
 {# Error banner placeholder — htmx move errors inject here #}
 <div id="board-error-banner"></div>
 
+{# Similar-task search — only for task entity (search-similar is task-specific) #}
+{% if entity_type == 'task' %}
+<div class="similar-search-bar">
+  <label for="similar-search-input" class="sr-only">유사 태스크 검색</label>
+  <input id="similar-search-input"
+         type="search" name="q"
+         class="form-input similar-search-input"
+         placeholder="유사 태스크 검색…"
+         hx-get="{{ url_for('tasks_similar') }}"
+         hx-trigger="input changed delay:400ms, search"
+         hx-target="#similar-results"
+         hx-include="this">
+  <div id="similar-results" class="similar-results-container" aria-live="polite"></div>
+</div>
+{% endif %}
+
 {# Kanban board — horizontal scroll container #}
 <div class="board-container" role="region" aria-label="{{ entity_label }} 칸반 보드">
   {% for col in columns_order %}
