@@ -1788,6 +1788,15 @@ body {
   margin: 0;
 }
 
+.home-hero__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-inline-md, 12px);
+  margin-top: var(--space-stack-md, 20px);
+  position: relative;
+  z-index: 1;
+}
+
 .home-hero__stats {
   display: flex;
   gap: 32px;
