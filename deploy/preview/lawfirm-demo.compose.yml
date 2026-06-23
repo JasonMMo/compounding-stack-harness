@@ -21,6 +21,7 @@ services:
     environment:
       PORT: "8081"
       PYTHONIOENCODING: "utf-8"
+      SEED_FILE: "/app/seed-data/lawfirm-demo.json"
     # No custom network — Coolify attaches containers to its uuid network only.
     # Traefik can only reach uuid-net IPs; declaring preview-net caused bistable 504.
     restart: unless-stopped
