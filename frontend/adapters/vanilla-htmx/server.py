@@ -479,6 +479,7 @@ def entity_list(entity_type: str):
         sort_direction=sort_direction,
         search=search,
         entity_label=manifest.label(entity_type) or entity_type,
+        board_enabled=manifest.board_descriptor(entity_type) is not None,
         wire_version=loader.wire_version(),
     )
 
@@ -709,6 +710,138 @@ def entity_delete_post(entity_type: str, entity_id: str):
         already_deleted=False,
         wire_version=loader.wire_version(),
     )
+
+
+# ---------------------------------------------------------------------------
+# Kanban board — state machine + board view  (project vertical / generic)
+# ---------------------------------------------------------------------------
+
+# Allowed status transitions (seed §Business Rules rule 7).
+# Keys are current status, values are the set of valid next statuses.
+# Entities without a status field or without this mapping are not guarded.
+_TASK_STATUS_MACHINE: dict[str, set[str]] = {
+    "todo":        {"in-progress"},
+    "in-progress": {"blocked", "done"},
+    "blocked":     {"in-progress"},
+    "done":        set(),          # terminal — no outgoing edges
+    "cancelled":   set(),          # terminal
+}
+
+# Generic fallback: no guard (allow any transition)
+# — used for entities with status fields that don't follow the task machine
+_STATUS_MACHINES: dict[str, dict[str, set[str]]] = {
+    "task": _TASK_STATUS_MACHINE,
+}
+
+
+def _validate_status_transition(entity_type: str, from_status: str, to_status: str) -> str | None:
+    """
+    Check if a status transition is allowed for entity_type.
+
+    Returns None when the transition is valid, or an error message string
+    when it is forbidden.  If the entity_type has no registered machine,
+    the transition is allowed (open for extension — other entities with
+    status fields can still use the board view without a hard guard).
+    """
+    machine = _STATUS_MACHINES.get(entity_type)
+    if machine is None:
+        return None  # no machine registered → allow
+    allowed = machine.get(from_status)
+    if allowed is None:
+        return f"알 수 없는 현재 상태: '{from_status}'"
+    if to_status not in allowed:
+        if not allowed:
+            return f"'{from_status}' 상태는 변경 불가합니다 (종료 상태)."
+        allowed_str = ", ".join(sorted(allowed))
+        return f"'{from_status}' → '{to_status}' 전이는 허용되지 않습니다. 허용: {allowed_str}"
+    return None
+
+
+@app.get("/board/<entity_type>")
+@_require_login
+def entity_board(entity_type: str):
+    """
+    Kanban board view for a board-enabled entity.
+
+    Fetches all records (up to size=200), groups by 'status', and renders
+    board.html with columns ordered per the manifest enum options.
+
+    Only accessible for entities where manifest.board_descriptor() is non-None
+    (i.e. entity has a status field with control=select + options list).
+    """
+    board = manifest.board_descriptor(entity_type)
+    if board is None:
+        abort(404)
+
+    # Fetch records — large page to get all items for the board view
+    payload, status = _proxy_request(
+        "GET",
+        _entity_path(entity_type),
+        params={"paging_mode": "offset", "page": "1", "size": "200"},
+        token=_current_token(),
+    )
+    if payload.get("error"):
+        return _render_error(payload, status, entity_type)
+
+    items = payload.get("items", [])
+
+    # Group items by status column order
+    columns_order = board["columns"]
+    grouped: dict[str, list[dict]] = {col: [] for col in columns_order}
+    for item in items:
+        col_val = str(item.get(board["group_by"], "")) if item.get(board["group_by"]) is not None else ""
+        if col_val in grouped:
+            grouped[col_val].append(item)
+        # items with unknown status values are silently dropped (schema drift)
+
+    return render_template(
+        "board.html",
+        entity_type=entity_type,
+        entity_label=manifest.label(entity_type) or entity_type,
+        board=board,
+        columns_order=columns_order,
+        grouped=grouped,
+        wire_version=loader.wire_version(),
+    )
+
+
+@app.post("/board/<entity_type>/<entity_id>/move")
+@_require_login
+def entity_board_move(entity_type: str, entity_id: str):
+    """
+    Move a card to a new status column (htmx endpoint).
+
+    Expects form fields: from_status, to_status.
+    Validates against the state machine before forwarding to backend PATCH.
+    On success returns the updated board fragment (hx-swap="outerHTML" on caller).
+    On validation error returns HTTP 422 with an error banner fragment.
+    """
+    from_status = request.form.get("from_status", "").strip()
+    to_status = request.form.get("to_status", "").strip()
+
+    # State machine guard
+    err_msg = _validate_status_transition(entity_type, from_status, to_status)
+    if err_msg:
+        return (
+            f'<div class="error-banner" role="alert">{err_msg}</div>',
+            422,
+        )
+
+    # Forward PATCH to backend
+    payload, status = _proxy_request(
+        "PATCH",
+        _entity_path(entity_type, entity_id),
+        body={"entity_type": entity_type, "id": entity_id, "data": {"status": to_status}},
+        token=_current_token(),
+    )
+    if payload.get("error"):
+        err = payload["error"]
+        code = err.get("code", "INTERNAL")
+        msg = loader.message_ko(code)
+        return f'<div class="error-banner" role="alert">{msg}</div>', status
+
+    # On success, re-render the full board as an htmx response
+    return redirect(url_for("entity_board", entity_type=entity_type))
 
 
 # ---------------------------------------------------------------------------
