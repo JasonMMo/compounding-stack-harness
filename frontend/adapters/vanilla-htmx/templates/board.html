@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}{{ entity_label }} 보드{% endblock %}
+
+{% block content %}
+<div class="entity-header">
+  <div class="entity-header__info">
+    <p class="entity-header__eyebrow">{{ entity_type | replace('-', ' ') }}</p>
+    <h1 class="entity-header__title">{{ entity_label }} 칸반 보드</h1>
+    <p class="entity-header__meta">{{ grouped.values() | map('length') | sum }}건</p>
+  </div>
+  <div class="entity-header__actions">
+    <a href="{{ url_for('entity_list', entity_type=entity_type) }}"
+       class="btn btn-secondary btn-sm">목록 보기</a>
+    <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}"
+       class="btn btn-primary btn-sm">+ 추가</a>
+    <a href="{{ url_for('home') }}" class="btn btn-md btn-on-dark">⌂ 홈</a>
+  </div>
+</div>
+
+{# Error banner placeholder — htmx move errors inject here #}
+<div id="board-error-banner"></div>
+
+{# Kanban board — horizontal scroll container #}
+<div class="board-container" role="region" aria-label="{{ entity_label }} 칸반 보드">
+  {% for col in columns_order %}
+  {% set cards = grouped.get(col, []) %}
+  <div class="board-column" data-status="{{ col }}" aria-label="{{ col }} 컬럼">
+    <div class="board-column__header">
+      <span class="board-column__title">{{ col | replace('-', ' ') | title }}</span>
+      <span class="board-column__count" aria-label="{{ cards | length }}건">{{ cards | length }}</span>
+    </div>
+
+    <div class="board-column__cards"
+         id="board-col-{{ col | replace('-', '_') }}"
+         ondragover="event.preventDefault()"
+         ondrop="boardDrop(event, '{{ col }}')">
+      {% if cards %}
+        {% for item in cards %}
+        {% set item_id = item.get('id', '') %}
+        <div class="board-card"
+             draggable="true"
+             data-id="{{ item_id }}"
+             data-status="{{ col }}"
+             ondragstart="boardDragStart(event, '{{ item_id }}', '{{ col }}')"
+             role="listitem"
+             aria-label="{{ item.get(board.card_fields[0], item_id) if board.card_fields else item_id }}">
+
+          {# Card fields — display up to 4 manifest-defined card_fields #}
+          {% for field_name in board.card_fields %}
+          {% set val = item.get(field_name) %}
+          {% if val is not none and val != '' %}
+          <div class="board-card__field">
+            <span class="board-card__field-label">{{ field_name | replace('_', ' ') | title }}</span>
+            <span class="board-card__field-value">{{ val }}</span>
+          </div>
+          {% endif %}
+          {% endfor %}
+
+          {# Card actions — quick status move buttons + detail link #}
+          <div class="board-card__actions">
+            {# Allowed next statuses for this entity type #}
+            {% set current = col %}
+            {% if entity_type == 'task' %}
+              {% if current == 'todo' %}
+                <button type="button"
+                        class="btn btn-ghost btn-sm board-card__move-btn"
+                        hx-post="{{ url_for('entity_board_move', entity_type=entity_type, entity_id=item_id) }}"
+                        hx-vals='{"from_status": "{{ current }}", "to_status": "in-progress"}'
+                        hx-target="#board-error-banner"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                  진행중으로 →
+                </button>
+              {% elif current == 'in-progress' %}
+                <button type="button"
+                        class="btn btn-ghost btn-sm board-card__move-btn"
+                        hx-post="{{ url_for('entity_board_move', entity_type=entity_type, entity_id=item_id) }}"
+                        hx-vals='{"from_status": "{{ current }}", "to_status": "blocked"}'
+                        hx-target="#board-error-banner"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                  블록으로
+                </button>
+                <button type="button"
+                        class="btn btn-primary btn-sm board-card__move-btn"
+                        hx-post="{{ url_for('entity_board_move', entity_type=entity_type, entity_id=item_id) }}"
+                        hx-vals='{"from_status": "{{ current }}", "to_status": "done"}'
+                        hx-target="#board-error-banner"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                  완료 ✓
+                </button>
+              {% elif current == 'blocked' %}
+                <button type="button"
+                        class="btn btn-ghost btn-sm board-card__move-btn"
+                        hx-post="{{ url_for('entity_board_move', entity_type=entity_type, entity_id=item_id) }}"
+                        hx-vals='{"from_status": "{{ current }}", "to_status": "in-progress"}'
+                        hx-target="#board-error-banner"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                  재개 →
+                </button>
+              {% endif %}
+            {% else %}
+              {# Generic entity: no state machine guard — allow any move via select #}
+              <form method="post"
+                    action="{{ url_for('entity_board_move', entity_type=entity_type, entity_id=item_id) }}"
+                    class="board-card__move-form"
+                    hx-post="{{ url_for('entity_board_move', entity_type=entity_type, entity_id=item_id) }}"
+                    hx-target="#board-error-banner"
+                    hx-swap="innerHTML"
+                    hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                <input type="hidden" name="from_status" value="{{ current }}">
+                <label class="sr-only" for="move-select-{{ item_id }}">상태 변경</label>
+                <select id="move-select-{{ item_id }}" name="to_status"
+                        class="form-input board-card__move-select"
+                        onchange="this.form.requestSubmit()">
+                  {% for opt in columns_order %}
+                  <option value="{{ opt }}" {% if opt == current %}selected{% endif %}>{{ opt | replace('-', ' ') | title }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            {% endif %}
+            <a href="{{ url_for('entity_detail', entity_type=entity_type, entity_id=item_id) }}"
+               class="btn btn-ghost btn-sm">상세</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="board-column__empty" aria-label="빈 컬럼">
+        <span class="text-empty">항목 없음</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// HTML5 Drag-and-drop support for kanban board (no external libraries).
+// Graceful degradation: the htmx button controls work without drag.
+
+let _dragId = null;
+let _dragFromStatus = null;
+
+function boardDragStart(event, itemId, fromStatus) {
+  _dragId = itemId;
+  _dragFromStatus = fromStatus;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', itemId);
+}
+
+function boardDrop(event, toStatus) {
+  event.preventDefault();
+  if (!_dragId || _dragFromStatus === toStatus) return;
+
+  const formData = new FormData();
+  formData.append('from_status', _dragFromStatus);
+  formData.append('to_status', toStatus);
+
+  fetch('{{ url_for("entity_board_move", entity_type=entity_type, entity_id="__ID__") }}'.replace('__ID__', _dragId), {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: formData,
+  })
+  .then(resp => {
+    const banner = document.getElementById('board-error-banner');
+    if (resp.ok) {
+      window.location.reload();
+    } else {
+      resp.text().then(html => { if (banner) banner.innerHTML = html; });
+    }
+  })
+  .catch(() => {
+    const banner = document.getElementById('board-error-banner');
+    if (banner) banner.innerHTML = '<div class="error-banner" role="alert">네트워크 오류가 발생했습니다.</div>';
+  })
+  .finally(() => {
+    _dragId = null;
+    _dragFromStatus = null;
+  });
+}
+</script>
+{% endblock %}
