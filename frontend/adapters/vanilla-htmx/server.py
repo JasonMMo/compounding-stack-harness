@@ -302,12 +302,18 @@ def home():
     Shows customer.display heading + domain cards (with entity links).
     Falls back gracefully when no manifest is loaded (generic heading).
     """
+    board_entities: list[dict] = []
+    for domain in manifest.domains():
+        for entity in domain.get("entities", []):
+            if manifest.board_descriptor(entity["key"]) is not None:
+                board_entities.append({"key": entity["key"], "label": entity["label"]})
     return render_template(
         "home.html",
         customer_display=manifest.customer_display(),
         domains=manifest.domains(),
         feedback_url=manifest.feedback_url(),
         wire_version=loader.wire_version(),
+        board_entities=board_entities,
     )
 
 
