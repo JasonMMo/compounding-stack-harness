@@ -12,6 +12,16 @@
   </h1>
   <p class="home-hero__subtitle">오늘도 효율적인 업무를 시작하세요.</p>
 
+  {% if board_entities %}
+  <div class="home-hero__cta">
+    {% for be in board_entities %}
+    <a href="{{ url_for('entity_board', entity_type=be.key) }}" class="btn btn-primary btn-md">
+      {{ be.label }} 보드
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {% if domains %}
   <div class="home-hero__stats">
     <div class="home-hero__stat">
