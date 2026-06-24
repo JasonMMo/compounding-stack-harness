@@ -39,6 +39,11 @@
   {% endif %}
 </form>
 
+{# Similar-task AI search — shared partial, self-gated to task (Growth-124).
+   Distinct from the substring toolbar above: this is Lite-AI semantic/lexical
+   similarity (wire key project.search-similar) with an honesty mode badge. #}
+{% include "_similar_search.html" %}
+
 {# Table #}
 {% if items %}
 <div class="table-wrapper" role="region" aria-label="{{ entity_type }} 목록">
