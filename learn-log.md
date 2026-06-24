@@ -740,3 +740,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈**: UI 가 노출한 기능(자유텍스트 검색)이 백엔드 계약에 없으면 "조용히 0건"으로 죽는다 — 비예약키=exact-filter 라는 어댑터 디폴트가 자유텍스트 박스와 충돌. 새 입력 표면은 contract 예약키+의미 정의가 선행돼야.
 - **잔여(founder)**: 9개 데모 Coolify 재배포(공유 fastapi 백엔드 재빌드로 픽업).
 - §6 rollup: [Growth-126] entity.list 자유텍스트 `search` 결함 — 비예약키 exact-filter 오용으로 전 업종 데모 검색 0건. `search` 예약키 승격+전필드 substring(OR, filter 이후) fastapi+springboot 파리티, contract 명문화. fastapi 86 passed+컴플라이언스 가드. 교훈: UI 노출 기능이 계약에 없으면 조용히 0건. founder 9데모 재배포 잔여. 5커밋.
+## Growth-127 — 소형 로펌 killer-app 2종(K1 기일 가디언·K2 이해충돌 검사) + 로폼 경쟁분석, 15커밋
+
+**맥락**: founder "소형 법무법인 타겟 killer app 추가 — 로폼(business.lawform.io) 분석해 needs 도출, 로폼 구독 SaaS 와 경쟁 회피·in-house 완성형으로". CTO 분석(wiki synthesis 환류 [[lawform-competitive-analysis]]): 로폼=계약(contract)축·생성형·클라우드구독·대기업법무팀/개인 → **소형 로펌의 사건(case)축은 사각지대**. 정면충돌(CLM·계약생성) 회피, 사건축·검색형·self-host 로 우회. founder 선택 K1+K2 둘 다.
+- **K1 기일·기한 가디언**: catalog `case-deadline`(legal, FK case_id→legal-case)+DDL augment `11_legal_case_deadline.sql`(신규테이블·case-scoped RLS)+profile/seed 12건(임박4·미래5·지남1·완료2). vanilla-htmx 리스트 임박(D-7·pending) 하이라이트(server.py imminent_ids + list.html tr--imminent + app.css warning 토큰), 종료상태 제외. honest: "누락 방지" 아님 "임박 표시".
+- **K2 이해충돌 검사**: `project.search-similar` 를 `entity_type` 파라미터(기본 task, open-closed)로 일반화 → `case-party` 이름 유사검색 재사용. wire contract 명문화. case-party 리스트에 conflict 위젯(_similar_search.html 분기)+conflict_results.html(mode 배지·"후보일 뿐 최종판단 변호사" 면책). embed 사이드카 재사용(미설정 시 lexical 폴백).
+- **검증**: fastapi 90 passed(K2 4 신규). 라이브 로컬: case-deadline 12건 서빙·conflict "박서연" 5건. scaffold lawfirm-demo 15엔티티 정상. py_compile OK. app.css 기존 raw-hex 3줄(834-836) 토큰 교정(가드 부분개선). G-1 PASS, 신규 G-12 위반 0.
+- **잔여(founder)**: ①lawfirm-demo Coolify 재배포(공유 fastapi+프론트 재빌드) ②**manifest scp**(out/lawfirm-demo/screen-manifest.json → /data/coolify/manifests/lawfirm-demo/, case-deadline nav 노출 필수) ③seed 기일 날짜 2026-06 앵커(시간경과 시 임박 퇴색 — 주기 갱신).
+- **교훈**: 경쟁 SaaS 와 같은 축에서 싸우지 말고 사각지대(사건축)를 self-host 완성형으로 — 차별화=기능 더하기 아니라 축 바꾸기. 기존 검색엔진을 entity_type 파라미터 하나로 새 killer-app(이해충돌)으로 재사용=복리.
+- §6 rollup: [Growth-127] 소형로펌 killer-app K1 기일가디언(case-deadline entity+DDL+임박 하이라이트)·K2 이해충돌검사(search-similar→entity_type 일반화로 case-party 재사용). 로폼=계약/구독/생성형, 사각지대=사건축 → self-host 검색형 우회([[lawform-competitive-analysis]]). fastapi 90 passed·라이브로컬 PASS. 잔여 founder: 재배포+manifest scp. 15커밋.
