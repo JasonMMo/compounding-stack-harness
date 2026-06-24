@@ -153,6 +153,58 @@ else:
 
 
 # ---------------------------------------------------------------------------
+# Form → typed payload coercion helper (F-5: form strings → contract types)
+# ---------------------------------------------------------------------------
+
+def _coerce_form_value(v: str, field_type: str):
+    """
+    Convert a form string value to the Python type expected by the backend contract.
+
+    Mapping (keyed on manifest field type, same vocabulary as catalog.yaml):
+      integer  → int(v)
+      decimal  → int(v) if integer-string (e.g. "5000000") else float(v)
+                 (avoids float precision loss for whole-number monetary amounts)
+      boolean  → True when v.strip().lower() in {"true","1","on","yes"}
+      all else → v as-is (string, text, date, timestamp, enum, uuid, …)
+
+    On ValueError the original string is returned so the backend produces a
+    clear 422 message rather than a silent crash in the adapter.
+    """
+    try:
+        if field_type == "integer":
+            return int(v)
+        if field_type == "decimal":
+            # Prefer int for whole-number strings to avoid float precision loss
+            # e.g. "5000000" → 5000000 (int), "1000.50" → 1000.5 (float)
+            return int(v) if "." not in v else float(v)
+        if field_type == "boolean":
+            return v.strip().lower() in {"true", "1", "on", "yes"}
+    except (ValueError, AttributeError):
+        pass
+    return v
+
+
+def _coerce_form_data(raw: dict[str, str], entity_type: str) -> dict:
+    """
+    Apply _coerce_form_value to every key in *raw* using the manifest field
+    type map for *entity_type*.
+
+    When the manifest is not loaded (no-manifest fallback mode) or the field
+    is not listed in the manifest, the value is left as a string — same
+    behaviour as before this helper was introduced.
+
+    This function is manifest-driven: it never hard-codes specific field names.
+    Adding a new decimal/integer/boolean field to the profile catalog
+    automatically gives it correct coercion without touching this file.
+    """
+    fields = manifest.entity_fields(entity_type)
+    if not fields:
+        return raw  # no-manifest mode: leave all values as strings
+    type_map = {f["name"]: f.get("type", "string") for f in fields}
+    return {k: _coerce_form_value(v, type_map.get(k, "string")) for k, v in raw.items()}
+
+
+# ---------------------------------------------------------------------------
 # Reverse proxy helper (F-1 / F-4 logic lives here)
 # ---------------------------------------------------------------------------
 
@@ -558,11 +610,12 @@ def entity_detail_partial(entity_type: str, entity_id: str):
 def entity_update(entity_type: str, entity_id: str):
     # Collect all non-empty form fields as the patch data (skip hidden/system fields)
     hidden = set(manifest.hidden_fields(entity_type))
-    data = {
+    raw = {
         k: v
         for k, v in request.form.items()
         if k != "_method" and v != "" and k not in hidden
     }
+    data = _coerce_form_data(raw, entity_type)
     payload, status = _proxy_request(
         "PATCH",
         _entity_path(entity_type, entity_id),
@@ -617,11 +670,12 @@ def entity_create_form(entity_type: str):
 def entity_create_post(entity_type: str):
     # hidden_fields are excluded from create POST (they are system-generated)
     hidden = set(manifest.hidden_fields(entity_type))
-    data = {
+    raw = {
         k: v
         for k, v in request.form.items()
         if v != "" and k not in hidden
     }
+    data = _coerce_form_data(raw, entity_type)
     payload, status = _proxy_request(
         "POST",
         _entity_path(entity_type),
