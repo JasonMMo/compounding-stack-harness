@@ -327,6 +327,15 @@ keys:
           required: false
           default: 5
           description: "Max results. Clamped to [1, 50] by the adapter."
+        entity_type:
+          type: string
+          required: false
+          default: task
+          description: >-
+            Entity type to search over. Default `task` (original behaviour).
+            Growth-127 (K2) reuses this same similarity engine for `case-party`
+            to provide a conflict-of-interest name check before engagement.
+            The `mode` honesty contract is unchanged regardless of entity_type.
     response:
       fields:
         mode:
