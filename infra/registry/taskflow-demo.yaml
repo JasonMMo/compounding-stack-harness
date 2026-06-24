@@ -17,7 +17,7 @@ preview:
   manifest_server_path: null    # 없음 — 매니페스트는 seeder 컨테이너가 shared volume에 생성
   status: live
   deployed_at: "2026-06-24"
-  build_commit: null
+  build_commit: "79a0729"   # Growth-125: embed 사이드카 + mode=semantic L4 live PASS
   tls: null
 production:
   install_method: null
