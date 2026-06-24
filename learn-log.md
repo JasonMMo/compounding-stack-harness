@@ -730,3 +730,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈**: ①provider 규약을 맞출 때 "단일 embed 로 query+passage 한방"은 G-87 비대칭 head 를 silently 깨뜨림 → 프로토콜 자체를 query/passage 2-메서드로 분리해 caller 가 교차 못 하게 강제. ②사이드카는 backend 와 hard depends_on 결합하지 말 것 — graceful-fallback 설계의 resilience(미가동 시 lexical)가 오케스트레이션 레벨에서 사라짐.
 - **잔여**: L4 live `mode=semantic` 실증 — Coolify 재배포(embed 이미지 빌드 ~수분) 후 `taskflow-demo.n9n.co.kr` 검색에서 "AI 의미검색" 배지 확인(push 자동배포 또는 founder redeploy). taskflow Growth-121 잔여 전부 종결.
 - §6 rollup: [Growth-125] taskflow mode=semantic 실현 — legal-rag embed-adapter(한국어 e5) 재사용, provider 를 비대칭 embed_query/embed_passages(G-87 query/passage head) 로 재배선. compose embed 사이드카+TASKFLOW_EMBED_URL=http://embed:8080(depends_on 생략=lexical resilience 보존). L1 30 PASS·G-1 PASS. **L4 live PASS** — 재배포 후 	askflow-demo.n9n.co.kr 검색이 'AI 의미검색'(semantic, cosine top 86%) 확증, lexical-distinct 쿼리 3종 전부 semantic. taskflow Growth-121 잔여 전부 종결. 5커밋.
+
+## Growth-126 — entity.list 자유텍스트 `search` 결함 수정: 전 데모 검색 0건 → 부분일치 (G-126), 5커밋
+
+**맥락**: founder "데모 포털 카드의 데모들 전부 검색이 안 된다". CTO 진단 — vanilla-htmx 공유 리스트 툴바의 자유텍스트 "검색…" 박스가 `?search=<term>` 전송하나, 백엔드 entity.list 가 비예약키를 **exact field=value 필터**로 처리 → 레코드에 없는 `search` 필드에 매칭 → **모든 업종 데모에서 검색 시 0건**(공유 어댑터 결함, taskflow 한정 아님).
+- **수정**: `search` 를 예약키로 승격, 전 필드값 대소문자무시 substring(OR) 매치를 `filter` 이후 적용. fastapi(`routers/entity.py` _matches_search)+springboot(`EntityController.java` matchesSearch) 양 어댑터 파리티. contract(`wire-v1.yaml`)에 `search` 필드 명문화(어댑터는 exact 필터 금지 — 없는 필드라 0건).
+- **테스트**: fastapi L1 7케이스(부분일치/대소문자/비-name OR/무매치0/공백·미지정 전체반환 회귀가드/filter결합) + `_shared` 컴플라이언스 1케이스(양 어댑터 라이브). fastapi 전체 86 passed. G-1 PASS.
+- **검증 한계**: springboot 미배포(전 데모 fastapi) → L3 gradle 은 오프라인 플러그인 미캐시·무네트워크 룰로 본 환경 미검증, 변경은 matchesFilter 패턴 1:1 미러+컴플라이언스 라이브 가드로 보증.
+- **교훈**: UI 가 노출한 기능(자유텍스트 검색)이 백엔드 계약에 없으면 "조용히 0건"으로 죽는다 — 비예약키=exact-filter 라는 어댑터 디폴트가 자유텍스트 박스와 충돌. 새 입력 표면은 contract 예약키+의미 정의가 선행돼야.
+- **잔여(founder)**: 9개 데모 Coolify 재배포(공유 fastapi 백엔드 재빌드로 픽업).
+- §6 rollup: [Growth-126] entity.list 자유텍스트 `search` 결함 — 비예약키 exact-filter 오용으로 전 업종 데모 검색 0건. `search` 예약키 승격+전필드 substring(OR, filter 이후) fastapi+springboot 파리티, contract 명문화. fastapi 86 passed+컴플라이언스 가드. 교훈: UI 노출 기능이 계약에 없으면 조용히 0건. founder 9데모 재배포 잔여. 5커밋.
