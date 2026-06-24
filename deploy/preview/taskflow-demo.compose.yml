@@ -26,6 +26,13 @@ services:
       PORT: "8081"
       PYTHONIOENCODING: "utf-8"
       # No SEED_FILE — taskflow uses in-memory store seeded via seeder service
+      # Lite-AI similar-search (wire project.search-similar): base URL of the
+      # internal embed sidecar. Set → mode=semantic; unset/unreachable → graceful
+      # lexical fallback. Internal Docker service only (API비0, no cloud). G-125.
+      # NOTE: backend intentionally does NOT depends_on embed — it starts and
+      # serves lexical immediately, flipping to semantic once embed is healthy
+      # (~60s model load). This preserves the honesty-fallback resilience.
+      TASKFLOW_EMBED_URL: "http://embed:8080"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/api/status/health')"]
       interval: 5s
@@ -75,6 +82,31 @@ services:
       seeder:
         condition: service_completed_successfully
     restart: unless-stopped
+
+  # ── Embed: reused legal-rag embed-adapter (8th-axis asset reuse, G-125) ──────
+  # Model intfloat/multilingual-e5-base (768-dim, Korean+English) baked into the
+  # image at build time; HF_HUB_OFFLINE at runtime → zero cloud, zero per-request
+  # API cost. Internal only — no external port. Coolify isolates each project's
+  # docker network, so the legal-rag stack's embed is NOT reachable here; this
+  # stack runs its own instance.
+  # CONTRACT (consumed by backend services/task_search.py::LocalEmbeddingProvider):
+  #   POST /embed        {"text": str}        -> {"embedding": [float x 768]}   (query head)
+  #   POST /embed/batch  {"texts": [str,...]} -> {"embeddings": [[float x 768]]} (passage head)
+  #   GET  /health       -> 200
+  embed:
+    build:
+      context: services/legal-rag/embed-adapter
+      dockerfile: Dockerfile
+    environment:
+      EMBED_MODEL_NAME: "intfloat/multilingual-e5-base"
+      # EMBED_QUERY_PREFIX / EMBED_PASSAGE_PREFIX defaults are correct (G-87).
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s   # baked model load ~10-20s; generous margin
 
 volumes:
   taskflow_manifest:
