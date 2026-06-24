@@ -1,12 +1,8 @@
 """
 routers/task_search.py — Lite-AI semantic issue search endpoint.
 
-Wire key (adapter-level, pending contract registration):
+Wire key (registered in middle/contract/wire-v1.yaml, Growth-123):
   project.search-similar
-
-TODO: Register 'project.search-similar' in middle/contract/wire-v1.yaml
-      once the CTO/contract owner confirms the stable wire key shape.
-      This router is adapter-local until that decision is made.
 
 Endpoint:
   POST /api/project/search-similar
