@@ -1681,6 +1681,37 @@ entities:
     #   fts_vector (tsvector GENERATED ALWAYS): postgres-specific; in augment DDL, not neutral catalog.
     #   RLS: case-scoped (attorney/partner only). See out/legal-rag-mvp/schema/04_case_document_augment.sql.
 
+  case-deadline:
+    # Growth-127 — K1 "기일·기한 가디언". 소형 로펌 killer-app: 변호사 최대 리스크(기일·시효 누락) 추적.
+    # 로폼(LawForm) 미커버 사건축. self-host·검색형 차별. wiki: syntheses/lawform-competitive-analysis.
+    domain: legal
+    table: legal_case_deadline
+    label_ko: 기일·기한
+    primary_key: id
+    columns:
+      id:                   { type: uuid,      nullable: false }
+      created_at:           { type: timestamp, nullable: false }
+      updated_at:           { type: timestamp, nullable: false }
+      case_id:              { type: uuid,      nullable: false,
+                              fk: { entity: legal-case, column: id, on_delete: cascade } }
+      deadline_type:        { type: enum,      values: [court_date, filing, statute_of_limitations, other], nullable: false }
+      title:                { type: string,    nullable: false }
+      due_date:             { type: date,      nullable: false }
+      status:               { type: enum,      values: [pending, done, missed], nullable: false }
+      assigned_attorney_id: { type: uuid,      nullable: true,
+                              fk: { entity: employee, column: id, on_delete: set_null } }
+      notes:                { type: string,    nullable: true }
+    constraints: []
+    indexes:
+      - { columns: [case_id] }
+      - { columns: [due_date] }
+      - { columns: [status] }
+    # DDL notes:
+    #   due_date 임박(D-7 이내, status=pending) 행은 프론트가 시각 하이라이트 — application layer.
+    #   statute_of_limitations(시효)는 종결 사건이라도 추적 필요 — terminal 사건 상태와 무관.
+    #   honest-promise: "기한 누락 100% 방지" 금지 → "등록된 기일의 임박 알림"만 약속.
+    #   RLS: case-scoped (담당 변호사·파트너만). augment DDL 09_legal_case_deadline.sql 참조.
+
   # ─── legal-rag-mvp additions (Growth-48) ────────────────────────────────────
 
   legal-case-augment:
