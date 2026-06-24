@@ -9,14 +9,14 @@ contact:
 preview:
   subdomain: taskflow-demo.n9n.co.kr
   url: https://taskflow-demo.n9n.co.kr
-  coolify_project: null         # founder가 deploy_to_coolify.py 실행 후 채울 것
-  coolify_app: null
+  coolify_project: tmxqpuzxk4uywv67bhywnnty
+  coolify_app: q1378vp78qvwfv5hh5hzv80o
   coolify_env: null
   coolify_privkey_uuid: s127pafarr46wlu1r2mre2te  # 재사용 (기존 preview 키)
   compose_file: deploy/preview/taskflow-demo.compose.yml
   manifest_server_path: null    # 없음 — 매니페스트는 seeder 컨테이너가 shared volume에 생성
-  status: pending               # founder가 Coolify 배포 후 live 로 갱신
-  deployed_at: null
+  status: live
+  deployed_at: "2026-06-24"
   build_commit: null
   tls: null
 production:
