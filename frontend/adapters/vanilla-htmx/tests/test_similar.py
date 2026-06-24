@@ -242,3 +242,34 @@ class TestSimilarProxyError:
                     status=500)
         response = flask_client.get("/tasks/similar?q=크래시")
         assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# 6. List-view surface — similar-search bar shared partial (Growth-124)
+#    The AI similar-search bar is exposed on the list view too (not only the
+#    board), via the self-gated _similar_search.html include.
+# ---------------------------------------------------------------------------
+
+class TestSimilarSearchBarSurface:
+    def test_task_list_shows_similar_bar(self, flask_client, monkeypatch):
+        """GET /entities/task renders the similar-search input (task-gated)."""
+        _mock_proxy(monkeypatch, {"items": [], "total": 0}, status=200)
+        response = flask_client.get("/entities/task")
+        assert response.status_code == 200
+        html = response.data.decode("utf-8")
+        assert 'id="similar-search-input"' in html
+        assert 'id="similar-results"' in html
+
+    def test_task_board_shows_similar_bar(self, flask_client, monkeypatch):
+        """GET /board/task still renders the bar after partial extraction."""
+        _mock_proxy(monkeypatch, {"items": [], "total": 0}, status=200)
+        response = flask_client.get("/board/task")
+        assert response.status_code == 200
+        assert 'id="similar-search-input"' in response.data.decode("utf-8")
+
+    def test_non_task_list_hides_similar_bar(self, flask_client, monkeypatch):
+        """Non-task entity list must NOT show the similar-search bar (self-gate)."""
+        _mock_proxy(monkeypatch, {"items": [], "total": 0}, status=200)
+        response = flask_client.get("/entities/department")
+        assert response.status_code == 200
+        assert 'id="similar-search-input"' not in response.data.decode("utf-8")
