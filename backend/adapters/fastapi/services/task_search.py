@@ -1,15 +1,15 @@
 """
 services/task_search.py — Lite-AI semantic-like issue search service.
 
-Wire key (future): project.search-similar
-TODO: Register 'project.search-similar' in middle/contract/wire-v1.yaml
-      once the contract owner decides on the stable wire key shape.
-      This module is adapter-level only for now.
+Wire key: project.search-similar (registered in middle/contract/wire-v1.yaml, Growth-123)
 
 Design:
-  - EmbeddingProvider protocol: embed(texts) -> list[list[float]]
-  - LocalEmbeddingProvider: calls TASKFLOW_EMBED_URL (TEI / embedding gemma)
-    via stdlib urllib.request ONLY — no httpx, no numpy, no cloud API deps.
+  - EmbeddingProvider protocol: embed_query(text) + embed_passages(texts)
+    (asymmetric e5 query/passage heads, G-87).
+  - LocalEmbeddingProvider: reuses the legal-rag embed-adapter sidecar
+    (multilingual-e5-base, 768-dim, model baked in, offline) via TASKFLOW_EMBED_URL
+    base url, stdlib urllib.request ONLY — no httpx, no numpy, no cloud API deps
+    (8th-axis asset reuse, Growth-125).
   - Fallback: trigram Jaccard lexical similarity (pure Python, 0 external deps)
     activated when TASKFLOW_EMBED_URL is unset OR embedding call fails.
   - search_similar() returns results with a 'mode' field ("semantic"|"lexical")
@@ -44,45 +44,61 @@ Embedding = list[float]
 
 @runtime_checkable
 class EmbeddingProvider(Protocol):
-    """Minimal embedding provider interface."""
+    """
+    Asymmetric embedding provider interface (e5 query/passage split, G-87).
 
-    def embed(self, texts: list[str]) -> list[Embedding]:
-        """Return one embedding vector per input text (same order, same length)."""
+    A search query and a stored task are embedded through DIFFERENT projection
+    heads, so the provider exposes two methods instead of a single embed():
+      - embed_query    → the user's search text (query head)
+      - embed_passages → the candidate tasks    (passage head)
+    """
+
+    def embed_query(self, text: str) -> Embedding:
+        """Return one embedding vector for a search query (query head)."""
+        ...
+
+    def embed_passages(self, texts: list[str]) -> list[Embedding]:
+        """Return one embedding vector per candidate passage (passage head)."""
         ...
 
 
 # ---------------------------------------------------------------------------
-# LocalEmbeddingProvider — stdlib urllib.request only, no cloud fallback
+# LocalEmbeddingProvider — reuses the legal-rag embed-adapter contract
+# (8th-axis asset reuse, Growth-125). stdlib urllib.request only, no cloud.
 # ---------------------------------------------------------------------------
 
 class LocalEmbeddingProvider:
     """
-    Posts texts to a local TEI / embedding-gemma endpoint.
+    Talks to the legal-rag embed-adapter sidecar (multilingual-e5-base, 768-dim,
+    Korean+English, model baked into the image, fully offline at runtime).
 
-    URL is taken exclusively from TASKFLOW_EMBED_URL env var.
-    If the env var is unset, this provider should not be instantiated
-    (use _resolve_provider() which handles the fallback decision).
+    Contract (matches services/legal-rag/embed-adapter/app.py byte-for-byte):
+      POST {base}/embed        {"text": str}        -> {"embedding": [float...]}   (query head)
+      POST {base}/embed/batch  {"texts": [str,...]} -> {"embeddings": [[float...]]} (passage head)
 
-    No external dependencies. Uses stdlib urllib.request + json.
-    No cloud API URL is hardcoded here or elsewhere in this module.
+    TASKFLOW_EMBED_URL is the BASE url (e.g. http://embed:8080); paths are
+    appended here.  If the env var is unset, this provider is not instantiated
+    (see _resolve_provider() which handles the lexical-fallback decision).
+
+    Asymmetric prefix invariant (G-87): the adapter applies "query: " on /embed
+    and "passage: " on /embed/batch.  taskflow is a NEW one-directional caller —
+    search text MUST go through embed_query, candidate tasks through
+    embed_passages.  Crossing them silently degrades retrieval quality.
+
+    No external dependencies. Uses stdlib urllib.request + json. No cloud API
+    URL is hardcoded here or elsewhere in this module.
     """
 
     def __init__(self, embed_url: str) -> None:
-        self._url = embed_url.rstrip("/")
+        self._base = embed_url.rstrip("/")
 
-    def embed(self, texts: list[str]) -> list[Embedding]:
-        """
-        POST {"inputs": texts} to the TEI endpoint.
-
-        Returns list of float vectors, one per input text.
-        Raises RuntimeError on any network/parse failure (caller catches).
-        """
+    def _post(self, path: str, payload: dict[str, Any]) -> Any:
         import urllib.request
 
-        payload = json.dumps({"inputs": texts}).encode("utf-8")
+        data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(
-            url=self._url,
-            data=payload,
+            url=f"{self._base}{path}",
+            data=data,
             headers={"Content-Type": "application/json"},
             method="POST",
         )
@@ -93,18 +109,34 @@ class LocalEmbeddingProvider:
             raise RuntimeError(f"Embedding endpoint call failed: {exc}") from exc
 
         try:
-            result = json.loads(body)
+            return json.loads(body)
         except json.JSONDecodeError as exc:
-            raise RuntimeError(f"Embedding endpoint returned non-JSON: {body[:200]}") from exc
+            raise RuntimeError(
+                f"Embedding endpoint returned non-JSON: {body[:200]}"
+            ) from exc
 
-        # TEI returns either [[...]] (batch) or [float, ...] (single).
-        # Normalise to always list[list[float]].
-        if not result:
-            raise RuntimeError("Embedding endpoint returned empty result")
-        if isinstance(result[0], list):
-            return [list(map(float, vec)) for vec in result]
-        # Single-item batch returned as flat list of floats
-        return [list(map(float, result))]
+    def embed_query(self, text: str) -> Embedding:
+        """POST /embed (query head). Returns one float vector."""
+        result = self._post("/embed", {"text": text})
+        vec = result.get("embedding") if isinstance(result, dict) else None
+        if not isinstance(vec, list) or not vec:
+            raise RuntimeError(
+                f"Embedding /embed response missing 'embedding': {str(result)[:200]}"
+            )
+        return [float(x) for x in vec]
+
+    def embed_passages(self, texts: list[str]) -> list[Embedding]:
+        """POST /embed/batch (passage head). Returns one float vector per input."""
+        if not texts:
+            return []
+        result = self._post("/embed/batch", {"texts": texts})
+        vecs = result.get("embeddings") if isinstance(result, dict) else None
+        if not isinstance(vecs, list) or len(vecs) != len(texts):
+            raise RuntimeError(
+                f"Embedding /embed/batch malformed: expected {len(texts)} vectors, "
+                f"got {str(result)[:200]}"
+            )
+        return [[float(x) for x in vec] for vec in vecs]
 
 
 # ---------------------------------------------------------------------------
@@ -233,17 +265,18 @@ def search_similar(
     scores: list[float] = []
 
     if provider is not None:
-        # Attempt semantic embedding
-        texts = [_candidate_text(c) for c in pool]
+        # Attempt semantic embedding — asymmetric heads (G-87): query text via
+        # the query head, candidate tasks via the passage head. Empty candidate
+        # text is replaced with a placeholder so the adapter (which 422s on empty
+        # input) never fails the whole batch over one untitled task.
+        texts = [_candidate_text(c) or "(제목 없음)" for c in pool]
         try:
-            all_texts = [query_text] + texts
-            all_embeds = provider.embed(all_texts)
-            if len(all_embeds) != len(all_texts):
+            query_embed = provider.embed_query(query_text)
+            candidate_embeds = provider.embed_passages(texts)
+            if len(candidate_embeds) != len(texts):
                 raise RuntimeError(
-                    f"Expected {len(all_texts)} embeddings, got {len(all_embeds)}"
+                    f"Expected {len(texts)} embeddings, got {len(candidate_embeds)}"
                 )
-            query_embed = all_embeds[0]
-            candidate_embeds = all_embeds[1:]
             scores = [_cosine(query_embed, ce) for ce in candidate_embeds]
             mode = "semantic"
         except Exception as exc:  # noqa: BLE001
