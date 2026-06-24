@@ -708,3 +708,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈**: ①어댑터가 먼저 동작하고 contract 가 뒤따르는 패턴은 정상이나, "pending registration" docstring TODO 는 복리 누락 신호 — 동작 확인 즉시 single-source 승격. ②contract 는 코드 모양을 그대로 박는 게 아니라 honesty/idempotent/clamp 같은 **불변 계약**을 명문화하는 자리(특히 mode 배지 의무는 코드 주석만으론 약함 → contract 박제).
 - **잔여(taskflow Growth-121)**: ③ search box list 뷰 노출 검토(CTO), ② TEI 연결 시 mode=semantic 실증(founder env 게이트).
 - §6 rollup: [Growth-123] taskflow `project.search-similar` 와이어키 등록 — 어댑터-로컬→middle wire-v1 single-source 승격(project 도메인 신설, mode honesty/idempotent/clamp 계약 박제). 라우터 TODO 제거·README 8→9. G-1 PASS, 30테스트 무회귀. 3커밋 푸시.
+
+## Growth-124 — taskflow 유사검색 바 list-뷰 노출 + 공유 partial 추출 (Growth-121 잔여 ③), 7커밋
+
+**맥락**: Growth-121 에서 taskflow Lite-AI 유사검색을 **board.html 에만** 인라인으로 surface. founder "이어서 마무리" → 잔여 ③ list 뷰 노출. board 인라인 블록을 그대로 복붙하면 중복 누적 = 복리 위반 → **공유 partial 추출 후 board+list 양쪽 include** 방식 채택.
+
+- **공유 partial**(`templates/_similar_search.html`, 신규): board 인라인 블록(15줄)을 self-gated partial 로 추출. `{% if entity_type == 'task' %}` 게이트를 partial **내부**에 두어 include 를 무조건화(비-task 는 무출력) — 호출부가 게이트 중복 안 함. honesty: mode 배지는 fragment(similar_results.html)가 유지하므로 partial 은 입력바만.
+- **배선**: board.html 인라인 → include 리팩터(기능 동일). list.html + list-master-detail + list-modal + list-top-bottom **4개 list 레이아웃 전부**에 include 추가(task 가 env 로 어느 레이아웃에 배정돼도 동일 기대 충족). list 의 기존 substring 툴바와는 **별개** — 그건 entity.list filter(부분일치), 이건 Lite-AI 의미/키워드 유사도(wire `project.search-similar`, mode 배지).
+- **테스트**(test_similar.py +3): `/entities/task` 바 노출 / `/board/task` 무회귀 / `/entities/department` 미노출(self-gate 검증). Flask 테스트 클라이언트(mock _proxy_request).
+- **CTO 검증 함정 회피**: standalone Jinja 렌더 스모크가 base.html 미충족 컨텍스트(Flask context_processor 의 manifest 전역 부재)로 content 블록 비어 **False 오판** → Flask 테스트 클라이언트로 전환해 실재 검증. **템플릿 검증은 standalone Jinja 아닌 app test_client 가 정답**(context_processor 의존). 119 passed(1 pre-existing hex FAIL 무관, app.css 무수정).
+- **교훈**: ①두 번째 surface 추가 = 복붙 신호 → 즉시 partial 추출(게이트는 partial 내부로 끌어와 호출부 무조건화). ②Jinja 템플릿 검증을 standalone Environment 로 하면 base.html 의 context_processor 전역이 비어 블록이 통째로 누락돼 false negative — Flask `app.test_client()` 사용. ③`git -C <repo>` 는 Bash persisted-cwd 훅 깨짐([[subagent-cwd-hook-fragility]])을 우회하는 안정 패턴.
+- **잔여(taskflow Growth-121)**: ② TEI 연결 시 mode=semantic 실증(founder env 게이트)만 남음.
+- §6 rollup: [Growth-124] taskflow 유사검색 바 list-뷰 노출(4 레이아웃 전부) — board 인라인 블록을 self-gated 공유 partial(_similar_search.html)로 추출해 board+list include. substring 툴바와 별개 Lite-AI 유사도. +3 테스트(노출/무회귀/미노출). standalone Jinja false negative 함정 → Flask test_client 전환. 7커밋.
