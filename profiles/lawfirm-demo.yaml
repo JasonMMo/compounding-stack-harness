@@ -34,7 +34,9 @@ security:
 domains:
   - slug: legal
     display: 법무 (사건·판례)
-    entities: [legal-case, precedent, case-party, case-document]
+    entities: [legal-case, precedent, case-party, case-document, case-deadline]
+    # case-deadline (Growth-127, K1): 기일·기한 가디언 killer-app — 임박 추적
+
   - slug: hr
     display: 인원 관리
     entities: [employee, department]
