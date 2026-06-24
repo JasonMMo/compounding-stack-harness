@@ -161,7 +161,17 @@ keys:
         filter:
           type: object
           required: false
-          description: "Key=value pairs applied as WHERE conditions."
+          description: "Key=value pairs applied as WHERE conditions (exact match)."
+        search:
+          type: string
+          required: false
+          description: >-
+            Free-text filter. Case-insensitive substring match against the
+            string form of ALL field values of each record (logical OR across
+            fields). Applied AFTER `filter`. Empty/absent → no text filtering.
+            Carried as the `search` HTTP query param. Adapters MUST NOT treat
+            `search` as an exact field=value filter (that field rarely exists,
+            so it would silently return zero rows — the defect fixed Growth-126).
         paging:
           type: object
           required: false
