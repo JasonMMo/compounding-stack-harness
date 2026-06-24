@@ -60,6 +60,11 @@ class SearchSimilarBody(BaseModel):
     query_text: str = Field(..., description="Search query text")
     exclude_id: Optional[str] = Field(None, description="Entity id to exclude from results")
     top_n: int = Field(5, ge=1, le=50, description="Maximum results to return")
+    entity_type: str = Field(
+        "task",
+        description="Entity type to search over (default 'task'). K2 (Growth-127) reuses "
+        "this engine for 'case-party' conflict-of-interest check by name.",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -70,6 +75,7 @@ def _run_search(
     query_text: str,
     exclude_id: str | None,
     top_n: int,
+    entity_type: str = "task",
 ) -> JSONResponse:
     if not query_text or not query_text.strip():
         return JSONResponse(
@@ -77,7 +83,9 @@ def _run_search(
             status_code=200,
         )
 
-    candidates: list[dict[str, Any]] = entity_store.find_all("task")
+    # entity_type defaults to "task" (existing behaviour, open-closed). K2 passes
+    # "case-party" to run the same similarity engine for conflict-of-interest check.
+    candidates: list[dict[str, Any]] = entity_store.find_all(entity_type or "task")
 
     try:
         result = search_similar(
@@ -117,6 +125,7 @@ async def search_similar_get(
     query_text: str = "",
     exclude_id: str | None = None,
     top_n: int = 5,
+    entity_type: str = "task",
 ) -> JSONResponse:
     """
     GET /api/project/search-similar
@@ -125,11 +134,13 @@ async def search_similar_get(
       query_text  — search text (required; empty returns empty list)
       exclude_id  — optional task id to exclude
       top_n       — max results (default 5, max 50)
+      entity_type — entity to search (default 'task'; 'case-party' for K2 conflict check)
     """
     return _run_search(
         query_text=query_text,
         exclude_id=exclude_id,
         top_n=max(1, min(top_n, 50)),
+        entity_type=entity_type,
     )
 
 
@@ -149,4 +160,5 @@ async def search_similar_post(body: SearchSimilarBody) -> JSONResponse:
         query_text=body.query_text,
         exclude_id=body.exclude_id,
         top_n=body.top_n,
+        entity_type=body.entity_type,
     )
