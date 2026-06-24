@@ -509,6 +509,31 @@ def entity_list(entity_type: str):
     # Derive column names from first item (generic — entity_type drives shape)
     columns = list(items[0].keys()) if items else []
 
+    # K1 기일 가디언 (Growth-127): 임박 기한 행을 시각 하이라이트한다.
+    # 대상 컬럼 = 전방 지향 기한(due_date / next_hearing_date / *deadline*)만.
+    # filed_date·decided_date 등 과거 사실 일자는 제외 — "임박"은 미래 D-7 이내만 의미.
+    # honest-promise: "누락 방지"가 아니라 "등록된 기일의 임박 표시"일 뿐.
+    from datetime import date as _date
+    _today = _date.today()
+    _deadline_cols = [c for c in columns if c in ("due_date", "next_hearing_date") or "deadline" in c]
+    imminent_ids: set = set()
+    if _deadline_cols:
+        for _it in items:
+            # 종료 상태(done/missed/closed/withdrawn)는 임박 대상 아님
+            if str(_it.get("status", "")).lower() in ("done", "missed", "closed", "withdrawn"):
+                continue
+            for _dc in _deadline_cols:
+                _val = _it.get(_dc)
+                if not _val:
+                    continue
+                try:
+                    _d = _date.fromisoformat(str(_val)[:10])
+                except (ValueError, TypeError):
+                    continue
+                if 0 <= (_d - _today).days <= 7:
+                    imminent_ids.add(_it.get("id"))
+                    break
+
     # Pagination math (offset mode)
     page_int = int(paging_page) if paging_page.isdigit() else 1
     size_int = int(paging_size) if paging_size.isdigit() else 20
@@ -527,6 +552,7 @@ def entity_list(entity_type: str):
         entity_type=entity_type,
         items=items,
         columns=columns,
+        imminent_ids=imminent_ids,
         total=total,
         paging_mode=paging_mode,
         paging_page=page_int,
@@ -957,6 +983,52 @@ def tasks_similar():
 
     return render_template(
         "similar_results.html",
+        mode=payload.get("mode"),
+        items=payload.get("items", []),
+        query=q,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Conflict-of-interest check  (K2, Growth-127 — legal vertical)
+# Reuses project.search-similar over case-party (entity_type=case-party).
+# Honesty: results are CANDIDATES; final conflict judgment is the attorney's.
+# ---------------------------------------------------------------------------
+
+@app.get("/parties/conflict")
+@_require_login
+def parties_conflict():
+    """
+    Server-rendered htmx fragment for conflict-of-interest name check.
+
+    A prospective party name is searched against existing case-party records
+    (same similarity engine as tasks_similar, entity_type=case-party).
+    Surfaces the 'mode' badge and a standing honesty disclaimer.
+    """
+    q = request.args.get("q", "").strip()
+    top_n_raw = request.args.get("top_n", "8").strip()
+    try:
+        top_n = max(1, min(20, int(top_n_raw)))
+    except (ValueError, TypeError):
+        top_n = 8
+
+    if not q:
+        return render_template("conflict_results.html", mode=None, items=[], query="")
+
+    payload, status = _proxy_request(
+        "GET",
+        "/api/project/search-similar",
+        params={"query_text": q, "top_n": top_n, "entity_type": "case-party"},
+        token=_current_token(),
+    )
+
+    if status != 200 or payload.get("error"):
+        err = payload.get("error") or {}
+        msg = loader.message_ko(err.get("code", "INTERNAL"))
+        return render_template("conflict_results.html", mode=None, items=[], query=q, error=msg)
+
+    return render_template(
+        "conflict_results.html",
         mode=payload.get("mode"),
         items=payload.get("items", []),
         query=q,
