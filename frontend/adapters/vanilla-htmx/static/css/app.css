@@ -831,9 +831,57 @@ body {
 }
 
 /* Hostinger: hover = 연회색, 줄무늬 없음 */
-.tr:hover .td { background: #F8FAFC; }
-.tr--alt .td  { background: #FFFFFF; }   /* 줄무늬 제거 */
-.tr--alt:hover .td { background: #F8FAFC; }
+.tr:hover .td { background: var(--color-surface-2); }
+.tr--alt .td  { background: var(--color-surface-1); }   /* 줄무늬 제거 */
+.tr--alt:hover .td { background: var(--color-surface-2); }
+
+/* ── K1 기일 가디언 (Growth-127): 임박 기한 행 하이라이트 ───────────────── */
+.tr--imminent .td { background: var(--color-warning-subtle); }
+.tr--imminent:hover .td { background: var(--color-warning-subtle); }
+.tr--imminent .td:first-child {
+  border-left: 3px solid var(--color-warning);
+  font-weight: var(--font-weight-medium, 600);
+}
+.badge--imminent {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  margin-right: 0.4rem;
+  border-radius: var(--radius-badge);
+  background: var(--color-warning);
+  color: var(--color-warning-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium, 600);
+  white-space: nowrap;
+}
+.imminent-legend {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--color-warning);
+  background: var(--color-warning-subtle);
+  color: var(--color-warning-text);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm, 6px);
+}
+
+/* ── K2 이해충돌 검사 (Growth-127) ───────────────────────────────────────── */
+.conflict-search-bar { margin: 0.5rem 0 0.75rem; }
+.conflict-search-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium, 600);
+  color: var(--color-text-2);
+}
+.conflict-disclaimer {
+  margin: 0.4rem 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-3);
+}
+.similar-row__meta {
+  margin-left: 0.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-3);
+}
 
 .text-empty { color: var(--color-text-3); }
 .text-caption { font-size: var(--font-size-xs); color: var(--color-text-3); }
