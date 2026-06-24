@@ -29,4 +29,4 @@
 
 ## Syntheses
 
-(없음)
+- [lawform-competitive-analysis](syntheses/lawform-competitive-analysis.md) — 로폼 경쟁분석: 로폼=계약/대기업법무팀/생성형/구독, 소형로펌 사건축은 사각지대. killer-app K1 기일가디언·K2 이해충돌검사(사건축·검색형·self-host로 비경쟁 우회) (updated: 2026-06-25) `[SYNTHESIZED]`
