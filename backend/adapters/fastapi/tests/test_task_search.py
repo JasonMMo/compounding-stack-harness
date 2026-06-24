@@ -83,22 +83,33 @@ TASKS = [
 class _FixedEmbeddingProvider:
     """
     Returns pre-defined embeddings so tests are deterministic.
-    All embeddings are 4-dimensional unit vectors (different per text index).
+    Mirrors the asymmetric provider contract: embed_query(text) for the search
+    query, embed_passages(texts) for the candidate tasks (G-87 query/passage).
+    All embeddings are 4-dimensional vectors (different per text index).
     """
 
-    def __init__(self, embeddings: list[list[float]]) -> None:
-        self._embeddings = embeddings
+    def __init__(self, query_vec: list[float], passage_vecs: list[list[float]]) -> None:
+        self._query_vec = query_vec
+        self._passage_vecs = passage_vecs
 
-    def embed(self, texts: list[str]) -> list[list[float]]:
-        if len(texts) > len(self._embeddings):
-            raise ValueError(f"Fake provider only has {len(self._embeddings)} embeddings")
-        return self._embeddings[: len(texts)]
+    def embed_query(self, text: str) -> list[float]:
+        return self._query_vec
+
+    def embed_passages(self, texts: list[str]) -> list[list[float]]:
+        if len(texts) > len(self._passage_vecs):
+            raise ValueError(
+                f"Fake provider only has {len(self._passage_vecs)} passage embeddings"
+            )
+        return self._passage_vecs[: len(texts)]
 
 
 class _FailingEmbeddingProvider:
     """Always raises RuntimeError to test graceful fallback."""
 
-    def embed(self, texts: list[str]) -> list[list[float]]:
+    def embed_query(self, text: str) -> list[float]:
+        raise RuntimeError("Simulated embedding endpoint failure")
+
+    def embed_passages(self, texts: list[str]) -> list[list[float]]:
         raise RuntimeError("Simulated embedding endpoint failure")
 
 
@@ -175,8 +186,7 @@ class TestSemanticMode:
             [0.9, 0.1, 0.0, 0.0],   # task-4: close to query
             [0.0, 0.0, 1.0, 0.0],   # task-5: orthogonal → cosine 0.0
         ]
-        all_vecs = [query_vec] + task_vecs
-        return _FixedEmbeddingProvider(all_vecs)
+        return _FixedEmbeddingProvider(query_vec, task_vecs)
 
     def test_returns_semantic_mode_when_provider_set(self, monkeypatch):
         monkeypatch.setenv("TASKFLOW_EMBED_URL", "http://localhost:9999")
