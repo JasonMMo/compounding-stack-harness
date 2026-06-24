@@ -27,5 +27,6 @@ production:
     backend: fastapi
 secret_ref:
   - vault/taskflow-demo/secret-key    # infra/secrets/taskflow-demo-secret-key.txt (gitignored)
-cost_note: "preview 티어 공유 VPS (187.77.140.157) 귀속분, Hostinger KVM2 $8.99/월 공유"
+cost_note: "preview 티어 공유 VPS (187.77.140.157) 귀속분, Hostinger KVM2 $8.99/월 공유. Growth-125: embed 사이드카(multilingual-e5-base) 추가 — 런타임 RAM +~400-500MB. legal-rag 도 별도 embed 가동 중이라 8GB 공유 여유 모니터링 필요 (Coolify 프로젝트 net 격리로 embed 공유 불가). hedge 후보: 단일 공유 embed 서비스."
 data_note: "in-memory store — 재시작 시 데이터 소멸. 실 고객 데이터 저장 금지."
+feature_note: "Lite-AI 유사검색(wire project.search-similar): TASKFLOW_EMBED_URL=http://embed:8080 설정 시 mode=semantic('AI 의미검색' 배지), 미설정/미가동 시 lexical 폴백('키워드 검색'). embed-adapter 규약(/embed query head · /embed/batch passage head, G-87) 재사용 (Growth-125)."
