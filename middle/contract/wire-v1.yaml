@@ -9,8 +9,9 @@
 # decision when the first adapter lands (M1).
 #
 # Key namespace: <domain>.<verb> — two-segment dotted path.
-#   domain: auth | entity | status
+#   domain: auth | entity | project | status
 #   verb:   login | logout | read | list | create | update | delete | health
+#           | search-similar  (hyphenated multi-word verbs allowed; see project domain)
 # Rationale: short enough to grep, long enough to be self-documenting.
 # New domains added here as presets/skills/<industry> warrant.
 #
@@ -283,6 +284,62 @@ keys:
       fields:
         success:
           type: boolean
+        error:
+          type: object
+          required: false
+          description: "Standard error envelope — see error_envelope and error/codes.yaml. Null on success."
+
+  # ── project domain ─────────────────────────────────────────────────────────
+  # Lite-AI value-add over the entity domain. Read-only, content-similarity
+  # search across a single entity type (currently "task"). Backed by an optional
+  # embedding service; degrades to lexical search when unavailable.
+
+  project.search-similar:
+    idempotent: true
+    description: >-
+      Content-similarity search over tasks. Returns ranked candidates plus a
+      `mode` flag stating HOW results were ranked. Cloud API cost: zero —
+      semantic mode uses a self-hosted embedding service, lexical mode is a
+      local fallback. Callers MUST surface `mode` to the user as a badge
+      (honesty contract — lexical results must never be labelled as AI/semantic).
+    request:
+      fields:
+        query_text:
+          type: string
+          required: true
+          description: "Free-text query. Empty/whitespace returns an empty list (mode=lexical, no backend call)."
+        exclude_id:
+          type: string
+          required: false
+          description: "Entity id to omit from results (e.g. the task being edited)."
+        top_n:
+          type: integer
+          required: false
+          default: 5
+          description: "Max results. Clamped to [1, 50] by the adapter."
+    response:
+      fields:
+        mode:
+          type: string
+          enum: [semantic, lexical]
+          description: >-
+            How results were ranked. `semantic` only when the embedding service
+            is configured AND the call succeeded; `lexical` otherwise (env unset
+            or embedding call failed → graceful fallback). ALWAYS present.
+        items:
+          type: array
+          description: "Ranked matches. Each item is the full entity field map plus a `score`."
+          items:
+            type: object
+            fields:
+              id:
+                type: string
+              score:
+                type: number
+                description: "Relevance score (higher = closer). Scale depends on `mode`."
+        total:
+          type: integer
+          description: "Number of items returned (== items length)."
         error:
           type: object
           required: false
