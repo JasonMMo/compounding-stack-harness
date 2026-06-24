@@ -1,0 +1,20 @@
+{# Similar-task AI search bar (Lite-AI, wire key project.search-similar).
+   Self-gated to the task entity — search-similar is task-specific.
+   Single source shared by board.html and list*.html (Growth-124).
+   Renders nothing for non-task entities, so includes can be unconditional.
+   Honesty: the returned fragment (similar_results.html) carries the mode
+   badge — lexical results are never labelled as AI/semantic. #}
+{% if entity_type == 'task' %}
+<div class="similar-search-bar">
+  <label for="similar-search-input" class="sr-only">유사 태스크 검색</label>
+  <input id="similar-search-input"
+         type="search" name="q"
+         class="form-input similar-search-input"
+         placeholder="유사 태스크 검색…"
+         hx-get="{{ url_for('tasks_similar') }}"
+         hx-trigger="input changed delay:400ms, search"
+         hx-target="#similar-results"
+         hx-include="this">
+  <div id="similar-results" class="similar-results-container" aria-live="polite"></div>
+</div>
+{% endif %}
