@@ -3,7 +3,10 @@
 # Build context: repo root (Coolify clones whole repo, build context = clone root)
 #
 # Domain: set via Coolify API PATCH docker_compose_domains (not SERVICE_FQDN_* env)
-# Manifest: server-side persistent file mounted read-only into frontend
+# Manifest: generated at deploy time by a one-shot manifest service, written to a
+#           shared volume that the frontend mounts read-only. No host bind-mount,
+#           no manual scp — a plain Redeploy regenerates it from current git so
+#           new entities appear in nav automatically (mirrors taskflow-demo).
 #
 # Coolify deployment:
 #   build_pack: dockercompose
@@ -25,6 +28,21 @@ services:
     # No custom network — Coolify attaches containers to its uuid network only.
     # Traefik can only reach uuid-net IPs; declaring preview-net caused bistable 504.
     restart: unless-stopped
+
+  manifest:
+    # One-shot: regenerates screen-manifest.json from current git on each Redeploy
+    # and writes it to the shared volume. Data comes from the backend's baked
+    # SEED_FILE, so this generator does manifest-only (no HTTP seeding).
+    build:
+      context: .
+      dockerfile: scripts/manifest-generator/Dockerfile
+    environment:
+      PYTHONIOENCODING: "utf-8"
+      PROFILE_SLUG: "lawfirm-demo"
+      MANIFEST_OUT: "/data/manifest/screen-manifest.json"
+    volumes:
+      - lawfirm_manifest:/data/manifest
+    restart: "no"
 
   frontend:
     build:
@@ -48,14 +66,19 @@ services:
       KILLER_APP_DESC: "RAG 기반 판례 원문 검색 — 변호사용"
       # SECRET_KEY injected via Coolify environment variables (not in compose file)
     volumes:
-      # Persistent manifest file — scp'd to server before deploy
-      # Path: /data/coolify/manifests/lawfirm-demo/screen-manifest.json
-      - type: bind
-        source: /data/coolify/manifests/lawfirm-demo/screen-manifest.json
-        target: /data/manifest/screen-manifest.json
-        read_only: true
+      # Shared manifest volume — written by the one-shot manifest service.
+      - lawfirm_manifest:/data/manifest:ro
     ports:
       - "5000"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
+      manifest:
+        condition: service_completed_successfully
     restart: unless-stopped
+
+volumes:
+  lawfirm_manifest:
+    # Shared ephemeral volume: manifest service writes, frontend reads.
+    # Local to this Coolify stack — no host bind-mount, no scp.
+    # Regenerated on every Redeploy, so new entities appear in nav automatically.
