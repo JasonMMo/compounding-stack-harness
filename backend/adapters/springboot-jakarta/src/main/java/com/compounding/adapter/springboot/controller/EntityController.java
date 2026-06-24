@@ -98,11 +98,16 @@ public class EntityController {
         String sortField     = p.get("sort.field");
         String sortDirection = p.getOrDefault("sort.direction", "asc");
 
-        // Build filter map: everything that is not a reserved paging/sort key
+        // Build filter map: everything that is not a reserved paging/sort/search key.
+        // 'search' is the free-text toolbar param — handled as a substring match
+        // (matchesSearch), NOT an exact field=value filter. Omitting it made the
+        // list filter on a nonexistent 'search' field → zero rows for every query
+        // in every demo (defect fixed Growth-126; parity with the fastapi adapter).
         Set<String> reservedKeys = Set.of("page", "size",
                                            "paging.mode", "paging_mode",
                                            "cursor",
-                                           "sort.field", "sort.direction");
+                                           "sort.field", "sort.direction",
+                                           "search");
         Map<String, String> filter = new LinkedHashMap<>();
         p.forEach((k, v) -> {
             if (!reservedKeys.contains(k)) filter.put(k, v);
@@ -114,6 +119,15 @@ public class EntityController {
         List<Map<String, Object>> filtered = all.stream()
             .filter(record -> matchesFilter(record, filter))
             .collect(Collectors.toList());
+
+        // Apply free-text search (substring across all fields), AFTER filter
+        String searchTerm = p.getOrDefault("search", "").trim();
+        if (!searchTerm.isEmpty()) {
+            final String needle = searchTerm.toLowerCase();
+            filtered = filtered.stream()
+                .filter(record -> matchesSearch(record, needle))
+                .collect(Collectors.toList());
+        }
 
         // Apply sort
         if (sortField != null) {
@@ -268,6 +282,20 @@ public class EntityController {
             }
         }
         return true;
+    }
+
+    /**
+     * Free-text substring match: true if {@code needle} (already lowercased)
+     * appears in the string form of ANY field value (logical OR across fields).
+     * Mirrors the generic toolbar search box intent and the fastapi adapter.
+     */
+    private boolean matchesSearch(Map<String, Object> record, String needle) {
+        for (Object val : record.values()) {
+            if (val != null && val.toString().toLowerCase().contains(needle)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
