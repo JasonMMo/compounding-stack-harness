@@ -154,6 +154,38 @@ class TestContractRoundTrip:
         assert "total" in body and isinstance(body["total"], int), f"Expected int total: {body}"
         assert body["total"] >= 2, f"Expected total >= 2: {body}"
 
+    def test_entity_list_free_text_search(self, adapter_base_url):
+        """`search=<term>` is a case-insensitive substring filter across fields,
+        NOT an exact field=value filter (Growth-126 regression guard).
+
+        Before the fix, every adapter treated `search` as a filter on a
+        nonexistent 'search' field, so EVERY query returned zero rows.
+        """
+        et = _et("list-search")
+        _request(adapter_base_url, "POST", f"/api/entities/{et}",
+                 body={"data": {"name": "Refund API failure"}})
+        _request(adapter_base_url, "POST", f"/api/entities/{et}",
+                 body={"data": {"name": "Login page redesign"}})
+
+        # substring match (case-insensitive) returns exactly the matching record
+        status, body = _request(adapter_base_url, "GET",
+                                 f"/api/entities/{et}?search=refund")
+        assert status == 200, f"Expected 200 on search, got {status}. Body: {body}"
+        assert body.get("total") == 1, f"Expected exactly 1 match for 'refund': {body}"
+        assert body["items"][0]["name"] == "Refund API failure", f"Wrong match: {body}"
+
+        # blank search must not filter anything out
+        status, body = _request(adapter_base_url, "GET",
+                                 f"/api/entities/{et}?search=")
+        assert status == 200, f"Expected 200 on blank search, got {status}. Body: {body}"
+        assert "total" in body and body["total"] >= 2, f"Blank search must return all rows: {body}"
+
+        # no match returns empty (not all rows)
+        status, body = _request(adapter_base_url, "GET",
+                                 f"/api/entities/{et}?search=zzz-no-such-term")
+        assert status == 200, f"Expected 200 on no-match search, got {status}. Body: {body}"
+        assert body.get("total") == 0, f"Expected 0 matches: {body}"
+
     def test_entity_update_patch_semantics(self, adapter_base_url):
         et = _et("update")
         _, cb = _request(adapter_base_url, "POST", f"/api/entities/{et}",
