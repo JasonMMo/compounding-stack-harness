@@ -1,0 +1,31 @@
+# infra/registry/taskflow-demo.yaml
+# 고객/프로필: taskflow-demo (태스크플로우 도메인 preview 데모)
+# Growth-35 DevOps loop — preview tier, in-memory store, fake data only
+# 시크릿 평문 절대 금지: secret_ref 볼트 키 이름만
+slug: taskflow-demo
+contact:
+  channel: internal             # 내부 데모 — 실 고객 아님
+  handle: "demo"
+preview:
+  subdomain: taskflow-demo.n9n.co.kr
+  url: https://taskflow-demo.n9n.co.kr
+  coolify_project: null         # founder가 deploy_to_coolify.py 실행 후 채울 것
+  coolify_app: null
+  coolify_env: null
+  coolify_privkey_uuid: s127pafarr46wlu1r2mre2te  # 재사용 (기존 preview 키)
+  compose_file: deploy/preview/taskflow-demo.compose.yml
+  manifest_server_path: null    # 없음 — 매니페스트는 seeder 컨테이너가 shared volume에 생성
+  status: pending               # founder가 Coolify 배포 후 live 로 갱신
+  deployed_at: null
+  build_commit: null
+  tls: null
+production:
+  install_method: null
+  installed_at: null
+  stack:
+    frontend: vanilla-htmx
+    backend: fastapi
+secret_ref:
+  - vault/taskflow-demo/secret-key    # infra/secrets/taskflow-demo-secret-key.txt (gitignored)
+cost_note: "preview 티어 공유 VPS (187.77.140.157) 귀속분, Hostinger KVM2 $8.99/월 공유"
+data_note: "in-memory store — 재시작 시 데이터 소멸. 실 고객 데이터 저장 금지."
