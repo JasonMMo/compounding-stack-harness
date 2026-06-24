@@ -17,4 +17,19 @@
          hx-include="this">
   <div id="similar-results" class="similar-results-container" aria-live="polite"></div>
 </div>
+{% elif entity_type == 'case-party' %}
+{# K2 이해충돌 검사 (Growth-127): 수임 전 상대방·관계자 이름을 기존 당사자와 대조.
+   honesty: 결과는 '후보'이며 최종 충돌 판단은 변호사 몫 (conflict_results.html 에 명시). #}
+<div class="similar-search-bar conflict-search-bar">
+  <label for="conflict-search-input" class="conflict-search-label">⚖ 이해충돌 검사 — 수임 전 상대방·관계자 이름 조회</label>
+  <input id="conflict-search-input"
+         type="search" name="q"
+         class="form-input similar-search-input"
+         placeholder="예) 홍길동, 주식회사 OO …"
+         hx-get="{{ url_for('parties_conflict') }}"
+         hx-trigger="input changed delay:400ms, search"
+         hx-target="#conflict-results"
+         hx-include="this">
+  <div id="conflict-results" class="similar-results-container" aria-live="polite"></div>
+</div>
 {% endif %}
