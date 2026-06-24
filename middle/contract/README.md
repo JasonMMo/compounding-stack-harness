@@ -8,7 +8,7 @@
 
 | File | Purpose | Since |
 |---|---|---|
-| [`wire-v1.yaml`](wire-v1.yaml) | Wire-protocol request/response schemas. 8 keys across `auth` / `entity` / `status` domains. Error fields reference the envelope below. | Growth-5d |
+| [`wire-v1.yaml`](wire-v1.yaml) | Wire-protocol request/response schemas. 9 keys across `auth` / `entity` / `project` / `status` domains. Error fields reference the envelope below. | Growth-5d |
 | [`error/codes.yaml`](error/codes.yaml) | Standard error-code catalog (11 codes). Closed set the `error` envelope `code` field draws from. http_status + retriable + i18n baseline. | Growth-7 |
 
 ## Contract conventions
