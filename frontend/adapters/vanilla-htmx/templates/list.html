@@ -44,6 +44,14 @@
    similarity (wire key project.search-similar) with an honesty mode badge. #}
 {% include "_similar_search.html" %}
 
+{# K1 기일 가디언 (Growth-127): 임박 범례 — 정직성 라벨(누락 방지 아님) #}
+{% if imminent_ids is defined and imminent_ids %}
+<p class="imminent-legend" role="note">
+  <span class="badge badge--imminent">🔔 임박</span>
+  7일 이내 도래 기한 {{ imminent_ids | length }}건 — 등록된 기일 기준 표시입니다(누락 방지 보장 아님).
+</p>
+{% endif %}
+
 {# Table #}
 {% if items %}
 <div class="table-wrapper" role="region" aria-label="{{ entity_type }} 목록">
@@ -73,9 +81,12 @@
     </thead>
     <tbody>
       {% for item in items %}
-      <tr class="tr {% if loop.index % 2 == 0 %}tr--alt{% endif %}">
+      {% set _imm = (imminent_ids is defined and item.get('id') in imminent_ids) %}
+      <tr class="tr {% if loop.index % 2 == 0 %}tr--alt{% endif %}{% if _imm %} tr--imminent{% endif %}"
+          {% if _imm %}title="기한 임박 — 7일 이내"{% endif %}>
         {% for col in columns %}
         <td class="td" data-label="{{ col }}">
+          {% if loop.first and _imm %}<span class="badge badge--imminent" aria-label="기한 임박">🔔 임박</span> {% endif %}
           {% set val = item[col] %}
           {% if val is none or val == '' %}
             <span class="text-empty">—</span>
