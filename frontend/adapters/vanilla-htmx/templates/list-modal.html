@@ -13,6 +13,9 @@
   </div>
 </div>
 
+{# Similar-task AI search — shared partial, self-gated to task (Growth-124) #}
+{% include "_similar_search.html" %}
+
 {# Search toolbar #}
 <form method="get" action="{{ url_for('entity_list', entity_type=entity_type) }}" class="toolbar">
   <label for="modal-search" class="sr-only">검색</label>
