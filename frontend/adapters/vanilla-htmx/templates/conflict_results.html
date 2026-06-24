@@ -1,0 +1,69 @@
+{#
+  conflict_results.html — htmx fragment for K2 conflict-of-interest check.
+  (Growth-127) Reuses project.search-similar over case-party.
+
+  Context vars:
+    mode   : "semantic" | "lexical" | None
+    items  : list of case-party dicts {id, name, role, case_id, score, ...}
+    query  : str — the prospective party name typed
+    error  : str | None — backend error message
+
+  Honesty contract (MUST NOT violate):
+    - Results are CANDIDATES, never a verdict. Final conflict judgment = attorney.
+    - mode="semantic" → "AI 의미검색"; mode="lexical" → "키워드 검색".
+      Never label a lexical result as AI/semantic.
+    - Never claim "충돌 없음 = 안전" — absence of a hit is not a clearance.
+#}
+
+{% if error %}
+<div class="error-banner" role="alert">{{ error }}</div>
+{% elif not query %}
+<p class="similar-empty">상대방·관계자 이름을 입력하면 기존 사건 당사자와 대조합니다.</p>
+{% else %}
+<div class="similar-results" role="region" aria-label="이해충돌 검사 결과">
+
+  {% if mode == "semantic" %}
+  <span class="similar-badge similar-badge--semantic" aria-label="AI 의미검색 결과">AI 의미검색</span>
+  {% elif mode == "lexical" %}
+  <span class="similar-badge similar-badge--lexical" aria-label="키워드 검색 결과">키워드 검색</span>
+  {% endif %}
+
+  {% if not items %}
+  <p class="similar-empty">"{{ query }}" 와(과) 유사한 기존 당사자를 찾지 못했습니다.</p>
+  <p class="conflict-disclaimer" role="note">
+    ※ 일치 후보가 없다고 해서 충돌이 없다고 단정할 수 없습니다 — 표기·법인명 차이 가능.
+    최종 판단은 변호사가 직접 확인하세요.
+  </p>
+  {% else %}
+  <p class="conflict-disclaimer" role="note">
+    ※ 아래는 이름 유사 <strong>후보</strong>입니다. 동명이인·표기차이 가능 —
+    이해충돌 여부의 최종 판단은 변호사가 직접 확인하세요.
+  </p>
+  <ul class="similar-list" role="list">
+    {% for item in items %}
+    {% set item_id = item.get('id', '') %}
+    {% set score_pct = (item.get('score', 0) * 100) | round | int %}
+    <li class="similar-row">
+      <div class="similar-row__main">
+        <a href="{{ url_for('entity_detail', entity_type='case-party', entity_id=item_id) }}"
+           class="similar-row__name">{{ item.get('name', item_id) }}</a>
+        {% if item.get('role') %}
+        <span class="similar-row__status">{{ item.get('role') }}</span>
+        {% endif %}
+        {% if item.get('case_id') %}
+        <span class="similar-row__meta">사건 {{ item.get('case_id') }}</span>
+        {% endif %}
+      </div>
+      <div class="similar-row__score" title="{{ score_pct }}% 이름 유사도">
+        <span class="similar-score-label">{{ score_pct }}%</span>
+        <div class="similar-score-bar" role="progressbar"
+             aria-valuenow="{{ score_pct }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="similar-score-bar__fill" style="width: {{ score_pct }}%"></div>
+        </div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
