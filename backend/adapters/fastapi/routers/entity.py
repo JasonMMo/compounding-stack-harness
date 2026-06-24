@@ -52,7 +52,11 @@ def _build_validation_error(errors: list) -> JSONResponse:
     return wire_response.error("VALIDATION_ERROR", {"fields": invalid_fields})
 
 
-# Query params that are reserved for paging/sort (not passed to filter)
+# Query params that are reserved for paging/sort/search (not passed to filter).
+# 'search' is the free-text toolbar param — it is handled as a substring match
+# (see _matches_search), NOT as an exact field=value filter. Leaving it out of
+# this set made entity.list filter on a nonexistent 'search' field and return
+# zero rows for every query in every demo (defect fixed Growth-126).
 _RESERVED_KEYS = frozenset(
     {
         "page",
@@ -65,6 +69,7 @@ _RESERVED_KEYS = frozenset(
         "sort.field",
         "sort_direction",
         "sort.direction",
+        "search",
     }
 )
 
@@ -84,6 +89,21 @@ def _matches_filter(record: dict[str, Any], filter_: dict[str, str]) -> bool:
         if val is None or str(val) != v:
             return False
     return True
+
+
+def _matches_search(record: dict[str, Any], term: str) -> bool:
+    """
+    Free-text substring match: True if the lowercased term appears in the
+    string form of ANY field value (logical OR across fields). Mirrors the
+    generic toolbar search box intent in the vanilla-htmx list view.
+    """
+    needle = term.lower()
+    for val in record.values():
+        if val is None:
+            continue
+        if needle in str(val).lower():
+            return True
+    return False
 
 
 def _compare_field(a: dict[str, Any], b: dict[str, Any], field: str, desc: bool) -> int:
@@ -138,8 +158,13 @@ async def list_entities(entity_type: str, request: Request) -> JSONResponse:
 
     all_records = entity_store.find_all(entity_type)
 
-    # Apply filter
+    # Apply filter (exact key=value)
     filtered = [r for r in all_records if _matches_filter(r, filter_)]
+
+    # Apply free-text search (substring across all fields), AFTER filter
+    search_term = (params.get("search") or "").strip()
+    if search_term:
+        filtered = [r for r in filtered if _matches_search(r, search_term)]
 
     # Apply sort
     if sort_field:
