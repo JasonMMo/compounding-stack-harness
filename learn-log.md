@@ -769,3 +769,17 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **교훈**: 멀티도메인 catalog에 엔티티 추가 시 **전역 키 유일성**을 먼저 확인(도메인 prefix 관습 case-/legal- 활용). YAML 중복키는 파서가 조용히 삼켜 가드를 우회 — CTO는 safe_load 후 키 존재를 직접 단언해야 한다.
 - **잔여 founder**: lawfirm-demo Coolify Redeploy(frontend+backend 재빌드, seeder가 manifest 재생성) → time-entry·case-invoice nav 등장 + 청구 롤업 배너 라이브.
 - §6 rollup: [Growth-128] K3 타임시트·빌링 — time-entry·case-invoice 엔티티+DDL(K1 RLS 미러)+청구 롤업 배너(billable/unbilled/총시간, imminent_ids 패턴). CTO 게이트가 invoice↔finance_invoice YAML 키 충돌(G-10 우회 silent 결함) 적발→case-invoice 리네임 복구. fastapi 90·billing 13·board 26 green. 11커밋.
+
+## Growth-129 — lawfirm-demo 헤더 좌우 여백 "반영 안 됨"의 2중 결함 규명 + headless 검증 하니스 skill화
+
+**맥락**: founder가 lawfirm-demo `/board/case-deadline` 글로벌 헤더의 좌우 여백이 Redeploy+캐시삭제 후에도 그대로고 "browser 사이즈에 비례해 여백이 늘고 준다 / 반영이 안됐어, 남의 다리 긁는 기분"이라 재점검 요청. 처음 padding(48→24px) 가설은 틀렸다 — 고정 px는 뷰포트-비례 여백을 못 만든다. 추측 중단, 라이브 DOM 측정으로 전환.
+
+- **결함 ①(반영을 가로막던 enabler)**: vanilla-htmx PWA 서비스워커 `/static/sw.js`(전 데모 공통)가 `/static/css|js`를 **cache-first + 고정 캐시명 `csh-v1`**로 서빙 → sw.js 무변경+캐시명 고정이라 브라우저가 SW 재설치 안 함 → 옛 app.css 영구 서빙. HTML(network-first)은 신선, CSS(cache-first)만 stale인 **비대칭**이 결정적 단서. 수정: 전부 **network-first(+오프라인 폴백)**, `csh-v1→csh-v2` bump로 activate가 독성 캐시 일괄 삭제 (commit 87091ac). 이후 Redeploy는 새로고침 1회로 항상 반영.
+- **결함 ②(진짜 시각 원인)**: Pico CSS v2 classless가 **body 직계 `<header>`/`<footer>`에 reading-container max-width**(xxl 1450px) + 가운데정렬을 자동 적용 → 뷰포트 1822px에서 헤더가 1450px로 좁아지고 좌측 186px 여백(비례)이 생김. app-layout grid를 `minmax(0,1fr)`로 풀폭 만든 이전 수정(디자인 수정-4)은 무효 — grid **컬럼**만 풀폭, 헤더 **아이템**의 Pico max-width는 별개. 직계 아닌 `<main class=app-main>`(app-body div 안)은 Pico `body>main` 미적용 → 본문은 멀쩡, 헤더만 좁은 이유. 수정: `.app-header,.app-footer,.app-header-minimal { max-width:none; width:100%; margin-inline:0 }`. class 셀렉터(0,1,0) > Pico `:where()`(0,0,0)라 `!important` 불필요 (commit f252336, 디자인 수정-6).
+- **왜 SW만 고치고 reload해도 안 변했나**: 새 CSS가 닿아도 그 CSS 자체에 헤더 수정이 없었음(②가 아직 미커밋). 두 결함은 founder 체감상 상호의존 — ①이 새 CSS를 브라우저까지 보내고, ②가 실제 여백을 제거.
+- **측정 증거**(라이브 로그인 demo/demo, vw=1822): BEFORE 헤더 `{x:186, w:1450}` → 후보 CSS 주입 AFTER `{x:0, w:1822, 로고 x:61}` = 풀폭, 좌측 여백 0. **배포 0회로 수정을 증명.**
+- **반복 작업 skill화**: 이 측정-주입 워크플로(puppeteer-core@23 `$TEMP/node_modules` + 로컬 Chrome, 라이브 로그인, getBoundingClientRect/getComputedStyle 측정, 후보 CSS `addStyleTag` 주입으로 redeploy 전 증명)를 `.claude/skills/htmx-demo-verify/`(SKILL.md + scripts/verify_live_css.mjs)로 추출. 기존 webapp-testing(로컬 Playwright)과 구분 — 이건 **이미 배포된 라이브** 데모 검증 + 배포 전 CSS 주입 증명. "디자인 수정 반영 안 됨" 3대 원인(SW stale / Pico max-width / push 누락) 변별표 동봉.
+- **전파**: 두 수정 모두 공통 vanilla-htmx 어댑터 → 전 ~10개 라이브 데모가 각 Redeploy 시 흡수. 진단법 메모리 2종 환류([[pwa-sw-stale-cache]], [[pico-container-maxwidth-shell]]).
+- **잔여 founder**: lawfirm-demo Redeploy 1회(새 sw.js + 새 app.css 둘 다) → 새로고침 1회로 헤더 풀폭 확인. SW 잔류 시 F12→Application→Service Workers→Unregister 후 reload.
+- **교훈**: "배포가 안 보인다"는 추측 금지 — 라이브 DOM을 측정하고 후보 CSS를 주입해 증명한 뒤 커밋한다. 뷰포트-비례 여백 = max-width 컨테이너(고정 px padding 아님). HTML은 되는데 CSS만 안 되면 SW stale.
+- §6 rollup: [Growth-129] lawfirm 헤더 여백 2중 결함 규명 — PWA SW stale 캐시(87091ac, network-first+csh-v2) + Pico 컨테이너 max-width(f252336, .app-* max-width:none). headless Chrome으로 x=186 w=1450→x=0 w=1822 측정 증명. 반복 검증 워크플로 → htmx-demo-verify skill 추출. 메모리 2종 환류. 전 데모 공통.
