@@ -1837,4 +1837,74 @@ entities:
     #   retrieved_chunk_ids: JSON array text of legal_document_chunk.id UUIDs.
     #   Append-only audit log — no UPDATE/DELETE for app_user (RLS enforced).
     #   query_embedding: pgvector column for query analytics; added via augment DDL.
+
+  # ─── K3 타임시트·빌링 killer-app (Growth K3) ────────────────────────────────
+
+  time-entry:
+    # Growth K3 — K3 "타임시트·빌링 killer-app". 변호사별 업무 시간 기록 → 청구 합계 집계.
+    # honest: "자동 청구서 생성·법적 효력" 주장 금지 — "기록 기반 청구 합계 집계"만 약속.
+    domain: legal
+    table: legal_time_entry
+    label_ko: 타임시트
+    primary_key: id
+    columns:
+      id:           { type: uuid,      nullable: false }
+      created_at:   { type: timestamp, nullable: false }
+      updated_at:   { type: timestamp, nullable: false }
+      case_id:      { type: uuid,      nullable: false,
+                      fk: { entity: legal-case, column: id, on_delete: cascade } }
+      employee_id:  { type: uuid,      nullable: false,
+                      fk: { entity: employee,   column: id, on_delete: restrict } }
+      work_date:    { type: date,      nullable: false }
+      minutes:      { type: integer,   nullable: false }
+      description:  { type: string,    nullable: false }
+      billable:     { type: boolean,   nullable: false }
+      hourly_rate:  { type: integer,   nullable: false }
+      amount:       { type: integer,   nullable: false }
+      status:       { type: enum,      values: [draft, submitted, billed], nullable: false }
+    constraints: []
+    indexes:
+      - { columns: [case_id] }
+      - { columns: [employee_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   minutes: 분 단위 정수. float 금지 — 정수 분 단위 집계로 반올림 오류 방지.
+    #   hourly_rate: KRW/시간 스냅샷. 기록 시점 단가 고정 (이후 변경 무관).
+    #   amount: KRW = round(minutes/60*hourly_rate). 저장 시 계산, 이후 불변.
+    #   RLS: case-scoped (담당 변호사·파트너만). augment DDL 12_legal_time_entry.sql 참조.
+    #   K3 killer 기능: time-entry 목록 화면에서 billable_total/unbilled_total/total_minutes 롤업 배너.
+
+  case-invoice:
+    # Growth K3 — K3 "타임시트·빌링 killer-app". 사건별 청구서.
+    # 키: case-invoice (legal 도메인 관습 — case-party/case-deadline/case-document 패턴).
+    # finance 도메인의 invoice(finance_invoice)와 YAML 키 충돌 방지.
+    # honest: "법적 효력 청구서" 주장 금지 — "기록 기반 청구 합계 집계"만 약속.
+    domain: legal
+    table: legal_invoice
+    label_ko: 청구서
+    primary_key: id
+    columns:
+      id:           { type: uuid,      nullable: false }
+      created_at:   { type: timestamp, nullable: false }
+      updated_at:   { type: timestamp, nullable: false }
+      case_id:      { type: uuid,      nullable: false,
+                      fk: { entity: legal-case, column: id, on_delete: cascade } }
+      client_name:  { type: string,    nullable: false }
+      issue_date:   { type: date,      nullable: false }
+      period_start: { type: date,      nullable: true }
+      period_end:   { type: date,      nullable: true }
+      subtotal:     { type: integer,   nullable: false }
+      tax:          { type: integer,   nullable: false }
+      total:        { type: integer,   nullable: false }
+      status:       { type: enum,      values: [draft, issued, paid], nullable: false }
+    constraints: []
+    indexes:
+      - { columns: [case_id] }
+      - { columns: [status] }
+    # DDL notes:
+    #   client_name: 의뢰인 표시명 비정규화 스냅샷. 발행 시점 고정.
+    #   subtotal: KRW 공급가액. time_entry.amount 합산.
+    #   tax: KRW 부가세 10%. round(subtotal * 0.1).
+    #   total: KRW = subtotal + tax.
+    #   RLS: case-scoped (담당 변호사·파트너만). augment DDL 13_legal_invoice.sql 참조.
     #   RLS: attorney sees only their own queries.
