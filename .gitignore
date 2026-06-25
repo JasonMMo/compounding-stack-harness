@@ -95,3 +95,8 @@ tests/ddl/lib/
 .obsidian/
 _obsidian_attachments/
 .gstack/
+
+# Design-Cloud Bridge staging — /design-sync transient 산출 (정규화 전).
+# README 만 추적, 동기화된 컴포넌트는 transient (production 진실은 정규화 후 design/presets).
+staging/design-sync/*
+!staging/design-sync/README.md

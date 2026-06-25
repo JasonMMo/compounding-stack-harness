@@ -1516,6 +1516,308 @@ def g13_subagent_output_protocol_wired() -> GuardResult:
 
 
 # ---------------------------------------------------------------------------
+# G-16 ~ G-20 — Design-Cloud Bridge guards (Growth-130, WP-2)
+#   claude.ai/design 클라우드 워크벤치 경계의 안전망. claude-design 비의존.
+#   설계: docs/architecture/design-cloud-bridge-execution-plan.md §3 (CI 가드 5종),
+#         docs/architecture/design-cloud-bridge.md §5.
+# ---------------------------------------------------------------------------
+
+# 클라우드(claude.ai/design)로 절대 올라가면 안 되는 PII/시크릿의 흔적 (G-16).
+_PII_PATTERNS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"), "email"),
+    (re.compile(r"\b\d{6}-\d{7}\b"), "RRN(주민등록번호)"),
+    (re.compile(r"\b01[016-9]-?\d{3,4}-?\d{4}\b"), "휴대폰번호"),
+    (re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b"), "AWS access key"),
+    (re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}"), "Anthropic API key"),
+    (re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"), "Google API key"),
+    (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "private key"),
+]
+# 주: RRN 의 하이픈 없는 13자리 형식(\d{13})은 epoch-ms 타임스탬프와 충돌 → 거짓양성
+#     위험으로 의도적 제외. 하이픈 형식만 고신호로 탐지 (QA WP-2 게이트 합의, 후속 재검토).
+# 시크릿/의뢰인 PII 보관 경로 — 업로드 컴포넌트가 이걸 참조하면 스코프 위반 (G-16).
+_FORBIDDEN_PATH_REFS = (
+    "apps/intake/data", "infra/secrets", "infra/cloudflared/config.yml",
+)
+# 인도물(복제본·landing 산출물)에 남으면 안 되는 클라우드 결합 흔적 (G-17).
+_CLOUD_COUPLING_TOKENS = (
+    "claude.ai/design", "claude.ai", "DesignSync", "/design-sync",
+)
+# 정규화 게이트를 우회한 raw synced 컴포넌트의 provenance 마커 (G-20).
+#   normalize.py / staging 컨벤션이 synced 원본에 이 토큰을 남긴다. production
+#   경로(frontend/presets)에서 발견되면 = 정규화 미경유 직붙임 = axis-8 붕괴.
+_STAGING_PROVENANCE_MARKER = "design-sync:staging"
+
+_BRIDGE_STAGING_DIR = REPO_ROOT / "staging" / "design-sync"
+_BRIDGE_REPLICA_ROOT = REPO_ROOT / "out" / "replicas"
+_BRIDGE_DELIVERY_ROOTS = (
+    REPO_ROOT / "frontend" / "adapters" / "landing-astro" / "src",
+    REPO_ROOT / "presets" / "themes",
+    REPO_ROOT / "presets" / "site-sections",
+)
+_BRIDGE_PRODUCTION_ROOTS = (
+    REPO_ROOT / "frontend" / "adapters",
+    REPO_ROOT / "presets" / "themes",
+    REPO_ROOT / "presets" / "site-sections",
+)
+_CODE_SUFFIXES = {".html", ".htm", ".css", ".js", ".mjs", ".ts", ".astro", ".json", ".svg"}
+_TEXTY_SUFFIXES = _CODE_SUFFIXES | {".yaml", ".yml", ".md", ".txt"}
+
+
+def _iter_files(root: Path, suffixes: set[str]):
+    """root 아래 주어진 확장자의 파일을 정렬 순회 (root 부재 시 빈 순회)."""
+    if not root.exists():
+        return
+    for p in sorted(root.rglob("*")):
+        if p.is_file() and p.suffix.lower() in suffixes:
+            yield p
+
+
+def _rel(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+    except ValueError:
+        return str(path)
+
+
+def g16_design_upload_scope(staging_dir: Path | None = None) -> GuardResult:
+    """G-16 / Growth-130 — claude.ai/design 업로드 스코프: 무명 컴포넌트만.
+
+    staging/design-sync/ (cloud 업로드 후보 영역)의 텍스트에서 PII/시크릿/금지경로
+    참조를 탐지한다. Claude Design 은 BAA 적용 제외 + 기본 학습 허용이므로 의뢰인
+    PII·기밀은 절대 업로드 금지 — 무명(無名) 디자인 컴포넌트만 경계를 넘는다.
+
+    SPEC: staging/design-sync/ 부재 또는 (README 외) 내용물 없음.
+    FAIL: 이메일/주민번호/전화/시크릿키/금지경로참조 발견.
+
+    테스트는 staging_dir 주입으로 임시 디렉터리 검사 (G-14/G-15 패턴).
+    """
+    sdir = staging_dir if staging_dir is not None else _BRIDGE_STAGING_DIR
+    if not sdir.exists():
+        return GuardResult(
+            "G-16", "design upload scope", "Growth-130",
+            status="SPEC",
+            notes="staging/design-sync/ not found — guard activates once components are synced.",
+        )
+    files = [
+        p for p in _iter_files(sdir, _TEXTY_SUFFIXES)
+        if p.name.lower() != "readme.md"
+    ]
+    if not files:
+        return GuardResult(
+            "G-16", "design upload scope", "Growth-130",
+            status="SPEC",
+            notes="No synced components in staging/design-sync/ (README only) — nothing to scope.",
+        )
+    violations: list[str] = []
+    for p in files:
+        text = p.read_text(encoding="utf-8", errors="replace")
+        for pat, label in _PII_PATTERNS:
+            if pat.search(text):
+                violations.append(f"{_rel(p)}: contains {label} — PII must not reach claude.ai/design.")
+        for ref in _FORBIDDEN_PATH_REFS:
+            if ref in text:
+                violations.append(f"{_rel(p)}: references secret/PII path '{ref}' — strip before upload.")
+    return GuardResult(
+        "G-16", "design upload scope", "Growth-130",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=f"Scanned {len(files)} staged file(s) for PII/secret leakage.",
+    )
+
+
+def g17_cloud_coupling_leak(scan_roots: tuple[Path, ...] | None = None) -> GuardResult:
+    """G-17 / Growth-130 — 인도물에 클라우드 결합 흔적 0.
+
+    고객에게 인도되는 산출물(복제본 번들, landing-astro 소스, 테마)에 claude.ai/design
+    클라우드 도구 참조가 남으면 vendor lock-in + 의도치 않은 외부 의존. 정적 검사로
+    'claude.ai', 'DesignSync', '/design-sync' 토큰을 0 으로 강제한다.
+
+    PASS: delivery 루트에 결합 토큰 없음 (clean repo 기본값).
+    FAIL: 발견 시 (어느 파일·토큰인지 보고).
+
+    스캔 대상 .md/.yaml 제외 — 문서/주석의 정당한 언급과 인도물을 구분.
+    """
+    roots = scan_roots if scan_roots is not None else (
+        _BRIDGE_REPLICA_ROOT, *_BRIDGE_DELIVERY_ROOTS,
+    )
+    present = [r for r in roots if r.exists()]
+    if not present:
+        return GuardResult(
+            "G-17", "cloud-coupling leak", "Growth-130",
+            status="SPEC",
+            notes="No delivery artifact roots present yet — guard activates once they land.",
+        )
+    violations: list[str] = []
+    scanned = 0
+    for root in present:
+        for p in _iter_files(root, _CODE_SUFFIXES):
+            scanned += 1
+            text_lc = p.read_text(encoding="utf-8", errors="replace").lower()
+            for tok in _CLOUD_COUPLING_TOKENS:
+                if tok.lower() in text_lc:  # 대소문자 변형(CLAUDE.AI 등)도 차단
+                    violations.append(f"{_rel(p)}: cloud-coupling token '{tok}' must be stripped from delivered artifact.")
+    return GuardResult(
+        "G-17", "cloud-coupling leak", "Growth-130",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=f"Scanned {scanned} delivery file(s) across {len(present)} root(s) for cloud coupling.",
+    )
+
+
+def g18_cross_tenant_leak(
+    replica_root: Path | None = None,
+    profiles_dir: Path | None = None,
+    cases_dir: Path | None = None,
+) -> GuardResult:
+    """G-18 / Growth-130 — 고객 복제본 번들에 타 테넌트 식별자 0.
+
+    out/replicas/<slug>/ 의 각 고객 번들은 자기 slug 외 다른 고객의 slug/식별자를
+    포함하면 안 된다 (데이터 격리). 알려진 slug 집합은 profiles/*.yaml +
+    infra/registry/cases/*.yaml stem 에서 수집.
+
+    SPEC: out/replicas/ 부재 (복제본 빌드 WP-3 전) 또는 번들 없음.
+    FAIL: 번들 <slug> 안에서 다른 고객 slug 가 토큰 단위로 발견.
+    """
+    rroot = replica_root if replica_root is not None else _BRIDGE_REPLICA_ROOT
+    pdir = profiles_dir if profiles_dir is not None else REPO_ROOT / "profiles"
+    cdir = cases_dir if cases_dir is not None else REPO_ROOT / "infra" / "registry" / "cases"
+    if not rroot.exists():
+        return GuardResult(
+            "G-18", "cross-tenant leak", "Growth-130",
+            status="SPEC",
+            notes="out/replicas/ not found — guard activates once replica builds land (WP-3).",
+        )
+    bundles = [d for d in sorted(rroot.iterdir()) if d.is_dir() and not d.name.startswith(("_", "."))]
+    if not bundles:
+        return GuardResult(
+            "G-18", "cross-tenant leak", "Growth-130",
+            status="SPEC", notes="No replica bundles in out/replicas/ yet.",
+        )
+    known: set[str] = set()
+    for d in (pdir, cdir):
+        for p in _iter_files(d, {".yaml", ".yml"}):
+            stem = p.stem
+            if not stem.startswith("_") and stem.lower() != "readme":
+                known.add(stem)
+    known |= {b.name for b in bundles}
+    # 토큰 경계 매칭: slug 가 단어 경계로 나타날 때만 (부분문자열 오탐 방지).
+    violations: list[str] = []
+    for bundle in bundles:
+        own = bundle.name
+        foreign = sorted(s for s in known if s != own and len(s) >= 3)
+        if not foreign:
+            continue
+        pats = {s: re.compile(rf"(?<![A-Za-z0-9_-]){re.escape(s)}(?![A-Za-z0-9_-])") for s in foreign}
+        for p in _iter_files(bundle, _TEXTY_SUFFIXES):
+            text = p.read_text(encoding="utf-8", errors="replace")
+            for s, pat in pats.items():
+                if pat.search(text):
+                    violations.append(f"{_rel(p)}: replica '{own}' leaks foreign tenant slug '{s}'.")
+    return GuardResult(
+        "G-18", "cross-tenant leak", "Growth-130",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=f"Checked {len(bundles)} replica bundle(s) against {len(known)} known slug(s).",
+    )
+
+
+def g19_dtcg_schema(staging_dir: Path | None = None) -> GuardResult:
+    """G-19 / Growth-130 — 경계를 넘는 토큰 override 가 DTCG semantic 화이트리스트 준수.
+
+    cloud→repo 단일 교환 포맷은 DTCG 토큰 JSON. staging/design-sync/**/*.tokens.json
+    의 각 override 가 design/tokens/semantic.json 키 화이트리스트(+landing extras)
+    안인지 scripts/design/dtcg_schema.py 로 검증한다.
+
+    SPEC: semantic.json 부재(검증 불가) 또는 token override 파일 없음.
+    FAIL: 화이트리스트 밖 키 발견.
+
+    주의: DTCG 는 W3C Community Group draft(v2025.10)로 완전한 Recommendation 아님.
+    """
+    sdir = staging_dir if staging_dir is not None else _BRIDGE_STAGING_DIR
+    design_dir = REPO_ROOT / "scripts" / "design"
+    if str(design_dir) not in sys.path:
+        sys.path.insert(0, str(design_dir))
+    try:
+        import dtcg_schema  # type: ignore[import-not-found]
+    except Exception as exc:  # pragma: no cover - import guard
+        return GuardResult(
+            "G-19", "DTCG token schema", "Growth-130",
+            status="SPEC", notes=f"scripts/design/dtcg_schema.py not importable: {exc}",
+        )
+    if not dtcg_schema.load_semantic_keys():
+        return GuardResult(
+            "G-19", "DTCG token schema", "Growth-130",
+            status="SPEC",
+            notes="design/tokens/semantic.json not found — cannot validate token boundary yet.",
+        )
+    if not sdir.exists():
+        return GuardResult(
+            "G-19", "DTCG token schema", "Growth-130",
+            status="SPEC", notes="staging/design-sync/ not found — no token overrides to validate.",
+        )
+    token_files = [p for p in _iter_files(sdir, {".json"}) if p.name.endswith(".tokens.json")]
+    if not token_files:
+        return GuardResult(
+            "G-19", "DTCG token schema", "Growth-130",
+            status="SPEC", notes="No *.tokens.json overrides staged yet.",
+        )
+    violations: list[str] = []
+    for p in token_files:
+        try:
+            overrides = json.loads(p.read_text(encoding="utf-8"))
+        except Exception as exc:
+            violations.append(f"{_rel(p)}: invalid JSON ({exc}).")
+            continue
+        if not isinstance(overrides, dict):
+            violations.append(f"{_rel(p)}: token override must be a JSON object.")
+            continue
+        for bad in dtcg_schema.validate_token_overrides(overrides):
+            violations.append(f"{_rel(p)}: key '{bad}' outside semantic whitelist.")
+    return GuardResult(
+        "G-19", "DTCG token schema", "Growth-130",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=f"Validated {len(token_files)} token-override file(s) against semantic whitelist.",
+    )
+
+
+def g20_normalization_gate(production_roots: tuple[Path, ...] | None = None) -> GuardResult:
+    """G-20 / Growth-130 — synced 컴포넌트 raw HTML 의 production 직붙임 차단.
+
+    정규화 게이트(normalize.py)는 비협상이다. cloud 에서 내려온 컴포넌트는 토큰
+    override + variant 로 분해되어야 production(frontend/adapters, presets/themes,
+    presets/site-sections)에 들어간다. 이 가드는 production 경로에서 staging
+    provenance 마커('design-sync:staging')를 탐지 — 발견 = 정규화 미경유 직붙임.
+
+    PASS: production 경로에 마커 없음 (clean repo 기본값).
+    FAIL: 마커 발견 (어느 파일인지 보고).
+    """
+    roots = production_roots if production_roots is not None else _BRIDGE_PRODUCTION_ROOTS
+    present = [r for r in roots if r.exists()]
+    if not present:
+        return GuardResult(
+            "G-20", "normalization gate", "Growth-130",
+            status="SPEC", notes="No production frontend/preset roots present.",
+        )
+    violations: list[str] = []
+    scanned = 0
+    for root in present:
+        for p in _iter_files(root, _TEXTY_SUFFIXES):
+            scanned += 1
+            if _STAGING_PROVENANCE_MARKER in p.read_text(encoding="utf-8", errors="replace"):
+                violations.append(
+                    f"{_rel(p)}: carries staging marker '{_STAGING_PROVENANCE_MARKER}' — "
+                    "raw synced component bypassed the normalization gate."
+                )
+    return GuardResult(
+        "G-20", "normalization gate", "Growth-130",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=f"Scanned {scanned} production file(s) for normalization-gate bypass.",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 
@@ -1535,6 +1837,11 @@ GUARDS: dict[str, GuardFn] = {
     "G-13": g13_subagent_output_protocol_wired,
     "G-14": g14_intake_pipeline_health,
     "G-15": g15_marketing_site_visual_gate,
+    "G-16": g16_design_upload_scope,
+    "G-17": g17_cloud_coupling_leak,
+    "G-18": g18_cross_tenant_leak,
+    "G-19": g19_dtcg_schema,
+    "G-20": g20_normalization_gate,
     "G-87": g87_embed_caller_split,
 }
 
