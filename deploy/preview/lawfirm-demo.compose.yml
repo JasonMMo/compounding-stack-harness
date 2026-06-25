@@ -62,7 +62,9 @@ services:
       # Killer-app cross-link (B2): surfaces "AI 판례검색" banner + sidebar link
       # pointing to the legal-pro React app. Separate deployment/login (not SSO).
       KILLER_APP_URL: "https://legal-rag.n9n.co.kr/pro"
-      KILLER_APP_LABEL: "AI 판례검색"
+      # 디자인 수정-1 #2: 상단 배너 제거 후 사이드바 링크 텍스트 보강
+      # "AI 판례검색" → "AI 판례 RAG기반 검색" (label 이 사이드바 단일 노출처).
+      KILLER_APP_LABEL: "AI 판례 RAG기반 검색"
       KILLER_APP_DESC: "RAG 기반 판례 원문 검색 — 변호사용"
       # SECRET_KEY injected via Coolify environment variables (not in compose file)
     volumes:
