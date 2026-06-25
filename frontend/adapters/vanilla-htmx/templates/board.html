@@ -13,7 +13,8 @@
        class="btn btn-secondary btn-sm">목록 보기</a>
     <a href="{{ url_for('entity_create_form', entity_type=entity_type) }}"
        class="btn btn-primary btn-sm">+ 추가</a>
-    <a href="{{ url_for('home') }}" class="btn btn-md btn-on-dark">⌂ 홈</a>
+    {# 홈 버튼 높이를 +추가(btn-sm 28px)와 일치 (디자인 수정-5 #2: 보드 페이지) #}
+    <a href="{{ url_for('home') }}" class="btn btn-sm btn-on-dark">⌂ 홈</a>
   </div>
 </div>
 
