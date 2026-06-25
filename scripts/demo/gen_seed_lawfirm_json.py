@@ -393,6 +393,36 @@ def _project_approval_decision(r: dict) -> dict:
     }
 
 
+def _project_time_entry(r: dict) -> dict:
+    return {
+        "id": r["id"],
+        "case_id": r["case_id"],
+        "employee_id": r["employee_id"],
+        "work_date": r["work_date"],
+        "minutes": r["minutes"],
+        "description": r["description"],
+        "billable": r["billable"],
+        "hourly_rate": r["hourly_rate"],
+        "amount": r["amount"],
+        "status": r["status"],
+    }
+
+
+def _project_invoice(r: dict) -> dict:
+    return {
+        "id": r["id"],
+        "case_id": r["case_id"],
+        "client_name": r["client_name"],
+        "issue_date": r["issue_date"],
+        "period_start": r.get("period_start"),
+        "period_end": r.get("period_end"),
+        "subtotal": r["subtotal"],
+        "tax": r["tax"],
+        "total": r["total"],
+        "status": r["status"],
+    }
+
+
 # ---------------------------------------------------------------------------
 # Backfill current_version_id into document records
 # ---------------------------------------------------------------------------
@@ -427,6 +457,8 @@ EXPECTED = {
     "approval-step":    13,
     "approver":         14,
     "approval-decision":10,
+    "time-entry":       25,
+    "case-invoice":      6,
 }
 
 
@@ -490,6 +522,12 @@ def main() -> None:
     # 15. Approval decisions
     approval_decisions = [_project_approval_decision(r) for r in S.APPROVAL_DECISIONS]
 
+    # 16. Time entries (K3)
+    time_entries = [_project_time_entry(r) for r in S.TIME_ENTRIES]
+
+    # 17. Invoices (K3)
+    invoices = [_project_invoice(r) for r in S.INVOICES]
+
     # --- Assemble payload ---
     payload = {
         "department":         departments,
@@ -506,6 +544,8 @@ def main() -> None:
         "approval-step":      approval_steps,
         "approver":           approvers,
         "approval-decision":  approval_decisions,
+        "time-entry":         time_entries,
+        "case-invoice":       invoices,
     }
 
     # --- Self-assert (CTO gate) ---
