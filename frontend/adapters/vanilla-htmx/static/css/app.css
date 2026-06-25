@@ -110,6 +110,20 @@ body {
   gap: var(--space-gap-lg);
 }
 
+/* 디자인 수정-6: 글로벌 헤더/푸터 좌우 여백의 진짜 원인 — Pico classless 가
+   body 직계 <header>/<footer>/<main> 에 reading-container max-width(xl 1200px)
+   + 가운데 정렬을 먹인다. 이건 읽기 컬럼용이지 풀블리드 앱 셸엔 부적합 — 헤더가
+   뷰포트보다 좁아져 좌우에 viewport-비례 여백이 생긴다(='비율로 늘고 주는 여백').
+   app-layout grid 폭(minmax)은 컬럼만 키울 뿐 이 아이템 max-width 는 못 이겼다.
+   class 셀렉터(0,1,0) > Pico :where()(0,0,0) 라 !important 없이 무력화된다. */
+.app-header,
+.app-footer,
+.app-header-minimal {
+  max-width: none;
+  width: 100%;
+  margin-inline: 0;
+}
+
 .header-start {
   display: flex;
   align-items: center;
