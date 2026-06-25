@@ -72,6 +72,10 @@ body {
 
 .app-layout {
   display: grid;
+  /* grid-template-columns: 명시적 단일 full-width 컬럼. 없으면 암묵적 auto 컬럼이
+     콘텐츠 폭으로 잡혀 상단 헤더 row 가 뷰포트 100% 가 아닐 수 있음. minmax(0,1fr)
+     로 정확히 100% + 넓은 테이블의 가로 blowout 방지 (디자인 수정-4 #1). */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: var(--app-header-h) 1fr auto;
   height: 100vh;
   overflow: hidden;
