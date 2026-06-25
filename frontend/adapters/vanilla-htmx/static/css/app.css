@@ -610,6 +610,10 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-gap-xs);
+  /* margin:0 — Pico classless 가 <button> 에 주는 기본 margin-bottom 제거. 없으면
+     flex 정렬 컨테이너(header-actions 등)에서 <button class="btn"> 만 위로 떠
+     <a class="btn"> 과 어긋난다 (디자인 수정-3 #1: 로그아웃 버튼 상단 치우침). */
+  margin: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-control);
   font-family: var(--font-family-body);
@@ -2324,6 +2328,10 @@ body {
 .board-card__move-select {
   font-size: var(--font-size-xs);
   height: 24px;
+  /* margin:0 — Pico 가 .form-input(<select>) 에 주는 margin-bottom 제거. 없으면
+     align-items:center 가 margin-box 를 센터링해 select 가 '상세' 위로 뜬다
+     (디자인 수정-3: 칸반 카드 상태 select 상단 치우침). */
+  margin: 0;
   padding: 0 var(--space-inset-xs);
   /* Override .form-input's display:block; width:100% — inside a compact kanban
      card the status dropdown must size to its content, not stretch full width. */
