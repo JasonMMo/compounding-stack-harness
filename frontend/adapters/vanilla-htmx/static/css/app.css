@@ -104,7 +104,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-page-gutter);
+  /* 헤더 좌우 패딩을 페이지 거터(48px)보다 작게 — 로고/액션이 화면 가장자리에
+     가깝게 붙어 좌우 여백을 채움 (디자인 수정-5 #1: 글로벌 헤드 좌우 여백). */
+  padding: 0 var(--space-inset-lg);
   gap: var(--space-gap-lg);
 }
 
