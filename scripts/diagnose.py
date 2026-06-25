@@ -1528,8 +1528,12 @@ _PII_PATTERNS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\b\d{6}-\d{7}\b"), "RRN(주민등록번호)"),
     (re.compile(r"\b01[016-9]-?\d{3,4}-?\d{4}\b"), "휴대폰번호"),
     (re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b"), "AWS access key"),
+    (re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}"), "Anthropic API key"),
+    (re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"), "Google API key"),
     (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"), "private key"),
 ]
+# 주: RRN 의 하이픈 없는 13자리 형식(\d{13})은 epoch-ms 타임스탬프와 충돌 → 거짓양성
+#     위험으로 의도적 제외. 하이픈 형식만 고신호로 탐지 (QA WP-2 게이트 합의, 후속 재검토).
 # 시크릿/의뢰인 PII 보관 경로 — 업로드 컴포넌트가 이걸 참조하면 스코프 위반 (G-16).
 _FORBIDDEN_PATH_REFS = (
     "apps/intake/data", "infra/secrets", "infra/cloudflared/config.yml",
@@ -1648,9 +1652,9 @@ def g17_cloud_coupling_leak(scan_roots: tuple[Path, ...] | None = None) -> Guard
     for root in present:
         for p in _iter_files(root, _CODE_SUFFIXES):
             scanned += 1
-            text = p.read_text(encoding="utf-8", errors="replace")
+            text_lc = p.read_text(encoding="utf-8", errors="replace").lower()
             for tok in _CLOUD_COUPLING_TOKENS:
-                if tok in text:
+                if tok.lower() in text_lc:  # 대소문자 변형(CLAUDE.AI 등)도 차단
                     violations.append(f"{_rel(p)}: cloud-coupling token '{tok}' must be stripped from delivered artifact.")
     return GuardResult(
         "G-17", "cloud-coupling leak", "Growth-130",
