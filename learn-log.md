@@ -755,3 +755,17 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **manifest 공급 scp→seeder 전환** (푸시 b79f1ec): scp publickey denied(no-SSH 경계) → 제너릭 `scripts/manifest-generator/`(Dockerfile+entrypoint, scaffold→공유볼륨, manifest-only ∵ SEED_FILE) + lawfirm compose 를 host bind-mount→공유볼륨 seeder 패턴 전환. scp 영구 제거, 나머지 8 scp-데모 재사용 자산.
 - **칸반 카드 상태 셀렉트 full-width 결함** (푸시 ed726d0): founder "칸반 카드 width 100%". CTO 라이브 probe — 카드/컬럼 정상(컨테이너 flex, 컬럼 240px, 3컬럼12카드). 진짜 원인=제너릭 엔티티 카드 상태변경 `<select class="form-input board-card__move-select">`가 `.form-input{width:100%}`(app.css:683) 상속, `.board-card__move-select` width 미정의 → 셀렉트가 카드 폭 전체로. task 엔티티=버튼이라 무관, lawfirm 6 board 엔티티 전부 제너릭→전 카드 증상. 수정: `display:inline-block;width:auto;max-width:100%`(정의순서상 .form-input 뒤→승리). board L1 26 passed. 교훈: 공유 폼 유틸클래스(.form-input)를 컴팩트 컨텍스트(카드/툴바)에 재사용 시 width override 누락이 조용한 레이아웃 결함.
 - §6 rollup: [Growth-127 후속] manifest scp→in-cluster seeder 영구전환(b79f1ec, 8데모 재사용) + 칸반 카드 상태셀렉트 full-width 결함 수정(ed726d0, .form-input width:100% 상속 차단). board L1 26 PASS. founder 잔여: lawfirm-demo Redeploy.
+
+
+## Growth-128 — 소형 로펌 killer-app K3 타임시트·빌링 (time-entry·case-invoice 엔티티 + 청구 롤업), 11커밋
+
+**맥락**: K1(기일 가디언)·K2(이해충돌) 종결 후 founder가 K3 타임시트·빌링 선택 — 시간당 청구는 소형 로펌 수익 핵심, 사건축 자연 동반. CTO 설계 → engineer-agent(sonnet) 위임, K1(case-deadline) 누적 패턴 1:1 미러.
+
+- **신규 엔티티 2**: `time-entry`(table legal_time_entry — case_id FK cascade·employee_id cross-domain fk-exempt[K1 assigned_attorney 관습]·minutes/hourly_rate/amount integer·billable·status[draft/submitted/billed]) + `case-invoice`(table legal_invoice — client_name·subtotal/tax/total·status[draft/issued/paid]). DDL 12/13 = K1 case-scoped RLS(ENABLE+FORCE, attorney/partner)·set_updated_at 트리거·인덱스·idempotent ADD-ONLY 미러.
+- **Killer 기능(K1 imminent_ids 미러)**: server.py entity_list가 entity_type=="time-entry"일 때 billable_total/unbilled_total(status!=billed)/total_minutes 롤업 계산(billable 타입 강제변환) → list.html 청구 요약 배너 + tr--unbilled 미청구 하이라이트. 개방-폐쇄(time-entry 가드). honest: "기록 기반 청구 합계 집계"만, 자동 청구서 생성·법적 효력 주장 금지.
+- **시드**: time-entry 25(billable 23·status 혼합)·case-invoice 6(부가세 10% 정합). amount=round(분/60×시급) 0오류, FK dangling 0.
+- **CTO 게이트 — CRITICAL 적발/수정**: engineer가 신규 엔티티를 `invoice` 키로 명명 → **기존 finance 도메인 `invoice`(finance_invoice)와 같은 /entities 매핑에서 YAML 키 충돌**. PyYAML이 로드 전 중복키 dedupe → finance_invoice 소실·payment.invoice_id FK 오염되나 **G-10이 dedupe된 결과만 봐서 PASS(silent 결함)**. CTO 독립 yaml.safe_load 검증으로 적발([[subagent-cross-service-verify]] 재확인). 신규 엔티티 `invoice`→`case-invoice` 리네임(finance 불가침, 5파일 일관: catalog·profile·seed gen·seed json·DDL 주석)으로 복구. 재검증: invoice→finance_invoice·case-invoice→legal_invoice 공존 확정.
+- **검증**: fastapi 90·billing L1 13·board L1 26 green, scaffold rc=0(17엔티티 manifest), diagnose 신규 FAIL 0. 11커밋(2c3f062).
+- **교훈**: 멀티도메인 catalog에 엔티티 추가 시 **전역 키 유일성**을 먼저 확인(도메인 prefix 관습 case-/legal- 활용). YAML 중복키는 파서가 조용히 삼켜 가드를 우회 — CTO는 safe_load 후 키 존재를 직접 단언해야 한다.
+- **잔여 founder**: lawfirm-demo Coolify Redeploy(frontend+backend 재빌드, seeder가 manifest 재생성) → time-entry·case-invoice nav 등장 + 청구 롤업 배너 라이브.
+- §6 rollup: [Growth-128] K3 타임시트·빌링 — time-entry·case-invoice 엔티티+DDL(K1 RLS 미러)+청구 롤업 배너(billable/unbilled/총시간, imminent_ids 패턴). CTO 게이트가 invoice↔finance_invoice YAML 키 충돌(G-10 우회 silent 결함) 적발→case-invoice 리네임 복구. fastapi 90·billing 13·board 26 green. 11커밋.
