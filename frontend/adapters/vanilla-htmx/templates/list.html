@@ -9,7 +9,8 @@
     {% if total is defined %}<p class="entity-header__meta">총 {{ total }}건</p>{% endif %}
   </div>
   <div class="entity-header__actions">
-    <a href="{{ url_for('home') }}" class="btn btn-md btn-on-dark">⌂ 홈</a>
+    {# 홈 버튼 높이를 툴바 +추가(btn-sm 28px)와 일치 (디자인 수정-4 #2) #}
+    <a href="{{ url_for('home') }}" class="btn btn-sm btn-on-dark">⌂ 홈</a>
   </div>
 </div>
 
