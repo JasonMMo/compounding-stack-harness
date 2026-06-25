@@ -52,6 +52,17 @@
 </p>
 {% endif %}
 
+{# K3 타임시트·빌링 (Growth K3): 청구 롤업 배너 — 정직성 라벨(기록 기반 집계만) #}
+{% if billing_summary is defined and billing_summary is not none %}
+<p class="billing-summary" role="note">
+  <span class="badge badge--billing">₩ 청구</span>
+  청구가능 ₩{{ "{:,}".format(billing_summary.billable_total) }} &middot;
+  미청구 ₩{{ "{:,}".format(billing_summary.unbilled_total) }} &middot;
+  총 {{ billing_summary.total_minutes // 60 }}시간 {{ billing_summary.total_minutes % 60 }}분
+  <span class="billing-summary__note">— 등록된 타임시트 기록 기반 집계입니다(법적 청구 효력 보장 아님).</span>
+</p>
+{% endif %}
+
 {# Table #}
 {% if items %}
 <div class="table-wrapper" role="region" aria-label="{{ entity_type }} 목록">
@@ -82,11 +93,13 @@
     <tbody>
       {% for item in items %}
       {% set _imm = (imminent_ids is defined and item.get('id') in imminent_ids) %}
-      <tr class="tr {% if loop.index % 2 == 0 %}tr--alt{% endif %}{% if _imm %} tr--imminent{% endif %}"
-          {% if _imm %}title="기한 임박 — 7일 이내"{% endif %}>
+      {% set _unb = (unbilled_ids is defined and item.get('id') in unbilled_ids) %}
+      <tr class="tr {% if loop.index % 2 == 0 %}tr--alt{% endif %}{% if _imm %} tr--imminent{% endif %}{% if _unb %} tr--unbilled{% endif %}"
+          {% if _imm %}title="기한 임박 — 7일 이내"{% endif %}{% if _unb %} title="미청구 타임시트"{% endif %}>
         {% for col in columns %}
         <td class="td" data-label="{{ col }}">
           {% if loop.first and _imm %}<span class="badge badge--imminent" aria-label="기한 임박">🔔 임박</span> {% endif %}
+          {% if loop.first and _unb %}<span class="badge badge--billing" aria-label="미청구">₩ 미청구</span> {% endif %}
           {% set val = item[col] %}
           {% if val is none or val == '' %}
             <span class="text-empty">—</span>
