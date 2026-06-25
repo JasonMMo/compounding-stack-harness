@@ -557,6 +557,10 @@ body {
 
 .persona-select {
   font-size: var(--font-size-sm);
+  /* margin:0 — Pico classless 가 select 에 주는 기본 margin-bottom 을 제거.
+     없으면 header-actions 의 align-items:center 가 margin-box 를 센터링해서
+     컨트롤이 위로 떠 보인다 (디자인 수정-2 #1: "Ops v" 수평센터 미정렬). */
+  margin: 0;
   padding: var(--space-inset-xs) var(--space-inset-sm);
   border: 1px solid var(--color-border-input);
   border-radius: var(--radius-control);
@@ -2297,6 +2301,7 @@ body {
 
 .board-card__actions {
   display: flex;
+  align-items: center;   /* 24px 상태 select 를 더 큰 '상세' 버튼과 세로 센터 (디자인 수정-2: 위로 치우침 해소) */
   gap: var(--space-gap-xs);
   flex-wrap: wrap;
   margin-top: var(--space-stack-xs, 4px);
