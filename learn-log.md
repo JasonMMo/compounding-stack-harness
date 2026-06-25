@@ -749,3 +749,9 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **잔여(founder)**: ①lawfirm-demo Coolify 재배포(공유 fastapi+프론트 재빌드) ②**manifest scp**(out/lawfirm-demo/screen-manifest.json → /data/coolify/manifests/lawfirm-demo/, case-deadline nav 노출 필수) ③seed 기일 날짜 2026-06 앵커(시간경과 시 임박 퇴색 — 주기 갱신).
 - **교훈**: 경쟁 SaaS 와 같은 축에서 싸우지 말고 사각지대(사건축)를 self-host 완성형으로 — 차별화=기능 더하기 아니라 축 바꾸기. 기존 검색엔진을 entity_type 파라미터 하나로 새 killer-app(이해충돌)으로 재사용=복리.
 - §6 rollup: [Growth-127] 소형로펌 killer-app K1 기일가디언(case-deadline entity+DDL+임박 하이라이트)·K2 이해충돌검사(search-similar→entity_type 일반화로 case-party 재사용). 로폼=계약/구독/생성형, 사각지대=사건축 → self-host 검색형 우회([[lawform-competitive-analysis]]). fastapi 90 passed·라이브로컬 PASS. 잔여 founder: 재배포+manifest scp. 15커밋.
+
+## Growth-127 후속 — manifest scp→seeder 전환 + 칸반 카드 셀렉트 full-width 결함 수정
+
+- **manifest 공급 scp→seeder 전환** (푸시 b79f1ec): scp publickey denied(no-SSH 경계) → 제너릭 `scripts/manifest-generator/`(Dockerfile+entrypoint, scaffold→공유볼륨, manifest-only ∵ SEED_FILE) + lawfirm compose 를 host bind-mount→공유볼륨 seeder 패턴 전환. scp 영구 제거, 나머지 8 scp-데모 재사용 자산.
+- **칸반 카드 상태 셀렉트 full-width 결함** (푸시 ed726d0): founder "칸반 카드 width 100%". CTO 라이브 probe — 카드/컬럼 정상(컨테이너 flex, 컬럼 240px, 3컬럼12카드). 진짜 원인=제너릭 엔티티 카드 상태변경 `<select class="form-input board-card__move-select">`가 `.form-input{width:100%}`(app.css:683) 상속, `.board-card__move-select` width 미정의 → 셀렉트가 카드 폭 전체로. task 엔티티=버튼이라 무관, lawfirm 6 board 엔티티 전부 제너릭→전 카드 증상. 수정: `display:inline-block;width:auto;max-width:100%`(정의순서상 .form-input 뒤→승리). board L1 26 passed. 교훈: 공유 폼 유틸클래스(.form-input)를 컴팩트 컨텍스트(카드/툴바)에 재사용 시 width override 누락이 조용한 레이아웃 결함.
+- §6 rollup: [Growth-127 후속] manifest scp→in-cluster seeder 영구전환(b79f1ec, 8데모 재사용) + 칸반 카드 상태셀렉트 full-width 결함 수정(ed726d0, .form-input width:100% 상속 차단). board L1 26 PASS. founder 잔여: lawfirm-demo Redeploy.
