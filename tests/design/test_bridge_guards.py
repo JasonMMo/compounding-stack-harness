@@ -45,6 +45,12 @@ class TestG16UploadScope:
         assert any("email" in v for v in r.violations)
         assert any("RRN" in v for v in r.violations)
 
+    def test_fail_on_api_keys(self, tmp_path: Path) -> None:
+        _write(tmp_path / "k/k.js", "const a='sk-ant-api03-aaaaaaaaaaaaaaaaaaaaaa';")
+        r = diagnose.g16_design_upload_scope(staging_dir=tmp_path)
+        assert r.status == "FAIL"
+        assert any("Anthropic" in v for v in r.violations)
+
     def test_fail_on_secret_path_ref(self, tmp_path: Path) -> None:
         _write(tmp_path / "x/y.css", "/* import apps/intake/data/clients.csv */")
         r = diagnose.g16_design_upload_scope(staging_dir=tmp_path)
@@ -73,6 +79,11 @@ class TestG17CloudCoupling:
         r = diagnose.g17_cloud_coupling_leak(scan_roots=(tmp_path,))
         assert r.status == "FAIL"
         assert any("claude.ai" in v for v in r.violations)
+
+    def test_fail_on_uppercase_variant(self, tmp_path: Path) -> None:
+        _write(tmp_path / "src/x.html", "<!-- synced from CLAUDE.AI/Design -->")
+        r = diagnose.g17_cloud_coupling_leak(scan_roots=(tmp_path,))
+        assert r.status == "FAIL"
 
 
 # ── G-18 cross-tenant leak ─────────────────────────────────────────────────
