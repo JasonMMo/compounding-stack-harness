@@ -5,6 +5,7 @@
 ## Sources
 
 - [lawfirm-demo profile](../../profiles/lawfirm-demo.yaml) — 30명 법무법인, legal vertical M3 첫 고객 프로파일 초안 (updated: 2026-06-11) `[INFERRED]`
+- [deep-research-design-cloud-2026-06](sources/deep-research-design-cloud-2026-06.md) — claude.ai/design 분리·통합 deep-research(8 findings, 1차출처 12종) (updated: 2026-06-26) `[EXTRACTED]`
 
 ## Entities
 
@@ -30,3 +31,4 @@
 ## Syntheses
 
 - [lawform-competitive-analysis](syntheses/lawform-competitive-analysis.md) — 로폼 경쟁분석: 로폼=계약/대기업법무팀/생성형/구독, 소형로펌 사건축은 사각지대. killer-app K1 기일가디언·K2 이해충돌검사(사건축·검색형·self-host로 비경쟁 우회) (updated: 2026-06-25) `[SYNTHESIZED]`
+- [claude-design-cloud-boundary](syntheses/claude-design-cloud-boundary.md) — claude.ai/design 워크벤치 분리·통합: 토큰 JSON 단일경계, BAA제외/학습기본 → PII 업로드금지, 빌드타임 정적 복제본(누출0·결합0·구조변경0), CI 가드5종. 설계: docs/architecture/design-cloud-bridge.md (updated: 2026-06-26) `[SYNTHESIZED]`
