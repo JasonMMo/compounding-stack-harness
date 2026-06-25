@@ -730,6 +730,9 @@ def g10_ddl_catalog_integrity() -> GuardResult:
           to a real catalog entity key.
       (c) type closure — every column `type` in catalog.yaml must be in the 8-type
           neutral vocabulary (uuid/string/text/integer/decimal/boolean/date/timestamp/enum).
+      (d) no duplicate entity keys — two entities sharing a key (e.g. a legal `invoice`
+          colliding with the finance `invoice`) is silently deduped by safe_load, which
+          DROPS one entity and can mis-point FKs. compose() sees pre-dedup nodes. (Growth-128)
     """
     if not _CATALOG_PATH.exists():
         return GuardResult(
@@ -760,6 +763,37 @@ def g10_ddl_catalog_integrity() -> GuardResult:
     catalog_keys: set[str] = set(catalog_entities.keys())
 
     violations: list[str] = []
+
+    # ── (d) no duplicate entity keys (safe_load silently dedups — compose sees all) ──
+    # YAML mappings with a repeated key keep only the LAST value after load, so a
+    # colliding entity silently overwrites another (and any FK to it mis-points).
+    # compose() yields the un-deduped node tree, exposing every key node. (Growth-128)
+    try:
+        _root_node = _yaml.compose(_CATALOG_PATH.read_text(encoding="utf-8"))
+        _ent_node = None
+        if _root_node is not None and hasattr(_root_node, "value"):
+            for _k, _v in _root_node.value:
+                if getattr(_k, "value", None) == "entities":
+                    _ent_node = _v
+                    break
+        if _ent_node is not None and hasattr(_ent_node, "value"):
+            _seen: set[str] = set()
+            _dups: list[str] = []
+            for _k, _v in _ent_node.value:
+                _key = getattr(_k, "value", None)
+                if _key is None:
+                    continue
+                if _key in _seen and _key not in _dups:
+                    _dups.append(_key)
+                _seen.add(_key)
+            for _d in _dups:
+                violations.append(
+                    f"(d) duplicate entity key '{_d}' in catalog.yaml — YAML keeps "
+                    f"only the last; one entity is silently dropped. Rename one "
+                    f"(use a domain prefix, e.g. 'case-invoice')."
+                )
+    except Exception as exc:  # pragma: no cover - compose failure is itself a defect
+        violations.append(f"(d) duplicate-key scan failed: {exc}")
 
     # ── (a) seed entities ⊆ catalog entities ─────────────────────────────────
     seed_files = sorted(_SEEDS_DIR.glob("*.seed.md"))
