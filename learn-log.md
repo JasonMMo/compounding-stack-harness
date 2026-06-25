@@ -52,6 +52,11 @@
 | **G-13** | 인격 loop SKILL(`*-loop/SKILL.md`)이 subagent-output-protocol.md 링크 없음 (반환 경계 드리프트) | Growth-34 | `scripts/diagnose.py::g13_subagent_output_protocol_wired` (PASS, Growth-34 — Growth-33 규약 hardening. 7 loop 스캔, 헤딩 문구 무관·프로토콜 링크 존재만 검사. envelope 크기는 런타임 속성이라 정적 검사 불가, 규약 wiring 만 가드) |
 | **G-14** | intake 파이프라인: qualify 케이스가 SLA 초과 stall 이거나 node FAIL 상태 | Phase-8 monitor (CLAUDE.md §10) | `scripts/diagnose.py::g14_intake_pipeline_health` (SPEC — infra/registry/cases/ 첫 케이스 도착 시 활성) |
 | **G-15** | marketing-site 케이스가 vision-QA 미통과(verdict≠PASS) 상태로 DELIVERED | Growth-65 | `scripts/diagnose.py::g15_marketing_site_visual_gate` (SPEC — infra/registry/cases/ 에 deliverable_kind=marketing-site 첫 케이스 도착 시 활성. ui_check `--full-vision` → CDO/QA zai-mcp 채점 → verdict PASS 필수) |
+| **G-16** | claude.ai/design 업로드 스코프 위반 — staging/design-sync 컴포넌트에 PII(email/RRN/전화)·시크릿키(AWS/Anthropic/Google)·금지경로(apps/intake/data·infra/secrets) 참조 | Growth-130 | `scripts/diagnose.py::g16_design_upload_scope` (SPEC — staging/design-sync 첫 컴포넌트 sync 시 활성. 무명 컴포넌트만 클라우드 업로드 = BAA제외·학습기본 정책) |
+| **G-17** | 인도물(복제본·landing-astro src·테마)에 클라우드 결합 흔적 — claude.ai/DesignSync/design-sync 토큰(대소문자 무관) | Growth-130 | `scripts/diagnose.py::g17_cloud_coupling_leak` (PASS — clean repo 30파일 0결합. vendor lock-in 차단) |
+| **G-18** | 고객 복제본 번들에 타 테넌트 slug 누출 — out/replicas/<slug> 안에서 다른 고객 slug 토큰경계 매칭 | Growth-130 | `scripts/diagnose.py::g18_cross_tenant_leak` (SPEC — out/replicas/ 복제본 빌드(WP-3) 도착 시 활성) |
+| **G-19** | 경계 토큰 override 가 DTCG semantic 화이트리스트 위반 — staging *.tokens.json 키 ⊄ design/tokens/semantic.json(+landing extras) | Growth-130 | `scripts/diagnose.py::g19_dtcg_schema` (SPEC — *.tokens.json sync 시 활성, scripts/design/dtcg_schema.py 연동. DTCG=W3C CG draft, Rec 아님) |
+| **G-20** | synced 컴포넌트 raw HTML 의 production 직붙임 — frontend/presets 경로에 'design-sync:staging' provenance 마커 | Growth-130 | `scripts/diagnose.py::g20_normalization_gate` (PASS — clean repo 125파일 0마커. 정규화 게이트 우회=axis-8 붕괴 차단) |
 | **G-87** | legal-rag embed 호출이 비대칭 e5 prefix 불변식 위반 — api.py 가 `.embed_batch(` 호출하거나 ingest.py 가 bare `.embed(` 호출 | Growth-93 | `scripts/diagnose.py::g87_embed_caller_split` (**SPEC** — 첫 production ingest 로 유효성 확인 전까지 SPEC. 현재 clean state 에서 PASS 확인. SKIP if services/legal-rag/ absent) |
 
 상태 코드: **PASS** 통과 / **FAIL** 위반 검출 / **SKIP** 검사 대상 부재 (이 시점) / **SPEC** 검출 로직 다음 milestone 에 박힘.
@@ -81,6 +86,7 @@
 | 2026-06-14 (자율 intake 파이프라인 — Phase 7 문서화) | 14 | + **G-14 SPEC** — 자율 intake 파이프라인 건전성 가드 (qualify stall/fail 검출). `scripts/diagnose.py::g14_intake_pipeline_health` (infra/registry/cases/ 첫 케이스 도착 시 활성, 현재 SPEC). |
 | 2026-06-15 (marketing-site track Phase 4 — vision-QA 게이트) | 15 | + **G-15 SPEC** — marketing-site 케이스 vision-QA 필수 게이트 (deliverable_kind=marketing-site AND triage_status=delivered → verdict PASS 없으면 FAIL). `scripts/diagnose.py::g15_marketing_site_visual_gate` (첫 marketing-site 케이스 도착 전 SPEC). `ui_check.py --full-vision` 비전 리뷰 request 생성 구현 (LLM 0). `design/vision-qa-rubric.yaml` 8기준 루브릭 신설. |
 | 2026-06-19 (Growth-93 — G-87 embed caller split 가드) | 16 | + **G-87 SPEC** — legal-rag 비대칭 e5 prefix 불변식 기계 가드 (api.py: .embed_batch 금지 / ingest.py: bare .embed 금지). `scripts/diagnose.py::g87_embed_caller_split` (현재 clean state PASS, 첫 production ingest 후 SPEC→PASS 확정). |
+| 2026-06-26 (Growth-130 — Design-Cloud Bridge WP-1+WP-2) | 21 | + **G-16~G-20 (5종 신설)** — claude.ai/design 클라우드 경계 안전망. G-16 업로드스코프(PII/시크릿 차단, SPEC)·G-17 클라우드결합누출(인도물 0결합, PASS)·G-18 교차테넌트누출(복제본 slug격리, SPEC)·G-19 DTCG스키마(토큰 화이트리스트, SPEC)·G-20 정규화게이트(직붙임 차단, PASS). worktree(design/cloud-bridge)→master 머지. QA WP-2 게이트 MERGE-OK, 단위테스트 24종 PASS. clean repo G-17/G-20 PASS·나머지 SPEC(타깃 미착지). 설계 docs/architecture/design-cloud-bridge-execution-plan.md. |
 
 ## §5 — Environment Notes
 
