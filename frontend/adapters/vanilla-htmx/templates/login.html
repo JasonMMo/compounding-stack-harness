@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}로그인 — {{ g_customer_display or '학사행정 통합 플랫폼' }}{% endblock %}
+{% block title %}로그인 — {{ g_customer_display or 'Compounding Stack' }}{% endblock %}
 
 {% block unauthenticated_content %}
 <div class="login-split">
@@ -7,15 +7,19 @@
   {# ── 왼쪽: 브랜드 패널 ────────────────────────────────────────────────── #}
   <div class="login-brand" aria-hidden="true">
     <div class="login-brand__inner">
+      {# KRDS 준수 배지는 공공기관(public-sector) 테마에서만 — 일반 고객엔 부적합 (디자인 수정-1 #3) #}
+      {% if ui_theme == 'public-sector' %}
       <span class="login-brand__badge">행정안전부 KRDS 준수 시스템</span>
+      {% endif %}
 
       <div class="login-brand__logo-wrap">
-        {{ (g_customer_display or '학')[0] | upper }}
+        {{ (g_customer_display or 'C')[0] | upper }}
       </div>
 
-      <p class="login-brand__product">{{ g_customer_display or '학사행정 통합 플랫폼' }}</p>
+      {# generic — 하드코딩 도메인/업종 문구 금지, 고객 표시명 폴백은 중립 브랜드 #}
+      <p class="login-brand__product">{{ g_customer_display or 'Compounding Stack' }}</p>
       <p class="login-brand__tagline">
-        교육기관의 모든 행정 업무를 하나의 플랫폼에서 — 빠르고 안전하게.
+        업무에 필요한 모든 화면을 하나의 작업공간에서 — 빠르고 안전하게.
       </p>
 
       <hr class="login-brand__divider">
