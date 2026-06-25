@@ -136,6 +136,12 @@ def verify_no_leak(replica_root: Path, slug: str,
 
     diagnose.py 의 단일 진실 가드를 재사용한다(재구현 금지):
       G-17 cloud-coupling-leak, G-18 cross-tenant-leak, 그리고 _PII_PATTERNS 로 raw PII.
+
+    한계 (QA WP-3 게이트 기록):
+      · 텍스트 파일만 스캔 — 바이너리 에셋(.png/.woff2) 속 누출은 대상 외.
+      · G-18 은 profiles/cases 에 등록된 known slug + 빌드된 번들 이름만 foreign 으로 본다.
+        미등록 테넌트 slug 는 탐지 불가. 단일 번들만 빌드된 초기 상태에선 foreign set 이
+        비어 G-18 이 사실상 비활성(거짓음성) — 복수 고객 빌드 시 활성. M2+ 재검토 대상.
     """
     import diagnose  # noqa: E402  (scripts/ on path)
 
