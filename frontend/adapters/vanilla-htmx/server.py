@@ -534,6 +534,31 @@ def entity_list(entity_type: str):
                     imminent_ids.add(_it.get("id"))
                     break
 
+    # K3 타임시트·빌링 (Growth K3): 청구 롤업 배너.
+    # entity_type=="time-entry" 일 때만 계산 — 개방-폐쇄 원칙.
+    # honest: "기록 기반 청구 합계 집계"만. 자동 청구서 생성·법적 효력 주장 금지.
+    billing_summary: dict | None = None
+    unbilled_ids: set = set()
+    if entity_type == "time-entry":
+        _billable_total = 0
+        _unbilled_total = 0
+        _total_minutes = 0
+        for _it in items:
+            _is_billable = _it.get("billable") in (True, "true", "True", 1, "1")
+            _amt = int(_it.get("amount") or 0)
+            _mins = int(_it.get("minutes") or 0)
+            if _is_billable:
+                _billable_total += _amt
+                _total_minutes += _mins
+                if str(_it.get("status", "")).lower() != "billed":
+                    _unbilled_total += _amt
+                    unbilled_ids.add(_it.get("id"))
+        billing_summary = {
+            "billable_total": _billable_total,
+            "unbilled_total": _unbilled_total,
+            "total_minutes":  _total_minutes,
+        }
+
     # Pagination math (offset mode)
     page_int = int(paging_page) if paging_page.isdigit() else 1
     size_int = int(paging_size) if paging_size.isdigit() else 20
@@ -553,6 +578,8 @@ def entity_list(entity_type: str):
         items=items,
         columns=columns,
         imminent_ids=imminent_ids,
+        billing_summary=billing_summary,
+        unbilled_ids=unbilled_ids,
         total=total,
         paging_mode=paging_mode,
         paging_page=page_int,
