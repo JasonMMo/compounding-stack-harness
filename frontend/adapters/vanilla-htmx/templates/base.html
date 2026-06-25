@@ -73,7 +73,7 @@
         </span>
         <span class="header-user__name">{{ session.get('user_id') }}</span>
       </span>
-      <form method="post" action="{{ url_for('logout') }}" style="display:inline">
+      <form method="post" action="{{ url_for('logout') }}" style="display:inline;margin:0">
         <button type="submit" class="btn btn-ghost btn-sm">로그아웃</button>
       </form>
       <div class="persona-switcher">
