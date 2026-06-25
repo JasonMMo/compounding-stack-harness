@@ -863,6 +863,40 @@ body {
   border-radius: var(--radius-sm, 6px);
 }
 
+/* ── K3 타임시트·빌링 (Growth K3) ────────────────────────────────────────── */
+/* 미청구 행: primary/accent 계열 (warning 황색과 구분) */
+.tr--unbilled .td { background: var(--color-primary-subtle); }
+.tr--unbilled:hover .td { background: var(--color-primary-subtle); }
+.tr--unbilled .td:first-child {
+  border-left: 3px solid var(--color-primary);
+  font-weight: var(--font-weight-medium, 600);
+}
+.badge--billing {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  margin-right: 0.4rem;
+  border-radius: var(--radius-badge);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium, 600);
+  white-space: nowrap;
+}
+.billing-summary {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm, 6px);
+}
+.billing-summary__note {
+  color: var(--color-text-2);
+  font-size: var(--font-size-xs);
+  margin-left: 0.5rem;
+}
+
 /* ── K2 이해충돌 검사 (Growth-127) ───────────────────────────────────────── */
 .conflict-search-bar { margin: 0.5rem 0 0.75rem; }
 .conflict-search-label {
