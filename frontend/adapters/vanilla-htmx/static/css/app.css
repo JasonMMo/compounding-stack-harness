@@ -2268,7 +2268,12 @@ body {
   font-size: var(--font-size-xs);
   height: 24px;
   padding: 0 var(--space-inset-xs);
+  /* Override .form-input's display:block; width:100% — inside a compact kanban
+     card the status dropdown must size to its content, not stretch full width. */
+  display: inline-block;
+  width: auto;
   min-width: 80px;
+  max-width: 100%;
 }
 
 /* ── Similar-task search (Lite-AI surface) ──────────────────────────────── */
