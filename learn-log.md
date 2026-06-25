@@ -783,3 +783,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **잔여 founder**: lawfirm-demo Redeploy 1회(새 sw.js + 새 app.css 둘 다) → 새로고침 1회로 헤더 풀폭 확인. SW 잔류 시 F12→Application→Service Workers→Unregister 후 reload.
 - **교훈**: "배포가 안 보인다"는 추측 금지 — 라이브 DOM을 측정하고 후보 CSS를 주입해 증명한 뒤 커밋한다. 뷰포트-비례 여백 = max-width 컨테이너(고정 px padding 아님). HTML은 되는데 CSS만 안 되면 SW stale.
 - §6 rollup: [Growth-129] lawfirm 헤더 여백 2중 결함 규명 — PWA SW stale 캐시(87091ac, network-first+csh-v2) + Pico 컨테이너 max-width(f252336, .app-* max-width:none). headless Chrome으로 x=186 w=1450→x=0 w=1822 측정 증명. 반복 검증 워크플로 → htmx-demo-verify skill 추출. 메모리 2종 환류. 전 데모 공통.
+
+## Growth-130 — claude.ai/design ↔ repo 분리·통합 아키텍처 (deep-research 기반 설계 박제)
+
+**맥락**: founder "디자인 조정 반복작업·시간 과다 + axis-8 산출물 밋밋. claude.ai/design 기능 활용 needs. 단 클라우드 분리 + 고객 복제본(구조변경0·데이터누출0) 가능해야". CTO 진단: 밋밋함은 구조적(토큰 재색칠+고정 variants), 시간싱크는 배포-왕복. claude-design=배포없는 즉시-렌더 craft 엔진이나 경계 선결. deep-research 하니스 가동(8 findings, 3-vote adversarial).
+
+- **연구 확정 제약**: Claude Design = 유료티어·**BAA 제외(beta)**·기본 학습허용(opt-out 카브아웃2) → PII 절대 업로드금지(C2~C4). DTCG 토큰 2025.10(W3C CG, Rec 아님)·Style Dictionary v5+ include/source·Storybook Package Composition·vercel/platforms는 런타임라우팅(우린 빌드타임 정적이 우월).
+- **아키텍처 4파트**(`docs/architecture/design-cloud-bridge.md`): (A)분리경계=클라우드 authoring-only/넘는것은 DTCG 토큰JSON뿐, 우리 raw→semantic→theme.yaml 계층이 곧 경계(신표준0) (B)정규화 게이트=CDO가 클라우드 컴포넌트를 catalog variant+토큰으로 분해해야 머지(직접붙임=복리붕괴) (C)복제본=빌드타임 물리격리(landing-astro SSG+고객 theme/profile 주입, 구조변경0) (D)CI가드 5종(업로드스코프·클라우드결합누출·교차테넌트누출·DTCG스키마·정규화게이트).
+- **환류**: wiki synthesis [[claude-design-cloud-boundary]] + source [[deep-research-design-cloud-2026-06]] + index 2줄. 원본 `out/`(gitignored).
+- **잔여**: Phase1 파일럿(landing-astro 테마1종 craft→sync→정규화→측정→design-loop 박제) / Phase2 가드5종 diagnose.py 구현+§2카탈로그 / Phase3 Style Dictionary v5+ 평가·복제본 CLI. legal 고객엔 BAA beta졸업 재검증 전 PII 금지.
+- §6 rollup: [Growth-130] claude.ai/design 분리·통합 아키텍처 박제 — deep-research(BAA제외·학습기본·DTCG·Style Dictionary v5+·빌드타임 물리격리) 기반. 경계=토큰JSON, 정규화 게이트, 복제본 누출0·결합0·구조변경0, CI가드5종 후보. 문서+wiki 3페이지 환류. 구현은 후속 Phase.
