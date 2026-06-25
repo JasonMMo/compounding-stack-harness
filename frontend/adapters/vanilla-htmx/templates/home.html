@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}홈 — {{ customer_display or '학사행정 통합 플랫폼' }}{% endblock %}
+{% block title %}홈 — {{ g_customer_display or customer_display or 'Compounding Stack' }}{% endblock %}
 
 {% block content %}
 
 {# ── Hero 배너 ─────────────────────────────────────────────────────────── #}
 <div class="home-hero">
-  <p class="home-hero__eyebrow">학사행정 통합 플랫폼</p>
+  {# eyebrow: 고객 표시명 반영 (generic — 하드코딩 도메인 문구 금지, 디자인 수정-1 #3) #}
+  <p class="home-hero__eyebrow">{{ g_customer_display or customer_display or 'Compounding Stack' }}</p>
   <h1 class="home-hero__title">
     안녕하세요,
     <span class="home-hero__name">{{ customer_display or '관리자' }}</span>님
