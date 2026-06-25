@@ -89,27 +89,9 @@
   </header>
   {% endblock %}
 
-  {# ── killer-app 배너: URL 설정 시 인증 후에만 노출 ─────────────────────── #}
-  {% if g_killer_app %}
-  <div class="killer-app-banner" role="complementary" aria-label="연동 서비스">
-    <div class="killer-app-banner__body">
-      <span class="killer-app-banner__icon" aria-hidden="true">⚖️</span>
-      <div class="killer-app-banner__text">
-        <span class="killer-app-banner__label">{{ g_killer_app.label }}</span>
-        {% if g_killer_app.desc %}
-        <span class="killer-app-banner__desc">{{ g_killer_app.desc }}</span>
-        {% endif %}
-      </div>
-    </div>
-    <a href="{{ g_killer_app.url }}"
-       target="_blank"
-       rel="noopener noreferrer"
-       class="killer-app-banner__cta btn btn-sm"
-       title="{{ g_killer_app.label }} — 외부 시스템 · 별도 로그인 필요">
-      바로가기 ↗
-    </a>
-  </div>
-  {% endif %}
+  {# ── killer-app 배너 제거 (디자인 수정-1 #2): 상단 배너 대신 좌측 사이드바
+        링크(아래 .sidebar-killer-app)만으로 노출. 라벨은 KILLER_APP_LABEL env 가
+        단일 진실 (data-driven, 템플릿은 generic 유지). ──────────────────────── #}
 
   {# ── 인증 바디: 사이드바 + 메인 ─────────────────────────────────────── #}
   <div class="app-body" id="app-body">
