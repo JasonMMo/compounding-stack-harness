@@ -547,6 +547,14 @@ body {
 
 /* ── Persona select ──────────────────────────────────────────────────────── */
 
+/* persona-switcher: inline-flex 로 select 의 inline-block baseline 갭 제거 —
+   align-items:center 가 select 를 header-actions 의 다른 항목(홈/로그아웃)과
+   같은 세로선에 맞춘다 (디자인 수정-1 #1: "Ops v" 가 위로 떠 보이던 문제). */
+.persona-switcher {
+  display: inline-flex;
+  align-items: center;
+}
+
 .persona-select {
   font-size: var(--font-size-sm);
   padding: var(--space-inset-xs) var(--space-inset-sm);
@@ -555,6 +563,7 @@ body {
   background: var(--color-surface-1);
   color: var(--color-text-1);
   cursor: pointer;
+  vertical-align: middle;
 }
 
 /* ── Page header ─────────────────────────────────────────────────────────── */
@@ -757,6 +766,15 @@ body {
 
 .toolbar-search {
   max-width: 280px;
+}
+
+/* toolbar 액션 그룹(+추가/보드보기): margin-left:auto 로 테이블 우측 끝 정렬,
+   align-items:center 로 검색바와 세로 센터 (디자인 수정-1 #4). */
+.toolbar__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-gap-sm);
 }
 
 .paging-mode-switcher {
