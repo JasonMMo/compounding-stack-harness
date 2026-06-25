@@ -751,6 +751,174 @@ APPROVAL_DECISIONS = [
 
 
 # ---------------------------------------------------------------------------
+# K3 타임시트·빌링 (Growth K3)
+# ---------------------------------------------------------------------------
+# UUID namespace: ff — time-entry
+_TE_BASE = "ffffffff-0000-0000-0000-"
+
+def _teid(n: int) -> str:
+    return f"{_TE_BASE}{n:012d}"
+
+# UUID namespace: ee — invoice
+_INV_BASE = "eeeeee00-0000-0000-0000-"
+
+def _invid(n: int) -> str:
+    return f"{_INV_BASE}{n:012d}"
+
+# hourly_rate KRW/시간: 파트너 40만, 시니어 30만, 주니어 15~20만
+# amount = round(minutes / 60 * hourly_rate)
+# 25건: billable 대다수, non-billable 일부 (internal), status 혼합
+
+TIME_ENTRIES = [
+    # C1 — ABC주식회사 손해배상 (담당: EMP001 김대호)
+    {"id": _teid(1),  "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C1, "employee_id": _EMP1,
+     "work_date": "2024-02-10", "minutes": 120, "description": "소장 초안 검토 및 청구취지 정리",
+     "billable": True,  "hourly_rate": 400000, "amount": 800000,  "status": "billed"},
+    {"id": _teid(2),  "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C1, "employee_id": _EMP2,
+     "work_date": "2024-02-15", "minutes": 90,  "description": "증거 자료 목록 정리",
+     "billable": True,  "hourly_rate": 200000, "amount": 300000,  "status": "billed"},
+    {"id": _teid(3),  "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C1, "employee_id": _EMP1,
+     "work_date": "2024-04-10", "minutes": 60,  "description": "1차 변론기일 출석",
+     "billable": True,  "hourly_rate": 400000, "amount": 400000,  "status": "submitted"},
+    {"id": _teid(4),  "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C1, "employee_id": _EMP3,
+     "work_date": "2024-04-11", "minutes": 45,  "description": "내부 사건 검토 회의 (non-billable)",
+     "billable": False, "hourly_rate": 150000, "amount": 0,       "status": "draft"},
+    # C2 — 부동산 매매 계약 위반 (담당: EMP002 이수진)
+    {"id": _teid(5),  "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C2, "employee_id": _EMP2,
+     "work_date": "2024-03-12", "minutes": 180, "description": "사실관계 분석 및 법리 검토",
+     "billable": True,  "hourly_rate": 200000, "amount": 600000,  "status": "billed"},
+    {"id": _teid(6),  "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C2, "employee_id": _EMP2,
+     "work_date": "2024-04-20", "minutes": 120, "description": "준비서면 작성",
+     "billable": True,  "hourly_rate": 200000, "amount": 400000,  "status": "submitted"},
+    {"id": _teid(7),  "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C2, "employee_id": _E5,
+     "work_date": "2024-04-21", "minutes": 60,  "description": "판례 조사 지원",
+     "billable": True,  "hourly_rate": 150000, "amount": 150000,  "status": "submitted"},
+    # C3 — 행정 제재처분 취소 (담당: EMP003 박민우)
+    {"id": _teid(8),  "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C3, "employee_id": _EMP3,
+     "work_date": "2024-03-01", "minutes": 240, "description": "처분 경위 사실조사 및 소장 작성",
+     "billable": True,  "hourly_rate": 150000, "amount": 600000,  "status": "billed"},
+    {"id": _teid(9),  "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C3, "employee_id": _EMP1,
+     "work_date": "2024-03-05", "minutes": 30,  "description": "전략 자문 (파트너 검토)",
+     "billable": True,  "hourly_rate": 400000, "amount": 200000,  "status": "billed"},
+    {"id": _teid(10), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C3, "employee_id": _EMP3,
+     "work_date": "2024-09-04", "minutes": 60,  "description": "2차 기일 출석 준비",
+     "billable": True,  "hourly_rate": 150000, "amount": 150000,  "status": "draft"},
+    # C4 — 이혼청구 (담당: E6 오서연)
+    {"id": _teid(11), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C4, "employee_id": _E6,
+     "work_date": "2024-01-10", "minutes": 90,  "description": "의뢰인 첫 상담 및 사실관계 청취",
+     "billable": True,  "hourly_rate": 200000, "amount": 300000,  "status": "billed"},
+    {"id": _teid(12), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C4, "employee_id": _E6,
+     "work_date": "2024-06-02", "minutes": 120, "description": "재산분할 목록 준비서면 작성",
+     "billable": True,  "hourly_rate": 200000, "amount": 400000,  "status": "submitted"},
+    # C5 — 형사 사건 (담당: E7 강현수)
+    {"id": _teid(13), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C5, "employee_id": _E7,
+     "work_date": "2024-07-16", "minutes": 150, "description": "회계감정 보고서 분석",
+     "billable": True,  "hourly_rate": 300000, "amount": 750000,  "status": "billed"},
+    {"id": _teid(14), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C5, "employee_id": _E7,
+     "work_date": "2024-09-11", "minutes": 180, "description": "방어 준비서면 작성",
+     "billable": True,  "hourly_rate": 300000, "amount": 900000,  "status": "submitted"},
+    {"id": _teid(15), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C5, "employee_id": _EMP1,
+     "work_date": "2024-09-12", "minutes": 30,  "description": "파트너 최종 검토",
+     "billable": False, "hourly_rate": 400000, "amount": 0,       "status": "draft"},
+    # C6 — SaaS 계약 분쟁 (담당: E8 임정우)
+    {"id": _teid(16), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C6, "employee_id": _E8,
+     "work_date": "2024-06-02", "minutes": 120, "description": "계약서 조항 검토",
+     "billable": True,  "hourly_rate": 200000, "amount": 400000,  "status": "billed"},
+    {"id": _teid(17), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C6, "employee_id": _E8,
+     "work_date": "2024-07-01", "minutes": 90,  "description": "협상 전략 메모 작성",
+     "billable": True,  "hourly_rate": 200000, "amount": 300000,  "status": "submitted"},
+    # C7 — 부동산 소유권 (담당: E9 한승민)
+    {"id": _teid(18), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C7, "employee_id": _E9,
+     "work_date": "2023-11-20", "minutes": 210, "description": "등기 이력 조사 및 청구취지 확정",
+     "billable": True,  "hourly_rate": 200000, "amount": 700000,  "status": "billed"},
+    {"id": _teid(19), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C7, "employee_id": _E9,
+     "work_date": "2024-02-10", "minutes": 60,  "description": "기일 출석",
+     "billable": True,  "hourly_rate": 200000, "amount": 200000,  "status": "billed"},
+    # C8 — 세무 과세처분 취소 (담당: E10 백지수)
+    {"id": _teid(20), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C8, "employee_id": _E10,
+     "work_date": "2025-02-06", "minutes": 300, "description": "세무조사결과 분석 및 소장 작성",
+     "billable": True,  "hourly_rate": 300000, "amount": 1500000, "status": "submitted"},
+    {"id": _teid(21), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C8, "employee_id": _EMP1,
+     "work_date": "2025-02-07", "minutes": 60,  "description": "세무 전문 파트너 검토",
+     "billable": True,  "hourly_rate": 400000, "amount": 400000,  "status": "submitted"},
+    # C9 — 하도급 (담당: E11 조나연)
+    {"id": _teid(22), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C9, "employee_id": _E11,
+     "work_date": "2024-06-12", "minutes": 180, "description": "하도급 손해 산정 보고서 작성",
+     "billable": True,  "hourly_rate": 200000, "amount": 600000,  "status": "billed"},
+    {"id": _teid(23), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C9, "employee_id": _E11,
+     "work_date": "2025-03-21", "minutes": 60,  "description": "항소심 판결문 검토 및 결과 보고",
+     "billable": True,  "hourly_rate": 200000, "amount": 200000,  "status": "billed"},
+    # C10 — 주주간 계약 (담당: E12 문재원)
+    {"id": _teid(24), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C10, "employee_id": _E12,
+     "work_date": "2025-01-22", "minutes": 240, "description": "항소 이유서 초안 작성",
+     "billable": True,  "hourly_rate": 300000, "amount": 1200000, "status": "submitted"},
+    {"id": _teid(25), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C10, "employee_id": _E12,
+     "work_date": "2025-04-02", "minutes": 90,  "description": "주주간계약 조항 분석 추가",
+     "billable": True,  "hourly_rate": 300000, "amount": 450000,  "status": "draft"},
+]
+
+# invoice — 사건별 집계: subtotal = sum(amount where billable), tax = round(subtotal*0.1), total = subtotal+tax
+# 6건: C1·C2·C3·C5·C7·C9 (각각 청구 완료 또는 진행 중)
+INVOICES = [
+    # C1: billed entries #1(800k)+#2(300k) = 1,100,000 + draft/submitted #3(400k) 미포함
+    {"id": _invid(1), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C1, "client_name": "ABC주식회사",
+     "issue_date": "2024-05-01", "period_start": "2024-02-01", "period_end": "2024-04-30",
+     "subtotal": 1100000, "tax": 110000, "total": 1210000, "status": "paid"},
+    # C2: billed #5(600k) = 600,000
+    {"id": _invid(2), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C2, "client_name": "김성훈 (부동산 매도인)",
+     "issue_date": "2024-04-30", "period_start": "2024-03-01", "period_end": "2024-04-30",
+     "subtotal": 600000, "tax": 60000, "total": 660000, "status": "issued"},
+    # C3: billed #8(600k)+#9(200k) = 800,000
+    {"id": _invid(3), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C3, "client_name": "주식회사 그린에너지",
+     "issue_date": "2024-04-01", "period_start": "2024-03-01", "period_end": "2024-03-31",
+     "subtotal": 800000, "tax": 80000, "total": 880000, "status": "paid"},
+    # C5: billed #13(750k) = 750,000
+    {"id": _invid(4), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C5, "client_name": "박서준 (피고인)",
+     "issue_date": "2024-08-01", "period_start": "2024-07-01", "period_end": "2024-07-31",
+     "subtotal": 750000, "tax": 75000, "total": 825000, "status": "issued"},
+    # C7: billed #18(700k)+#19(200k) = 900,000
+    {"id": _invid(5), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C7, "client_name": "이명섭 (원고)",
+     "issue_date": "2024-03-01", "period_start": "2023-11-01", "period_end": "2024-02-29",
+     "subtotal": 900000, "tax": 90000, "total": 990000, "status": "paid"},
+    # C9: billed #22(600k)+#23(200k) = 800,000
+    {"id": _invid(6), "created_at": _NOW, "updated_at": _NOW,
+     "case_id": _C9, "client_name": "주식회사 세화전기",
+     "issue_date": "2025-04-01", "period_start": "2024-06-01", "period_end": "2025-03-31",
+     "subtotal": 800000, "tax": 80000, "total": 880000, "status": "issued"},
+]
+
+
+# ---------------------------------------------------------------------------
 # Upsert helpers
 # ---------------------------------------------------------------------------
 
