@@ -39,7 +39,26 @@ description: Run the CDO design loop — token single-source grounding, persona 
 
 참고 사례: `ai-guide` 섹션 타입 (2026-06-18) — `concepts/smb-ai-guide-lite.md`.
 
+## 클라우드 craft 브리지 (design-cloud bridge, Growth-130 WP-4 파일럿 측정)
+
+claude.ai/design(`/design-sync`)을 **섹션 컴포넌트 craft 엔진**으로 쓰되, repo 복리·고객 인도물과 분리한다. 설계: [`docs/architecture/design-cloud-bridge.md`](../../../docs/architecture/design-cloud-bridge.md).
+
+**언제 쓰나 (파일럿 측정 결과 기준)**:
+- ✅ **재사용 섹션 컴포넌트 1건 craft** (pricing/hero 등 카탈로그 섹션) — 측정: cloud 2~3분 1-shot vs repo 코드 baseline ~25분(blind, 3 cycle). 4통증(카드정렬·하이라이트·CTA 하단고정·반응형)을 baseline 과 **독립적으로 동일 기법 수렴** = 해답 정합성 신호. export 충실도 HIGH(우리 Props/variant/DEC-3/data-loop 보존, **기존 semantic 토큰명 그대로 사용** — 예: `color-surface-1` 신규 아님 기존 소비), a11y 개선(aria-labelledby/role/focus-visible) 무료.
+- ❌ **전체 UI layer 이전 금지** — 데이터 바인딩(screen-manifest typed-form) 손실 + 복리 역전(고객별 재craft) + 미세 tweak 왕복 지연. 3-tier 중 cloud 는 **authoring-only**, 경계는 토큰JSON/무명 컴포넌트뿐.
+
+**절차 (정규화 게이트 — 비협상)**:
+1. **무명 컴포넌트만 craft** — PII·고객 slug·기밀 0. claude-design 은 BAA 적용 제외·학습 기본 → 의뢰인 데이터 절대 업로드 금지. 공유 스코프 = `frontend/adapters/landing-astro/src/sections/` 한정(전체 repo 연결 = G-16 위반).
+2. **인도** — claude-design 클라우드 폴더는 read-only(로컬 디스크 쓰기 불가). download 카드 → `staging/design-sync/<slug>/` 수동 배치. 파일명 ASCII slug(G-8, 공백 금지).
+3. **정규화** — `python scripts/design/normalize.py staging/design-sync/<slug>`. **단, cloud 가 토큰-구동 .astro 로 self-normalize 해 오면 normalize.py 스켈레톤은 거의 redundant** — CDO 가 토큰 커버리지·variant 분해만 확인.
+4. **토큰 규약 (위 §3 재적용)** — cloud 가 만든 신규 토큰(예: `shadow-card-hover`·`shadow-card-lg`)은 **theme.yaml 후보, semantic.json 직등록 금지**. 컴포넌트는 인라인 fallback(`var(--x, <기본>)`)으로 미등록 상태에서도 렌더 — 2개 테마 이상 재사용 시 semantic 승격.
+5. **컨벤션 판정 (CDO, 미결)** — cloud 산출은 scoped `<style>`+시맨틱 클래스, 기존 landing-astro 섹션은 Tailwind 유틸리티. 둘 다 CSS var 토큰 소비로 동작. 혼용 vs 재표현은 라이브 다수 검증 후 결정 — 파일럿 단계에선 **production 덮어쓰기 금지, 신규 variant 로 병존**.
+6. **CI 가드** — G-16~G-20(업로드스코프·결합누출·교차테넌트·DTCG스키마·정규화게이트)이 직붙임·누출 차단.
+
+**부수 발견 — repo 시각검증 레버**: baseline 의 ~25분 blind 는 코드 결함이 아니라 `large-file-guard` 훅이 **repo 경로 하위 PNG Read 차단**한 아티팩트(scratchpad 복사 시 즉시 읽힘). 즉 단축 레버 2개 — ① cloud 도입 ② **훅을 PNG 스크린샷에 한해 완화**(②만으로 baseline 도 cloud급 단축). headless 검증: `chrome --headless --screenshot` → scratchpad PNG Read.
+
 ## Anti-patterns
 
 - 하드코딩 hex / adapter 별 토큰 fork / contract 암묵 변경 / 페르소나 없는 단일 화면 / 장식적 복잡성 (비전문 사용자 3 페르소나가 기준)
 - 기능성 섹션의 런타임 config 를 catalog schema 에 포함 → site_manifest.py 오검증 유발
+- 클라우드 craft 산출의 production 직붙임(정규화 게이트 우회) / PII·고객 slug 업로드 / cloud 신규 토큰 semantic.json 직등록(theme.yaml 선행 원칙 위반)
