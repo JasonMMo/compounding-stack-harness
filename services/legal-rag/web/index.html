@@ -126,6 +126,8 @@
             placeholder="예: 이혼소송 재산분할 최근 판례, 손해배상 과실상계 비율 등 자연어로 입력하세요"
             aria-label="법률 문서 검색"
             aria-multiline="true"
+            spellcheck="false"
+            autocapitalize="none"
           ></textarea>
           <button
             type="button"
@@ -185,6 +187,11 @@
           <div class="results-message" id="results-message" role="status">
             검색어를 입력하면 관련 문서를 출처와 함께 보여줍니다.
           </div>
+          <div
+            class="example-queries"
+            id="example-queries"
+            aria-label="예시 검색어"
+          ></div>
           <ul class="results-list" id="results-list" aria-label="인용 결과 목록"></ul>
         </section>
       </main>
