@@ -312,6 +312,91 @@ async def test_validate_source_exists_not_found_raises():
         await validate_source_exists(conn, "precedent", source_id)
 
 
+@pytest.mark.asyncio
+async def test_reingest_shorter_removes_orphan_chunks(tmp_path):
+    """재인제스트 시 청크 수 축소 → 고아 청크 삭제 확인.
+
+    1. 긴 텍스트 ingest → N청크 upsert 확인
+    2. 같은 source_id로 짧은 텍스트 재ingest → M(<N) 청크
+    3. DELETE 호출의 마지막 인자(threshold)가 정확히 M임을 assert
+       (즉, chunk_index >= M 이상 행을 삭제하는 올바른 orphan 삭제 요청)
+    """
+    source_id = str(uuid.uuid4())
+    embedder = _make_mock_embedder()
+
+    # ── 1차 ingest: 긴 텍스트 ──────────────────────────────────────────────────
+    long_text = "판례 내용입니다. " * 60  # token_target=30 기준 여러 청크 생성
+    file_long = _make_text_file(tmp_path, long_text, suffix=".txt")
+
+    delete_calls_first: list[tuple] = []
+
+    conn1 = _make_mock_conn(source_exists=True)
+    _orig_execute1 = conn1.execute.side_effect
+
+    async def _execute1_spy(sql, params=None):
+        if "DELETE FROM legal_document_chunk" in sql and params:
+            delete_calls_first.append(params)
+        return await _orig_execute1(sql, params)
+
+    conn1.execute = AsyncMock(side_effect=_execute1_spy)
+
+    chunks_first = await ingest_file(
+        conn=conn1,
+        embed_client=embedder,
+        model_version="v1",
+        file_path=str(file_long),
+        source_type="precedent",
+        source_id=source_id,
+        chunk_token_target=30,
+        chunk_overlap_tokens=0,
+        batch_size=10,
+    )
+    assert chunks_first >= 2, "긴 텍스트는 2개 이상 청크를 생성해야 한다"
+    assert len(delete_calls_first) == 1, "orphan DELETE가 1회 호출되어야 한다"
+    # 1차: orphan threshold == 전체 청크 수 (삭제 대상 없음이지만 DELETE는 실행)
+    assert delete_calls_first[0][2] == chunks_first
+
+    # ── 2차 ingest: 짧은 텍스트 (1청크만 생성) ──────────────────────────────────
+    short_text = "짧은 문서."
+    file_short = _make_text_file(tmp_path, short_text, suffix=".txt")
+
+    delete_calls_second: list[tuple] = []
+
+    conn2 = _make_mock_conn(source_exists=True)
+    _orig_execute2 = conn2.execute.side_effect
+
+    async def _execute2_spy(sql, params=None):
+        if "DELETE FROM legal_document_chunk" in sql and params:
+            delete_calls_second.append(params)
+        return await _orig_execute2(sql, params)
+
+    conn2.execute = AsyncMock(side_effect=_execute2_spy)
+
+    chunks_second = await ingest_file(
+        conn=conn2,
+        embed_client=embedder,
+        model_version="v1",
+        file_path=str(file_short),
+        source_type="precedent",
+        source_id=source_id,
+        chunk_token_target=30,
+        chunk_overlap_tokens=0,
+        batch_size=10,
+    )
+    assert chunks_second < chunks_first, "짧은 텍스트는 이전보다 적은 청크를 만들어야 한다"
+    assert len(delete_calls_second) == 1, "orphan DELETE가 1회 호출되어야 한다"
+
+    # 핵심 assert: DELETE threshold == 새 청크 수 M, 즉 chunk_index >= M 삭제
+    orphan_threshold = delete_calls_second[0][2]
+    assert orphan_threshold == chunks_second, (
+        f"orphan DELETE threshold는 새 청크 수({chunks_second})여야 하는데 "
+        f"{orphan_threshold}가 전달됐다"
+    )
+    # source_id, source_type 파라미터 정합성도 확인
+    assert delete_calls_second[0][0] == source_id
+    assert delete_calls_second[0][1] == "precedent"
+
+
 @pytest.mark.skipif(not _has_gap3, reason="Gap-3 not in current ingest.py — apply ingest.py.patched")
 @pytest.mark.asyncio
 async def test_ingest_rejects_nonexistent_source(tmp_path):
