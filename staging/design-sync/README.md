@@ -25,3 +25,37 @@
 ```bash
 python scripts/design/normalize.py staging/design-sync/<slug>
 ```
+
+## 역방향 (cloud → repo) pull 절차
+
+claude.ai/design 이 `harness-design-system` sibling 레포에서 컴포넌트를 craft 한 후
+main 레포로 역반입하는 경로:
+
+```
+claude.ai/design
+  ─ DTCG export (tokens.json 또는 컴포넌트 HTML/CSS)
+    ─ harness-design-system 에 커밋
+      ─ 수동으로 staging/design-sync/<slug>/ 로 복사
+        ─ python scripts/design/normalize.py staging/design-sync/<slug>
+          ─ CDO 검수 후 design/tokens/ 또는 presets/ 에 반영
+```
+
+**staging 은 양방향 착지점**:
+
+| 방향 | 경로 |
+|---|---|
+| main → cloud (순방향) | `export_system.py` → `harness-design-system/tokens/` |
+| cloud → main (역방향) | cloud DTCG export → `staging/design-sync/<slug>/` → `normalize.py` |
+
+역방향에서 컴포넌트 HTML 을 main 레포 adapter 에 **직접 복사 금지**.
+반드시 `normalize.py` 게이트를 통과한 뒤 CDO 승인 후 반영한다.
+
+### 순방향 (토큰 export) 실행
+
+```bash
+# main 레포 루트에서
+python scripts/design/export_system.py [--target ../harness-design-system]
+
+# sibling 레포에서 CSS 재빌드
+cd ../harness-design-system && node build-tokens.mjs
+```
