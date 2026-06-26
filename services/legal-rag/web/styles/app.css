@@ -414,8 +414,8 @@ a:hover {
 
 .search-bar {
   display: flex;
-  gap: 8px;
-  align-items: flex-start;
+  gap: var(--space-meta-gap);
+  align-items: stretch;  /* craft D: textarea·버튼 동일 블록 높이로 정렬 */
 }
 
 .search-bar__input {
@@ -448,7 +448,8 @@ a:hover {
 
 .search-bar__btn {
   flex-shrink: 0;
-  align-self: flex-end;
+  align-self: stretch;   /* craft D: textarea 높이에 맞춰 늘어남 */
+  min-width: 64px;       /* craft D: 버튼 최소 가로 확보 */
 }
 
 .search-bar-controls {
@@ -524,6 +525,52 @@ a:hover {
 .match-mode-btn:focus-visible {
   outline: 3px solid var(--color-border-focus);
   outline-offset: -2px;
+}
+
+/* ── craft C: 예시 질의 칩 그룹 ── */
+
+.example-queries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-meta-gap);          /* 8px — 칩 간 여백 */
+  justify-content: center;
+  max-width: 680px;
+  margin: var(--space-card-gap) auto 0; /* 안내문과 12px 간격, 수평 중앙 */
+}
+
+.example-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  font-family: var(--font-family);
+  font-size: var(--text-label-size);   /* 12px */
+  font-weight: var(--text-label-fw);   /* 500 */
+  line-height: var(--text-label-lh);
+  color: var(--color-text-2);
+  background-color: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;               /* pill */
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-control),
+    border-color var(--transition-control),
+    color var(--transition-control);
+}
+
+.example-chip:hover {
+  background-color: var(--color-primary-subtle);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.example-chip:focus-visible {
+  outline: 3px solid var(--color-border-focus);
+  outline-offset: 2px;
+  background-color: var(--color-primary-subtle);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 /* ══════════════════════════════════════════════
@@ -1463,5 +1510,15 @@ body.persona-it .chunk-ref {
 
   .case-table {
     min-width: 600px;
+  }
+
+  /* craft C — 좁은 폭: 칩 좌우 여백 축소 */
+  .example-queries {
+    max-width: 100%;
+    margin-top: var(--space-meta-gap);
+  }
+
+  .example-chip {
+    padding: 4px 12px;
   }
 }
