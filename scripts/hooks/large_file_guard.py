@@ -6,6 +6,12 @@ Blocks context-flooding reads by two criteria:
               that exceed DATA_THRESHOLD_BYTES (10 KB).
   SIZE CAP  : any file exceeding SIZE_CAP_BYTES (100 KB), regardless of type.
 
+EXEMPTION: raster image formats are rendered by Read as *bounded visual tokens*
+(a 60 KB screenshot ≈ 90 tokens, capped by the vision pipeline regardless of byte
+size), so the KB→context-flood premise does not apply. Blocking them would defeat
+visual verification (e.g. headless-Chrome screenshot A/B — Growth-130 WP-4). They
+pass both guards. SVG is excluded from the exemption (XML text, can flood as bytes).
+
 Writes {"decision": "block", "reason": ...} to stdout on block; exits 0 silently on pass.
 """
 
@@ -16,6 +22,8 @@ import sys
 DATA_THRESHOLD_BYTES = 10 * 1024   # 10 KB — data files above this flood context
 SIZE_CAP_BYTES = 100 * 1024        # 100 KB — hard cap for all files (CLAUDE.md §8)
 DATA_EXTS = {".log", ".csv", ".tsv", ".jsonl"}
+# Raster images render as bounded visual tokens, not raw bytes — exempt from guards.
+IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
 
 
 def is_data_file(path: str) -> bool:
@@ -44,6 +52,10 @@ def main() -> None:
 
     if not os.path.exists(file_path):
         # Let the Read tool surface its own "file not found" error
+        sys.exit(0)
+
+    # Raster images render as bounded visual tokens — exempt (see module docstring).
+    if os.path.splitext(file_path.replace("\\", "/"))[1].lower() in IMAGE_EXTS:
         sys.exit(0)
 
     size = os.path.getsize(file_path)
