@@ -527,6 +527,11 @@ function setResultsState(state, message) {
   if (state === "results") {
     resultsMessage.hidden = true;
   }
+
+  // 예시 칩 컨테이너: 초기(empty) 상태에서만 노출
+  if (exampleQueriesEl) {
+    exampleQueriesEl.hidden = state !== "initial";
+  }
 }
 
 function renderSkeletons() {
@@ -596,6 +601,20 @@ function expandQueryTermsForHighlight(query) {
   });
 
   return Array.from(terms).filter(Boolean);
+}
+
+// excerpt 표시 정제: 인제스트 아티팩트(구분선/메타 대괄호) 제거 — 실고객 문서가 지저분해도 방어
+function sanitizeExcerpt(text) {
+  if (!text) return "";
+  return text
+    .split("\n")
+    .filter(line => !/^\s*=+\s*$/.test(line))                                   // 순수 구분선 줄
+    .filter(line => !/^\s*\[.*(가명 처리|RAG ingest|테스트용|이 문서는).*\]\s*$/.test(line)) // 메타 대괄호 줄
+    .join("\n")
+    .replace(/={3,}/g, " ")        // 줄 중간에 끼인 ==== 런 제거
+    .replace(/[ \t]{2,}/g, " ")    // 다중 공백 축약
+    .replace(/\n{2,}/g, "\n")      // 다중 개행 축약
+    .trim();
 }
 
 // 검색어 강조: textContent 기반 안전 DOM 조작 (XSS 방지)
@@ -678,15 +697,16 @@ function buildCitationCard(cit, queryTerms) {
   }
 
   // 단어 일치 배지 — excerpt 기준 (하이라이트와 동일 규범)
+  // cleanExcerpt: sanitize 적용본 — 아티팩트 제거 후 카운트·하이라이트 정합성 유지
+  const cleanExcerpt = sanitizeExcerpt(cit.chunk_text_excerpt);
   if (queryTerms && queryTerms.length > 0) {
-    const excerptRaw = cit.chunk_text_excerpt || "";
     // buildCitationCard 는 expandQueryTermsForHighlight 결과(queryTerms)가 아닌
     // 원본 query 를 받지 않으므로, queryTerms 에서 원본 '단어'만 역추출한다:
     // expandQueryTermsForHighlight 가 항상 rawToken 자체를 terms 에 먼저 add 하므로,
     // 공백 split 으로 얻은 sanitized 토큰이 queryTerms 안에 포함되어 있다.
     // 단어 배지는 원본 query 를 직접 받지 않으므로, STATE.lastQuery 를 참조한다.
-    const wordMatch = countMatchedWords(excerptRaw, STATE.lastQuery);
-    if (wordMatch.total >= 2) {
+    const wordMatch = countMatchedWords(cleanExcerpt, STATE.lastQuery);
+    if (wordMatch.total >= 2 && wordMatch.matched > 0) {
       const mBadge = document.createElement("span");
       const isFull = wordMatch.matched === wordMatch.total;
       mBadge.className = `match-count-badge${isFull ? " match-count-badge--full" : " match-count-badge--partial"}`;
@@ -728,7 +748,7 @@ function buildCitationCard(cit, queryTerms) {
   // ── 본문 발췌 (검색어 강조) ───────────────────────────────────────────────
   const excerpt = document.createElement("div");
   excerpt.className = "citation-card__excerpt";
-  highlightText(excerpt, cit.chunk_text_excerpt, queryTerms);
+  highlightText(excerpt, cleanExcerpt, queryTerms);
   li.appendChild(excerpt);
 
   // ── 푸터 (관련도·청크·IT 상세·원문보기) ───────────────────────────────────
@@ -781,6 +801,30 @@ function buildCitationCard(cit, queryTerms) {
   li.appendChild(footer);
   return li;
 }
+
+// ── 예시 질의 칩 (수정 C) ────────────────────────────────────────────────────
+
+const EXAMPLE_QUERIES = [
+  "소프트웨어 공급계약 해지 손해배상",
+  "기간제 근로 부당해고",
+  "주택임대차 보증금 반환",
+  "저작권 침해 손해배상",
+];
+
+const exampleQueriesEl = $("example-queries");
+
+// 칩 생성 (정적 마크업 대신 JS 생성 — 쿼리 목록을 한 곳에서 관리)
+EXAMPLE_QUERIES.forEach((q) => {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "example-chip";
+  btn.textContent = q;
+  btn.addEventListener("click", () => {
+    searchInput.value = q;
+    doSearch();
+  });
+  exampleQueriesEl.appendChild(btn);
+});
 
 btnSearch.addEventListener("click", doSearch);
 searchInput.addEventListener("keydown", (e) => {
