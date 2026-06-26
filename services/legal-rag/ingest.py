@@ -210,6 +210,13 @@ SET ingest_status = %s, ingested_at = %s
 WHERE id = %s
 """
 
+# 재인제스트 시 청크 수가 줄어들면 높은 idx의 옛 청크가 고아(orphan)로 잔존한다.
+# upsert 루프 완료 후 len(chunks) 이상의 idx를 일괄 삭제해 정합성을 보장한다.
+_DELETE_ORPHAN_CHUNK_SQL = """
+DELETE FROM legal_document_chunk
+WHERE source_id = %s::uuid AND source_type = %s AND chunk_index >= %s
+"""
+
 
 async def ingest_file(
     *,
@@ -306,6 +313,14 @@ async def ingest_file(
             await cur.executemany(_UPSERT_CHUNK_SQL, rows)
         upserted += len(rows)
         logger.debug("Upserted chunks %d-%d", batch_start, batch_start + len(batch) - 1)
+
+    # 재인제스트 고아 청크 삭제: 새 파일이 이전보다 적은 청크를 만들 경우,
+    # upsert는 idx 기준 매칭이므로 높은 idx의 옛 행이 그대로 남는다.
+    # upsert 완료 직후(Step 5 parent 갱신 전) 같은 conn으로 원자적 삭제.
+    await conn.execute(
+        _DELETE_ORPHAN_CHUNK_SQL,
+        (source_id_str, source_type, len(chunks)),
+    )
 
     # Step 5: update parent status
     if source_type == "case_document":
