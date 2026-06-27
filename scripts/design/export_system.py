@@ -49,6 +49,18 @@ FORBIDDEN_PATTERNS: list[str] = [
     r"\bpassword\b",
     r"\bsecret\b",
     r"\bsupabase\b",
+    # legal 버티컬 도메인 어휘 (Growth-130 sibling 누출 사고 환류 — 익명 셸이
+    # 판례/대법원 용어를 잔존시켜 cloud 업로드된 사고. 이 목록은 main 레포(비노출)
+    # 에만 존재하므로 실 용어를 담아도 안전.)
+    r"판례",
+    r"대법원",
+    r"손해배상",
+    r"피고",
+    r"\bprecedent\b",
+    r"\bcourt\b",
+    r"\bplaintiff\b",
+    r"\bdefendant\b",
+    r"\blitigation\b",
 ]
 
 _COMPILED = [re.compile(p, re.IGNORECASE) for p in FORBIDDEN_PATTERNS]
