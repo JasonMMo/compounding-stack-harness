@@ -1,0 +1,34 @@
+sequenceDiagram
+    autonumber
+    actor F as founder
+    participant DW as design_work_0625<br/>별채 CLI (cwd=harness-design-system)
+    participant B as baton.md<br/>(.handoff/ · gitignored)
+    participant CTO as CTO<br/>본채 (cwd=compounding-stack-harness)
+    participant GH as GitHub<br/>JasonMMo/harness-design-system
+    participant CD as claude.ai/design<br/>(cloud)
+
+    Note over CTO: ① 토큰 export (토큰 변경 시만)<br/>python scripts/design/export_system.py --target ../harness-design-system
+    CTO-->>DW: 전달파일 tokens/{raw,semantic,persona/*}.json (sanitized)
+
+    Note over DW: ② 슬롯 작성 (슬롯만)<br/>components 셸 index.html 은 슬롯마커만<br/>fixtures/synthetic.json · _structural-allowlist.txt
+    Note over DW: ③ 로컬 렌더<br/>node scripts/render-showcase.mjs
+    DW->>B: STATE=READY-FOR-GATE + 변경 컴포넌트 (push·sync 안 함)
+
+    F->>CTO: "baton 확인"
+    Note over CTO: ④ 누출 게이트<br/>python scripts/design/preflight_sibling.py
+    alt GATE FAIL
+        CTO->>B: STATE=GATE-FAIL + 위반 줄
+        B-->>DW: 반려 → ②로
+    else GATE PASS (CLEAN)
+        Note over CTO: ⑤ 별채 커밋·push (파일당)<br/>git commit / git push origin master
+        CTO->>GH: clean 푸시 (도메인-프리 슬롯+더미)
+        CTO->>B: STATE=GATE-PASS (sync 안전)
+        B-->>F: 통과 신호
+        Note over F,CD: ⑥ design-sync = 게이트 뒤 1회 업로드 (로컬→클라우드)
+        F->>CD: design-sync (34c4c9d7 클린 재sync)
+        GH-->>CD: sync source (git-tracked 전부)
+        Note over CD: 비주얼 디자인 (드래그 · 토큰/클래스)
+        CD-->>DW: 구조 변경분 내려받기 → ②부터 반복
+    end
+
+    Note over CTO: ⑦ 본채 환류 (디자인 확정 후)<br/>design/tokens/ 단일진실 + 어댑터 field.label 매핑
