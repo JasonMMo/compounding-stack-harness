@@ -32,7 +32,14 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-# ── 금지 패턴 (대소문자 무시) ──────────────────────────────────────────────
+# ── 금지 패턴 (대소문자 무시) — 2차 안전망 (defense-in-depth) ────────────────
+# 역할 재정의 (v2 WP-E): 이 denylist 는 더 이상 *1차* 누출 게이트가 아니다.
+#   1차 = G-21 shell conformance (allowlist) — 셸 텍스트는 {{슬롯}}|chrome 만 허용.
+#     allowlist 는 fail-safe(누락 시 BLOCK)라 미래 도메인 용어 누락 누출이 원천 불가능.
+#   2차 = 이 denylist — conformance 통과분을 한 번 더 거르는 보강망. denylist 의 구조적
+#     한계(개방형 집합 → 미래 용어 열거 불가, Growth-130 판례 사고)는 1차가 이미 차단하므로,
+#     여기서는 "알려진 고위험 식별자 즉시 차단"의 보조 역할만 한다.
+#   설계: docs/architecture/design-cloud-bridge-v2-structural.md §4.
 FORBIDDEN_PATTERNS: list[str] = [
     r"legal",
     r"attorney",
