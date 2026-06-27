@@ -27,6 +27,7 @@ import io
 import json
 import re
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Callable
 
@@ -1817,6 +1818,142 @@ def g20_normalization_gate(production_roots: tuple[Path, ...] | None = None) -> 
     )
 
 
+# G-21 — Shell 컴포넌트 conformance (구조적 도메인-프리, v2 WP-C)
+#   격리 sibling 레포(harness-design-system)의 셸 템플릿이 도메인 텍스트를 담지
+#   못하게 강제한다. 가시 텍스트노드 / aria-label·placeholder·title·alt 는 단일
+#   {{마커}} 이거나 _structural-allowlist.txt(UI chrome 닫힌 집합)여야 한다.
+#   denylist(FORBIDDEN_PATTERNS)와의 결정적 차이: allowlist = fail-safe(누락 시 BLOCK),
+#   미래 도메인 용어 누락으로 인한 누출(Growth-130 사고 클래스) 원천 불가능.
+#   설계: docs/architecture/design-cloud-bridge-v2-structural.md, sibling components/CONTRACT.md.
+# ---------------------------------------------------------------------------
+
+_SIBLING_ROOT = REPO_ROOT.parent / "harness-design-system"
+_SIBLING_COMPONENTS = _SIBLING_ROOT / "components"
+_SHELL_ALLOWLIST_FILE = _SIBLING_COMPONENTS / "_structural-allowlist.txt"
+
+# conformance 스캔 시 서브트리째 무시할 태그(콘텐츠 아님) / 클래스(데모 scaffolding).
+_SHELL_SKIP_TAGS = {"head", "title", "script", "style", "svg"}
+_SHELL_SKIP_CLASSES = {"demo-heading", "demo-desc"}
+_SHELL_VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img",
+                    "input", "link", "meta", "param", "source", "track", "wbr"}
+_SHELL_CHECK_ATTRS = ("aria-label", "placeholder", "title", "alt")
+_SHELL_MARKER_RE = re.compile(r"\{\{\s*[\w.]+\s*\}\}")
+_SHELL_MARKER_ONLY_RE = re.compile(r"^(?:\{\{\s*[\w.]+\s*\}\}\s*)+$")
+_HANGUL_RE = re.compile(r"[가-힣]")
+_LATIN_WORD_RE = re.compile(r"[A-Za-z]{3,}")
+
+
+def _shell_text_ok(raw: str, allow: set[str]) -> bool:
+    """텍스트노드/속성값이 conformance 통과면 True.
+
+    통과: (a) 마커만으로 구성, (b) 마커 제거 후 Hangul/3+자 라틴단어 없음(순수 chrome 기호),
+          (c) 원문(trim)이 allowlist 에 정확히 존재.
+    """
+    s = raw.strip()
+    if not s:
+        return True
+    if _SHELL_MARKER_ONLY_RE.match(s):
+        return True
+    residue = _SHELL_MARKER_RE.sub(" ", s)
+    if not _HANGUL_RE.search(residue) and not _LATIN_WORD_RE.search(residue):
+        return True
+    return s in allow
+
+
+class _ShellConformanceParser(HTMLParser):
+    """셸 템플릿에서 conformance 위반 텍스트/속성을 수집 (stdlib만 사용)."""
+
+    def __init__(self, allow: set[str]) -> None:
+        super().__init__(convert_charrefs=True)
+        self._allow = allow
+        self._skip_stack: list[bool] = []
+        self.violations: list[str] = []
+
+    def _class_skip(self, attrs: list[tuple[str, str | None]]) -> bool:
+        for k, v in attrs:
+            if k == "class" and v:
+                if set(v.split()) & _SHELL_SKIP_CLASSES:
+                    return True
+        return False
+
+    def _parent_skip(self) -> bool:
+        return self._skip_stack[-1] if self._skip_stack else False
+
+    def _check_attrs(self, attrs: list[tuple[str, str | None]]) -> None:
+        for k, v in attrs:
+            if k in _SHELL_CHECK_ATTRS and v and not _shell_text_ok(v, self._allow):
+                self.violations.append(f"@{k}=\"{v.strip()}\"")
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        skip = self._parent_skip() or tag in _SHELL_SKIP_TAGS or self._class_skip(attrs)
+        if not skip:
+            self._check_attrs(attrs)
+        if tag not in _SHELL_VOID_TAGS:
+            self._skip_stack.append(skip)
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if not (self._parent_skip() or tag in _SHELL_SKIP_TAGS or self._class_skip(attrs)):
+            self._check_attrs(attrs)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag not in _SHELL_VOID_TAGS and self._skip_stack:
+            self._skip_stack.pop()
+
+    def handle_data(self, data: str) -> None:
+        if self._parent_skip():
+            return
+        if not _shell_text_ok(data, self._allow):
+            self.violations.append(f"text \"{data.strip()}\"")
+
+
+def _load_shell_allowlist() -> set[str]:
+    allow: set[str] = set()
+    if _SHELL_ALLOWLIST_FILE.exists():
+        for line in _SHELL_ALLOWLIST_FILE.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                allow.add(line)
+    return allow
+
+
+def g21_shell_conformance(components_dir: Path | None = None) -> GuardResult:
+    """G-21 / Growth-130 — Shell 템플릿 구조적 도메인-프리 conformance.
+
+    SPEC: sibling components/ 부재 (sibling 레포 미체크아웃) 또는 index.html 없음.
+    FAIL: 마커도 allowlist도 아닌 Hangul/단어 텍스트노드·속성 발견 (= 도메인 텍스트 잔존).
+    PASS: 모든 셸이 {{마커}} + chrome 만 포함.
+    """
+    cdir = components_dir if components_dir is not None else _SIBLING_COMPONENTS
+    if not cdir.exists():
+        return GuardResult(
+            "G-21", "shell conformance", "Growth-130",
+            status="SPEC",
+            notes=f"sibling components/ not found ({_rel(cdir)}) — guard activates once design-system repo is checked out alongside.",
+        )
+    shells = sorted(cdir.glob("*/index.html"))
+    if not shells:
+        return GuardResult(
+            "G-21", "shell conformance", "Growth-130",
+            status="SPEC", notes="No shell index.html templates found.",
+        )
+    allow = _load_shell_allowlist()
+    violations: list[str] = []
+    for shell in shells:
+        parser = _ShellConformanceParser(allow)
+        parser.feed(shell.read_text(encoding="utf-8", errors="replace"))
+        rel = shell.parent.name
+        for v in parser.violations:
+            violations.append(
+                f"components/{rel}/index.html: {v} — not a {{{{slot}}}} marker nor in _structural-allowlist.txt (domain text must move to fixtures/manifest)."
+            )
+    return GuardResult(
+        "G-21", "shell conformance", "Growth-130",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=f"Scanned {len(shells)} shell template(s) against {len(allow)} chrome allowlist entr(ies).",
+    )
+
+
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
@@ -1842,6 +1979,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-18": g18_cross_tenant_leak,
     "G-19": g19_dtcg_schema,
     "G-20": g20_normalization_gate,
+    "G-21": g21_shell_conformance,
     "G-87": g87_embed_caller_split,
 }
 
