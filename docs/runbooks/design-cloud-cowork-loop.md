@@ -27,6 +27,61 @@
 
 > design_work_0625(로컬 CLI) ≠ claude.ai/design(클라우드 웹). 전자가 슬롯작업, 후자가 비주얼 디자인. design-sync 가 둘 사이 다리.
 
+## 시퀀스 다이어그램 (주체 · 전달 파일 · 실행 명령)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor F as founder
+    participant DW as design_work_0625<br/>별채 CLI (cwd=harness-design-system)
+    participant B as baton.md<br/>(.handoff/ · gitignored)
+    participant CTO as CTO<br/>본채 (cwd=compounding-stack-harness)
+    participant GH as GitHub<br/>JasonMMo/harness-design-system
+    participant CD as claude.ai/design<br/>(cloud)
+
+    Note over CTO: ① 토큰 export (토큰 변경 시만)<br/>python scripts/design/export_system.py --target ../harness-design-system
+    CTO-->>DW: 전달파일 tokens/{raw,semantic,persona/*}.json (sanitized)
+
+    Note over DW: ② 슬롯 작성 (슬롯만)<br/>components/&lt;name&gt;/index.html = {{slot}}<br/>fixtures/synthetic.json · _structural-allowlist.txt
+    Note over DW: ③ 로컬 렌더<br/>node scripts/render-showcase.mjs
+    DW->>B: STATE=READY-FOR-GATE + 변경 컴포넌트 (push·sync 안 함)
+
+    F->>CTO: "baton 확인"
+    Note over CTO: ④ 누출 게이트<br/>python scripts/design/preflight_sibling.py
+    alt GATE FAIL
+        CTO->>B: STATE=GATE-FAIL + 위반 줄
+        B-->>DW: 반려 → ②로
+    else GATE PASS (CLEAN)
+        Note over CTO: ⑤ 별채 커밋·push (파일당)<br/>git commit / git push origin master
+        CTO->>GH: clean 푸시 (도메인-프리 슬롯+더미)
+        CTO->>B: STATE=GATE-PASS (sync 안전)
+        B-->>F: 통과 신호
+        Note over F,CD: ⑥ design-sync = 게이트 뒤 1회 업로드 (로컬→클라우드)
+        F->>CD: design-sync (34c4c9d7 클린 재sync)
+        GH-->>CD: sync source (git-tracked 전부)
+        Note over CD: 비주얼 디자인 (드래그 · 토큰/클래스)
+        CD-->>DW: 구조 변경분 내려받기 → ②부터 반복
+    end
+
+    Note over CTO: ⑦ 본채 환류 (디자인 확정 후)<br/>design/tokens/ 단일진실 + 어댑터 {{ field.label }} 매핑
+```
+
+### 단계별 매핑 (주체 · 전달 파일 · 실행 명령)
+
+| # | 주체 | 전달 파일 (방향) | 실행 명령 |
+|---|---|---|---|
+| ① | CTO (본채) | `tokens/*.json` → 별채 | `python scripts/design/export_system.py --target ../harness-design-system` |
+| ② | design_work_0625 (별채) | `components/<name>/index.html`, `fixtures/synthetic.json`, `_structural-allowlist.txt` | (편집) |
+| ③ | design_work_0625 (별채) | `reference/rendered/*.html` (로컬 산출, gitignored) | `node scripts/render-showcase.mjs` |
+| — | design_work_0625 → baton | `.handoff/baton.md` `STATE=READY-FOR-GATE` | (편집) |
+| ④ | CTO (본채) | — (별채를 스캔) | `python scripts/design/preflight_sibling.py` |
+| ⑤ | CTO (본채) | 별채 commit → `GitHub` | `git commit` (파일당) · `git push origin master` |
+| — | CTO → baton | `.handoff/baton.md` `STATE=GATE-PASS`/`GATE-FAIL` | (편집) |
+| ⑥ | founder | 로컬 별채 → `claude.ai/design` (업로드) | design-sync (클라우드 웹 · 게이트 뒤 1회) |
+| ⑦ | CTO (본채) | 확정분 → 본채 `design/tokens/` + 어댑터 | (편집·환류) |
+
+> baton(`READY-FOR-GATE`→`GATE-PASS`/`GATE-FAIL`)은 ③↔④ 사이를 잇는 유일한 세션 간 채널. design-sync 는 ⑤ 뒤에만(업로드=노출).
+
 ## 협업 루프 (한 사이클)
 
 ### ① 본채 → 별채: 토큰 export *(토큰이 바뀐 경우만)*
