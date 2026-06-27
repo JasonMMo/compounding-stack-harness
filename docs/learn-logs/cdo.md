@@ -133,6 +133,16 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
   - 4번째 테마 `presets/themes/kiln/` — 점토 테라코타(clay #C9A078, OKLCH L0.78/C0.07·cream-trap 회피) + 목회재 중성(ash) + 가마-엠버 accent(#B5501A). 폰트: Cormorant Garamond(display) + Source Serif 4(body) — off-reflex serif+serif 대비 축, editorial-craft 지향. texture-clay/ash/ember 3 토큰(CSS gradient+grain, 사진 0). AA 10 pair 검증. aurora(indigo-glow)·harvest(amber-craft)·atelier(ink-paper)와 4번째 완전 고유 정체성.
   - 첫 **SCROLL-CINEMATIC variant** `gallery/parallax-scroll` — 21st.dev "Text Parallax Content" 적응. framer-motion `useScroll` 기반 sticky full-viewport "챕터" 패널이 스크롤에 따라 scale+overlay, 각 챕터의 heading/subheading은 parallax offset으로 독립 이동. 챕터 아래 editorial body+CTA 블록. 라이브러리 8축 중 처음으로 **scroll-driven 모션**(gtm·hopwell·studio-north은 intersect 기반 static-scroll). 시간 축에서 CEO "같은 패턴, 다른 색" 비판에 정면 응답.
   - `texture:clay|ash|ember` 센티넬 — parallax-scroll `src` 가 sentinel이면 테마 material-texture 필드 렌더(CSS gradient+grain). 실 고객은 실사 `src` 경로 입력, 데모는 사진 0으로 운영(A2 CTA blank-box 계열 결함 구조적 회피).
+
+### Growth-130b (2026-06-28) — design-cloud cowork loop cycle-1 ⑦: --font-size-display 토큰 환류
+
+- **Deliverable**: 본채 `design/tokens/{raw,semantic}.json` 에 디스플레이 타이포 토큰 신설 — `--font-size-display: 44px` / `--font-line-display: 52px` (raw `type.scale.display` + semantic `size-display`/`line-display`). 별채 hero(`components/hero/styles.css` + `.ds-pkg/src/components.css`) headline 을 `--font-size-3xl`(24px)→`--font-size-display` 스왑.
+- **루프 검증**: cowork loop ⑥→② 다운로드(`DesignSync` read) → ⑦ 토큰 환류 경로의 첫 end-to-end 완주. cycle-1 브리프가 의도한 "토큰 갭 probe"(semantic 스케일이 24px에서 끝나 hero headline 부족)가 클라우드 워크벤치 오버레이로 발현 → 본채 단일진실에 토큰 신설로 해소(raw 자체확대 금지 원칙 유지).
+- **Craft 인사이트 (핵심)**: baton 핸드오프엔 "40px 확정"으로 적혔으나, **cloud-pull 다운로드 실측 결과 오버레이 실제값은 44px**(`__om-edit-overrides` `font-size:44px !important`). 추정값으로 토큰을 박지 말고 **아티팩트를 먼저 내려받아 실측**해야 한다 — 핸드오프 노트와 실제 디자인이 갈릴 수 있다. founder 확인하 44px 확정. 다음 sync 시 워크벤치 오버레이는 토큰이 대체하므로 제거 가능.
+- **Persona served**: 전 페르소나(랜딩 hero = marketing-site deliverable 공통 셸). landing-astro 가 본채 design/tokens 직접 소비처라 `--font-size-display` 자동 전파(legal-pro 는 독립 테마 경로라 무영향).
+- **Accessibility**: 44px/52px line-height ≈ 1.18 비율(디스플레이 타이포 적정). 색/대비 무변경(text-1 on surface-1 17.28:1 유지).
+- **Cross-agent dependency**: CTO — export_system 누출 게이트(24패턴) + preflight_sibling conformance PASS, 양 repo 파일당 커밋·push. design-cloud-bridge v2 경계(본채 클라우드 비연결: read-only 다운로드만, 업로드 노출 0) 준수.
+- **Cost**: 본채 2커밋 + 별채 7커밋(9dbdfbc·6a80140 / 4b115e8..47ff5bb). subagent 0, API 추가 0.
   - item_slots 보강: `gallery/parallax-scroll`(heading/subheading/body/cta_label/cta_href), `story/timeline-year`(year/milestone/detail). 신규 섹션 type `lead/minimal-field`(`entity.create`(entity_type=lead) 재사용, G-1 — 신규 wire key 0). 카탈로그 11→13 type.
 - **Persona served**: 업무담당자 (공예·로컬 홈페이지 의뢰 고객), CEO (인도 전 게이트)
 - **Accessibility checks**: AA 10 pair 검증(clay/ash/ember 조합 전부). no-JS 콘텐츠 5/5 PASS(framer-motion SSR baked opacity 함정 회피 — Growth-69 계열). mobile body.scrollWidth−clientWidth=0px, hero "Made of earth, fire, and time." 390w Cormorant 줄바꿈 정상.
