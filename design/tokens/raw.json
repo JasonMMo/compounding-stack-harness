@@ -94,7 +94,8 @@
       "xl":   { "size": "18px", "line_height": "28px" },
       "2xl":  { "size": "20px", "line_height": "28px" },
       "3xl":  { "size": "24px", "line_height": "32px" },
-      "4xl":  { "size": "30px", "line_height": "36px" }
+      "4xl":  { "size": "30px", "line_height": "36px" },
+      "display": { "size": "44px", "line_height": "52px" }
     },
     "weight": {
       "regular": "400",
