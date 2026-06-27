@@ -66,6 +66,9 @@ sequenceDiagram
     Note over CTO: ⑦ 본채 환류 (디자인 확정 후)<br/>design/tokens/ 단일진실 + 어댑터 {{ field.label }} 매핑
 ```
 
+> 렌더 이미지: [SVG](assets/design-cloud-cowork-loop.svg) · [PNG](assets/design-cloud-cowork-loop.png) — 소스 [`assets/design-cloud-cowork-loop.mmd`](assets/design-cloud-cowork-loop.mmd).
+> 재생성: `npx -y @mermaid-js/mermaid-cli -i <소스>.mmd -o <out>.svg` (`PUPPETEER_EXECUTABLE_PATH` 로 로컬 Chrome 지정, `--no-sandbox`).
+
 ### 단계별 매핑 (주체 · 전달 파일 · 실행 명령)
 
 | # | 주체 | 전달 파일 (방향) | 실행 명령 |
