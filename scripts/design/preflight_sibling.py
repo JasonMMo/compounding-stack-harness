@@ -72,6 +72,23 @@ def scan_tree(root: Path) -> list[tuple[str, int, str]]:
     return hits
 
 
+def run_conformance(target_root: Path) -> list[str]:
+    """G-21 shell conformance 를 sibling components/ 에 실행 (구조적 도메인-프리 1차 게이트).
+
+    diagnose.g21_shell_conformance 재사용(DRY). 위반 메시지 목록 반환(빈=PASS).
+    sibling components/ 부재 시 빈 리스트(SPEC).
+    """
+    scripts_dir = Path(__file__).resolve().parent.parent  # scripts/
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    try:
+        import diagnose  # type: ignore[import-not-found]
+    except Exception as exc:  # pragma: no cover
+        return [f"diagnose.py import 실패 — conformance 미실행: {exc}"]
+    result = diagnose.g21_shell_conformance(components_dir=target_root / "components")
+    return list(result.violations)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Preflight leak scan of the cloud-exposed sibling repo before /design-sync."
@@ -106,7 +123,21 @@ def main() -> None:
         )
         sys.exit(1)
 
-    print("[preflight] CLEAN — 금지 패턴 0건. /design-sync 연결 안전.")
+    print("[preflight] denylist CLEAN — 금지 패턴 0건 (2차 안전망).")
+
+    # ── G-21 conformance (구조적 도메인-프리, 1차 게이트) ──────────────────
+    conf = run_conformance(target_root)
+    if conf:
+        for v in conf:
+            print(f"  [CONFORMANCE] {v}", file=sys.stderr)
+        print(
+            f"[preflight] ABORT: G-21 conformance {len(conf)}건 — 셸에 도메인 텍스트 잔존. "
+            "{{슬롯}}/allowlist 로 옮긴 뒤 재실행.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    print("[preflight] conformance CLEAN — 셸 0위반 (1차 게이트).")
+    print("[preflight] CLEAN — /design-sync 연결 안전.")
 
 
 if __name__ == "__main__":
