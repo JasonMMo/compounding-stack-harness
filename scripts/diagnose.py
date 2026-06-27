@@ -1930,27 +1930,40 @@ def g21_shell_conformance(components_dir: Path | None = None) -> GuardResult:
             status="SPEC",
             notes=f"sibling components/ not found ({_rel(cdir)}) — guard activates once design-system repo is checked out alongside.",
         )
-    shells = sorted(cdir.glob("*/index.html"))
-    if not shells:
+    # 스캔 대상 = 컴포넌트 셸 템플릿 + cloud-노출(committed) 갤러리 HTML.
+    #   reference/showcase.html 류도 cloud(GitHub 연결)에 노출되므로 같은 conformance 적용.
+    #   단 reference/rendered/ (gitignored 렌더 산출물 = corpus 충전본)는 제외.
+    targets = sorted(cdir.glob("*/index.html"))
+    ref_dir = cdir.parent / "reference"
+    if ref_dir.is_dir():
+        targets += sorted(
+            p for p in ref_dir.glob("*.html")
+            if "rendered" not in p.relative_to(ref_dir).parts
+        )
+    if not targets:
         return GuardResult(
             "G-21", "shell conformance", "Growth-130",
-            status="SPEC", notes="No shell index.html templates found.",
+            status="SPEC", notes="No shell/reference HTML templates found.",
         )
     allow = _load_shell_allowlist()
+    sib_root = cdir.parent
     violations: list[str] = []
-    for shell in shells:
+    for tgt in targets:
         parser = _ShellConformanceParser(allow)
-        parser.feed(shell.read_text(encoding="utf-8", errors="replace"))
-        rel = shell.parent.name
+        parser.feed(tgt.read_text(encoding="utf-8", errors="replace"))
+        try:
+            label = str(tgt.relative_to(sib_root)).replace("\\", "/")
+        except ValueError:
+            label = tgt.name
         for v in parser.violations:
             violations.append(
-                f"components/{rel}/index.html: {v} — not a {{{{slot}}}} marker nor in _structural-allowlist.txt (domain text must move to fixtures/manifest)."
+                f"{label}: {v} — not a {{{{slot}}}} marker nor in _structural-allowlist.txt (domain text must move to fixtures/manifest)."
             )
     return GuardResult(
         "G-21", "shell conformance", "Growth-130",
         status="FAIL" if violations else "PASS",
         violations=violations,
-        notes=f"Scanned {len(shells)} shell template(s) against {len(allow)} chrome allowlist entr(ies).",
+        notes=f"Scanned {len(targets)} shell/gallery template(s) against {len(allow)} chrome allowlist entr(ies).",
     )
 
 
