@@ -63,12 +63,14 @@
     "size-xl":   "{type.scale.xl.size}",
     "size-2xl":  "{type.scale.2xl.size}",
     "size-3xl":  "{type.scale.3xl.size}",
+    "size-display": "{type.scale.display.size}",
 
     "line-xs":   "{type.scale.xs.line_height}",
     "line-sm":   "{type.scale.sm.line_height}",
     "line-md":   "{type.scale.md.line_height}",
     "line-lg":   "{type.scale.lg.line_height}",
     "line-xl":   "{type.scale.xl.line_height}",
+    "line-display": "{type.scale.display.line_height}",
 
     "weight-body":     "{type.weight.regular}",
     "weight-label":    "{type.weight.medium}",
