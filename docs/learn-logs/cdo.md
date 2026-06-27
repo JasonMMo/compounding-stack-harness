@@ -143,6 +143,17 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **Accessibility**: 44px/52px line-height ≈ 1.18 비율(디스플레이 타이포 적정). 색/대비 무변경(text-1 on surface-1 17.28:1 유지).
 - **Cross-agent dependency**: CTO — export_system 누출 게이트(24패턴) + preflight_sibling conformance PASS, 양 repo 파일당 커밋·push. design-cloud-bridge v2 경계(본채 클라우드 비연결: read-only 다운로드만, 업로드 노출 0) 준수.
 - **Cost**: 본채 2커밋 + 별채 7커밋(9dbdfbc·6a80140 / 4b115e8..47ff5bb). subagent 0, API 추가 0.
+
+### Growth-130c (2026-06-28) — cowork loop 자동화 A/B + 마커 가드 결함 환류 (CTO 검토)
+
+- **Deliverable**: 별채 design_work_0625 가 cowork loop 자동화 4스크립트 추가, CTO 검토·파일당 커밋·push(`47ff5bb..b170306`). **A** `scripts/sync-preflight.mjs`(build-tokens→render 마커검증→본채 preflight_sibling.py 한 방, SYNC-READY 판정) + `scripts/hooks/{post-commit,install.mjs}`(커밋후 비차단 informer). **B** `scripts/design/pull-diff.mjs`(cloud→local 워크벤치 `__om-edit-overrides` 오버레이 감지, font-size→토큰 환류 힌트, 2단계: --fetch-list→에이전트 get_file 덤프→--remote diff).
+- **경계 검증 (CTO 게이트)**: 두 스크립트 모두 §0 황금률 준수 — A는 본채 게이트 *호출만*(클라우드 미접촉, 업로드는 사람 게이트), B는 순수 node 라 원격 직접 read 불가→에이전트 fetch 강제(무인 클라우드 접근 불가가 설계로 보장). denylist 게이트를 cloud-exposed 별채가 아닌 본채에 두고 외부 호출하는 판단 정확(금지패턴 목록 노출 방지). preflight_sibling CLEAN(신규 4파일 포함, denylist 0/conformance 0) + sync-preflight 직접 실행 SYNC-READY 확증.
+- **확정 결함 1건 (design_work_0625 lane — CTO 미수정, 신호만)**: sync-preflight 의 미해결-마커 가드가 **exit code 아닌 stderr 문자열 매칭에 전적 의존**. `render-showcase.mjs` 는 마커 잔존 시에도 exit 0(`process.exit` 는 components-dir 부재 1곳뿐) → 구조적 가드 L62 가 못 잡고 fragile grep `/미해결 마커|\[WARN\]/` 만 남음. 누락(문구 변경 시 마커가 클라우드로)·오탐(무관 `[WARN]` 에 hard-FAIL) 양방향 취약. **근본 수정 권장**: render-showcase 가 마커 발견 시 `process.exit(2)` → L62 구조적 캐치, grep 은 보조 강등.
+- **Craft 인사이트**: 핸드오프 자동화 게이트는 "통과/실패" 신호의 **출처가 구조적(exit code)인지 문자열 파싱인지** 구분해야 한다 — 후자는 산출물 문구 드리프트에 silently 깨진다. 다운로드-먼저(130b)와 동일 교훈: 추정·문자열이 아니라 결정적 신호에 게이트를 묶는다.
+- **Cross-agent dependency**: design_work_0625 — 4스크립트 작성. CTO — 소스 검토·경계 검증·게이트 재실행·파일당 커밋·push·결함 판정. 후속(render-showcase exit 수정)은 design_work_0625 환류 대기.
+- **Cost**: 별채 4커밋, subagent 0, API 추가 0.
+
+<!-- 아래는 Growth-77 terra-ceramics 단편(헤더 유실) — 별도 정리 대상 -->
   - item_slots 보강: `gallery/parallax-scroll`(heading/subheading/body/cta_label/cta_href), `story/timeline-year`(year/milestone/detail). 신규 섹션 type `lead/minimal-field`(`entity.create`(entity_type=lead) 재사용, G-1 — 신규 wire key 0). 카탈로그 11→13 type.
 - **Persona served**: 업무담당자 (공예·로컬 홈페이지 의뢰 고객), CEO (인도 전 게이트)
 - **Accessibility checks**: AA 10 pair 검증(clay/ash/ember 조합 전부). no-JS 콘텐츠 5/5 PASS(framer-motion SSR baked opacity 함정 회피 — Growth-69 계열). mobile body.scrollWidth−clientWidth=0px, hero "Made of earth, fire, and time." 390w Cormorant 줄바꿈 정상.
