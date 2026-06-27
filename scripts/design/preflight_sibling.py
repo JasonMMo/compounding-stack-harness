@@ -39,7 +39,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from export_system import FORBIDDEN_PATTERNS, _COMPILED  # noqa: E402
 
 # 워킹 시 제외할 디렉터리 / 확장자
-_SKIP_DIRS = {".git", ".serena", "node_modules", "dist", "build", ".astro", "__pycache__"}
+# skip: VCS·로컬 전용 sync 툴링(.ds-sync, 업로드 안 됨)·서드파티 프레임워크(_vendor,
+# React 등 — 우리 콘텐츠 아님)·생성 빌드 메타. 우리가 authored/생성한 콘텐츠는 스캔.
+_SKIP_DIRS = {".git", ".serena", "node_modules", "dist", "build", ".astro",
+              "__pycache__", ".ds-sync", "_vendor", ".cache"}
 _BINARY_EXTS = {
     ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico",
     ".woff", ".woff2", ".ttf", ".otf", ".eot",
