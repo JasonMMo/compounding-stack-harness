@@ -181,6 +181,16 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **Cross-agent dependency**: Engineer — IBM Plex Sans + DM Sans + DM Mono fontsource 패키지 추가, HeroBentoGrid.astro 구현, catalog.yaml bento-grid variant 추가, landing-pattern-matrix §2·§3 갱신. QA — 비주얼 게이트 + no-JS 검증.
 - **Cost**: CDO 디자인 패스 1 turn (design-agent, out/ 파일 산출).
 
+### Growth-130d (2026-06-28) — (가) 슬라이스 브릭2: landing-astro IO-reveal → motion 팔레트 배선
+
+- **Deliverable**: Growth-87 IO-reveal 3티어(`:root` baseline / `[data-motion="subtle"]` / `[data-motion="rich"]`)의 duration/ease/stagger 를 브릭1 design motion 팔레트 `var(--motion-*-*)` 참조로 교체. landing-astro `tokens.gen.css`(생성기 build-tokens.mjs 가 semantic.json flatten)에 motion primitive 11종(duration fast/base/slow/intro, ease standard/emphasized/exit/spring, stagger tight/base/loose) 자동 유입 — 생성기 무수정. 살아있는 reveal 시스템이 design 토큰을 실제 소비 = 토큰 시스템 end-to-end 증명.
+- **CTO 매핑 결정(팔레트 동결, 어댑터 소비자만 변경)**: baseline=slow/emphasized/stagger-base(80 정확일치), subtle=base/emphasized/stagger-tight, rich=slow/emphasized/stagger-loose. `--motion-distance`(공간값)는 팔레트 밖 → 현행 유지(baseline −24/subtle −16/rich −40).
+- **CTO 판단 — rich duration 팔레트 갭**: 구 rich=640ms였으나 팔레트에 rich 전용 슬롯 부재 → slow(480)를 baseline과 공유. rich 차별화는 distance(−40, baseline 1.67×) + stagger(140, 1.75×)로 지각상 충족 → 수용. `duration-xslow`(640+) 슬롯은 후속 브릭에서 CDO 필요 시 팔레트 추가(미결).
+- **범위 한정**: 레거시 `.motion-fade-*`(`--animation-*`)·`.hover-lift`(`--transition-*`) 클래스는 이번 제외(후속 브릭).
+- **검증(CTO 독립)**: build:tokens rc0 · test:tokens 8/8(브릭2 가드 2건 신설) · astro build rc0(2p/5.26s) · prefers-reduced-motion 3블록 생존(fade-simple 강등 유지) · G-69 default-visible 무손상 · global.css 3블록 팔레트 var 참조 직접 확인 · tokens.gen.css 11종/구 transition 0.
+- **커밋(파일당)**: `81b98a1` global.css, `fd9546f` tokens.test.mjs. tokens.gen.css=gitignored 빌드산출물(미커밋, 빌드 재생성). 푸시 `747910d..fd9546f`. preflight leakage CLEAN.
+- **Cross-agent**: design-agent 실행(매핑 표 CTO 제공). Engineer — 후속 브릭(레거시 클래스 토큰화 + 신규 intro/page-transition 프리셋)에서 합류.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
