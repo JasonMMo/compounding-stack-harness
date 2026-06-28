@@ -79,7 +79,7 @@ for (const key of Object.keys(wireKeys)) {
   } else {
     path = `/api/${domain}/${verb}`
   }
-  const tsKey = key.replace('.', '_')
+  const tsKey = key.replace(/[^A-Za-z0-9]/g, '_')
   lines.push(`  ${tsKey}: '${path}',`)
 }
 lines.push('} as const', '')
