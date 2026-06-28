@@ -16,6 +16,7 @@
  */
 import '../styles/global.css'
 import { ViewTransitions } from 'astro:transitions'
+import IntroOverlay from '../components/IntroOverlay.astro'
 
 interface Props {
   title?: string
@@ -74,6 +75,9 @@ const isMotionOn = motion === 'subtle' || motion === 'rich'
     {isMotionOn && <ViewTransitions />}
   </head>
   <body class={isSnapMode ? 'snap-root' : undefined}>
+    {/* G-69: overlay defaults hidden (CSS); JS-only reveal on first load.
+        motion=off → 마크업 자체가 미출력 → 콘텐츠 즉시 가시. */}
+    {isMotionOn && <IntroOverlay title={title} />}
     <slot />
 
     <!--
