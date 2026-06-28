@@ -128,6 +128,33 @@ a lightweight inline `IntersectionObserver` island in `BaseLayout.astro`.
 - `prefers-reduced-motion: reduce` → all animations fall back to `fade-simple` (CSS `@media`, no JS needed)
 - No autoplay on any component (WCAG 2.2.2 invariant)
 
+### Intro Overlay (one-time splash)
+
+**동작**: 사이트 첫 방문 시 브랜드 워드마크가 전체 화면 오버레이로 잠깐 노출된 뒤 퇴장 애니메이션으로 사라진다.
+
+**motion 다이얼 게이트**: `site.motion=subtle` 또는 `rich` 일 때만 `IntroOverlay` 마크업이 HTML 에 출력된다. `motion=off` 시 마크업 자체가 없으므로 콘텐츠는 즉시 가시.
+
+**한 번만 재생**: `sessionStorage` 키 `landing-intro-played` 로 제어. 같은 세션 내 재방문 및 Astro View Transition 내비게이션 시 오버레이를 재생하지 않는다. `astro:page-load` 이벤트에 리스너를 등록해 VT 이후에도 항상 세션 키를 재확인한다.
+
+**소비 토큰**:
+- `--motion-duration-intro` (900ms) — 퇴장 animation-duration
+- `--motion-ease-emphasized` (`cubic-bezier(0.16,1,0.3,1)`) — 퇴장 animation-timing-function
+
+**G-69 보장 (4가지 경로)**:
+
+| 경로 | 처리 방식 |
+|---|---|
+| JS 비활성화 | CSS 기본 상태가 `opacity:0; visibility:hidden` — `.is-active` 미추가 → 콘텐츠 즉시 가시 |
+| `motion=off` | `isMotionOn` 게이트로 마크업 자체가 미출력 |
+| `prefers-reduced-motion: reduce` | JS early-return + CSS `display:none !important` (belt-and-suspenders) |
+| 세션 재방문 / VT nav | `sessionStorage` 키 존재 → JS early-return → 오버레이 숨김 상태 유지 |
+
+**구현 파일**:
+- `src/components/IntroOverlay.astro` — 마크업 + `<script>` 로직
+- `src/styles/global.css` — `.intro-overlay` 상태별 CSS + `@keyframes intro-overlay-exit` + reduced-motion block
+
+---
+
 ### Page Transitions (Brick-3b)
 
 **동작**: `site.motion=subtle` 또는 `rich` 을 설정하면 Astro View Transitions API 기반 페이지 전환이 자동 적용된다. 전환 효과는 cross-fade(opacity) + 미세 상승(translateY 8px→0) — 절제된 impeccable floor 준수.
