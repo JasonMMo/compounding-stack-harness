@@ -237,19 +237,21 @@ body {
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 /* ── Motion token declarations (aurora baseline; theme overrides via data-motion) */
+/* Wired to design motion palette (tokens.gen.css, Growth-87 brick-2).
+   --motion-distance is NOT in the palette (spatial value, not timing) — keep raw. */
 :root {
-  --motion-duration: 520ms;
-  --motion-ease:     cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-duration: var(--motion-duration-slow);     /* 480ms */
+  --motion-ease:     var(--motion-ease-emphasized);   /* cubic-bezier(0.16,1,0.3,1) */
   --motion-distance: -24px;   /* 위에서 아래로 24px — 음수 = translateY 시작 위치 위쪽 */
-  --motion-stagger:  80ms;
+  --motion-stagger:  var(--motion-stagger-base);      /* 80ms */
 }
 
 /* ── site.motion=subtle override ─────────────────────────────────────────── */
 :root[data-motion="subtle"] {
-  --motion-duration: 360ms;
-  --motion-ease:     cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-duration: var(--motion-duration-base);     /* 280ms */
+  --motion-ease:     var(--motion-ease-emphasized);   /* cubic-bezier(0.16,1,0.3,1) */
   --motion-distance: -16px;
-  --motion-stagger:  60ms;
+  --motion-stagger:  var(--motion-stagger-tight);     /* 40ms */
 }
 
 /* ── site.motion=rich override ───────────────────────────────────────────── */
@@ -261,11 +263,11 @@ body {
    subtle: legacy vars deliberately left at var() fallback defaults (subtle gentleness
    lives in IO tokens only; legacy subtle ≈ off is intended per CTO). */
 html[data-motion="rich"] {
-  /* IO reveal tokens */
-  --motion-duration: 640ms;
-  --motion-ease:     cubic-bezier(0.16, 1, 0.3, 1);
-  --motion-distance: -40px;
-  --motion-stagger:  110ms;
+  /* IO reveal tokens — wired to design palette (brick-2) */
+  --motion-duration: var(--motion-duration-slow);     /* 480ms; rich boldness via distance+stagger */
+  --motion-ease:     var(--motion-ease-emphasized);   /* cubic-bezier(0.16,1,0.3,1) */
+  --motion-distance: -40px;   /* spatial boldness: 40px > baseline 24px > subtle 16px */
+  --motion-stagger:  var(--motion-stagger-loose);     /* 140ms — perceptibly wider than baseline 80ms */
 
   /* Legacy [data-motion] animation vars — dial-aware wiring.
      off-mode fallbacks (per var() in global.css): --animation-duration 500ms/200ms/300ms
