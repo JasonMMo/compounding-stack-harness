@@ -45,7 +45,7 @@
 </section>
 
 <!-- Results area — htmx replaces this on search -->
-<section id="results" aria-live="polite" aria-label="검색 결과">
+<section id="results" class="swap-fade-up swap-stagger" aria-live="polite" aria-label="검색 결과">
   {% if items is defined %}
     {% include "_precedent_results.html" %}
   {% else %}
