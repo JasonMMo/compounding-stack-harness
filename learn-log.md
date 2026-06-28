@@ -817,3 +817,10 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **데모 2곳**: `legal_precedent_search.html`(#results=fade-up+stagger) · `list-master-detail.html`(#detail-panel=slide-in, 행 swap:120ms).
 - **검증**: L3 토큰빌드 PASS · L1 132 pass(잔여 1 fail=app.css hex, 무관 기존) · 가드 신규위반 0(FAIL 3건 out/·ledger·legal catalog 전부 기존) · CSS 브레이스 24/24·6 토큰참조 실존·키프레임 4종 정합.
 - §6 rollup: [Growth-131] HTMX swap/settle 전환 프리셋 신설(swap-transitions.css) — opt-in fade/slide+stagger, motion 토큰 구동, IN=삽입트리거(settle footgun 회피)·OUT=htmx-swapping, G-69+reduced-motion 안전, --motion-stagger 첫 소비, 데모 2곳. landing 페이지전환 대응 vanilla net-new.
+
+### Growth-131 라이브 검증 (lawfirm-demo redeploy 후, htmx-demo-verify headless Chrome)
+
+- **fade-up+stagger LIVE PASS**: `/legal/search` 실제 htmx 검색 스왑에서 `#results` 자식이 `swap-in-up` 발화·토큰해석 280ms 확증. Stage0(에셋 200·`@keyframes swap-in-up`·`.swap-stagger` 라이브 서빙, SW stale 아님·push 반영) + 스타일시트 라이브 적용 PASS. (8/9 체크)
+- **slide-in 라이브 미행사 — 코드결함 아님/deploy-config**: lawfirm-demo 에 `MASTER_DETAIL_ENTITIES` env 미설정 → `/type1`→`/home` 리다이렉트, 전 legal 엔티티가 `list.html`(plain)로 렌더(master-detail/top-bottom/modal 전부 false, server.py:567 `entity_type in _MD_ENTITIES` 게이트). slide-in CSS 계약은 로컬 headless 픽스처 13/13(swap-in-x·280ms)로 증명필. 라이브 확인하려면 founder가 `MASTER_DETAIL_ENTITIES=legal-case` 설정+redeploy.
+- **부수 결함 환류(79a685e)**: htmx-demo-verify 로그인 패턴이 `/api/auth/login`(백엔드 JSON 토큰, Set-Cookie 없음) POST → 세션 미설정 → 인증 대상 대신 `/login` 페이지를 조용히 측정하던 결함. `/login` 폼 제출(세션쿠키)로 교정·라이브 스모크(`.app-header` x:0 w:1822) 확증. 메모리 [[htmx-demo-verify-skill]] 환류.
+- §6 rollup: [Growth-131-verify] fade-up+stagger 라이브 PASS(/legal/search 실 htmx 스왑, swap-in-up 280ms). slide-in 은 lawfirm-demo MASTER_DETAIL_ENTITIES 미설정으로 라이브 미행사(코드 OK, config 갭). htmx-demo-verify 로그인 결함(/api/auth/login→/login 폼) 교정 환류.
