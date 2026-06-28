@@ -148,6 +148,7 @@
       "fast":  "150ms",
       "base":  "280ms",
       "slow":  "480ms",
+      "xslow": "640ms",
       "intro": "900ms"
     },
     "easing": {
