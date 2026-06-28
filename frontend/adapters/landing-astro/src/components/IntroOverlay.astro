@@ -1,0 +1,77 @@
+---
+/**
+ * IntroOverlay.astro — One-time intro splash overlay.
+ *
+ * G-69 invariant (non-negotiable):
+ *   CSS default state = HIDDEN (opacity:0; visibility:hidden; pointer-events:none).
+ *   JS가 없으면 / motion=off 이면 / prefers-reduced-motion:reduce 이면 / 이미 재생됨 이면
+ *   오버레이는 절대 콘텐츠를 가리지 않는다.
+ *   Only JS, on a fresh first load, adds .is-active then .is-exiting.
+ *
+ * Consumes tokens: --motion-duration-intro (900ms) + --motion-ease-emphasized.
+ * Session: sessionStorage key "landing-intro-played" prevents replay.
+ * VT: listener runs on astro:page-load (fires on initial load + every VT nav).
+ */
+
+interface Props {
+  title?: string
+}
+const { title = '' } = Astro.props
+---
+
+<div class="intro-overlay" id="intro-overlay" aria-hidden="true">
+  <span class="intro-overlay__mark">{title}</span>
+</div>
+
+<script>
+  const SESSION_KEY = 'landing-intro-played'
+
+  function runIntro() {
+    // Belt-and-suspenders: if prefers-reduced-motion, never show overlay.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    // Already played in this session → leave overlay hidden, do nothing.
+    if (sessionStorage.getItem(SESSION_KEY)) return
+
+    const overlay = document.getElementById('intro-overlay')
+    if (!overlay) return
+
+    // Step 1: make overlay cover — add .is-active (shows it full-bleed).
+    overlay.classList.add('is-active')
+
+    // Step 2: next frame → add .is-exiting to trigger token-driven exit keyframe.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        overlay.classList.add('is-exiting')
+      })
+    })
+
+    // Step 3: collapse helper — whichever fires first (animationend or timeout) wins.
+    let done = false
+    function collapse() {
+      if (done) return
+      done = true
+      overlay.removeEventListener('animationend', collapse)
+      sessionStorage.setItem(SESSION_KEY, '1')
+      overlay.classList.remove('is-active', 'is-exiting')
+      overlay.classList.add('is-done')
+    }
+
+    overlay.addEventListener('animationend', collapse)
+
+    // Safety fallback: read intro duration from CSS token, add 400ms buffer.
+    const introDuration =
+      parseInt(getComputedStyle(document.documentElement)
+        .getPropertyValue('--motion-duration-intro'), 10) || 900
+    setTimeout(collapse, introDuration + 400)
+  }
+
+  // astro:page-load fires on initial load AND after every View Transition nav.
+  // On VT nav the session key is already set → runIntro returns immediately.
+  // Guard against double-binding across hot-reloads in dev.
+  let _introListenerAttached = false
+  if (!_introListenerAttached) {
+    document.addEventListener('astro:page-load', runIntro)
+    _introListenerAttached = true
+  }
+</script>
