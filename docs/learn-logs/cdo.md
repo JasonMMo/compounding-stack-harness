@@ -209,6 +209,15 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **검증(CTO 독립)**: astro build SUCCESS, 4 degrade 경로 코드 추적 확인, BaseLayout 마운트=body 첫 자식·게이트, preflight CLEAN. 커밋 파일당 4건 `3e4531c`(component)/`2ff626b`(global.css)/`42242d1`(BaseLayout)/`df5d7c6`(README), 푸시 `d72a52d..df5d7c6`.
 - **결과**: (가) 슬라이스 motion 토큰 5값(150/280/480/640/900) 전부 소비처 확보 — intro까지 살아있는 토큰이 됨. 후속(미결): 타 어댑터(react/vanilla) motion 토큰 확산.
 
+### Growth-130g (2026-06-28) — (가) 후속: motion 토큰 타 어댑터 확산 (react·vanilla-htmx)
+
+- **확산 = 양자화 마이그레이션**(CTO 결정): 두 어댑터는 motion 토큰을 emit 하나 소비 안 함(정찰 확인). 임의 레거시 duration 마다 토큰을 늘리는 건 토큰 시스템의 본질(제약 스케일)을 파괴 → ad-hoc 값을 기존 5-tier 로 **양자화**. 팔레트 FROZEN 무변경.
+- **react**(engineer): app.css 하드코딩 `0.15s` 2건 → `--motion-duration-fast`+`--motion-ease-standard`. 부수효과: 기존 하드코딩이 reduced-motion override(→0.01ms)를 우회하던 접근성 버그 해소. 커밋 `277405e`.
+- **react codegen 근본버그 적발·수정**(CTO→engineer): 빌드 검증 중 react 어댑터가 **master 에서 전면 빌드불가** 발견 — `codegen.mjs` 가 wire 키의 `.`만 `_`로 치환하고 `-`는 방치, `project.search-similar`→`project_search-similar:` bare key→TS 구문오류(prebuild 자동재생성이라 상시 깨짐). 근본수정: `key.replace(/[^A-Za-z0-9]/g,'_')`(G-7 flat-underscore 일치). contract YAML 하이픈 보존, 어댑터가 식별자 정규화. 생성물 gitignored. 커밋 `ab196cc`. **[subagent-cross-service-verify]: 에이전트 "pre-existing build fail" 주장을 CTO 가 직접 빌드 재현·근본원인 소스확인 후 채택(경로도 에이전트 추정 src/wire→실제 src/contract 정정).**
+- **vanilla-htmx**(design): app.css 21 transition 양자화 — 100/120/150/180/200/220ms → fast/base, ease/cubic-bezier → standard/emphasized. 200ms site별 판정(micro→fast, 레이아웃→base). **CTO 정정 1건**: 사이드바 슬라이드(L459) 감속-진입 곡선을 design 이 ease-exit(가속)로 오매핑 → ease-emphasized 로 정정(의미 역전 방지). tokens.css reduced-motion override 로 전 transition 자동 강등 확인. 커밋 `1cdaf2a`.
+- **검증·인도**: react 풀빌드 SUCCESS(codegen 수정이 motion 변경까지 동시 검증), preflight CLEAN, 파일당 3커밋 푸시 `a17ff39..1cdaf2a`.
+- **결과**: 3 어댑터(landing/react/vanilla) 전부 motion 토큰 소비처 확보 — palette 단일 소스가 전 프런트로 확산. 후속(미결): HTMX swap/settle 전환 프리셋(vanilla net-new capability, landing 3b 격 — 정찰이 "최고 레버리지"로 지목).
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
