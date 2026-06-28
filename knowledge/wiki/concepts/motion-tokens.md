@@ -76,15 +76,16 @@ raw layer CSS 변수명 패턴: `--raw-motion-duration-fast` (raw), `--motion-du
 /* a11y: prefers-reduced-motion override (WCAG 2.3.3 / KWCAG) */
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --motion-duration-fast:  0.01ms;
     --motion-duration-base:  0.01ms;
-    --motion-duration-slow:  0.01ms;
+    --motion-duration-fast:  0.01ms;
     --motion-duration-intro: 0.01ms;
+    --motion-duration-slow:  0.01ms;
+    --motion-duration-xslow: 0.01ms;
   }
 }
 ```
 
-모든 duration 을 `0.01ms` 로 붕괴시켜 사실상 즉시 전환. `xslow` 는 현재 override 목록에 없다 — 추가 필요 여부는 미결. `[INFERRED]`
+모든 duration(`fast`·`base`·`slow`·`xslow`·`intro` 전 5종)을 `0.01ms` 로 붕괴시켜 사실상 즉시 전환. `[EXTRACTED]` override 목록은 `sem_pairs`(semantic 토큰셋)에서 `--motion-duration-*` 접두를 파생해 생성하므로, **신규 duration 토큰은 자동 커버**된다 — 하드코딩 드리프트 불가(Growth-131b). 과거 `xslow` 누락은 하드코딩 4종 시절의 a11y 갭이었고 해소됨. `[EXTRACTED]`
 
 ---
 
