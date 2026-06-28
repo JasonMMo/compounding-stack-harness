@@ -140,8 +140,8 @@ _PICO_OVERRIDES = """\
   --pico-button-box-shadow: var(--shadow-xs);
   --pico-button-hover-box-shadow: var(--shadow-sm);
 
-  /* Transition */
-  --pico-transition: var(--motion-transition-control);
+  /* Transition — control micro-interaction: 150ms standard (구 transition-control 보존) */
+  --pico-transition: var(--motion-duration-fast) var(--motion-ease-standard);
 
   /* Nav */
   --pico-nav-element-spacing-horizontal: var(--space-inset-md);
@@ -437,7 +437,6 @@ def generate(tokens_dir: pathlib.Path | None = None, ui_theme: str = "saas") -> 
 
 if __name__ == "__main__":
     import argparse
-    import sys
 
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
