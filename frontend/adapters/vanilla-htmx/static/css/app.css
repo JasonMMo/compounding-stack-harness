@@ -57,7 +57,7 @@ body {
   border-radius: var(--radius-control);
   font-weight: var(--font-weight-label);
   z-index: calc(var(--zindex-sticky) + 100);
-  transition: top 100ms ease;
+  transition: top var(--motion-duration-fast) var(--motion-ease-standard);
   text-decoration: none;
 }
 .skip-link:focus {
@@ -202,7 +202,7 @@ body {
   position: sticky;
   top: var(--app-header-h);
   padding: var(--space-stack-sm) 0;
-  transition: width 150ms cubic-bezier(0.2,0,0,1);
+  transition: width var(--motion-duration-fast) var(--motion-ease-emphasized);
 }
 
 .app-sidebar--collapsed {
@@ -266,7 +266,7 @@ body {
 .sidebar-group__chevron {
   flex-shrink: 0;
   color: var(--sidebar-group-label-color);
-  transition: transform 220ms cubic-bezier(0.2, 0, 0, 1);
+  transition: transform var(--motion-duration-base) var(--motion-ease-emphasized);
   transform: rotate(0deg);
 }
 .sidebar-group__header[aria-expanded="false"] .sidebar-group__chevron {
@@ -277,7 +277,7 @@ body {
 .sidebar-nav--accordion {
   overflow: hidden;
   max-height: 0;
-  transition: max-height 250ms cubic-bezier(0.2, 0, 0, 1);
+  transition: max-height var(--motion-duration-base) var(--motion-ease-emphasized);
 }
 .sidebar-nav--accordion.is-open {
   max-height: 600px;
@@ -308,7 +308,7 @@ body {
   text-decoration: none;
   border-radius: var(--radius-control);
   margin: 1px var(--space-inset-xs);
-  transition: background 100ms ease, color 100ms ease;
+  transition: background var(--motion-duration-fast) var(--motion-ease-standard), color var(--motion-duration-fast) var(--motion-ease-standard);
   white-space: nowrap;
   overflow: hidden;
 }
@@ -381,7 +381,7 @@ body {
   width: 0;
   overflow: hidden;
   pointer-events: none;
-  transition: opacity 150ms ease, width 150ms ease;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-standard), width var(--motion-duration-fast) var(--motion-ease-standard);
 }
 .app-sidebar--collapsed .sidebar-nav--accordion {
   max-height: 600px !important;
@@ -395,7 +395,7 @@ body {
   width: 0;
   overflow: hidden;
   pointer-events: none;
-  transition: opacity 150ms ease, width 150ms ease;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-standard), width var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 /* 첫글자 아바타 (접힘 상태 아이콘 대체) */
@@ -456,7 +456,7 @@ body {
     height: calc(100vh - var(--app-header-h));
     z-index: calc(var(--zindex-sticky) + 50);
     transform: translateX(-100%);
-    transition: transform 200ms cubic-bezier(0,0,0.2,1);
+    transition: transform var(--motion-duration-base) var(--motion-ease-emphasized);
     box-shadow: var(--shadow-modal);
     width: 280px;
   }
@@ -641,7 +641,7 @@ body {
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  transition: background 150ms ease, box-shadow 150ms ease, color 150ms ease;
+  transition: background var(--motion-duration-fast) var(--motion-ease-standard), box-shadow var(--motion-duration-fast) var(--motion-ease-standard), color var(--motion-duration-fast) var(--motion-ease-standard);
   box-shadow: var(--shadow-xs);
 }
 
@@ -728,7 +728,7 @@ body {
   color: var(--color-text-1);
   font-size: var(--font-size-md);
   font-family: var(--font-family-body);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition: border-color var(--motion-duration-fast) var(--motion-ease-standard), box-shadow var(--motion-duration-fast) var(--motion-ease-standard);
   box-sizing: border-box;
 }
 
@@ -1154,8 +1154,8 @@ body {
 .home-domain-card {
   padding: var(--space-inset-lg);
   /* 카드 hover lift — 디자이너 서명 §5-6 */
-  transition: transform 150ms cubic-bezier(0.2,0,0,1),
-              box-shadow 150ms cubic-bezier(0.2,0,0,1);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-emphasized),
+              box-shadow var(--motion-duration-fast) var(--motion-ease-emphasized);
 }
 
 .home-domain-card:hover {
@@ -1325,7 +1325,7 @@ body {
   display: flex;
   gap: var(--space-gap-xs);
   opacity: 0;
-  transition: opacity .12s;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-standard);
   justify-content: flex-end;
 }
 
@@ -1364,7 +1364,7 @@ body {
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   cursor: pointer;
-  transition: color .12s, border-color .12s;
+  transition: color var(--motion-duration-fast) var(--motion-ease-standard), border-color var(--motion-duration-fast) var(--motion-ease-standard);
   white-space: nowrap;
   font-family: var(--font-family-body);
 }
@@ -1472,7 +1472,7 @@ body {
 .master-table tbody tr {
   cursor: pointer;
   border-bottom: 1px solid var(--color-border);
-  transition: background .08s;
+  transition: background var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 /* Explicit zebra striping with light-theme tokens — overrides Pico's
@@ -1968,7 +1968,7 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   overflow: hidden;
-  transition: transform .18s ease, box-shadow .18s ease;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-standard), box-shadow var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .home-domain-card:hover {
@@ -2024,14 +2024,14 @@ body {
   font-size: var(--font-size-sm);
   color: var(--color-text-2);
   text-decoration: none;
-  transition: background .12s ease, color .12s ease;
+  transition: background var(--motion-duration-fast) var(--motion-ease-standard), color var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .home-entity-link::after {
   content: '→';
   font-size: 0.8rem;
   opacity: .4;
-  transition: transform .12s ease, opacity .12s ease;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-standard), opacity var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .home-entity-link:hover {
@@ -2117,7 +2117,7 @@ body {
   background: rgba(255,255,255,.12);
   color: #fff;
   border: 1px solid rgba(255,255,255,.22);
-  transition: background .15s, border-color .15s;
+  transition: background var(--motion-duration-fast) var(--motion-ease-standard), border-color var(--motion-duration-fast) var(--motion-ease-standard);
 }
 .btn-on-dark:hover {
   background: rgba(255,255,255,.22);
@@ -2129,7 +2129,7 @@ body {
   color: var(--color-primary);
   border: 1px solid transparent;
   font-weight: var(--font-weight-heading);
-  transition: background .15s;
+  transition: background var(--motion-duration-fast) var(--motion-ease-standard);
 }
 .btn-on-dark-primary:hover {
   background: #fff;
@@ -2292,7 +2292,7 @@ body {
   padding: var(--space-inset-sm);
   box-shadow: var(--shadow-card);
   cursor: grab;
-  transition: box-shadow 100ms ease, transform 100ms ease;
+  transition: box-shadow var(--motion-duration-fast) var(--motion-ease-standard), transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
 .board-card:hover {
@@ -2480,7 +2480,7 @@ body {
   height: 100%;
   background: var(--color-primary);
   border-radius: var(--radius-badge);
-  transition: width 200ms ease;
+  transition: width var(--motion-duration-base) var(--motion-ease-standard);
 }
 
 .similar-empty {
