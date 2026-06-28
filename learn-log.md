@@ -830,3 +830,9 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - `verify_live_swap.mjs` 재실행 **12/12 PASS** (이전 8/9 → slide-in Stage2 4-check 전부 GREEN).
 - Stage2: `/type1` master-detail 도달, `#detail-panel`=`swap-slide-in`, **실제 행 클릭 htmx swap에서 `swap-in-x` 발화 + duration 280ms(`--motion-duration-base` 토큰 해석)** 확증.
 - 결론: swap-transitions.css 두 프리셋(fade-up/stagger, slide-in) 모두 라이브에서 실제 htmx swap에 행사됨. 코드 결함 0, 잔여 config-gap 0. Growth-131 end-to-end LIVE 종결.
+
+### Growth-131b — reduced-motion override xslow 누락 a11y 갭 수정 (하드코딩→토큰셋 파생)
+- CTO가 wiki 환류(Growth-131) 중 적발: reduced-motion override가 `--motion-duration-xslow`(640ms 페이지레벨 전환)를 붕괴 안 시킴. 원인=override 토큰 목록 하드코딩(fast/base/slow/intro 4종)이 토큰셋과 드리프트.
+- 결함 2곳: `token_css_generator.py`(vanilla, py) + `build-tokens.mjs`(react, js) 동일 하드코딩. landing-astro는 token-override 없음(컴포넌트별 처리, 무관).
+- 근본 수정(engineer): 하드코딩 4줄 → `sem_pairs`/`semPairs`에서 `--motion-duration-*` 접두 필터·정렬 순회로 파생. **신규 duration 토큰 자동 커버, 재발 불가**(open-closed).
+- 재생성 검증: vanilla tokens.css L385-389 + react tokens.gen.css L274-278 모두 5종(xslow 포함) 붕괴 확인. pytest 26 passed(기존 무관 app.css raw-hex 1 fail 유지), diagnose 새 FAIL 0. wiki motion-tokens.md §3 INFERRED→EXTRACTED 해소.
