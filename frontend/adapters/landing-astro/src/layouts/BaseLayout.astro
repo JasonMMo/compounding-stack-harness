@@ -3,13 +3,19 @@
  * BaseLayout.astro — Root HTML layout for all landing pages.
  * Imports global CSS (tokens + fonts + motion keyframes).
  * Growth-87: IO reveal directive + scroll-snap shell + data-motion attr.
+ * Brick-3b: Astro View Transitions — page-to-page transition preset.
  *
  * G-69 invariant (non-negotiable):
  *   CSS default state = fully visible. html.motion-ready 가 없으면 모든
  *   [data-reveal] 요소는 opacity:1; transform:none (브라우저 기본).
  *   JS off → 모든 카피 정적 HTML 에 present·가시.
+ *
+ * G-69 / View Transitions gate:
+ *   motion=off → <ViewTransitions /> 미탑재 → 표준 풀-페이지 내비게이션.
+ *   motion=subtle|rich → <ViewTransitions /> 탑재 → cross-fade+rise 전환.
  */
 import '../styles/global.css'
+import { ViewTransitions } from 'astro:transitions'
 
 interface Props {
   title?: string
@@ -61,6 +67,11 @@ const isMotionOn = motion === 'subtle' || motion === 'rich'
     {title && <meta property="og:title" content={title} />}
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    {/* Brick-3b: Page transitions — gate: motion=subtle|rich only.
+        G-69: motion=off → this tag absent → zero transition JS/meta injected.
+        Browser without View Transitions API → Astro auto-falls back to normal nav. */}
+    {isMotionOn && <ViewTransitions />}
   </head>
   <body class={isSnapMode ? 'snap-root' : undefined}>
     <slot />
