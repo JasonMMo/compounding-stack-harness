@@ -191,6 +191,15 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **커밋(파일당)**: `81b98a1` global.css, `fd9546f` tokens.test.mjs. tokens.gen.css=gitignored 빌드산출물(미커밋, 빌드 재생성). 푸시 `747910d..fd9546f`. preflight leakage CLEAN.
 - **Cross-agent**: design-agent 실행(매핑 표 CTO 제공). Engineer — 후속 브릭(레거시 클래스 토큰화 + 신규 intro/page-transition 프리셋)에서 합류.
 
+### Growth-130e (2026-06-28) — (가) 브릭3b/3a/3c: 페이지 전환 프리셋 + 모션 어휘 단일화 완결
+
+- **3b 신규 capability — 페이지 전환 프리셋**(engineer): landing-astro에 Astro `<ViewTransitions/>`(4.16.18 API) 탑재, `isMotionOn`(motion!=off) 게이트 → off는 라우터 미탑재=표준 풀내비(G-69). `::view-transition-old/new(root)` cross-fade+rise가 `--motion-duration-base`(280, 스냅)·`--motion-ease-emphasized` 소비. reduced-motion=animation:none. `intro`(900) 토큰은 일회성 인트로-오버레이용 보존. README 모션 섹션에 프리셋 등록(섹션 아닌 사이트-레벨 → catalog.yaml 무변경, motion 다이얼로 전 고객 자동 적용). 커밋 `e951904`(BaseLayout)/`a5694ab`(global.css)/`618bd06`(README).
+- **3a 어휘 단일화**(design): 레거시 `.motion-fade-simple/up`·`.motion-scale-in`·`.motion-stagger-child`·`.hover-lift` 의 하드코딩 fallback(200/500/450/300ms+raw bezier) → 팔레트 토큰 fallback으로 교체(1차 island var 보존, fallback만). reduced-motion 강등 타겟도 토큰화. IO-reveal 3티어(브릭2) 무변경. 커밋 `07c8b29`(global.css 1파일, 8/8행).
+- **3c 팔레트 갭 해소**(design): 브릭2 박제한 rich duration 갭 → `motion.duration.xslow`(640) 1슬롯 additive 추가(raw.json/semantic.json), landing rich `--motion-duration` slow→xslow 재배선. 3 생성기(landing/react/vanilla) 전부 xslow emit 확인. 기존 4값(150/280/480/900) 불변. 커밋 `143e48b`(raw)/`aab8d37`(semantic)/`7be1bd1`(landing global rich).
+- **CTO 통합검증·정정 1건**: 3c 브리프에서 내가 react TRACKED 토큰출력을 `src/styles/semantic.css`로 지정했으나 **실재하지 않는 경로**(`check-ignore`가 비존재 비-ignore 경로를 TRACKED로 오판). 실제 react 토큰출력은 전부 gitignore(`src/tokens/tokens.gen.css`) → react drift 0, 커밋할 tracked 산출물 없음이 정답. design-agent가 임의 커밋 않고 플래그→CTO 소스 확인(`git ls-files`/`git grep`)으로 확정. [subagent-cross-service-verify] 적용.
+- **검증(전 브릭 CTO 독립)**: build:tokens/test:tokens(8/8)/astro build 전부 PASS, reduced-motion·G-69 무손상, 커밋 파일당·푸시(`4904a89..7be1bd1`)·preflight CLEAN.
+- **결과**: (가) 슬라이스 = 팔레트(브릭1)→IO-reveal 배선(브릭2)→페이지전환 프리셋(3b)→레거시 흡수(3a)→팔레트 갭해소(3c). landing-astro 모션이 design 토큰 단일 소스로 완결. 후속(미결): 일회성 인트로-오버레이(`intro` 토큰 소비), 타 어댑터 motion 토큰 확산.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
