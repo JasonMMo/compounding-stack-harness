@@ -264,7 +264,7 @@ body {
    lives in IO tokens only; legacy subtle ≈ off is intended per CTO). */
 html[data-motion="rich"] {
   /* IO reveal tokens — wired to design palette (brick-2) */
-  --motion-duration: var(--motion-duration-slow);     /* 480ms; rich boldness via distance+stagger */
+  --motion-duration: var(--motion-duration-xslow);    /* 640ms; xslow closes brick-2 rich duration gap */
   --motion-ease:     var(--motion-ease-emphasized);   /* cubic-bezier(0.16,1,0.3,1) */
   --motion-distance: -40px;   /* spatial boldness: 40px > baseline 24px > subtle 16px */
   --motion-stagger:  var(--motion-stagger-loose);     /* 140ms — perceptibly wider than baseline 80ms */
