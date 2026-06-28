@@ -415,6 +415,19 @@ def generate(tokens_dir: pathlib.Path | None = None, ui_theme: str = "saas") -> 
         sections.append("}")
         sections.append("")
 
+    # ── 6. prefers-reduced-motion: override all --motion-duration-* to near-zero
+    # WCAG 2.3.3 / KWCAG — easing kept intact, only duration collapsed.
+    sections.append("/* ── a11y: prefers-reduced-motion override (WCAG 2.3.3 / KWCAG) ── */")
+    sections.append("@media (prefers-reduced-motion: reduce) {")
+    sections.append("  :root {")
+    sections.append("    --motion-duration-fast:  0.01ms;")
+    sections.append("    --motion-duration-base:  0.01ms;")
+    sections.append("    --motion-duration-slow:  0.01ms;")
+    sections.append("    --motion-duration-intro: 0.01ms;")
+    sections.append("  }")
+    sections.append("}")
+    sections.append("")
+
     return "\n".join(sections)
 
 
