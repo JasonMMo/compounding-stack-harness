@@ -426,4 +426,87 @@ html.motion-ready [data-reveal].in-view[data-reveal-delay="7"] { transition-dela
     to   { transform: translateY(calc(var(--motion-distance, -24px) * 1.5)); }
   }
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Intro Overlay — 일회성 인트로 스플래시 (G-69 + motion-dial 게이트)
+   IntroOverlay.astro 에서만 사용. motion=off 시 마크업 자체가 미출력됨.
+
+   G-69 핵심 원칙 (inverted default):
+     기본 CSS 상태 = HIDDEN (opacity:0; visibility:hidden; pointer-events:none).
+     JS 가 .is-active 를 추가해야 비로소 콘텐츠 위를 덮는다.
+     JS 없음 / reduced-motion / 세션 키 존재 → .is-active 미추가 → 콘텐츠 즉시 가시.
+
+   토큰 소비:
+     --motion-duration-intro (900ms) — 퇴장 animation-duration
+     --motion-ease-emphasized         — 퇴장 animation-timing-function
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ── 기본 상태: 완전 숨김 (G-69 inverted default) ───────────────────────────── */
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-1, #ffffff);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── .is-active: JS 가 첫 로드 시에만 추가 → 오버레이 노출 ─────────────────── */
+.intro-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ── .is-exiting: 퇴장 keyframe 실행 — 토큰 소비 ───────────────────────────── */
+.intro-overlay.is-exiting {
+  animation-name: intro-overlay-exit;
+  animation-duration: var(--motion-duration-intro);         /* 900ms */
+  animation-timing-function: var(--motion-ease-emphasized); /* cubic-bezier(0.16,1,0.3,1) */
+  animation-fill-mode: forwards;
+}
+
+.intro-overlay__mark {
+  font-family: var(--font-family-display, 'Plus Jakarta Sans', system-ui, sans-serif);
+  font-size: clamp(1.5rem, 5vw, 3rem);
+  font-weight: 700;
+  color: var(--color-text-1, #111827);
+  letter-spacing: -0.02em;
+  opacity: 1;
+}
+
+/* 워드마크: 오버레이 퇴장 시 미세 확대 (tasteful, impeccable floor 준수) */
+.intro-overlay.is-exiting .intro-overlay__mark {
+  animation-name: intro-mark-scale;
+  animation-duration: var(--motion-duration-intro);
+  animation-timing-function: var(--motion-ease-emphasized);
+  animation-fill-mode: forwards;
+}
+
+@keyframes intro-overlay-exit {
+  from { opacity: 1; }
+  to   { opacity: 0; visibility: hidden; }
+}
+
+@keyframes intro-mark-scale {
+  from { transform: scale(1); opacity: 1; }
+  to   { transform: scale(1.04); opacity: 0; }
+}
+
+/* ── .is-done: animationend 후 완전 제거 ──────────────────────────────────── */
+.intro-overlay.is-done {
+  display: none;
+}
+
+/* ── reduced-motion: belt-and-suspenders — display:none 강제 ─────────────── */
+/* JS 의 early-return 에 더해 CSS 레벨에서도 보장 (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  .intro-overlay {
+    display: none !important;
+  }
+}
 /* 미지원: animation 속성 무시 → 정적 배치 (graceful degrade) */
