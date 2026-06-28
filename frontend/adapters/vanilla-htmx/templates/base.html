@@ -28,6 +28,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
   {% endif %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <!-- swap-transitions.css: HTMX swap/settle 전환 프리셋 (opt-in, --motion-* 토큰 구동, G-69/reduced-motion 안전) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/swap-transitions.css') }}">
   <!-- htmx: loaded from CDN for zero-build simplicity; pin to a specific version for production -->
   <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
   {% if g_authenticated %}
