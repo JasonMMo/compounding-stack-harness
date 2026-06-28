@@ -128,6 +128,32 @@ a lightweight inline `IntersectionObserver` island in `BaseLayout.astro`.
 - `prefers-reduced-motion: reduce` → all animations fall back to `fade-simple` (CSS `@media`, no JS needed)
 - No autoplay on any component (WCAG 2.2.2 invariant)
 
+### Page Transitions (Brick-3b)
+
+**동작**: `site.motion=subtle` 또는 `rich` 을 설정하면 Astro View Transitions API 기반 페이지 전환이 자동 적용된다. 전환 효과는 cross-fade(opacity) + 미세 상승(translateY 8px→0) — 절제된 impeccable floor 준수.
+
+**motion 다이얼 게이트**:
+
+| `site.motion` | `<ViewTransitions />` | 페이지 전환 |
+|---|---|---|
+| `off` (기본) | 미탑재 | 표준 풀-페이지 내비게이션 (전환 JS 0) |
+| `subtle` | 탑재 | cross-fade + micro-rise (280ms) |
+| `rich` | 탑재 | cross-fade + micro-rise (280ms) |
+
+**적용 조건**: `BaseLayout.astro`의 `isMotionOn` 게이트(`motion === 'subtle' || 'rich'`) 로 제어. 고객이 profile에서 `site.motion: subtle` 한 줄만 켜면 모든 페이지에 자동 적용된다.
+
+**G-69 보장**: `motion=off` 시 `<ViewTransitions />` 태그 자체가 HTML에 미출력 → 관련 JS/메타 0바이트. 콘텐츠는 항상 즉시 가시.
+
+**폴백**:
+- `prefers-reduced-motion: reduce` → `::view-transition-old/new(root) { animation: none !important }` (즉시 스왑, WCAG 2.3.3)
+- View Transitions API 미지원 브라우저 → Astro 내장 폴백으로 일반 내비게이션 자동 전환 (추가 처리 불필요)
+
+**소비 토큰**:
+- `--motion-duration-base` (280ms) — 페이지 전환 duration
+- `--motion-ease-emphasized` (`cubic-bezier(0.16,1,0.3,1)`) — 전환 easing
+
+> `--motion-duration-intro` (900ms) 는 **미사용** — 일회성 인트로 오버레이 전용으로 보존.
+
 ---
 
 ## Tests
