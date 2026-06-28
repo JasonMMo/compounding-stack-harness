@@ -184,6 +184,17 @@ for (const file of personaFiles) {
   sections.push('}', '')
 }
 
+// 4. prefers-reduced-motion: override all --motion-duration-* to near-zero
+sections.push('/* ── a11y: prefers-reduced-motion override (WCAG 2.3.3 / KWCAG) ── */')
+sections.push('@media (prefers-reduced-motion: reduce) {')
+sections.push('  :root {')
+sections.push('    --motion-duration-fast:  0.01ms;')
+sections.push('    --motion-duration-base:  0.01ms;')
+sections.push('    --motion-duration-slow:  0.01ms;')
+sections.push('    --motion-duration-intro: 0.01ms;')
+sections.push('  }')
+sections.push('}', '')
+
 const css = sections.join('\n') + '\n'
 mkdirSync(dirname(OUT_FILE), { recursive: true })
 writeFileSync(OUT_FILE, css, 'utf8')
