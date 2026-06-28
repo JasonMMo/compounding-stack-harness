@@ -372,6 +372,47 @@ html.motion-ready [data-reveal].in-view[data-reveal-delay="7"] { transition-dela
   display: block;
 }
 
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Brick-3b — Page Transitions (Astro View Transitions)
+   Gate: motion=subtle|rich → <ViewTransitions /> injected in BaseLayout head.
+   motion=off → ::view-transition-* pseudo-elements never created (no-op CSS).
+   Tokens consumed: --motion-duration-base (280ms), --motion-ease-emphasized.
+   Impeccable floor: opacity + translateY only. No glow/neon/blur/scale-jank.
+   --motion-duration-intro (900ms) intentionally unused — reserved for intro overlay.
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ── Outgoing page: fade out ─────────────────────────────────────────────── */
+::view-transition-old(root) {
+  animation-duration: var(--motion-duration-base);       /* 280ms */
+  animation-timing-function: var(--motion-ease-emphasized); /* cubic-bezier(0.16,1,0.3,1) */
+}
+
+/* ── Incoming page: fade in + micro-rise (translateY 8px → 0) ───────────── */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+::view-transition-new(root) {
+  animation-name: page-enter;
+  animation-duration: var(--motion-duration-base);       /* 280ms */
+  animation-timing-function: var(--motion-ease-emphasized); /* cubic-bezier(0.16,1,0.3,1) */
+}
+
+/* ── prefers-reduced-motion: instant swap (WCAG 2.3.3) ──────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
 /* CSS scroll-driven parallax (Chrome 115+, Firefox 110+) */
 @supports (animation-timeline: scroll()) {
   html.motion-ready .strip__item {
