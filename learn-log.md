@@ -836,3 +836,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - 결함 2곳: `token_css_generator.py`(vanilla, py) + `build-tokens.mjs`(react, js) 동일 하드코딩. landing-astro는 token-override 없음(컴포넌트별 처리, 무관).
 - 근본 수정(engineer): 하드코딩 4줄 → `sem_pairs`/`semPairs`에서 `--motion-duration-*` 접두 필터·정렬 순회로 파생. **신규 duration 토큰 자동 커버, 재발 불가**(open-closed).
 - 재생성 검증: vanilla tokens.css L385-389 + react tokens.gen.css L274-278 모두 5종(xslow 포함) 붕괴 확인. pytest 26 passed(기존 무관 app.css raw-hex 1 fail 유지), diagnose 새 FAIL 0. wiki motion-tokens.md §3 INFERRED→EXTRACTED 해소.
+### Growth-131c — ledger-index incremental cache (누적-민감 재파싱 제거) + create-context-graph 거부 결정
+- founder가 create-context-graph(Neo4j Labs, github.com/neo4j-labs/create-context-graph)를 3-검색 앞단/메모리 대체 후보로 제시. CTO 측정으로 진단 후 거부.
+- 측정(Measure-Command 분해): qmd "느림"=바이너리 spawn ~335ms 고정비(BM25 실검색 ~30ms, 누적 무관). 유일한 누적-민감 비용=ledger-index의 평면원장(190KB+360KB) 전체 재파싱 ~160ms. Neo4j는 둘 다 못 고침(서버왕복 추가)+self-host/cost-aware wedge 정면충돌+codegraph SQLite 중복.
+- 차용한 아이디어("그래프 메모리 증분 갱신")만 흡수: `ledger-index.py` build_index에 content-hash(sha256) 캐시(`_index.cache.json`, gitignored). parse+extract만 캐시(파일내용 순수함수), codegraph 검증·전역 dedup·정렬은 매번 신선. mtime 아닌 content-hash(checkout 견고).
+- 정확성: HEAD 원본과 `_index.json` byte-identical(sha256 c7022ec8, 콜드·웜 동일) 독립 검증. in-proc build_index 콜드 85ms→웜 31ms(2.7x). diagnose 새 FAIL 0. 커밋 41e413c(ledger-index.py)+805d7b1(.gitignore) 푸시.
+- 환류: wiki concepts/asset-search-architecture.md 신설(누적 자산 3-tier 검색 + 측정 프로파일 + 결정), index.md +1줄, qmd wiki 재색인(asset-search 검색 85% 확인). 사용자 최초 질문("누적 자산 검색 방식")의 커버리지 갭 종결.
+- Files touched:
+  - `scripts/ledger-index.py`
+  - `.gitignore`
+  - `knowledge/wiki/concepts/asset-search-architecture.md`
+  - `knowledge/wiki/index.md`
