@@ -417,13 +417,15 @@ def generate(tokens_dir: pathlib.Path | None = None, ui_theme: str = "saas") -> 
 
     # ── 6. prefers-reduced-motion: override all --motion-duration-* to near-zero
     # WCAG 2.3.3 / KWCAG — easing kept intact, only duration collapsed.
+    # Derived from sem_pairs so new tokens are covered automatically (no hardcoding).
+    duration_names = sorted(
+        name for name, _ in sem_pairs if name.startswith("--motion-duration-")
+    )
     sections.append("/* ── a11y: prefers-reduced-motion override (WCAG 2.3.3 / KWCAG) ── */")
     sections.append("@media (prefers-reduced-motion: reduce) {")
     sections.append("  :root {")
-    sections.append("    --motion-duration-fast:  0.01ms;")
-    sections.append("    --motion-duration-base:  0.01ms;")
-    sections.append("    --motion-duration-slow:  0.01ms;")
-    sections.append("    --motion-duration-intro: 0.01ms;")
+    for name in duration_names:
+        sections.append(f"    {name}: 0.01ms;")
     sections.append("  }")
     sections.append("}")
     sections.append("")
