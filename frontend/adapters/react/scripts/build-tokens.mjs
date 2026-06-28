@@ -185,13 +185,17 @@ for (const file of personaFiles) {
 }
 
 // 4. prefers-reduced-motion: override all --motion-duration-* to near-zero
+// Derived from semPairs so new tokens are covered automatically (no hardcoding).
+const durationNames = semPairs
+  .map(([name]) => name)
+  .filter(name => name.startsWith('--motion-duration-'))
+  .sort()
 sections.push('/* ── a11y: prefers-reduced-motion override (WCAG 2.3.3 / KWCAG) ── */')
 sections.push('@media (prefers-reduced-motion: reduce) {')
 sections.push('  :root {')
-sections.push('    --motion-duration-fast:  0.01ms;')
-sections.push('    --motion-duration-base:  0.01ms;')
-sections.push('    --motion-duration-slow:  0.01ms;')
-sections.push('    --motion-duration-intro: 0.01ms;')
+for (const name of durationNames) {
+  sections.push(`    ${name}: 0.01ms;`)
+}
 sections.push('  }')
 sections.push('}', '')
 
