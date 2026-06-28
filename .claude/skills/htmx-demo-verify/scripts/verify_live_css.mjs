@@ -18,7 +18,7 @@
  *
  * OPTIONS:
  *   --url URL            page to measure (required), e.g. https://lawfirm-demo.n9n.co.kr/board/case-deadline
- *   --login user:pass    POST /api/auth/login first (demo demos use demo:demo)
+ *   --login user:pass    submit the /login form first (sets session cookie; demo demos use demo:demo)
  *   --sel "a,b,c"        comma CSS selectors to measure (default ".app-header,.app-footer,.app-logo")
  *   --css "<rules>"      candidate CSS to inject; prints BEFORE then AFTER geometry
  *   --css-file PATH      read candidate CSS from a file instead of --css
@@ -81,14 +81,20 @@ try {
   if (LOGIN) {
     const [u, p] = LOGIN.split(':');
     const origin = new global.URL(URL_).origin;
-    await page.goto(origin + '/', { waitUntil: 'networkidle2' });
-    const resp = await page.evaluate(async (origin, u, p) => {
-      const r = await fetch(origin + '/api/auth/login', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: u, password: p }), credentials: 'include' });
-      return r.status;
-    }, origin, u, p);
-    console.log(`login POST status: ${resp}`);
+    // Log in via the Flask /login FORM — this sets the session cookie that gates
+    // page navigation. Do NOT POST /api/auth/login: that is the backend JSON
+    // endpoint, returns a bearer token, and sets NO frontend session cookie, so
+    // every subsequent goto silently redirects to /login (you'd measure the login
+    // page, not the target). Verified live on lawfirm-demo 2026-06-28.
+    await page.goto(origin + '/login', { waitUntil: 'networkidle2' });
+    await page.type('input[name="username"]', u);
+    await page.type('input[name="password"]', p);
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle2' }),
+      page.click('button[type="submit"]'),
+    ]);
+    const landed = page.url();
+    console.log(`login → ${landed}${landed.endsWith('/login') ? '  ⚠️ STILL ON /login (auth failed)' : '  ✅'}`);
   }
 
   await page.goto(URL_, { waitUntil: 'networkidle2' });
