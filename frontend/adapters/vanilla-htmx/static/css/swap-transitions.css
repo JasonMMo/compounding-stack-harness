@@ -1,0 +1,100 @@
+/* ============================================================================
+ * swap-transitions.css — HTMX swap/settle 전환 프리셋 (Growth-131)
+ * ----------------------------------------------------------------------------
+ * vanilla-htmx 어댑터의 net-new 모션 역량. landing-astro 의 페이지 전환에 대응하는
+ * "콘텐츠 스왑 전환" 레이어를, library-free + motion-토큰 구동 + opt-in 으로 제공한다.
+ *
+ * 설계 원칙 (motion-system.md 계승):
+ *  - opt-in: 타깃 요소에 .swap-* 클래스를 붙인 경우에만 작동. 미적용 화면은 byte-identical.
+ *  - 토큰 구동: 모든 duration/ease/stagger 는 --motion-* 토큰(tokens.css) 소비. 하드코딩 0.
+ *  - G-69 / no-JS-visible: 정지(resting) opacity 는 항상 1. opacity:0 은 @keyframes from
+ *    과 .htmx-swapping 에서만 적용 → JS/htmx 미작동 시 콘텐츠 100% 가시.
+ *  - reduced-motion: 하단 @media 블록이 transform·stagger·duration 을 전부 중화(WCAG 2.3.3).
+ *
+ * 두 단계(swap / settle) 메커니즘:
+ *  ┌ OUT (swap phase) ─ htmx 가 구(舊) 콘텐츠에 .htmx-swapping 부여. opacity 페이드.
+ *  │   ※ 가시화 조건: hx-swap 에 `swap:120ms`(≈--motion-duration-fast) 명시 필요.
+ *  │     미명시 시 swapDelay=0 → OUT 생략(스냅), IN 은 그대로 작동.
+ *  └ IN  (settle phase) ─ 삽입-트리거 1회성 CSS animation(`> *`). htmx settle 타이밍에
+ *      의존하지 않으므로(settle footgun 회피) hx-swap 에 settle: 불필요. JS 로 innerHTML 을
+ *      직접 덮는 화면(예: 판례검색 결과 렌더)에서도 동일하게 작동.
+ *
+ * 사용법:
+ *   <div id="detail" class="swap-slide-in"> … </div>      ← IN 만(클래스만)
+ *   <tr hx-target="#detail" hx-swap="innerHTML swap:120ms"> ← OUT 도 원하면 swap: 추가
+ *   <div id="results" class="swap-fade-up swap-stagger">    ← 목록 계단식 등장
+ *
+ * 프리셋:
+ *   .swap-fade       opacity 페이드 (impeccable 안전 기본)
+ *   .swap-fade-up    페이드 + 아래에서 상승 (목록/카드 등장)
+ *   .swap-fade-down  페이드 + 위에서 하강 (상단 삽입 콘텐츠)
+ *   .swap-slide-in   페이드 + 측면 슬라이드 (master-detail 상세 패널)
+ * 수식자:
+ *   .swap-stagger    직계 자식 계단식 지연(--motion-stagger-base, 6단계 캡)
+ *
+ * 미사용이던 --motion-stagger-* 토큰을 처음으로 소비한다(토큰 활용 환류).
+ * ========================================================================== */
+
+:root {
+  /* 등장 오프셋 — 절제된 subtle 거리(impeccable: scale/bounce 금지).
+   * design 8th-axis motion 팔레트에 --motion-distance 가 생기면 그쪽으로 승격 가능. */
+  --swap-distance: 8px;
+}
+
+/* ── IN: 삽입-트리거 진입 애니메이션 (settle 타이밍 무의존) ──────────────── */
+
+@keyframes swap-in-fade { from { opacity: 0; } }
+@keyframes swap-in-up   { from { opacity: 0; transform: translateY(var(--swap-distance)); } }
+@keyframes swap-in-down { from { opacity: 0; transform: translateY(calc(-1 * var(--swap-distance))); } }
+@keyframes swap-in-x    { from { opacity: 0; transform: translateX(var(--swap-distance)); } }
+
+.swap-fade > *,
+.swap-fade-up > *,
+.swap-fade-down > *,
+.swap-slide-in > * {
+  animation-duration: var(--motion-duration-base);
+  animation-timing-function: var(--motion-ease-standard);
+  animation-fill-mode: both;
+}
+
+.swap-fade > *      { animation-name: swap-in-fade; }
+.swap-fade-up > *   { animation-name: swap-in-up; }
+.swap-fade-down > * { animation-name: swap-in-down; }
+.swap-slide-in > *  { animation-name: swap-in-x; animation-timing-function: var(--motion-ease-emphasized); }
+
+/* ── 계단식(stagger) — 직계 자식 지연. 6단계에서 캡(긴 목록 끝단 지연 폭주 방지) ── */
+
+.swap-stagger > *:nth-child(2)    { animation-delay: var(--motion-stagger-base); }
+.swap-stagger > *:nth-child(3)    { animation-delay: calc(var(--motion-stagger-base) * 2); }
+.swap-stagger > *:nth-child(4)    { animation-delay: calc(var(--motion-stagger-base) * 3); }
+.swap-stagger > *:nth-child(5)    { animation-delay: calc(var(--motion-stagger-base) * 4); }
+.swap-stagger > *:nth-child(6)    { animation-delay: calc(var(--motion-stagger-base) * 5); }
+.swap-stagger > *:nth-child(n+7)  { animation-delay: calc(var(--motion-stagger-base) * 6); }
+
+/* ── OUT: swap phase 페이드 (hx-swap 에 swap:<ms> 명시 시 가시) ─────────── */
+
+.swap-fade.htmx-swapping,
+.swap-fade-up.htmx-swapping,
+.swap-fade-down.htmx-swapping,
+.swap-slide-in.htmx-swapping {
+  opacity: 0;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-exit);
+}
+
+/* ── a11y: prefers-reduced-motion — 전환 전면 중화(WCAG 2.3.3 / KWCAG) ──── */
+
+@media (prefers-reduced-motion: reduce) {
+  .swap-fade > *,
+  .swap-fade-up > *,
+  .swap-fade-down > *,
+  .swap-slide-in > * {
+    animation: none !important;       /* transform·stagger·fade 모두 제거 → 즉시 가시 */
+  }
+  .swap-fade.htmx-swapping,
+  .swap-fade-up.htmx-swapping,
+  .swap-fade-down.htmx-swapping,
+  .swap-slide-in.htmx-swapping {
+    transition: none !important;
+    opacity: 1 !important;            /* OUT 페이드 제거(잔존 swapDelay 는 ≤150ms 권장으로 무시 가능) */
+  }
+}
