@@ -127,10 +127,19 @@
   },
 
   "motion": {
-    "transition-control": "{motion.duration.normal} {motion.easing.standard}",
-    "transition-enter":   "{motion.duration.enter} {motion.easing.decelerate}",
-    "transition-exit":    "{motion.duration.exit} {motion.easing.accelerate}",
-    "transition-fast":    "{motion.duration.fast} {motion.easing.standard}"
+    "duration-fast":  "{motion.duration.fast}",
+    "duration-base":  "{motion.duration.base}",
+    "duration-slow":  "{motion.duration.slow}",
+    "duration-intro": "{motion.duration.intro}",
+
+    "ease-standard":   "{motion.easing.standard}",
+    "ease-emphasized": "{motion.easing.emphasized}",
+    "ease-exit":       "{motion.easing.exit}",
+    "ease-spring":     "{motion.easing.spring}",
+
+    "stagger-tight": "{motion.stagger.tight}",
+    "stagger-base":  "{motion.stagger.base}",
+    "stagger-loose": "{motion.stagger.loose}"
   },
 
   "zindex": {
