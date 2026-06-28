@@ -53,7 +53,7 @@
           <tr
             hx-get="{{ url_for('entity_detail_partial', entity_type=entity_type, entity_id=item.get('id', '')) }}"
             hx-target="#detail-panel"
-            hx-swap="innerHTML"
+            hx-swap="innerHTML swap:120ms"
             role="button"
             tabindex="0"
             aria-label="{{ item.get(columns[0], '') }} 상세 보기"
@@ -82,7 +82,7 @@
   </div>{# /master-panel #}
 
   {# ── Detail panel (right) ── #}
-  <div class="detail-panel" id="detail-panel">
+  <div class="detail-panel swap-slide-in" id="detail-panel">
     <div class="detail-panel-placeholder">
       <div class="detail-panel-placeholder__icon">☰</div>
       <p class="detail-panel-placeholder__text">
