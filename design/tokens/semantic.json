@@ -130,6 +130,7 @@
     "duration-fast":  "{motion.duration.fast}",
     "duration-base":  "{motion.duration.base}",
     "duration-slow":  "{motion.duration.slow}",
+    "duration-xslow": "{motion.duration.xslow}",
     "duration-intro": "{motion.duration.intro}",
 
     "ease-standard":   "{motion.easing.standard}",
