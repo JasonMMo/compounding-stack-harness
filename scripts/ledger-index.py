@@ -13,10 +13,16 @@ CLI:
   python scripts/ledger-index.py --md         # also write _index.md
 
 Exit code: 0 normally, 1 on --check with stale anchors.
+
+Performance:
+  Incremental parse cache stored in docs/learn-logs/_index.cache.json (gitignored).
+  Each source file is SHA-256 hashed; on cache hit, parse+extract is skipped.
+  codegraph verification, global dedup, and sort always run fresh (never cached).
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import re
@@ -36,6 +42,9 @@ LEARN_LOGS_DIR = REPO_ROOT / "docs" / "learn-logs"
 CODEGRAPH_DB = REPO_ROOT / ".codegraph" / "codegraph.db"
 INDEX_JSON = LEARN_LOGS_DIR / "_index.json"
 INDEX_MD = LEARN_LOGS_DIR / "_index.md"
+CACHE_JSON = LEARN_LOGS_DIR / "_index.cache.json"
+
+_CACHE_VERSION = 1
 
 # Agents to process: (path, agent_name)
 # Excluded stems: _index (self-output), synthesis-template (template, not a Growth ledger)
@@ -49,6 +58,39 @@ def _source_files() -> list[tuple[Path, str]]:
         if p.stem not in _EXCLUDED_STEMS:
             sources.append((p, p.stem))
     return sources
+
+
+# ---------------------------------------------------------------------------
+# Content-hash incremental cache helpers
+# ---------------------------------------------------------------------------
+
+def _file_sha256(path: Path) -> str:
+    """Return hex SHA-256 of the raw bytes of *path*."""
+    h = hashlib.sha256()
+    h.update(path.read_bytes())
+    return h.hexdigest()
+
+
+def _load_cache() -> dict[str, Any]:
+    """Load _index.cache.json if it exists and version matches, else return empty structure."""
+    if not CACHE_JSON.exists():
+        return {"version": _CACHE_VERSION, "files": {}}
+    try:
+        data = json.loads(CACHE_JSON.read_text(encoding="utf-8"))
+        if data.get("version") != _CACHE_VERSION:
+            return {"version": _CACHE_VERSION, "files": {}}
+        return data
+    except Exception:
+        return {"version": _CACHE_VERSION, "files": {}}
+
+
+def _save_cache(cache: dict[str, Any]) -> None:
+    """Write cache to _index.cache.json atomically."""
+    CACHE_JSON.parent.mkdir(parents=True, exist_ok=True)
+    CACHE_JSON.write_text(
+        json.dumps(cache, sort_keys=True, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -172,6 +214,30 @@ def _extract_symbol_candidates(body: str) -> list[str]:
     return result
 
 
+def _extract_file_contribution(path: Path, agent: str) -> list[dict[str, Any]]:
+    """Parse *path* and enrich each entry with pre-computed file_anchors + symbol_candidates.
+
+    Returns a list of entry dicts suitable for caching:
+    {agent, growth, date, title, file, file_anchors: [...], symbol_candidates: [...]}.
+    The 'body' field is intentionally excluded from the returned dicts to keep the cache
+    compact — callers consume file_anchors / symbol_candidates directly.
+    """
+    raw_entries = _parse_file(path, agent)
+    result: list[dict[str, Any]] = []
+    for entry in raw_entries:
+        body = entry["body"]
+        result.append({
+            "agent": entry["agent"],
+            "growth": entry["growth"],
+            "date": entry["date"],
+            "title": entry["title"],
+            "file": entry["file"],
+            "file_anchors": _extract_file_anchors(body),
+            "symbol_candidates": _extract_symbol_candidates(body),
+        })
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Codegraph cross-validation
 # ---------------------------------------------------------------------------
@@ -219,63 +285,103 @@ def _git_head() -> str:
 
 
 def build_index() -> dict[str, Any]:
-    """Parse all ledger files and build the full index structure."""
+    """Parse all ledger files and build the full index structure.
+
+    Uses a content-hash incremental cache (docs/learn-logs/_index.cache.json) so that
+    unchanged files skip parse+extract on subsequent calls.  codegraph verification,
+    global dedup, and sort always run fresh — they depend on .codegraph/codegraph.db
+    which changes independently of the ledger files.
+    """
+    # ── Codegraph (always fresh — independent change source) ──────────────
     cg_names, cg_warn = _load_codegraph_names()
     if cg_warn:
         print(f"[ledger-index] WARNING: {cg_warn}", file=sys.stderr)
 
+    # ── Incremental parse cache ───────────────────────────────────────────
+    cache = _load_cache()
+    cache_files: dict[str, Any] = cache.setdefault("files", {})
+    cache_dirty = False
+
+    # Collect entries from cache or fresh parse
+    all_entries: list[dict[str, Any]] = []  # each has file_anchors + symbol_candidates
+    current_keys: set[str] = set()
+
+    for src_path, agent in _source_files():
+        rel_key = src_path.relative_to(REPO_ROOT).as_posix()
+        current_keys.add(rel_key)
+
+        file_hash = _file_sha256(src_path)
+
+        cached = cache_files.get(rel_key)
+        if cached is not None and cached.get("hash") == file_hash:
+            # Cache hit: reuse pre-computed entries
+            all_entries.extend(cached["entries"])
+        else:
+            # Cache miss: parse + extract, then store
+            extracted = _extract_file_contribution(src_path, agent)
+            cache_files[rel_key] = {"hash": file_hash, "entries": extracted}
+            cache_dirty = True
+            all_entries.extend(extracted)
+
+    # Prune stale keys (source file deleted)
+    stale_keys = set(cache_files.keys()) - current_keys
+    if stale_keys:
+        for k in stale_keys:
+            del cache_files[k]
+        cache_dirty = True
+
+    if cache_dirty:
+        _save_cache(cache)
+
+    # ── Global bucketing + codegraph verification (always fresh) ──────────
     symbols: dict[str, list[dict]] = {}
     files: dict[str, list[dict]] = {}
     unverified: list[dict] = []
 
-    for src_path, agent in _source_files():
-        entries = _parse_file(src_path, agent)
-        for entry in entries:
-            body = entry["body"]
-            meta = {
-                "agent": entry["agent"],
-                "growth": entry["growth"],
-                "date": entry["date"],
-                "title": entry["title"],
-                "file": entry["file"],
-            }
+    for entry in all_entries:
+        meta = {
+            "agent": entry["agent"],
+            "growth": entry["growth"],
+            "date": entry["date"],
+            "title": entry["title"],
+            "file": entry["file"],
+        }
 
-            # ── File anchors ──────────────────────────────────────────────
-            for fpath in _extract_file_anchors(body):
-                bucket = files.setdefault(fpath, [])
-                rec = dict(meta)
-                # file anchors: always add (they are real paths, not codegraph symbols)
+        # ── File anchors ──────────────────────────────────────────────
+        for fpath in entry["file_anchors"]:
+            bucket = files.setdefault(fpath, [])
+            rec = dict(meta)
+            if not any(
+                r["agent"] == rec["agent"] and r["growth"] == rec["growth"]
+                for r in bucket
+            ):
+                bucket.append(rec)
+
+        # ── Symbol anchors ────────────────────────────────────────────
+        for sym in entry["symbol_candidates"]:
+            rec = dict(meta)
+            if cg_names is not None:
+                verified = sym in cg_names
+            else:
+                verified = False
+
+            if verified:
+                rec["verified"] = True
+                bucket = symbols.setdefault(sym, [])
                 if not any(
                     r["agent"] == rec["agent"] and r["growth"] == rec["growth"]
                     for r in bucket
                 ):
                     bucket.append(rec)
-
-            # ── Symbol anchors ────────────────────────────────────────────
-            for sym in _extract_symbol_candidates(body):
-                rec = dict(meta)
-                if cg_names is not None:
-                    verified = sym in cg_names
-                else:
-                    verified = False
-
-                if verified:
-                    rec["verified"] = True
-                    bucket = symbols.setdefault(sym, [])
-                    if not any(
-                        r["agent"] == rec["agent"] and r["growth"] == rec["growth"]
-                        for r in bucket
-                    ):
-                        bucket.append(rec)
-                else:
-                    # unverified: do NOT drop — store in unverified list
-                    uv_rec = dict(rec)
-                    uv_rec["symbol"] = sym
-                    if not any(
-                        u["symbol"] == sym and u["agent"] == uv_rec["agent"] and u["growth"] == uv_rec["growth"]
-                        for u in unverified
-                    ):
-                        unverified.append(uv_rec)
+            else:
+                # unverified: do NOT drop — store in unverified list
+                uv_rec = dict(rec)
+                uv_rec["symbol"] = sym
+                if not any(
+                    u["symbol"] == sym and u["agent"] == uv_rec["agent"] and u["growth"] == uv_rec["growth"]
+                    for u in unverified
+                ):
+                    unverified.append(uv_rec)
 
     # Sort for deterministic output
     symbols_sorted = {k: sorted(v, key=lambda r: (r["growth"], r["agent"])) for k, v in sorted(symbols.items())}
