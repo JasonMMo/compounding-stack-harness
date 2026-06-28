@@ -200,6 +200,15 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 인격 헌장: [
 - **검증(전 브릭 CTO 독립)**: build:tokens/test:tokens(8/8)/astro build 전부 PASS, reduced-motion·G-69 무손상, 커밋 파일당·푸시(`4904a89..7be1bd1`)·preflight CLEAN.
 - **결과**: (가) 슬라이스 = 팔레트(브릭1)→IO-reveal 배선(브릭2)→페이지전환 프리셋(3b)→레거시 흡수(3a)→팔레트 갭해소(3c). landing-astro 모션이 design 토큰 단일 소스로 완결. 후속(미결): 일회성 인트로-오버레이(`intro` 토큰 소비), 타 어댑터 motion 토큰 확산.
 
+### Growth-130f (2026-06-28) — (가) 후속: 일회성 인트로 스플래시 오버레이 (intro 토큰 첫 소비)
+
+- **신규 컴포넌트**(engineer): `IntroOverlay.astro` — 브릭2~3c에서 보존해둔 `--motion-duration-intro`(900) 토큰의 **첫 소비처**. 의뢰인 "인트로 페이지" 요구의 나머지 절반.
+- **G-69 inverted-default 패턴**(CTO 설계 결정): 오버레이 기본 CSS = 완전 숨김(opacity:0/visibility:hidden/pointer-events:none). JS가 첫 로드에만 `.is-active`(노출)→`.is-exiting`(토큰 구동 퇴장) 부여. 기존 IO-reveal은 "기본 가시→JS가 숨김"인데, 풀스크린 오버레이는 역으로 "기본 숨김→JS가 노출"이어야 JS-off에서 콘텐츠 미가림. degrade 4경로: JS-off(.is-active 미부여)/motion=off(BaseLayout 게이트 마크업 미출력)/reduced-motion(스크립트 early-return + CSS display:none)/세션 재생됨(sessionStorage `landing-intro-played`).
+- **CTO 2차 환류 — safety timeout**: 1차 산출물은 collapse를 `animationend`에만 의존. 코드베이스 타 모션 island(IO-reveal 800/1200ms fallback) 규율 대비 누락 → 멈춤 시 풀스크린 오버레이가 콘텐츠 영구 가림=최악 모드. `done` 가드 공유 collapse() + `setTimeout(intro+400ms)` 추가 재위임, animationend/timeout 중 선발화 승리. VT: `astro:page-load` 바인딩(내비마다 재확인, 키 존재 시 즉시 return).
+- **토큰 소비**: 퇴장 `@keyframes intro-overlay-exit`+워드마크 `intro-mark-scale`(1→1.04) 모두 `--motion-duration-intro`+`--motion-ease-emphasized`(하드코딩 0). 팔레트 FROZEN 무변경(`git status design/tokens` CLEAN 확인).
+- **검증(CTO 독립)**: astro build SUCCESS, 4 degrade 경로 코드 추적 확인, BaseLayout 마운트=body 첫 자식·게이트, preflight CLEAN. 커밋 파일당 4건 `3e4531c`(component)/`2ff626b`(global.css)/`42242d1`(BaseLayout)/`df5d7c6`(README), 푸시 `d72a52d..df5d7c6`.
+- **결과**: (가) 슬라이스 motion 토큰 5값(150/280/480/640/900) 전부 소비처 확보 — intro까지 살아있는 토큰이 됨. 후속(미결): 타 어댑터(react/vanilla) motion 토큰 확산.
+
 ## §3 — Open Loops (이 인격 책임)
 
 - [x] `docs/design/tokens.md` 초안 — Growth-5c 완료
