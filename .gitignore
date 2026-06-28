@@ -70,6 +70,8 @@ apps/intake/data-test-fixture/
 # Ledger reverse-index (rebuildable from learn-log.md + docs/learn-logs/ via scripts/ledger-index.py)
 docs/learn-logs/_index.json
 docs/learn-logs/_index.md
+# Ledger incremental parse cache (content-hash based, rebuildable, cold-miss is 1 slow run then fast)
+docs/learn-logs/_index.cache.json
 
 # Local tooling artifact (observation/memory vault — not repo state)
 .context/
