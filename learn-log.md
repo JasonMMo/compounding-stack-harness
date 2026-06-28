@@ -805,3 +805,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **환류**: wiki synthesis [[claude-design-cloud-boundary]] + source [[deep-research-design-cloud-2026-06]] + index 2줄. 원본 `out/`(gitignored).
 - **잔여**: ~~Phase2 가드5종~~(WP-2) · ~~Phase3 복제본 CLI~~(WP-3) · ~~WP-4 파일럿 측정~~(A/B 종결: cloud craft 2~3분 vs baseline 25분, 충실도 HIGH·normalize LOW, 라이브 픽셀 양 arm PASS, 판정=재사용 섹션 craft 한정 도입+repo 시각검증 훅 완화, design-loop SKILL 박제) **종결**. **잔여 = founder 채택결정 게이트**: 채택 시 → 신규 variant 로 landing-astro 병존 빌드(production Pricing.astro 덮어쓰기 ✗)·shadow 2종 theme.yaml 등록·scoped-CSS vs Tailwind 컨벤션 CDO 판정·net-new 섹션 재측정. legal 고객엔 BAA beta졸업 재검증 전 PII 금지.
 - §6 rollup: [Growth-130] claude.ai/design 분리·통합 아키텍처 박제 — deep-research(BAA제외·학습기본·DTCG·Style Dictionary v5+·빌드타임 물리격리) 기반. 경계=토큰JSON, 정규화 게이트, 복제본 누출0·결합0·구조변경0, CI가드5종 후보. 문서+wiki 3페이지 환류. 구현은 후속 Phase.
+
+## Growth-131 — HTMX swap/settle 전환 프리셋 (vanilla net-new 모션 역량)
+
+**맥락**: 정찰이 "최고 레버리지 후속"으로 지목 — landing-astro 페이지 전환에 대응하는 vanilla-htmx 콘텐츠-스왑 전환. 기존 어댑터는 motion 토큰을 소비하되(Growth-130g) 스왑은 전부 무전환 스냅(`hx-swap=innerHTML` 다수).
+
+- **신설**: `static/css/swap-transitions.css` — opt-in `.swap-fade/-up/-down/-slide-in` + `.swap-stagger`. library-free, `--motion-*` 토큰 구동, base.html 링크.
+- **2단계 메커니즘**: IN=삽입-트리거 1회성 CSS animation(`.swap-* > *`, settle 타이밍 무의존 → footgun 회피, JS innerHTML 덮어쓰기 화면에도 작동) / OUT=`.htmx-swapping` opacity 페이드(`hx-swap` 에 `swap:120ms` 명시 시 가시).
+- **불변식**: resting opacity 항상 1(opacity:0 은 keyframe from·htmx-swapping 한정) → G-69 no-JS-visible 유지. `prefers-reduced-motion` 전용 블록이 transform·stagger·duration 전면 중화(WCAG 2.3.3). 미적용 화면 byte-identical(motion off 기본 계승).
+- **토큰 환류**: 미사용이던 `--motion-stagger-base` 첫 소비(계단식 6단계 캡). 신규 design 토큰 0(adapter-local `--swap-distance:8px`, motion-distance 승격 여지 주석).
+- **데모 2곳**: `legal_precedent_search.html`(#results=fade-up+stagger) · `list-master-detail.html`(#detail-panel=slide-in, 행 swap:120ms).
+- **검증**: L3 토큰빌드 PASS · L1 132 pass(잔여 1 fail=app.css hex, 무관 기존) · 가드 신규위반 0(FAIL 3건 out/·ledger·legal catalog 전부 기존) · CSS 브레이스 24/24·6 토큰참조 실존·키프레임 4종 정합.
+- §6 rollup: [Growth-131] HTMX swap/settle 전환 프리셋 신설(swap-transitions.css) — opt-in fade/slide+stagger, motion 토큰 구동, IN=삽입트리거(settle footgun 회피)·OUT=htmx-swapping, G-69+reduced-motion 안전, --motion-stagger 첫 소비, 데모 2곳. landing 페이지전환 대응 vanilla net-new.
