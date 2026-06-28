@@ -96,6 +96,34 @@ Generator rules (per `design/tokens/README.md`):
 `app.css` consumes only `var(--*)` tokens — zero raw hex values.
 `build_tokens.py` is the L3 build step.
 
+## Swap Transition Presets (`swap-transitions.css`, Growth-131)
+
+Opt-in HTMX 콘텐츠-스왑 전환 레이어. library-free, `--motion-*` 토큰 구동, G-69 / reduced-motion 안전.
+landing-astro 의 페이지 전환에 대응하는 vanilla-htmx net-new 모션 역량.
+
+| 클래스 | 효과 | 비고 |
+|--------|------|------|
+| `.swap-fade` | opacity 페이드 | impeccable 안전 기본 |
+| `.swap-fade-up` | 페이드 + 아래에서 상승 | 목록/카드 등장 |
+| `.swap-fade-down` | 페이드 + 위에서 하강 | 상단 삽입 콘텐츠 |
+| `.swap-slide-in` | 페이드 + 측면 슬라이드 | master-detail 상세 패널 |
+| `.swap-stagger` (수식자) | 직계 자식 계단식 지연 | `--motion-stagger-base`, 6단계 캡 |
+
+**2단계 메커니즘:**
+- **IN (settle)** — 삽입-트리거 1회성 CSS animation(`.swap-* > *`). htmx settle 타이밍에 무의존
+  (settle footgun 회피) → `hx-swap` 에 `settle:` 불필요. JS 가 `innerHTML` 을 직접 덮는 화면에서도 동작.
+- **OUT (swap)** — `.htmx-swapping` opacity 페이드. **가시화하려면 `hx-swap` 에 `swap:120ms`(≈`--motion-duration-fast`) 명시.**
+  미명시 시 `swapDelay=0` → OUT 생략(스냅), IN 은 그대로.
+
+**불변식:**
+- resting opacity 는 항상 1 (opacity:0 은 `@keyframes from` / `.htmx-swapping` 에만) → JS-off 콘텐츠 100% 가시.
+- `@media (prefers-reduced-motion: reduce)` 블록이 transform·stagger·duration 을 전면 중화 (WCAG 2.3.3 / KWCAG).
+  잔존 `swap:` attribute 지연(JS-레벨, CSS 무관)은 ≤150ms 권장으로 무시 가능.
+- 미적용 화면은 byte-identical (motion `off` 기본 원칙 계승).
+
+**라이브 데모:** `legal_precedent_search.html`(`#results` = `.swap-fade-up .swap-stagger`),
+`list-master-detail.html`(`#detail-panel` = `.swap-slide-in`, 행 `hx-swap="innerHTML swap:120ms"`).
+
 ## Compliance Points (F-1 ~ F-4)
 
 | # | Point | Implementation |
