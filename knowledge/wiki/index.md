@@ -16,6 +16,7 @@
 
 ## Concepts
 
+- [asset-search-architecture](concepts/asset-search-architecture.md) — 누적 자산 3-tier 검색(qmd BM25 / codegraph SQLite / ledger-index) + 측정된 성능 프로파일(체감 지연=spawn 고정비+평면원장 재파싱) + incremental cache + create-context-graph(Neo4j) 거부 결정 (updated: 2026-06-29) `[EXTRACTED]`
 - [motion-tokens](concepts/motion-tokens.md) — 3 토큰 패밀리(duration/ease/stagger) + semantic.json→codegen 파이프라인 + reduced-motion override + 3-어댑터 확산 현황 (updated: 2026-06-28) `[EXTRACTED]`
 - [legal-ai-search-strategy](concepts/legal-ai-search-strategy.md) — A안 augment 패턴: FTS+RAG 하이브리드 ✅ 구현·라이브(Growth-93/97), 전략 자동생성(B안) 제외 (updated: 2026-06-20) `[EXTRACTED]`
 - [smb-ai-guide-lite](concepts/smb-ai-guide-lite.md) — Lite 티어: 로컬 임베딩 즉답 위젯 + 리드폼, API 비용 0, 데이터 외부 유출 0, SMB 리드젠 범용 패턴 (updated: 2026-06-18) `[SYNTHESIZED]`
