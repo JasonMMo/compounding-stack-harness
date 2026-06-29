@@ -67,6 +67,16 @@ KIOM OASIS(37,199 논문, 0-3) / 약재백과(478건, 1-2) / MHDR Corpus(1-2) �
 - **판정**: 의료기기법 §2(1) 4목적 비해당(법문 3-0) + 웰니스 가이드라인 '정보제공용 비의료기기' 예시 정합 → **법령·가이드라인 해석상 비의료기기 유력**. 확정은 식약처 사전검토 질의(고객 옵션). **게이트① CLOSE.**
 - **고객 제공용 산출물**: [`docs/legal/search-cite-rag-medical-device-basis.md`](../../../docs/legal/search-cite-rag-medical-device-basis.md) — 검색·인용 RAG 비의료기기 법적근거(legal-rag 공통 재사용), §6 설계 경계조건 C1~C4 포함.
 
+## 게이트 ② 종결 (2026-06-30, CTO VPS 실수집 확증) — 🟢 합법 수집경로 end-to-end 동작
+2차의 "파라미터 확인만 남음"을 VPS(등록 IP)에서 law.go.kr Open API 실호출로 닫음.
+- **[VERIFIED] 인증·검색**: OC=`aijasonmore`(이메일 프리픽스) + VPS egress IP(187.77.140.157, 등록·전파완료)로 `lawSearch.do?target=admrul&search=2` 정상 응답. 한방/한의약/첩약/약침 키워드로 보건복지부 등 행정규칙 **37건(중복제거)** 수집. (이전 AUTH ERROR는 IP 등록 전파지연이었음 — 우리측 결함 0.)
+- **[VERIFIED] 본문조회**: `lawService.do?target=admrul&ID=<행정규칙일련번호>&type=XML` 로 고시 본문 구조화 XML(`<AdmRulService><행정규칙기본정보>…</행정규칙명>…<조문내용>`) **실수신·저장**(예: 한의약산업실태조사 고시 2,680B/1,512자). 본문조회 ID는 `행정규칙ID`(짧은 값)가 아니라 **`행정규칙일련번호`**(13자리)를 쓴다. 검색응답의 `<행정규칙상세링크>`는 `type=HTML` 임베드라 XML파싱 폴백 필요.
+- **API 구조 메모(재사용)**: 검색응답 ROOT `<AdmRulSearch>`, item `<admrul>`, 자식태그 **한글**(행정규칙명/행정규칙ID/행정규칙일련번호/소관부처명/행정규칙종류/행정규칙상세링크). 본문 ROOT `<AdmRulService>`. `search=2`=본문검색(노이즈↑, 키워드 정제 필요), `search=1`=제목검색.
+- **판정**: 저작권법 §7(2) 비보호 + law.go.kr Open API 실동작 → **합법·기술 수집경로 확증. 게이트② CLOSE.** PoC: `scripts/corpus/fetch_hanbang_admrul.py`(표준라이브러리, IP화이트리스트라 VPS 실행). 잔여는 게이트 아닌 **build-time corpus 큐레이션**(정확히 어떤 한방 급여 고시를 ingest할지 — 후보: 건강보험 행위 급여·비급여 목록표/상대가치점수, 첩약 시범사업 고시).
+
+## 종합 — 양 게이트 CLOSE, 빌드 진입 가능 (규제·corpus 리스크 해소)
+게이트①(규제 비의료기기 유력) + ②(합법 수집경로 동작) 모두 종결. 남은 미검증은 **GTM 트랙**(③맥챗 경쟁범위 ④WTP/구매자) — build-gate 아님, 별도 1차조사. legal-rag 스택 포팅은 엔지니어링 저리스크.
+
 ## 함의
 - legal-rag 스택([[legal-rag-pattern]], RLS 멀티테넌트·검색 청크격리·로컬 임베딩) 포팅은 **엔지니어링 리스크 낮음** — 리스크는 전부 규제·corpus·시장.
 - self-host 쐐기는 의료정보 민감성으로 legal 대비 **더 강함**([[smb-ai-market-2026h1]] 규제업종 명제와 정합).
