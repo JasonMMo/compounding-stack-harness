@@ -6,6 +6,7 @@
 
 - [lawfirm-demo profile](../../profiles/lawfirm-demo.yaml) — 30명 법무법인, legal vertical M3 첫 고객 프로파일 초안 (updated: 2026-06-11) `[INFERRED]`
 - [deep-research-design-cloud-2026-06](sources/deep-research-design-cloud-2026-06.md) — claude.ai/design 분리·통합 deep-research(8 findings, 1차출처 12종) (updated: 2026-06-26) `[EXTRACTED]`
+- [deep-research-hanbang-rag-2026-06](sources/deep-research-hanbang-rag-2026-06.md) — 한의원 self-host RAG 시장성·규제·경쟁: **규제 게이트 미통과(SaMD 안전항 0-3 반증), 비임상 HIRA 급여청구 corpus 만 안전, WTP/경쟁 미검증**. legal-rag 포팅은 엔지니어링 저리스크 (updated: 2026-06-30) `[EXTRACTED]`
 
 ## Entities
 
