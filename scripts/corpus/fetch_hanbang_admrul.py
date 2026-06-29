@@ -97,6 +97,8 @@ def parse_search_xml(xml_bytes: bytes) -> list[dict]:
         if tag in ("admrul",):
             name_el = item.find("행정규칙명")
             id_el = item.find("행정규칙ID")
+            seq_el = item.find("행정규칙일련번호")
+            link_el = item.find("행정규칙상세링크")
             ministry_el = item.find("소관부처명")
             kind_el = item.find("행정규칙종류")
             date_el = item.find("발령일자")
@@ -110,6 +112,10 @@ def parse_search_xml(xml_bytes: bytes) -> list[dict]:
             results.append({
                 "name": name_el.text.strip() if name_el is not None and name_el.text else "",
                 "id": id_el.text.strip() if id_el is not None and id_el.text else "",
+                # 본문조회 ID= 파라미터는 행정규칙ID 가 아니라 행정규칙일련번호 를 쓴다
+                "seq": seq_el.text.strip() if seq_el is not None and seq_el.text else "",
+                # 검색 응답이 제공하는 상세링크(OC·target·ID 임베드) — 본문조회에 직접 사용
+                "detail_link": link_el.text.strip() if link_el is not None and link_el.text else "",
                 "ministry": ministry_el.text.strip() if ministry_el is not None and ministry_el.text else "",
                 "kind": kind_el.text.strip() if kind_el is not None and kind_el.text else "",
                 "date": date_el.text.strip() if date_el is not None and date_el.text else "",
@@ -208,31 +214,41 @@ def main():
         (h for h in unique_hits if any(k in h["name"] for k in _RELEVANT)),
         unique_hits[0],  # 관련 항목 없으면 첫 번째
     )
-    print(f"\n[본문 조회] {target_item['name']} (id={target_item['id']})")
+    print(f"\n[본문 조회] {target_item['name']} (id={target_item['id']}, seq={target_item.get('seq','')})")
 
     detail_raw: bytes | None = None
     saved_path: Path | None = None
 
-    for id_param in ("ID", "MST"):
-        if not target_item["id"]:
-            break
+    # 본문조회 URL 후보: ①검색이 준 상세링크(가장 견고, ID=행정규칙일련번호 임베드)
+    #                    ②행정규칙일련번호를 ID= 로 직접 구성 (상세링크 부재 시)
+    detail_urls: list[tuple[str, str]] = []
+    link = target_item.get("detail_link", "")
+    if link:
+        full = "https://www.law.go.kr" + link
+        if "type=" not in full:
+            full += "&type=XML"
+        detail_urls.append(("상세링크", full))
+    if target_item.get("seq"):
         params = urllib.parse.urlencode({
-            "OC": oc_key,
-            "target": "admrul",
-            "type": "XML",
-            **{id_param: target_item["id"]},
+            "OC": oc_key, "target": "admrul", "type": "XML", "ID": target_item["seq"],
         })
-        url = f"{BASE_DETAIL_URL}?{params}"
-        print(f"  시도: {id_param} 파라미터  URL={mask_oc(url)}")
+        detail_urls.append(("일련번호 ID", f"{BASE_DETAIL_URL}?{params}"))
+
+    for label, url in detail_urls:
+        print(f"  시도: {label}  URL={mask_oc(url)}")
         try:
-            detail_raw = http_get(url)
-            # XML 파싱 최소 확인
-            ET.fromstring(detail_raw)
+            raw = http_get(url)
+            ET.fromstring(raw)  # XML 파싱 최소 확인
+            decoded = raw.decode("utf-8", errors="replace")
+            # 빈 응답/오류 스텁 감지 (예: "일치하는 행정규칙이 없습니다.")
+            if "일치하는" in decoded or "없습니다" in decoded or len(decoded) < 300:
+                print(f"  [WARN] {label} 빈/오류 응답 ({len(raw)} bytes) — 다음 후보 시도")
+                continue
+            detail_raw = raw
             print(f"  [OK] 본문 XML 수신 ({len(detail_raw)} bytes)")
             break
         except Exception as e:
-            print(f"  [WARN] {id_param} 실패: {e}")
-            detail_raw = None
+            print(f"  [WARN] {label} 실패: {e}")
 
     if detail_raw:
         slug = re.sub(r"[^\w가-힣-]", "_", target_item["name"])[:60]
