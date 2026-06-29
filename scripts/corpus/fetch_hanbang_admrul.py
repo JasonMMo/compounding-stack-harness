@@ -11,7 +11,6 @@ fetch_hanbang_admrul.py
 - URL 출력 시 OC 파라미터는 OC=*** 마스킹.
 """
 
-import os
 import sys
 import re
 import urllib.request
