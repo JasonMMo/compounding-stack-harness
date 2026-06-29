@@ -26,7 +26,7 @@ OUT_DIR = Path(__file__).parent.parent.parent / "out" / "corpus" / "hanbang"
 BASE_SEARCH_URL = "https://www.law.go.kr/DRF/lawSearch.do"
 BASE_DETAIL_URL = "https://www.law.go.kr/DRF/lawService.do"
 TIMEOUT = 15
-SEARCH_KEYWORDS = ["첩약", "한방", "한의", "약침"]
+SEARCH_KEYWORDS = ["첩약 급여", "한방 건강보험", "한의약", "약침"]
 
 
 # ---------------------------------------------------------------------------
@@ -80,8 +80,9 @@ def check_auth_error(xml_bytes: bytes) -> str | None:
 def parse_search_xml(xml_bytes: bytes) -> list[dict]:
     """
     lawSearch.do 응답 XML 파싱.
-    행정규칙 항목: <admrul> 하위 <admrulNm>, <admrulSeq> (또는 <mst>)
-    반환: [{"name": ..., "id": ..., "ministry": ...}, ...]
+    행정규칙 항목: <admrul> 하위 한글 태그 (실제 응답 구조 기준)
+      - 행정규칙명, 행정규칙ID, 소관부처명, 행정규칙종류, 발령일자
+    반환: [{"name": ..., "id": ..., "ministry": ..., "kind": ..., "date": ...}, ...]
     """
     try:
         root = ET.fromstring(xml_bytes)
@@ -90,17 +91,28 @@ def parse_search_xml(xml_bytes: bytes) -> list[dict]:
         return []
 
     results = []
-    # 행정규칙 항목 태그 후보
+    # 행정규칙 항목 태그 — 한글 자식 태그 우선 (실제 API 응답 구조)
     for item in root.iter():
         tag = item.tag.lower()
         if tag in ("admrul",):
-            name_el = item.find("admrulNm")
-            seq_el = item.find("admrulSeq") or item.find("mst") or item.find("admrulId")
-            ministry_el = item.find("chrDeptNm") or item.find("ministryNm")
+            name_el = item.find("행정규칙명")
+            id_el = item.find("행정규칙ID")
+            ministry_el = item.find("소관부처명")
+            kind_el = item.find("행정규칙종류")
+            date_el = item.find("발령일자")
+            # 한글 태그가 없을 때만 영문 태그 fallback
+            if name_el is None:
+                name_el = item.find("admrulNm")
+            if id_el is None:
+                id_el = item.find("admrulSeq") or item.find("mst") or item.find("admrulId")
+            if ministry_el is None:
+                ministry_el = item.find("chrDeptNm") or item.find("ministryNm")
             results.append({
                 "name": name_el.text.strip() if name_el is not None and name_el.text else "",
-                "id": seq_el.text.strip() if seq_el is not None and seq_el.text else "",
+                "id": id_el.text.strip() if id_el is not None and id_el.text else "",
                 "ministry": ministry_el.text.strip() if ministry_el is not None and ministry_el.text else "",
+                "kind": kind_el.text.strip() if kind_el is not None and kind_el.text else "",
+                "date": date_el.text.strip() if date_el is not None and date_el.text else "",
             })
 
     # fallback: 응답이 다른 구조일 수 있음 (law 항목으로 섞여서 올 때)
@@ -116,6 +128,8 @@ def parse_search_xml(xml_bytes: bytes) -> list[dict]:
                     "name": name_el.text.strip() if name_el is not None and name_el.text else "",
                     "id": seq_el.text.strip() if seq_el is not None and seq_el.text else "",
                     "ministry": ministry_el.text.strip() if ministry_el is not None and ministry_el.text else "",
+                    "kind": "",
+                    "date": "",
                     "tag": tag,
                 })
 
@@ -141,6 +155,7 @@ def main():
             "type": "XML",
             "query": keyword,
             "display": "20",
+            "search": "2",  # 2=본문검색 (1=법령명만) — 첩약/약침 등 제목 미포함 고시도 수집
         })
         url = f"{BASE_SEARCH_URL}?{params}"
         print(f"[검색] keyword={keyword!r}  URL={mask_oc(url)}")
@@ -183,8 +198,16 @@ def main():
 
     print(f"\n[합계] 고유 행정규칙 {len(unique_hits)}건 (중복 제거 후)")
 
-    # 2. 본문 조회 — 첫 번째 유효 항목
-    target_item = unique_hits[0]
+    # 2. 본문 조회 — 관련 항목 우선 선택 (남북한방문 같은 오탐 제외)
+    if not unique_hits:
+        print("\n[결론] 중복 제거 후 유효 항목 없음")
+        return
+
+    _RELEVANT = ("한의", "한방", "첩약", "약침", "한의약")
+    target_item = next(
+        (h for h in unique_hits if any(k in h["name"] for k in _RELEVANT)),
+        unique_hits[0],  # 관련 항목 없으면 첫 번째
+    )
     print(f"\n[본문 조회] {target_item['name']} (id={target_item['id']})")
 
     detail_raw: bytes | None = None
