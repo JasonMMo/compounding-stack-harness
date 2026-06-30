@@ -106,7 +106,6 @@ class RetrievedChunk:
     chunk_id: str           # hanbang_rag_document_chunk.id (UUID str) — citation anchor
     source_type: str        # 'notice'
     source_id: str          # FK UUID str (hanbang_rag_notice.id)
-    case_id: str | None     # always None for notice chunks
     chunk_index: int
     chunk_text: str
     token_count: int | None
@@ -160,7 +159,7 @@ def rrf_merge(
 # ── SQL templates ──────────────────────────────────────────────────────────────
 
 # Stage 1-B: FTS via OR-tsquery (pg_bigm absent).
-# {case_filter} is replaced at call time with either "" or "AND case_id = %s::uuid".
+# {case_filter} is always "" for notice-only source type (no case scoping for 고시).
 _FTS_OR_SQL = """
 SELECT id::text
 FROM hanbang_rag_document_chunk
@@ -185,7 +184,6 @@ SELECT
   id::text,
   source_type,
   source_id::text,
-  case_id::text,
   chunk_index,
   chunk_text,
   token_count
@@ -205,7 +203,6 @@ async def hybrid_search(
     rrf_k: int = 60,
     min_relevance: float = 0.0,
     match_mode: str = "or",
-    case_id: str | None = None,
 ) -> list[RetrievedChunk]:
     """Run hybrid FTS+ANN+RRF search and return top_k chunks.
 
@@ -222,7 +219,6 @@ async def hybrid_search(
         rrf_k:           RRF constant.
         min_relevance:   Minimum cosine relevance threshold [0.0, 1.0].
         match_mode:      'or' (default) or 'and'.
-        case_id:         Not used for notice-only source type (always None).
 
     Returns:
         List of RetrievedChunk ordered by RRF score descending.
@@ -236,12 +232,8 @@ async def hybrid_search(
             f"query_embedding must be 768-dim, got {len(query_embedding)}"
         )
 
-    if case_id is not None:
-        case_filter = "AND case_id = %s::uuid"
-        case_params: list[str] = [case_id]
-    else:
-        case_filter = ""
-        case_params = []
+    case_filter = ""
+    case_params: list[str] = []
 
     # Stage 1: FTS — dual-path (pg_bigm or tsquery)
     use_bigm = await _probe_bigm(conn)
@@ -321,10 +313,9 @@ async def hybrid_search(
                 chunk_id=row[0],
                 source_type=row[1],
                 source_id=row[2],
-                case_id=row[3],
-                chunk_index=row[4],
-                chunk_text=row[5],
-                token_count=row[6],
+                chunk_index=row[3],
+                chunk_text=row[4],
+                token_count=row[5],
                 rrf_score=score,
                 fts_rank=fts_rank,
                 ann_rank=ann_rank,
