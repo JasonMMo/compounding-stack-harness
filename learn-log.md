@@ -868,3 +868,12 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **CTO 통합검증**: case_id 잔재 0(주석조차)·py_compile 8모듈 OK·pytest **29 passed**·DDL↔코드 불일치 0. api.py L115 pyright(**docs_kwargs None 추론)·import 미해결은 config/추론 아티팩트(런타임 무해, py_compile/pytest 통과)→D3 pyrightconfig 정리.
 - 커밋: DDL 2그룹(schema/grants+seed) + api.py + ingest/retrieve/test 단독 = 6커밋 푸시.
 - **D2 미결**: VPS corpus 수집(fetch_hanbang_admrul.py, 고시 4건)→XML파싱→hanbang_rag_notice INSERT→/ingest. sql/ DB적용(psql/Coolify). bcrypt 실해시(CISO). 배포env 5종(DSN/EMBED_URL/JWT_SECRET/SERVICE_TOKEN/INGEST_ROOT). catalog.yaml 환류 후보="공개 참조데이터+RAG 청크" 패턴(CTO 승인 후).
+### Growth-134 — 한방 RAG 데모 D2(일부): corpus 라이브 수집 (founder "corpus만 먼저" 게이트)
+- founder가 D2 진행을 "corpus만 먼저 수집"으로 선택(DB적용·ingest·배포는 DSN/Coolify 준비 시점까지 대기). CTO가 VPS(187.77.140.157) SSH로 실수집 수행.
+- **스크립트 업그레이드**(fetch_hanbang_admrul.py): PoC(본문 1건 증명) → 다건 수집 + manifest.json(ingest 연결). engineer 설계 위임했으나 cwd-hook로 파일 못읽어 **dict 키 불일치**(부처명/법령일련번호 vs 실제 ministry/seq) → CTO(integrator)가 실제 키로 보정 적용(PowerShell, engineer 구조적 blind).
+- **핵심 발견 — admrul API 본문 구조**: law.go.kr `lawService.do?target=admrul&ID=<일련번호>&type=XML`이 고시별로 다르게 반환. 건강보험 「요양급여 세부사항」·「행위 급여·비급여 목록표 및 상대가치점수」는 **개정문(thin, ~3K자, 별표 미포함)만** → 데모 corpus 부적합. 의료급여수가·비급여보고·의료기술분류는 **전문(rich, 180~720K자)** 반환. **큐레이션 정답=키워드+제목필터 ✗, 검증된 seq 직접지정 ○**(TARGET_SEQS 상수).
+- **버그 수정**: empty-detector(`"없습니다" in decoded`)가 1MB 정상문서를 부분문자열 매칭으로 오탐 거부 → `len<300 or (len<2000 and marker)` 로 수정. 의료급여수가 720K 수신 회복.
+- **수집 corpus 3건(~1.97MB, 전부 보건복지부 고시 원문)**: 의료급여수가 기준(720K, 추나12·한방38·한의7) + 비급여 진료비용 보고(544K, 추나13·약침3·첩약1) + 보건의료기술 분류체계(183K, 한의5). manifest.json(seq/name/ministry/date/char_count/xml_file) parse_detail_meta로 본문 XML서 메타 추출. VPS out/corpus/hanbang/.
+- **데모-적합 caveat(founder 보고)**: 수집 corpus는 **의료급여+비급여**가 중심, 페르소나(한의원 청구담당)의 주력인 **건강보험 요양급여/상대가치점수 전문은 API 한계로 미수집**. 실제 한방 급여 내용(추나/약침/한방)은 풍부해 "고시 원문 검색" 데모 신뢰전달엔 충분하나, 건강보험 상대가치 corpus 보강은 follow-up(별표 별도 API 또는 HIRA 경로).
+- 커밋: fetch 스크립트 다건화(ed5126b 직전)+큐레이션(bf19557). 3커밋 푸시.
+- **D2 잔여(founder 게이트)**: shared postgres에 sql/ 8파일 적용(DSN) → XML 파싱→hanbang_rag_notice INSERT(manifest 기반)→/ingest 청킹·임베딩. bcrypt 실해시(CISO). 배포env 5종은 D3. VPS 잔여 probe 파일(probe*.py) 정리 필요(무해, OC 비내장).
