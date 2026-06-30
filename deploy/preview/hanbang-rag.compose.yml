@@ -1,0 +1,97 @@
+# deploy/preview/hanbang-rag.compose.yml
+# Coolify dockercompose preview — profile: hanbang-rag (한방 급여기준 RAG 데모)
+# Build context: repo root (Coolify clones whole repo; for manual `docker compose`
+# run from a checkout root, build context = that root).
+#
+# Domain: hanbang-rag.n9n.co.kr (wildcard *.n9n.co.kr → 187.77.140.157 already resolves)
+#
+# ── TOPOLOGY DECISION (Growth-136) ──────────────────────────────────────────────
+# Unlike legal-rag (db+embed+app), hanbang-rag is APP-ONLY. It REUSES legal-rag's
+# existing postgres (legaldb) and embed sidecar:
+#   - 한방 corpus (hanbang_rag_* tables, 781 chunks) was loaded INTO legaldb.
+#   - embed model (intfloat/multilingual-e5-base, 768-dim) is identical → reuse.
+# The app joins legal-rag's docker network as an EXTERNAL network, so it resolves
+# `db:5432` and `embed:8080` by service name. Zero duplication, zero coupling of
+# legal-rag's deploy (separate Coolify resource / separate redeploy).
+#
+# SECURITY:
+#   - Reuses internal-only db/embed (never externally exposed).
+#   - All secrets injected via ${...} (Coolify env panel, or a VPS-side .env for
+#     manual `docker compose`). Plain-text secret values in this file are FORBIDDEN.
+#   - HANBANG_RAG_EMBED_URL points to the internal docker service name.
+#
+# NOTE on DB user: api.py login reads hanbang_rag_user (app_user has NO grant there),
+#   so the app connects as app_service (BYPASSRLS). Acceptable for this demo because
+#   한방 고시 corpus is public (no per-user row isolation requirement). A production
+#   multi-tenant deployment would split login(app_service) vs query(app_user).
+
+services:
+
+  # ── App: FastAPI hanbang-rag (vanilla SPA at /app) ──────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: services/hanbang-rag/Dockerfile
+    image: hanbang-rag-app:latest
+    environment:
+      # Required secrets — set in Coolify env panel / VPS .env (never hardcode).
+      HANBANG_RAG_DB_DSN: ${HANBANG_RAG_DB_DSN}
+      HANBANG_RAG_JWT_SECRET: ${HANBANG_RAG_JWT_SECRET}
+      HANBANG_RAG_SERVICE_TOKEN: ${HANBANG_RAG_SERVICE_TOKEN}
+      HANBANG_RAG_INGEST_ROOT: ${HANBANG_RAG_INGEST_ROOT:-/data/hanbang-docs}
+      # Embed sidecar — internal docker service name on the shared network.
+      HANBANG_RAG_EMBED_URL: "http://embed:8080"
+      # Deployment mode: disables /docs /redoc /openapi.json.
+      HANBANG_RAG_ENV: "prod"
+      # Model version recorded in hanbang_rag_document_chunk.model_version.
+      HANBANG_RAG_EMBED_MODEL_VERSION: ${HANBANG_RAG_EMBED_MODEL_VERSION:-multilingual-e5-base}
+      # Optional tuning (config.py defaults are fine for preview).
+      HANBANG_RAG_TOP_K: ${HANBANG_RAG_TOP_K:-10}
+      HANBANG_RAG_RRF_K: ${HANBANG_RAG_RRF_K:-60}
+      HANBANG_RAG_POOL_MIN: ${HANBANG_RAG_POOL_MIN:-2}
+      HANBANG_RAG_POOL_MAX: ${HANBANG_RAG_POOL_MAX:-10}
+      PYTHONIOENCODING: "utf-8"
+    volumes:
+      # Ingest root (runtime /ingest is service-token gated; demo corpus already
+      # loaded into legaldb, so this is for completeness/future re-ingest).
+      - type: bind
+        source: /data/hanbang-rag/ingest
+        target: /data/hanbang-docs
+        read_only: false
+    networks:
+      - coolifynet
+    labels:
+      # ── Main router: hanbang-rag.n9n.co.kr → all paths ───────────────────────
+      - "traefik.enable=true"
+      - "traefik.docker.network=gwpba3e8j8upf9v0swf96wkt"
+      - "traefik.http.routers.hanbang-rag.rule=Host(`hanbang-rag.n9n.co.kr`)"
+      - "traefik.http.routers.hanbang-rag.entrypoints=https"
+      - "traefik.http.routers.hanbang-rag.tls=true"
+      - "traefik.http.routers.hanbang-rag.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.hanbang-rag.service=hanbang-rag"
+      - "traefik.http.services.hanbang-rag.loadbalancer.server.port=8000"
+      # ── /auth/login router with rate-limit middleware (hardening) ─────────────
+      - "traefik.http.middlewares.hanbang-rag-ratelimit.ratelimit.average=5"
+      - "traefik.http.middlewares.hanbang-rag-ratelimit.ratelimit.burst=10"
+      - "traefik.http.middlewares.hanbang-rag-ratelimit.ratelimit.period=1m"
+      - "traefik.http.middlewares.hanbang-rag-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth=1"
+      - "traefik.http.routers.hanbang-rag-login.rule=Host(`hanbang-rag.n9n.co.kr`) && PathPrefix(`/auth/login`)"
+      - "traefik.http.routers.hanbang-rag-login.entrypoints=https"
+      - "traefik.http.routers.hanbang-rag-login.tls=true"
+      - "traefik.http.routers.hanbang-rag-login.service=hanbang-rag"
+      - "traefik.http.routers.hanbang-rag-login.priority=100"
+      - "traefik.http.routers.hanbang-rag-login.middlewares=hanbang-rag-ratelimit"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+# Reuse legal-rag's docker network so `db` and `embed` resolve by service name.
+# coolify-proxy (Traefik v3.6) is also attached to this network → auto-routing works.
+networks:
+  coolifynet:
+    name: gwpba3e8j8upf9v0swf96wkt
+    external: true
