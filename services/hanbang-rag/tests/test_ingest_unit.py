@@ -168,10 +168,9 @@ async def test_ingest_batch_upsert_rows_correct(tmp_path):
     for row in all_rows:
         assert row[0] == "notice"          # source_type
         assert row[1] == source_id         # source_id
-        assert row[2] is None              # case_id_str (always None for notice)
-        assert isinstance(row[3], int)     # chunk_index
-        assert isinstance(row[4], str)     # chunk_text
-        assert row[8] == "v1"              # model_version
+        assert isinstance(row[2], int)     # chunk_index
+        assert isinstance(row[3], str)     # chunk_text
+        assert row[7] == "v1"              # model_version
 
 
 @pytest.mark.asyncio
