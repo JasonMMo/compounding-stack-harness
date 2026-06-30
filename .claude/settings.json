@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONIOENCODING=utf-8 python scripts/hooks/large_file_guard.py",
+            "command": "PYTHONIOENCODING=utf-8 python \"${CLAUDE_PROJECT_DIR}/scripts/hooks/large_file_guard.py\"",
             "timeout": 5
           }
         ]
@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONIOENCODING=utf-8 python scripts/hooks/output_filter.py",
+            "command": "PYTHONIOENCODING=utf-8 python \"${CLAUDE_PROJECT_DIR}/scripts/hooks/output_filter.py\"",
             "timeout": 5
           }
         ]
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONIOENCODING=utf-8 python scripts/hooks/knowledge_sync.py",
+            "command": "PYTHONIOENCODING=utf-8 python \"${CLAUDE_PROJECT_DIR}/scripts/hooks/knowledge_sync.py\"",
             "timeout": 10
           }
         ]
