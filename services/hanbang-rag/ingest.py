@@ -190,10 +190,10 @@ async def validate_source_exists(
 
 _UPSERT_CHUNK_SQL = """
 INSERT INTO hanbang_rag_document_chunk
-  (source_type, source_id, case_id, chunk_index, chunk_text, token_count,
+  (source_type, source_id, chunk_index, chunk_text, token_count,
    embedding, embedded_at, model_version)
 VALUES
-  (%s, %s, %s, %s, %s, %s, %s::vector, %s, %s)
+  (%s, %s, %s, %s, %s, %s::vector, %s, %s)
 ON CONFLICT (source_id, source_type, chunk_index)
 DO UPDATE SET
   chunk_text    = EXCLUDED.chunk_text,
@@ -220,7 +220,6 @@ async def ingest_file(
     file_path: str | Path,
     source_type: str,
     source_id: str | uuid.UUID,
-    case_id: str | uuid.UUID | None = None,
     chunk_token_target: int = 500,
     chunk_overlap_tokens: int = 50,
     batch_size: int = 32,
@@ -234,9 +233,6 @@ async def ingest_file(
       3. Batch-embed via sidecar.
       4. Upsert chunks into hanbang_rag_document_chunk.
 
-    Note: case_id parameter is accepted for schema compatibility but is always
-    None for notice source type (고시는 case 범주 없음). D1 DDL에서 컬럼 제거 고려.
-
     Raises:
         ValueError: Invalid source_type (must be 'notice').
         SourceNotFoundError: source_id not found in hanbang_rag_notice.
@@ -248,9 +244,6 @@ async def ingest_file(
         )
 
     source_id_str = str(uuid.UUID(str(source_id)))
-    # case_id is always None for notice (no case scoping for 고시)
-    case_id_str = None
-
     logger.info(
         "Ingest start: file=%s source_type=%s source_id=%s",
         file_path, source_type, source_id_str,
@@ -282,7 +275,6 @@ async def ingest_file(
             (
                 source_type,
                 source_id_str,
-                case_id_str,
                 chunk.index,
                 chunk.text,
                 chunk.token_count,
