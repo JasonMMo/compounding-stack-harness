@@ -858,3 +858,13 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - 커밋: 실질변경 3파일(ingest/retrieve/citation) 단독 + 복사본 3그룹(인프라/embed-adapter/tests) = 8커밋. master 푸시(8485419..a953a71).
 - **D1 미결(인계)**: hanbang_rag_notice 컬럼스키마 확정→citation SELECT/Citation 매핑 검증, document_chunk의 case_id 컬럼 잔재 제거여부, hanbang_rag_query_log/hanbang_rag_user DDL 신규작성, api.py 신규작성(/search,/ingest,/health,/auth/login,/documents/notice/*).
 - 비용: postgres·embed-adapter 공유로 신규 월비용 ≈ FastAPI 컨테이너 1개+서브도메인. M3(첫 버티컬→두번째) 기여.
+### Growth-133 — 한방 RAG 데모 D1: DDL(4테이블) + api.py 신규 + case_id legal 잔재 정리
+- DBA가 contract-first DDL 작성: D0 코드가 SELECT/INSERT하는 컬럼을 역도출해 `services/hanbang-rag/sql/` 8파일(00_extensions~07_seed). 매핑표 불일치 0(citation/ingest/retrieve/auth의 모든 SQL ↔ DDL 컬럼 1:1).
+- **4테이블**: hanbang_rag_notice(고시번호/소관부처/발령일자/notice_type TEXT/요약/전문) · hanbang_rag_document_chunk(vector(768) HNSW cosine + FTS simple GIN, source_type='notice' CHECK) · hanbang_rag_user(bcrypt) · hanbang_rag_query_log.
+- **RLS 단순화(CTO 지침)**: 한방 고시=공개 참조데이터(PII 0, 전 사용자 동일열람) → notice/chunk RLS 비활성(legal 청크격리 RLS 미포팅), 쓰기제한은 grant(app_user INSERT 미부여)로. query_log만 user_id RLS(Phase 2 멀티계정 대비·legal 패턴 재사용). 향후 공개 랜딩 테넌트는 CISO 게이트 후 재검토.
+- **case_id legal 잔재 clean 제거**: DBA가 DDL에서 제거 → engineer가 코드 정합. ingest UPSERT 9→8컬럼, retrieve _FETCH_CHUNKS_SQL row 재인덱싱(case_id 제거로 row[3]=chunk_index/row[4]=chunk_text/row[5]=token_count)·case_filter 고정 빈값·RetrievedChunk 필드 제거. CTO가 grep으로 제거범위 확인 후 결정(테스트 1곳만 검증=contained).
+- **engineer cwd-hook-fragility 재발**: Read/Edit 차단으로 직접수정 불가 → fail-safe 패치스크립트(`_patch_d1_case_id.py`, 미발견시 sys.exit(1)) 작성. **CTO가 라인별 검토 후 적용** — 결함 적발: open(w) newline 미지정 → Windows LF→CRLF 변환. 적용 후 3파일 LF 정규화로 교정. 메모리 [[subagent-cwd-hook-fragility]] 재확증.
+- **api.py 신규(~310줄)**: legal api.py(63KB) 모델로 lean 재작성. /auth/login(hanbang_rag_user+JWT)·/health·/health/detail·/ingest(notice 고정, service token)·/search(retrieve→citation→log_query, rls_session)·/documents/notice/{id}(full_text 원문, 인터뷰 신뢰전달). case/party/attorney/document-upload 엔드포인트 전부 제외. retrieve/citation/ingest/auth/db 와이어만(재구현 0).
+- **CTO 통합검증**: case_id 잔재 0(주석조차)·py_compile 8모듈 OK·pytest **29 passed**·DDL↔코드 불일치 0. api.py L115 pyright(**docs_kwargs None 추론)·import 미해결은 config/추론 아티팩트(런타임 무해, py_compile/pytest 통과)→D3 pyrightconfig 정리.
+- 커밋: DDL 2그룹(schema/grants+seed) + api.py + ingest/retrieve/test 단독 = 6커밋 푸시.
+- **D2 미결**: VPS corpus 수집(fetch_hanbang_admrul.py, 고시 4건)→XML파싱→hanbang_rag_notice INSERT→/ingest. sql/ DB적용(psql/Coolify). bcrypt 실해시(CISO). 배포env 5종(DSN/EMBED_URL/JWT_SECRET/SERVICE_TOKEN/INGEST_ROOT). catalog.yaml 환류 후보="공개 참조데이터+RAG 청크" 패턴(CTO 승인 후).
