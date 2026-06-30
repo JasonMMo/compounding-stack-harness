@@ -30,6 +30,13 @@ TIMEOUT = 15
 SEARCH_KEYWORDS = ["첩약 급여", "한방 건강보험", "한의약", "약침"]
 # 본문 조회 최대 건수 (law.go.kr 호출 폭주 방지)
 MAX_FULLTEXT = 12
+# 데모 corpus: 검증된 한방 급여 관련 "전문(rich)" 고시 일련번호 (CTO 큐레이션 2026-06-30)
+#   개정문(thin, 별표 미포함)만 반환하는 건강보험 세부사항/상대가치점수는 제외.
+TARGET_SEQS = [
+    "2100000270620",  # 의료급여수가의 기준 및 일반기준 (720K, 추나/한의/한방 급여 수가·기준)
+    "2100000274952",  # 비급여 진료비용 등의 보고 및 공개에 관한 기준 (544K, 약침/첩약/추나 비급여)
+    "2100000259168",  # 보건의료기술 분류체계에 관한 고시 (183K, 한의 의료기술 분류)
+]
 
 
 # ---------------------------------------------------------------------------
@@ -148,6 +155,27 @@ def parse_search_xml(xml_bytes: bytes) -> list[dict]:
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
+def parse_detail_meta(xml_bytes: bytes) -> dict:
+    """행정규칙 본문 XML의 행정규칙기본정보에서 메타 추출."""
+    meta = {"name": "", "seq": "", "ministry": "", "kind": "", "date": ""}
+    try:
+        root = ET.fromstring(xml_bytes)
+    except ET.ParseError:
+        return meta
+    base = root.find(".//행정규칙기본정보")
+    if base is None:
+        return meta
+    def _t(tag: str) -> str:
+        el = base.find(tag)
+        return el.text.strip() if el is not None and el.text else ""
+    meta["name"] = _t("행정규칙명")
+    meta["seq"] = _t("행정규칙일련번호")
+    meta["ministry"] = _t("소관부처명")
+    meta["kind"] = _t("행정규칙종류")
+    meta["date"] = _t("발령일자")
+    return meta
+
+
 def fetch_fulltext(item: dict, oc_key: str) -> "bytes | None":
     """단일 행정규칙 항목의 본문 XML을 조회한다.
 
@@ -173,7 +201,7 @@ def fetch_fulltext(item: dict, oc_key: str) -> "bytes | None":
             raw = http_get(url)
             ET.fromstring(raw)
             decoded = raw.decode("utf-8", errors="replace")
-            if "일치하는" in decoded or "없습니다" in decoded or len(decoded) < 300:
+            if len(decoded) < 300 or (len(decoded) < 2000 and ("일치하는" in decoded or "없습니다" in decoded)):
                 print(f"    [WARN] {label} 빈/오류 응답 ({len(raw)} bytes) — 다음 후보")
                 continue
             print(f"    [OK] 본문 XML 수신 ({len(raw)} bytes)")
@@ -242,43 +270,34 @@ def main():
 
     print(f"\n[합계] 고유 행정규칙 {len(unique_hits)}건 (중복 제거 후)")
 
-    # 2. 본문 조회 — 관련 항목 전부(최대 MAX_FULLTEXT 건) 수집
-    if not unique_hits:
-        print("\n[결론] 중복 제거 후 유효 항목 없음")
-        return
-
-    _RELEVANT = ("한의", "한방", "첩약", "약침", "한의약")
-    relevant = [h for h in unique_hits if any(k in h["name"] for k in _RELEVANT)][:MAX_FULLTEXT]
-    if not relevant:
-        print("\n[결론] 관련 행정규칙 없음 (이름 필터 후 0건)")
-        return
-
-    print(f"\n[본문 조회] 관련 {len(relevant)}건 (최대 {MAX_FULLTEXT})")
+    # 2. 본문 조회 — 큐레이션된 한방 급여 전문 고시(TARGET_SEQS) 수집
+    #    키워드 검색(위)은 발견/로깅용. 실제 corpus 는 검증된 전문 고시로 큐레이션.
+    print(f"\n[큐레이션 수집] TARGET_SEQS {len(TARGET_SEQS)}건 (검증된 전문 고시), 검색발견 {len(unique_hits)}건")
     manifest: list[dict] = []
     name_counter: dict[str, int] = {}
 
-    for h in relevant:
-        name = h.get("name", "unknown")
-        print(f"\n  - {name[:50]} (seq={h.get('seq','')})")
-        body = fetch_fulltext(h, oc_key)
+    for seq in TARGET_SEQS:
+        body = fetch_fulltext({"seq": seq, "detail_link": ""}, oc_key)
         if body is None:
-            print("    [SKIP] 본문 없음 — 다음 항목")
+            print(f"  [SKIP] seq={seq} 본문 없음")
             continue
+        meta = parse_detail_meta(body)
+        name = meta["name"] or f"admrul_{seq}"
+        print(f"  - {name[:50]} (seq={seq})")
         slug = re.sub(r"[^\w가-힣-]", "_", name)[:60] or "notice"
         n = name_counter.get(slug, 0)
         name_counter[slug] = n + 1
         fname = f"{slug}.xml" if n == 0 else f"{slug}_{n + 1}.xml"
-        out_path = OUT_DIR / fname
-        out_path.write_bytes(body)
+        (OUT_DIR / fname).write_bytes(body)
         char_count = len(body.decode("utf-8", errors="replace"))
         manifest.append({
             "name": name,
-            "id": h.get("id", ""),
-            "seq": h.get("seq", ""),
-            "ministry": h.get("ministry", ""),
-            "kind": h.get("kind", ""),
-            "date": h.get("date", ""),
-            "keyword": h.get("keyword", ""),
+            "id": "",
+            "seq": seq,
+            "ministry": meta["ministry"],
+            "kind": meta["kind"],
+            "date": meta["date"],
+            "keyword": "curated",
             "char_count": char_count,
             "xml_file": fname,
         })
@@ -294,9 +313,9 @@ def main():
         print(f"  - {m['name'][:46]}  [{m['ministry']}/{m['date']}]  {m['char_count']:,}자  → {m['xml_file']}")
     print("\n=== 판정 ===")
     if manifest:
-        print(f"corpus 수집: 확증  (검색 {len(unique_hits)}건, 본문 {len(manifest)}건 저장)")
+        print(f"corpus 수집: 확증  (큐레이션 {len(manifest)}건 저장)")
     else:
-        print(f"corpus 수집: 본문 0건  (검색 {len(unique_hits)}건, 본문조회 전부 실패)")
+        print("corpus 수집: 실패  (TARGET_SEQS 본문조회 전부 실패)")
 
 
 if __name__ == "__main__":
