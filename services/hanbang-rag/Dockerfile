@@ -5,9 +5,9 @@
 #     context: .
 #     dockerfile: services/hanbang-rag/Dockerfile
 #
-# D0 simplification: legal-pro React build stage removed.
-# Vanilla SPA (web/) will be added in D3.
-# D3 TODO: COPY services/hanbang-rag/web/ ./web/
+# Single-stage: FastAPI + vanilla SPA. No React build stage (Lite tier).
+# The vanilla SPA lives at services/hanbang-rag/web/ and is copied as part of
+# `COPY services/hanbang-rag/ .` below — api.py mounts it at /app.
 
 FROM python:3.11-slim
 
@@ -28,5 +28,4 @@ USER appuser
 
 EXPOSE 8000
 
-# D1 TODO: CMD targets api:app once api.py is written.
-CMD ["python", "-m", "pytest", "--co", "-q"]
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
