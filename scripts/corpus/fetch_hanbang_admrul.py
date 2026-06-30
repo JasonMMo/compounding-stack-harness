@@ -16,6 +16,7 @@ import re
 import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
+import json
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -27,6 +28,8 @@ BASE_SEARCH_URL = "https://www.law.go.kr/DRF/lawSearch.do"
 BASE_DETAIL_URL = "https://www.law.go.kr/DRF/lawService.do"
 TIMEOUT = 15
 SEARCH_KEYWORDS = ["첩약 급여", "한방 건강보험", "한의약", "약침"]
+# 본문 조회 최대 건수 (law.go.kr 호출 폭주 방지)
+MAX_FULLTEXT = 12
 
 
 # ---------------------------------------------------------------------------
@@ -145,6 +148,41 @@ def parse_search_xml(xml_bytes: bytes) -> list[dict]:
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
+def fetch_fulltext(item: dict, oc_key: str) -> "bytes | None":
+    """단일 행정규칙 항목의 본문 XML을 조회한다.
+
+    ① 검색이 준 상세링크(OC·ID 임베드) → ② 일련번호 ID 직접구성 폴백.
+    빈/오류 응답은 None. SECURITY: oc_key 는 URL 에만, 로그/반환에 노출 금지.
+    """
+    detail_urls: list[tuple[str, str]] = []
+    link = item.get("detail_link", "")
+    if link:
+        full = "https://www.law.go.kr" + link
+        if "type=" not in full:
+            full += "&type=XML"
+        detail_urls.append(("상세링크", full))
+    if item.get("seq"):
+        params = urllib.parse.urlencode({
+            "OC": oc_key, "target": "admrul", "type": "XML", "ID": item["seq"],
+        })
+        detail_urls.append(("일련번호 ID", f"{BASE_DETAIL_URL}?{params}"))
+
+    for label, url in detail_urls:
+        print(f"    시도: {label}  URL={mask_oc(url)}")
+        try:
+            raw = http_get(url)
+            ET.fromstring(raw)
+            decoded = raw.decode("utf-8", errors="replace")
+            if "일치하는" in decoded or "없습니다" in decoded or len(decoded) < 300:
+                print(f"    [WARN] {label} 빈/오류 응답 ({len(raw)} bytes) — 다음 후보")
+                continue
+            print(f"    [OK] 본문 XML 수신 ({len(raw)} bytes)")
+            return raw
+        except Exception as e:
+            print(f"    [WARN] {label} 실패: {e}")
+    return None
+
+
 def main():
     oc_key = load_oc_key()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -204,71 +242,61 @@ def main():
 
     print(f"\n[합계] 고유 행정규칙 {len(unique_hits)}건 (중복 제거 후)")
 
-    # 2. 본문 조회 — 관련 항목 우선 선택 (남북한방문 같은 오탐 제외)
+    # 2. 본문 조회 — 관련 항목 전부(최대 MAX_FULLTEXT 건) 수집
     if not unique_hits:
         print("\n[결론] 중복 제거 후 유효 항목 없음")
         return
 
     _RELEVANT = ("한의", "한방", "첩약", "약침", "한의약")
-    target_item = next(
-        (h for h in unique_hits if any(k in h["name"] for k in _RELEVANT)),
-        unique_hits[0],  # 관련 항목 없으면 첫 번째
-    )
-    print(f"\n[본문 조회] {target_item['name']} (id={target_item['id']}, seq={target_item.get('seq','')})")
+    relevant = [h for h in unique_hits if any(k in h["name"] for k in _RELEVANT)][:MAX_FULLTEXT]
+    if not relevant:
+        print("\n[결론] 관련 행정규칙 없음 (이름 필터 후 0건)")
+        return
 
-    detail_raw: bytes | None = None
-    saved_path: Path | None = None
+    print(f"\n[본문 조회] 관련 {len(relevant)}건 (최대 {MAX_FULLTEXT})")
+    manifest: list[dict] = []
+    name_counter: dict[str, int] = {}
 
-    # 본문조회 URL 후보: ①검색이 준 상세링크(가장 견고, ID=행정규칙일련번호 임베드)
-    #                    ②행정규칙일련번호를 ID= 로 직접 구성 (상세링크 부재 시)
-    detail_urls: list[tuple[str, str]] = []
-    link = target_item.get("detail_link", "")
-    if link:
-        full = "https://www.law.go.kr" + link
-        if "type=" not in full:
-            full += "&type=XML"
-        detail_urls.append(("상세링크", full))
-    if target_item.get("seq"):
-        params = urllib.parse.urlencode({
-            "OC": oc_key, "target": "admrul", "type": "XML", "ID": target_item["seq"],
+    for h in relevant:
+        name = h.get("name", "unknown")
+        print(f"\n  - {name[:50]} (seq={h.get('seq','')})")
+        body = fetch_fulltext(h, oc_key)
+        if body is None:
+            print("    [SKIP] 본문 없음 — 다음 항목")
+            continue
+        slug = re.sub(r"[^\w가-힣-]", "_", name)[:60] or "notice"
+        n = name_counter.get(slug, 0)
+        name_counter[slug] = n + 1
+        fname = f"{slug}.xml" if n == 0 else f"{slug}_{n + 1}.xml"
+        out_path = OUT_DIR / fname
+        out_path.write_bytes(body)
+        char_count = len(body.decode("utf-8", errors="replace"))
+        manifest.append({
+            "name": name,
+            "id": h.get("id", ""),
+            "seq": h.get("seq", ""),
+            "ministry": h.get("ministry", ""),
+            "kind": h.get("kind", ""),
+            "date": h.get("date", ""),
+            "keyword": h.get("keyword", ""),
+            "char_count": char_count,
+            "xml_file": fname,
         })
-        detail_urls.append(("일련번호 ID", f"{BASE_DETAIL_URL}?{params}"))
 
-    for label, url in detail_urls:
-        print(f"  시도: {label}  URL={mask_oc(url)}")
-        try:
-            raw = http_get(url)
-            ET.fromstring(raw)  # XML 파싱 최소 확인
-            decoded = raw.decode("utf-8", errors="replace")
-            # 빈 응답/오류 스텁 감지 (예: "일치하는 행정규칙이 없습니다.")
-            if "일치하는" in decoded or "없습니다" in decoded or len(decoded) < 300:
-                print(f"  [WARN] {label} 빈/오류 응답 ({len(raw)} bytes) — 다음 후보 시도")
-                continue
-            detail_raw = raw
-            print(f"  [OK] 본문 XML 수신 ({len(detail_raw)} bytes)")
-            break
-        except Exception as e:
-            print(f"  [WARN] {label} 실패: {e}")
+    manifest_path = OUT_DIR / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
-    if detail_raw:
-        slug = re.sub(r"[^\w가-힣-]", "_", target_item["name"])[:60]
-        saved_path = OUT_DIR / f"{slug}.xml"
-        saved_path.write_bytes(detail_raw)
-        char_count = len(detail_raw.decode("utf-8", errors="replace"))
-        print(f"\n[저장] {saved_path}")
-        print(f"  본문 글자수(UTF-8 근사): {char_count:,}")
-    else:
-        print("\n[본문] 저장 실패 — ID 파라미터 방식 둘 다 실패")
-
-    # 3. 판정
+    # 3. 요약 + 판정
+    print(f"\n=== 수집 요약 ({len(manifest)}건, manifest → {manifest_path.name}) ===")
+    for m in manifest:
+        print(f"  - {m['name'][:46]}  [{m['ministry']}/{m['date']}]  {m['char_count']:,}자  → {m['xml_file']}")
     print("\n=== 판정 ===")
-    hit_count = len(unique_hits)
-    if detail_raw and saved_path:
-        print(f"게이트② corpus 수집경로: 확증  (검색 {hit_count}건, 본문 1건 저장 완료)")
-    elif hit_count > 0:
-        print(f"게이트② corpus 수집경로: 부분확증  (검색 {hit_count}건 찾음, 본문 저장 실패)")
+    if manifest:
+        print(f"corpus 수집: 확증  (검색 {len(unique_hits)}건, 본문 {len(manifest)}건 저장)")
     else:
-        print("게이트② corpus 수집경로: 실패  (검색 결과 없음)")
+        print(f"corpus 수집: 본문 0건  (검색 {len(unique_hits)}건, 본문조회 전부 실패)")
 
 
 if __name__ == "__main__":
