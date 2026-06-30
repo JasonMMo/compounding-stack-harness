@@ -73,8 +73,35 @@ ssh root@187.77.140.157 'cd /root/hanbang-deploy && docker compose -f hanbang-ra
 
 ## 7. 잔여/주의
 
-- corpus 일부 청크가 고시 표·서식(─ ┃ 210㎜×297㎜) 텍스트 포함 — ANN 이 의미청크 보완하나
-  build-time 청크 정제로 품질 향상 여지(후속).
+- ✅ **표·서식 청크 정제 완료 (Growth-137, 2026-06-30)** — `ingest_hanbang_notices.py`
+  의 `clean_admrul_text()` 가 별표 박스드로잉 테두리(─━│┃┼)·용지규격을 제거(셀 텍스트
+  보존). 재인제스트 결과 **청크 781→125**, 박스문자 chunk·full_text 모두 0, 5시나리오
+  라이브 PASS·발췌문 청결. 재인제스트 절차: §8 참조.
 - 한국어 simple-FTS 부분문자열 미스(첩약 등) — pg_bigm 바이그램은 legal-rag 와 공유 이미지라
   동일 개선 트랙. ([[legal-rag-korean-lexical-pass]])
 - 프로덕션 전: STORAGE 바디제한(Traefik)·app_service→app_user 분리 검토.
+
+## 8. corpus 재인제스트 (정제 로더 변경 시)
+
+corpus 정제 로직(`scripts/corpus/ingest_hanbang_notices.py`)을 바꾼 뒤 라이브 반영:
+
+```bash
+# 1) 갱신 로더를 VPS 인제스트 디렉터리에 동기화
+scp -i ~/.ssh/n9n_preview_ed25519 scripts/corpus/ingest_hanbang_notices.py \
+    root@187.77.140.157:/root/hanbang-poc/ingest/
+
+# 2) gwpba3e8 네트워크 one-off 컨테이너로 재인제스트 (DSN 은 실행중 app env 에서
+#    읽어 변수로만 전달 — stdout 노출 0). app 이미지에 psycopg+httpx 포함.
+ssh -i ~/.ssh/n9n_preview_ed25519 root@187.77.140.157 '
+  DSN=$(docker inspect hanbang-deploy-app-1 --format "{{range .Config.Env}}{{println .}}{{end}}" \
+        | grep "^HANBANG_RAG_DB_DSN=" | cut -d= -f2-)
+  docker run --rm --network gwpba3e8j8upf9v0swf96wkt \
+    -v /root/hanbang-poc/ingest:/app \
+    -v /root/hanbang-poc/out/corpus/hanbang:/corpus:ro \
+    -e DSN="$DSN" -e EMBED=http://embed:8080 -e CORPUS=/corpus \
+    -e MODEL=multilingual-e5-base -e PYTHONIOENCODING=utf-8 \
+    -w /app hanbang-rag-app:latest python ingest_hanbang_notices.py'
+```
+
+ingest.py 의 ON CONFLICT upsert + orphan 삭제(`chunk_index >= len(chunks)`)가 정합성을
+보장하므로 청크 수가 줄어도 고아 청크 없음. 앱 재시작 불요(쿼리시 DB 직독). 검증: §5.
