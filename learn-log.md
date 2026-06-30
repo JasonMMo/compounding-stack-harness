@@ -847,3 +847,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
   - `.gitignore`
   - `knowledge/wiki/concepts/asset-search-architecture.md`
   - `knowledge/wiki/index.md`
+
+### Growth-132 — 한방 RAG 데모 D0: services/hanbang-rag/ 포크 (legal-rag → 한방 버티컬)
+- CTO greenlight 3결정(테이블 hanbang_rag_*, auth+단일데모계정, FastAPI독립+postgres/embed공유) 확정 후 D0 착수. engineer-agent 위임.
+- **재구현 금지 준수**: ingest/retrieve/citation/auth/db/embed_client/config + embed-adapter 카피 후 최소 SQL 교체만. 검색 파이프라인(FTS+ANN+RRF) 완전 재사용.
+- **테이블 네이밍(founder 확정)**: `hanbang_rag_notice` / `hanbang_rag_document_chunk` / `hanbang_rag_user` / `hanbang_rag_query_log` (서비스 슬러그=테이블 프리픽스 일치).
+- **단일 소스타입 단순화**: legal-rag의 precedent+case_document 2갈래 → 한방 고시(notice) 1갈래. ingest의 _CHECK_CASE_DOC/_UPDATE_CASE_DOC_STATUS 분기·citation의 _RESOLVE_CASE_DOC 분기·Citation case 필드 전부 제거. Citation 메타=고시번호/소관부처/발령일자/요약.
+- **D0 범위 경계**: api.py(D1 신규작성)·web/(D3 카피교체) 의도적 제외 — legal 엔티티 의존성이 pytest를 깨뜨리므로 파이프라인 코어+단위테스트만.
+- **CTO 통합검증(보고 비신뢰, 독립 재현)**: ①잔존 legal_ 테이블 참조 0(주석 3건뿐) ②hanbang_rag_ 34곳 적용 ③pytest **29 passed** 독립 재현 ④api.py/web 부재 확인. PASS.
+- 커밋: 실질변경 3파일(ingest/retrieve/citation) 단독 + 복사본 3그룹(인프라/embed-adapter/tests) = 8커밋. master 푸시(8485419..a953a71).
+- **D1 미결(인계)**: hanbang_rag_notice 컬럼스키마 확정→citation SELECT/Citation 매핑 검증, document_chunk의 case_id 컬럼 잔재 제거여부, hanbang_rag_query_log/hanbang_rag_user DDL 신규작성, api.py 신규작성(/search,/ingest,/health,/auth/login,/documents/notice/*).
+- 비용: postgres·embed-adapter 공유로 신규 월비용 ≈ FastAPI 컨테이너 1개+서브도메인. M3(첫 버티컬→두번째) 기여.
