@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -37,6 +38,34 @@ MODEL = os.environ.get("MODEL", "multilingual-e5-base")
 
 # admrul content-bearing tags (metadata excluded)
 CONTENT_TAGS = {"조문내용", "별표", "부칙내용"}
+
+# ── 별표/서식 표-괘선 정제 (CTO 검증 2026-06-30, 실 corpus 3건) ──────────────
+# law.go.kr 별표는 박스드로잉 문자로 표를 그린다. 셀 텍스트는 보존하고 테두리만
+# 제거 → 임베딩/FTS/발췌문 품질 향상. 검증: 박스문자 195K→0, 핵심토큰(청구처·
+# 연번·추나·상대가치·약침·첩약·대분류) 출현수 raw==clean(전부 보존), corpus 14~22%로 축소.
+_BOX_CHARS = "─━│┃┌┐└┘├┤┬┴┼╋┏┓┗┛┣┫┳┻═║╔╗╚╝╠╣╦╩╬"
+_BOX_RE = re.compile("[" + re.escape(_BOX_CHARS) + "]")
+_RULE_LINE_RE = re.compile(r"^[\s" + re.escape(_BOX_CHARS) + r"]+$")
+_PAPERSIZE_RE = re.compile(r"\d+\s*㎜\s*[×xX*]\s*\d+\s*㎜(?:\[[^\]]*\])?")
+_MULTISPACE_RE = re.compile(r"[ \t]{2,}")
+_MULTINEWLINE_RE = re.compile(r"\n{3,}")
+
+
+def clean_admrul_text(text: str) -> str:
+    """별표/서식의 표-괘선·용지규격 보일러플레이트를 제거(셀 텍스트는 보존)."""
+    out = []
+    for line in text.split("\n"):
+        if _RULE_LINE_RE.match(line):
+            continue  # 순수 표-괘선 줄 → 제거
+        line = _BOX_RE.sub(" ", line)       # 테두리 → 공백 (셀 텍스트 보존)
+        line = _PAPERSIZE_RE.sub("", line)  # 용지규격(210㎜×297㎜ 등) 제거
+        line = _MULTISPACE_RE.sub(" ", line).rstrip()
+        if line.strip():
+            out.append(line)
+    cleaned = "\n".join(out)
+    cleaned = _MULTINEWLINE_RE.sub("\n\n", cleaned)
+    return cleaned.strip()
+
 
 _UPSERT_NOTICE = """
 INSERT INTO hanbang_rag_notice
@@ -82,7 +111,7 @@ def parse_xml(path: Path):
             t = "".join(el.itertext()).strip()
             if t:
                 parts.append(t)
-    body = "\n\n".join(parts)
+    body = clean_admrul_text("\n\n".join(parts))
     return name, ministry, issued_date, notice_number, body
 
 
