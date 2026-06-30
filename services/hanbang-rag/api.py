@@ -42,6 +42,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import auth
@@ -499,3 +500,12 @@ async def get_notice(
         summary=row[4],
         full_text=row[5],
     )
+
+
+# ── Static frontend ────────────────────────────────────────────────────────────
+# Mounted last so API routes take precedence over the catch-all html=True handler.
+# Serves the vanilla JS SPA at /app/ (index.html). Conditional mount: if web/ is
+# absent (e.g. dev checkout without built assets) the API still boots cleanly.
+_WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+if os.path.isdir(_WEB_DIR):
+    app.mount("/app", StaticFiles(directory=_WEB_DIR, html=True), name="web")
