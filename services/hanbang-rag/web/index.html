@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="한의원 건강보험·의료급여 고시 검색 — 사내 서버 전용">
+  <title>한방 급여기준 검색 시스템</title>
+  <link rel="stylesheet" href="/app/styles/tokens.css">
+  <link rel="stylesheet" href="/app/styles/app.css">
+</head>
+<body>
+  <!-- 접근성: 키보드 포커스 건너뛰기 -->
+  <a class="skip-link" href="#main-content">본문으로 이동</a>
+
+  <!-- ══ 로그인 화면 ═════════════════════════════════════════════════════════ -->
+  <div id="screen-login" class="login-wrapper" role="main">
+    <div class="login-card">
+      <div class="login-card__header">
+        <div class="login-card__wordmark">한방 급여기준 검색</div>
+        <div class="login-card__subtitle">한의원 사내 전용 · 정부 고시 기반</div>
+      </div>
+      <div class="login-card__body">
+        <div
+          id="login-alert"
+          class="login-card__alert"
+          role="alert"
+          hidden
+          aria-live="assertive"
+        ></div>
+        <form id="login-form" novalidate>
+          <div class="form-field">
+            <label class="form-label" for="login-email">이메일</label>
+            <input
+              class="form-input"
+              type="email"
+              id="login-email"
+              name="email"
+              autocomplete="email"
+              autocapitalize="none"
+              spellcheck="false"
+              required
+              aria-required="true"
+            >
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="login-password">비밀번호</label>
+            <input
+              class="form-input"
+              type="password"
+              id="login-password"
+              name="password"
+              autocomplete="current-password"
+              required
+              aria-required="true"
+            >
+          </div>
+          <button
+            type="submit"
+            class="btn btn--primary btn--full"
+            id="login-btn"
+          >로그인</button>
+        </form>
+      </div>
+      <div class="login-card__footer">
+        사내 서버에서 동작합니다.<br>
+        외부 네트워크로 데이터가 전송되지 않습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 메인 앱 화면 (인증 후) ════════════════════════════════════════════ -->
+  <div id="screen-app" class="app-root" hidden>
+
+    <!-- 헤더 -->
+    <header class="app-header" role="banner">
+      <span class="header-wordmark">한방 급여기준 검색</span>
+      <div class="header-controls">
+        <span class="header-user" id="header-username" aria-label="로그인한 사용자"></span>
+        <button
+          type="button"
+          class="btn btn--ghost btn--sm"
+          id="btn-logout"
+          aria-label="로그아웃"
+        >로그아웃</button>
+      </div>
+    </header>
+
+    <!-- ── 검색 패널 ──────────────────────────────────────────────────────── -->
+    <div id="panel-search">
+      <!-- 건강 배너: IT 담당자용 -->
+      <div
+        id="health-banner"
+        class="health-banner health-banner--ok"
+        role="status"
+        aria-live="polite"
+        hidden
+      ></div>
+
+      <!-- 검색창 섹션 -->
+      <section class="search-bar-section" aria-label="검색">
+        <div class="search-bar">
+          <textarea
+            class="search-bar__input"
+            id="search-input"
+            rows="2"
+            placeholder="예: 추나요법 급여 기준, 비급여 진료비용 보고 대상, 의료급여 본인부담 등 자연어로 입력하세요"
+            aria-label="한방 급여기준 고시 검색"
+            aria-multiline="true"
+            spellcheck="false"
+            autocapitalize="none"
+          ></textarea>
+          <button
+            type="button"
+            class="btn btn--primary search-bar__btn"
+            id="btn-search"
+          >검색</button>
+        </div>
+        <div class="search-bar-controls">
+          <select
+            class="search-param-select"
+            id="search-top-k"
+            aria-label="결과 수"
+          >
+            <option value="5">결과 5건</option>
+            <option value="10" selected>결과 10건</option>
+            <option value="20">결과 20건</option>
+          </select>
+          <div
+            class="match-mode-toggle"
+            role="group"
+            aria-label="검색 매치 방식"
+          >
+            <button
+              type="button"
+              class="match-mode-btn"
+              id="match-mode-and"
+              data-mode="and"
+              aria-pressed="false"
+            >모두 포함</button>
+            <button
+              type="button"
+              class="match-mode-btn match-mode-btn--active"
+              id="match-mode-or"
+              data-mode="or"
+              aria-pressed="true"
+            >하나라도</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 결과 섹션 -->
+      <main class="page-main" id="main-content">
+        <section
+          class="results-section results--empty-initial"
+          id="results-section"
+          aria-label="검색 결과"
+          aria-live="polite"
+        >
+          <div class="results-header" id="results-header" hidden></div>
+          <div class="results-message" id="results-message" role="status">
+            검색어를 입력하면 관련 고시를 출처와 함께 보여줍니다.
+          </div>
+          <div
+            class="example-queries"
+            id="example-queries"
+            aria-label="예시 검색어"
+          ></div>
+          <ul class="results-list" id="results-list" aria-label="인용 결과 목록"></ul>
+        </section>
+      </main>
+    </div>
+
+  </div><!-- /#screen-app -->
+
+  <!-- ══ 원문 슬라이드오버 드로어 ══════════════════════════════════════════ -->
+  <div
+    id="doc-drawer-backdrop"
+    class="doc-drawer-backdrop"
+    aria-hidden="true"
+  ></div>
+  <aside
+    id="doc-drawer"
+    class="doc-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="doc-drawer-title"
+    aria-label="고시 원문 보기"
+    hidden
+  >
+    <div class="doc-drawer__header">
+      <div class="doc-drawer__title-block">
+        <div class="doc-drawer__title" id="doc-drawer-title">고시 원문 보기</div>
+        <div class="doc-drawer__citation" id="doc-drawer-citation" hidden></div>
+      </div>
+      <button
+        type="button"
+        class="doc-drawer__close"
+        id="doc-drawer-close"
+        aria-label="닫기"
+      >&#x2715;</button>
+    </div>
+    <div class="doc-drawer__meta" id="doc-drawer-meta" hidden></div>
+    <div class="doc-drawer__body" id="doc-drawer-body">
+      <div class="doc-drawer__status" id="doc-drawer-status">불러오는 중...</div>
+    </div>
+  </aside>
+
+  <script src="/app/app.js"></script>
+</body>
+</html>
