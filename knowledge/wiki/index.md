@@ -7,6 +7,7 @@
 - [lawfirm-demo profile](../../profiles/lawfirm-demo.yaml) — 30명 법무법인, legal vertical M3 첫 고객 프로파일 초안 (updated: 2026-06-11) `[INFERRED]`
 - [deep-research-design-cloud-2026-06](sources/deep-research-design-cloud-2026-06.md) — claude.ai/design 분리·통합 deep-research(8 findings, 1차출처 12종) (updated: 2026-06-26) `[EXTRACTED]`
 - [deep-research-hanbang-rag-2026-06](sources/deep-research-hanbang-rag-2026-06.md) — 한의원 self-host RAG 시장성·규제·경쟁(1차) + 게이트①②(2차): **2차에서 두 게이트 조건부 통과 — 규제는 법률상 비의료기기 유력(가이드라인1건 확인 남음), corpus는 law.go.kr API 합법경로 확인(HIRA 스크레이핑 회피)**. WTP/경쟁은 별도 트랙 (updated: 2026-06-30) `[EXTRACTED]`
+- [deep-research-hanbang-billing-pivot-2026-07](sources/deep-research-hanbang-billing-pivot-2026-07.md) — "공개 급여기준 검색 → 사적 청구·삭감 인텔리전스" 피벗 근거 조사: **피벗 근거 불충분**. 삭감 페인 크기 미확증·확증 분쟁은 전부 자보채널(건보 아님)·self-host 법적필연성 반대방향(소상공인 면제)·무료AI 정확도 미조사. 한의맥이 base 독점(삭감기능 백지) (updated: 2026-07-01) `[EXTRACTED]`
 
 ## Entities
 
