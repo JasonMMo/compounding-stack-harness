@@ -8,6 +8,7 @@
 - [deep-research-design-cloud-2026-06](sources/deep-research-design-cloud-2026-06.md) — claude.ai/design 분리·통합 deep-research(8 findings, 1차출처 12종) (updated: 2026-06-26) `[EXTRACTED]`
 - [deep-research-hanbang-rag-2026-06](sources/deep-research-hanbang-rag-2026-06.md) — 한의원 self-host RAG 시장성·규제·경쟁(1차) + 게이트①②(2차): **2차에서 두 게이트 조건부 통과 — 규제는 법률상 비의료기기 유력(가이드라인1건 확인 남음), corpus는 law.go.kr API 합법경로 확인(HIRA 스크레이핑 회피)**. WTP/경쟁은 별도 트랙 (updated: 2026-06-30) `[EXTRACTED]`
 - [deep-research-hanbang-billing-pivot-2026-07](sources/deep-research-hanbang-billing-pivot-2026-07.md) — "공개 급여기준 검색 → 사적 청구·삭감 인텔리전스" 피벗 근거 조사: **피벗 근거 불충분**. 삭감 페인 크기 미확증·확증 분쟁은 전부 자보채널(건보 아님)·self-host 법적필연성 반대방향(소상공인 면제)·무료AI 정확도 미조사. 한의맥이 base 독점(삭감기능 백지) (updated: 2026-07-01) `[EXTRACTED]`
+- [deep-research-benchmark-hunt-2026-07](sources/deep-research-benchmark-hunt-2026-07.md) — "돈 버는 앱 벤치마킹→5% 개선" 새 후보 발굴(108 agent): **깨끗한 새 SMB 버티컬 없음**. 강한 증거 수렴은 금융권 망분리(전자금융감독규정시행세칙 2026-04-20) 1개뿐인데 WTP 직접증거0·엔터프라이즈=SMB포지션 충돌. 팀챗/비번/개발툴=레드오션, 병원망분리·NineHire·SKT CCaaS=반증. **피벗 금지, 리소스는 legal-rag 유지** (updated: 2026-07-01) `[EXTRACTED]`
 - [deep-research-rag-revenue-pipeline-2026-07](sources/deep-research-rag-revenue-pipeline-2026-07.md) — 제로베이스·산업무관 RAG 수익 파이프라인(엔드투엔드) 조사: **확증된 WTP는 고위험 전문서비스(법률 Harvey·금융 Hebbia)+엔터프라이즈검색(Glean)+SaaS 기능부착뿐**. 이기는 조합=고단가 seat 구독+연간계약+land-expand+도메인전문가 하이터치 CS. usage/outcome 과금 이행 0. 해자 문제는 미해결(낙관·비관 둘 다 기각). **우리 함의: legal 버티컬만 시장정렬, self-host·저터치는 이기는 GTM과 충돌** (updated: 2026-07-01) `[EXTRACTED]`
 
 ## Entities
