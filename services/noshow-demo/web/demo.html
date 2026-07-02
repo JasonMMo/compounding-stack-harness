@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="노쇼가드 — 손님 예약 데모">
+  <title>예약하기 — 노쇼가드</title>
+  <link rel="stylesheet" href="/static/styles/app.css">
+</head>
+<body>
+  <div class="app-shell app-shell--demo">
+    <header class="app-topbar">
+      <a class="app-topbar__brand" href="/">노쇼가드</a>
+      <a class="app-topbar__link" href="/admin">사장님 대시보드 →</a>
+    </header>
+
+    <div class="disclaimer-banner" role="note">
+      이 데모의 메시지는 실제 발송이 아닌 <strong>화면 내 시뮬레이션</strong>입니다.
+      실서비스는 카카오 알림톡 또는 SMS로 실발송 설정해드립니다.
+    </div>
+
+    <main class="page-main" id="main-content">
+      <h1 class="page-title">데모 미용실 예약</h1>
+
+      <!-- ── 예약 완료 화면 ─────────────────────────────────────────────── -->
+      <section id="screen-complete" class="card card--complete" hidden aria-live="polite">
+        <div class="complete-icon" aria-hidden="true">&#x2713;</div>
+        <h2>예약이 완료되었습니다</h2>
+        <p id="complete-summary" class="complete-summary"></p>
+        <p class="complete-note">확인 메시지가 사장님 대시보드 메시지 로그에 발송되었습니다.</p>
+        <button type="button" class="btn btn--primary" id="btn-book-another">다른 예약 하기</button>
+      </section>
+
+      <!-- ── 예약 플로우 ───────────────────────────────────────────────── -->
+      <section id="screen-booking">
+
+        <div id="booking-alert" class="alert alert--error" role="alert" hidden></div>
+
+        <div class="booking-step">
+          <h2 class="booking-step__title">1. 시술을 선택하세요</h2>
+          <div id="service-list" class="service-grid" role="radiogroup" aria-label="시술 선택"></div>
+        </div>
+
+        <div class="booking-step">
+          <h2 class="booking-step__title">2. 날짜를 선택하세요</h2>
+          <div id="date-chips" class="date-chip-row" role="radiogroup" aria-label="날짜 선택"></div>
+        </div>
+
+        <div class="booking-step">
+          <h2 class="booking-step__title">3. 시간을 선택하세요</h2>
+          <div id="slot-grid" class="slot-grid" role="radiogroup" aria-label="시간 선택">
+            <p class="slot-grid__empty" id="slot-empty-msg">시술과 날짜를 먼저 선택해주세요.</p>
+          </div>
+        </div>
+
+        <div class="booking-step" id="contact-step" hidden>
+          <h2 class="booking-step__title">4. 예약자 정보를 입력하세요</h2>
+          <form id="booking-form" novalidate>
+            <div class="form-field">
+              <label class="form-label" for="booking-name">이름</label>
+              <input class="form-input" type="text" id="booking-name" name="name" maxlength="30" required>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="booking-phone">연락처</label>
+              <input class="form-input" type="tel" id="booking-phone" name="phone" maxlength="20"
+                     placeholder="010-0000-0000" required>
+            </div>
+            <button type="submit" class="btn btn--primary btn--full" id="btn-submit-reservation">예약하기</button>
+          </form>
+        </div>
+
+        <div class="waitlist-block">
+          <button type="button" class="btn btn--ghost btn--full" id="btn-toggle-waitlist">
+            원하는 시간이 없나요? 대기명단 신청
+          </button>
+          <div id="waitlist-panel" class="card" hidden>
+            <h2 class="booking-step__title">대기명단 신청</h2>
+            <div id="waitlist-alert" class="alert alert--error" role="alert" hidden></div>
+            <div id="waitlist-success" class="alert alert--success" role="status" hidden></div>
+            <form id="waitlist-form" novalidate>
+              <div class="form-field">
+                <label class="form-label" for="waitlist-date">희망 날짜</label>
+                <select class="form-input" id="waitlist-date" name="date" required></select>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="waitlist-name">이름</label>
+                <input class="form-input" type="text" id="waitlist-name" name="name" maxlength="30" required>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="waitlist-phone">연락처</label>
+                <input class="form-input" type="tel" id="waitlist-phone" name="phone" maxlength="20"
+                       placeholder="010-0000-0000" required>
+              </div>
+              <button type="submit" class="btn btn--secondary btn--full" id="btn-submit-waitlist">대기명단 등록</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/demo.js"></script>
+</body>
+</html>
