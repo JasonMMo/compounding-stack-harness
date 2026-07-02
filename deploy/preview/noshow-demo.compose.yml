@@ -1,0 +1,70 @@
+# deploy/preview/noshow-demo.compose.yml
+# Coolify dockercompose preview — profile: noshow-demo (노쇼가드 — 미용실 예약·노쇼
+# 자동화 공개 데모).
+# Build context: repo root (Coolify clones whole repo; for manual `docker compose`
+# run from a checkout root, build context = that root).
+#
+# Domain: noshow.n9n.co.kr (wildcard *.n9n.co.kr → 187.77.140.157 already resolves)
+#
+# ── TOPOLOGY (Growth-142) ────────────────────────────────────────────────────
+# App-only, zero external dependencies: SQLite lives in-container, no db/embed
+# sidecar, no secrets. Public demo — no auth, no LLM calls (API cost 0).
+# Data wipes + reseeds on boot and every 6h (NOSHOW_RESET_INTERVAL_SECONDS),
+# so intentionally NO volume mount for the SQLite file (see
+# services/noshow-demo/db.py — reset-by-design, not a bug).
+#
+# SECURITY:
+#   - No secrets to inject (no DB DSN, no JWT, no service token).
+#   - Public write endpoints (POST /api/*) are rate-limited at the edge via
+#     Traefik (hanbang-rag ratelimit middleware pattern) to blunt abuse of the
+#     unauthenticated demo (spam bookings/waitlist entries).
+
+services:
+
+  # ── App: FastAPI noshow-demo (vanilla SPA at /, /demo, /admin) ─────────────
+  app:
+    build:
+      context: .
+      dockerfile: services/noshow-demo/Dockerfile
+    image: noshow-demo-app:latest
+    environment:
+      NOSHOW_ENV: "prod"
+      NOSHOW_DB_PATH: "/data/noshow.db"
+      NOSHOW_RESET_INTERVAL_SECONDS: ${NOSHOW_RESET_INTERVAL_SECONDS:-21600}
+      PYTHONIOENCODING: "utf-8"
+    networks:
+      - coolifynet
+    labels:
+      # ── Main router: noshow.n9n.co.kr → all paths ─────────────────────────
+      - "traefik.enable=true"
+      - "traefik.docker.network=gwpba3e8j8upf9v0swf96wkt"
+      - "traefik.http.routers.noshow-demo.rule=Host(`noshow.n9n.co.kr`)"
+      - "traefik.http.routers.noshow-demo.entrypoints=https"
+      - "traefik.http.routers.noshow-demo.tls=true"
+      - "traefik.http.routers.noshow-demo.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.noshow-demo.service=noshow-demo"
+      - "traefik.http.services.noshow-demo.loadbalancer.server.port=8000"
+      # ── /api router with rate-limit middleware (public demo abuse guard) ──
+      - "traefik.http.middlewares.noshow-demo-ratelimit.ratelimit.average=10"
+      - "traefik.http.middlewares.noshow-demo-ratelimit.ratelimit.burst=20"
+      - "traefik.http.middlewares.noshow-demo-ratelimit.ratelimit.period=1m"
+      - "traefik.http.middlewares.noshow-demo-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth=1"
+      - "traefik.http.routers.noshow-demo-api.rule=Host(`noshow.n9n.co.kr`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.noshow-demo-api.entrypoints=https"
+      - "traefik.http.routers.noshow-demo-api.tls=true"
+      - "traefik.http.routers.noshow-demo-api.service=noshow-demo"
+      - "traefik.http.routers.noshow-demo-api.priority=100"
+      - "traefik.http.routers.noshow-demo-api.middlewares=noshow-demo-ratelimit"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+# Shared Coolify/Traefik network (same one hanbang-rag/legal-rag attach to).
+networks:
+  coolifynet:
+    name: gwpba3e8j8upf9v0swf96wkt
+    external: true
