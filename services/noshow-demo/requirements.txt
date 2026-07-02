@@ -1,0 +1,9 @@
+# noshow-demo service dependencies
+# SQLite is stdlib — no DB driver needed. No LLM/embedding calls (API cost 0).
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi>=0.111.0,<1.0
+uvicorn[standard]>=0.29.0,<1.0
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.0.0,<9.0
