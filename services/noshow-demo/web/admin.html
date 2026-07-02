@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="노쇼가드 — 사장님 대시보드 데모">
+  <title>사장님 대시보드 — 노쇼가드</title>
+  <link rel="stylesheet" href="/static/styles/app.css">
+</head>
+<body>
+  <div class="app-shell app-shell--admin">
+    <header class="app-topbar">
+      <a class="app-topbar__brand" href="/">노쇼가드</a>
+      <a class="app-topbar__link" href="/demo">손님 예약 화면 보기 →</a>
+    </header>
+
+    <div class="disclaimer-banner disclaimer-banner--admin" role="note">
+      공개 데모 — 데이터는 6시간마다 자동 초기화됩니다. 메시지는 실제 발송이 아닌 시뮬레이션입니다.
+    </div>
+
+    <main class="page-main page-main--admin" id="main-content">
+      <div class="admin-clockbar">
+        <span class="admin-clockbar__label">현재 데모 시각</span>
+        <span class="admin-clockbar__value" id="clock-value">-</span>
+        <button type="button" class="btn btn--primary btn--sm" id="btn-fast-forward">
+          &#x23E9; 하루 빨리감기
+        </button>
+      </div>
+      <div id="fast-forward-result" class="alert alert--success" role="status" hidden></div>
+
+      <div class="admin-grid">
+        <section class="admin-panel" aria-label="오늘/내일 예약">
+          <h2 class="admin-panel__title">오늘 &amp; 내일 예약</h2>
+          <div class="table-wrap">
+            <table class="admin-table" id="reservations-table">
+              <thead>
+                <tr>
+                  <th scope="col">날짜</th>
+                  <th scope="col">시간</th>
+                  <th scope="col">시술</th>
+                  <th scope="col">고객</th>
+                  <th scope="col">상태</th>
+                  <th scope="col"></th>
+                </tr>
+              </thead>
+              <tbody id="reservations-tbody">
+                <tr><td colspan="6" class="table-empty">불러오는 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-panel" aria-label="대기명단">
+          <h2 class="admin-panel__title">대기명단</h2>
+          <ul class="waitlist-list" id="waitlist-list">
+            <li class="table-empty">불러오는 중...</li>
+          </ul>
+        </section>
+
+        <section class="admin-panel admin-panel--messages" aria-label="메시지 발송 로그">
+          <h2 class="admin-panel__title">메시지 발송 로그</h2>
+          <div class="chat-log" id="message-log">
+            <p class="table-empty">불러오는 중...</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/admin.js"></script>
+</body>
+</html>
