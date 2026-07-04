@@ -1974,6 +1974,50 @@ def g21_shell_conformance(components_dir: Path | None = None) -> GuardResult:
 
 
 # ---------------------------------------------------------------------------
+# G-22 Ledger size cap (2-stage archive convention)
+# ---------------------------------------------------------------------------
+
+_LEDGER_MAX_BYTES = 90_000  # 100KB Read-skip 한도 아래 안전 마진 (규약: docs/learn-logs/README.md)
+
+
+def g22_ledger_size_cap() -> GuardResult:
+    """G-22 / Growth-144 — no ledger/archive file may approach the 100KB Read limit.
+
+    Checks learn-log.md and every *.md under docs/learn-logs/ (recursive,
+    including archive volumes) against _LEDGER_MAX_BYTES. Generated index
+    artifacts (_index*) are exempt — they are ledger-index.py output meant
+    for scoped queries, never whole-file reads.
+
+    Remedy on FAIL: apply the 2-stage archive convention
+    (docs/learn-logs/README.md) — rotate the live ledger at 64KB, close
+    archive volumes at 80KB.
+    """
+    violations: list[str] = []
+    targets = [REPO_ROOT / "learn-log.md"]
+    ledger_dir = REPO_ROOT / "docs" / "learn-logs"
+    if ledger_dir.is_dir():
+        targets += sorted(ledger_dir.rglob("*.md"))
+    checked = 0
+    for path in targets:
+        if not path.is_file() or path.name.startswith("_index"):
+            continue
+        checked += 1
+        size = path.stat().st_size
+        if size > _LEDGER_MAX_BYTES:
+            rel = path.relative_to(REPO_ROOT)
+            violations.append(
+                f"{rel}: {size:,} bytes > {_LEDGER_MAX_BYTES:,} cap — "
+                "docs/learn-logs/README.md 2단계 아카이브 규약으로 회전/분할 필요"
+            )
+    return GuardResult(
+        "G-22", "ledger size cap", "Growth-144",
+        status="FAIL" if violations else "PASS",
+        violations=violations,
+        notes=f"Checked {checked} ledger files (cap {_LEDGER_MAX_BYTES:,} bytes).",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 
@@ -1999,6 +2043,7 @@ GUARDS: dict[str, GuardFn] = {
     "G-19": g19_dtcg_schema,
     "G-20": g20_normalization_gate,
     "G-21": g21_shell_conformance,
+    "G-22": g22_ledger_size_cap,
     "G-87": g87_embed_caller_split,
 }
 
