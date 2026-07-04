@@ -58,6 +58,7 @@
 | **G-19** | 경계 토큰 override 가 DTCG semantic 화이트리스트 위반 — staging *.tokens.json 키 ⊄ design/tokens/semantic.json(+landing extras) | Growth-130 | `scripts/diagnose.py::g19_dtcg_schema` (SPEC — *.tokens.json sync 시 활성, scripts/design/dtcg_schema.py 연동. DTCG=W3C CG draft, Rec 아님) |
 | **G-20** | synced 컴포넌트 raw HTML 의 production 직붙임 — frontend/presets 경로에 'design-sync:staging' provenance 마커 | Growth-130 | `scripts/diagnose.py::g20_normalization_gate` (PASS — clean repo 125파일 0마커. 정규화 게이트 우회=axis-8 붕괴 차단) |
 | **G-21** | Shell 컴포넌트 conformance 위반 — 격리 sibling(harness-design-system) `components/*/index.html` 텍스트노드/aria-label·placeholder·title·alt 가 `{{슬롯}}` 마커도 `_structural-allowlist.txt`(UI chrome 닫힌집합)도 아닌 Hangul/단어 텍스트(=도메인 잔존) | Growth-130 v2 | `scripts/diagnose.py::g21_shell_conformance` (**PASS** — 5 셸 0위반, chrome 12종. stdlib HTMLParser, demo-heading/demo-desc/svg/script/style 스킵. **allowlist=fail-safe**(누락 시 BLOCK) → denylist(FORBIDDEN_PATTERNS, 2차)가 못 잡는 미래 도메인 용어 누출(Growth-130 사고 클래스) 원천 차단. SPEC if sibling repo absent) |
+| **G-22** | ledger/아카이브 파일 비대 — `learn-log.md`·`docs/learn-logs/**/*.md`(생성물 `_index*` 제외) 가 90KB 초과 = 100KB Read-skip 한도 접근(원장이 자기 도구로 안 읽히는 상태) | Growth-144 | `scripts/diagnose.py::g22_ledger_size_cap` (**PASS** — 17파일 검사. 해소법 = 2단계 아카이브 규약 `docs/learn-logs/README.md`: live 64KB 회전 / 볼륨 80KB 닫기) |
 | **G-87** | legal-rag embed 호출이 비대칭 e5 prefix 불변식 위반 — api.py 가 `.embed_batch(` 호출하거나 ingest.py 가 bare `.embed(` 호출 | Growth-93 | `scripts/diagnose.py::g87_embed_caller_split` (**SPEC** — 첫 production ingest 로 유효성 확인 전까지 SPEC. 현재 clean state 에서 PASS 확인. SKIP if services/legal-rag/ absent) |
 
 상태 코드: **PASS** 통과 / **FAIL** 위반 검출 / **SKIP** 검사 대상 부재 (이 시점) / **SPEC** 검출 로직 다음 milestone 에 박힘.
@@ -93,6 +94,7 @@
 | 2026-06-26 (Growth-131 — legal-rag 데모 craft) | 21 | 가드 추가 0. **legal-rag /app 검색 데모 UI craft** (경로A 로컬, 클라우드/외부 0). 라이브 headless 진단(이준호 partner 5화면)→5수정: ①excerpt 아티팩트 제거(seed 데모문서 ====구분선·ingest메타 정제 + app.js sanitizeExcerpt 렌더타임 이중방어, 카운트·하이라이트 cleanExcerpt 정합) ②0-매치 단어뱃지 숨김(matched==0 미생성, '0/N=실패' 오독 차단) ③빈 검색화면 예시질의 칩 4개(CDO pill craft, 죽은화면→권유형) ④검색창↔버튼 그룹핑(align-self:stretch) ⑤search-input spellcheck=false(한글 법률어 물결선 제거). **로컬 fetch-stub headless 렌더 검증 PASS**(verify_local.mjs — /auth·/search stub으로 SPA 로직변경을 재배포 전 픽셀증명, htmx-demo-verify를 legal-rag SPA로 확장). 6커밋 per-file 푸시(4d83d22..23192d9). **founder 게이트: app Redeploy + 데모 재인제스트**(픽스처 정제는 재인제스트로만 라이브 청크 반영, render sanitize는 Redeploy만으로 표시 정제). |
 
 | 2026-06-27 (Growth-130 — Design-Cloud Bridge v2 WP-A~C) | 22 | **G-21 신설 PASS** (shell conformance) — 구조적 분리 v2 핵심 게이트. 진단: 디자인 sibling 셸이 도메인 텍스트를 inline 하드코딩(business-system 경로는 wire-contract(라벨0)+screen-manifest로 이미 분리 달성, 디자인 레이어만 퇴행) → 누출 방지가 절차적(스크럽+denylist)일 수밖에 없던 근본원인. WP-A/B: 5 셸을 `{{슬롯}}` 템플릿+중립 corpus(`fixtures/synthetic.json`)로 리팩터(잔존 legal 어휘 계약해지/위약금/임대차/면책/불법행위/과실 완전 제거 — 이전 스크럽이 못 잡은 denylist 누락분). WP-C: G-21=allowlist conformance(텍스트=마커|chrome), **denylist→allowlist 패러다임 전환**(fail-safe, 미래 도메인 용어 누락 누출 원천 차단). 적대적 검증: dirty 스니펫(상속재산/판결문/진료기록=현 denylist 부재 용어) 2위반 검출, clean/scaffolding/chrome 오탐 0. sibling 16커밋, main G-21+import 1커밋. v1 산출물(G-16~20) 전부 유지. |
+| 2026-07-05 (Growth-144 — ledger 2단계 아카이브) | 23 | **G-22 신설 PASS** (ledger size cap 90KB, 17파일) — growth-archive.md 가 265KB(100KB Read-skip 한도 2.6배)로 비대해 원장이 자기 도구로 안 읽히는 상태를 적발한 부류의 재발 방지. 적용: growth-archive 볼륨 4개(01~04, 각 ≤80KB) 분할+인덱스 전환, engineer.md 79KB→22KB (Growth-5d~70 → archive/engineer-01.md). 규약 = docs/learn-logs/README.md (live 64KB 회전 / 볼륨 80KB 닫기 / 90KB 가드) |
 
 ## §5 — Environment Notes
 
@@ -230,3 +232,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **상세**: [cto.md#Growth-143](docs/learn-logs/cto.md)
 - **결정**: founder 승인 ("P1부터 해소하자") + 세부 실행 CTO Auto
 - **Open loops**: 홈(C:/Users/cubis) 커밋0 가짜 git repo 삭제(founder 확인), 비활성 플러그인 4종 uninstall(founder), P2 5건(훅 오버헤드·토큰절약 4종 정책·compose 템플릿화·ledger 아카이브·모델 역할표)
+
+### Growth-144 (2026-07-05) — P2 일괄 해소: 훅 슬림화·토큰정책·deploy 템플릿·G-22 ledger 캡
+
+- **인격**: CTO (글로벌 설정·ledger·가드) + DevOps (deploy 템플릿)
+- **Axis touched**: creater (G-22 가드·아카이브 규약), deploy (traefik 템플릿 등록)
+- **Milestone**: 전 milestone 지원 (세션당 오버헤드·원장 기계가독성)
+- **Revenue/cost**: 직접 매출 0 / **비용 절감**: Bash 툴콜당 훅 프로세스 ~9→~3 (사운드훅 27등록 삭제 + token-optimizer per-call 7종 비활성 + headroom MCP 상주 제거)
+- **Why (1줄)**: founder P2 승인 — 같은 목적 도구 중복 활성은 절약이 아니라 spawn 비용, 원장은 100KB Read 한도 앞에서 자기 도구로 안 읽힘
+- **산출**: 홈 phantom .git 삭제(커밋0 확증 후) / TOKEN-POLICY.md(RTK+context-mode 2종 체제) / deploy/templates/traefik-labels.tpl.yml+README(변형 A/B, 3벌 라벨과 캐논 일치 CTO 검증) / 2단계 아카이브 규약(README)+growth-archive 볼륨 4분할+engineer 79→22KB+**G-22 신설 PASS**
+- **결정**: 모델 역할표 "Orchestration/Planning=Opus" 행 유지 (founder 확정)
+- **상세**: [cto.md#Growth-144](docs/learn-logs/cto.md) · [devops.md](docs/learn-logs/devops.md)
+- **Open loops**: 비활성 플러그인 uninstall(founder, token-optimizer 포함 5종으로 증가)
