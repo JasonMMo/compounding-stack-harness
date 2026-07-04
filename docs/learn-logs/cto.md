@@ -310,3 +310,20 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - ~~**System maturity threshold 측정 정의**~~ ✅ **해소 (2026-06-02)**: `revenue-roadmap.md#M1-Maturity-Threshold` 에 정량 박음 — Technical Maturity T-1~T-6(현재 6/6 MET) + GTM(demo·lead, CEO/CMO). T-7(비용측정)은 런타임 LLM 호출 생기는 M2/M3 로 이관(M1 무 LLM 런타임). 자동화 `maturity-check.py` 는 CEO 승인 시 후속.
 - **OpenAPI 3.1 migration (M1 후반)**: 첫 adapter 작업 완료 후 schema 갭 학습 → migration
 - **schema v2 (`secrets:` top-level)**: customer profile 5+ block 도달 시 재검토
+
+## Growth-143 — 시스템 위생 감사 + P1 해소 (2026-07-05)
+
+**트리거**: founder "우리 시스템을 점검해줘 … 깊게 분석해줘" → 감사 subagent 3종 병렬(설정/repo시스템/CC신기능) → P1 5건 승인.
+
+**해소 내역** (전 가드 스위트 exit 0 확인):
+1. **learn-log §6 slim 계약 붕괴** — 헤딩 드리프트 35건(104~105·110~131=`##`레벨, 135~142=불릿)으로 G-9 스캐너 맹점 + 546/200줄. `###` 정규화 후 Growth-68~134를 growth-archive.md 9차 회전(674줄), §6=8엔트리 19줄. (4436261, bee6182)
+2. **diagnose.py cp949 크래시** — stdout/stderr UTF-8 reconfigure. 이 크래시가 가드 실행 진입장벽 → G-8/G-12 FAIL 방치의 근본 원인(가드 부패 체인). (0187634)
+3. **G-8 FAIL 2건** — U+F03A 콜론 빈 쓰레기 디렉터리(절대경로 mkdir 잔재) rmdir + reference/lawform 한글 PNG → lawsuit-lifecycle-slm.png rename (미추적 파일).
+4. **G-12 FAIL 4건** — catalog.yaml fk-exempt 마커 미러(augments/legal SQL 02·07의 기존 마커가 진실): partner_id·attorney_id(cross-domain hr_employee), source_id(polymorphic), model_id(LLM 식별 문자열). 마커는 칼럼 직전 줄 규칙. (46442d5)
+5. **글로벌 설정 정리** — settings.json 죽은 `subAgentModel:haiku` 제거(env `CLAUDE_CODE_SUBAGENT_MODEL=sonnet`이 항상 우선 = 실동작 sonnet, 비용 함의 founder 보고), allow 41→19(Bash(*) 하위 no-op 22 제거), 프로젝트 settings.local.json 56→31(1회성 정확매치 제거, Read .ssh/** 포함 보안 하드닝), 글로벌 CLAUDE.md 죽은 참조 3종(skill-definition/agent-definition/hooks-config 경로) 정리.
+
+**신기능 감사 요지**(P3 유지 확정): agent teams·cron·codegraph는 이미 네이티브 위, 파일 memory·context-mode 샌드박스·deep-research 검증루프는 고유가치 유지. 네이티브 auto-memory가 MEMORY.md 인덱스 패턴에 수렴(관찰 지속).
+
+**중대 발견(미해소·founder 게이트)**: 홈 디렉터리 전체(C:/Users/cubis)가 **커밋 0개 git repo**(3,813 staged) — 사고성 init 잔재. 홈발 git 명령 전부가 이 repo를 스캔(비용) + `git clean` 오발 시 파괴 위험. `.git` 삭제 권고(커밋 0 = 이력 손실 없음), founder 확인 대기. 이로 인해 ~/.claude 변경분(CLAUDE.md·settings.json)은 버전관리 밖.
+
+**P2 백로그**(다음 세션 후보): ① Bash당 훅 3계층(rtk+output_filter 5s+글로벌 hooks.py 25이벤트) 정리 ② 토큰절약 4종(RTK/token-optimizer/context-mode/headroom) 사용정책 1장 ③ deploy compose Traefik 라벨 템플릿화(3벌 복붙) ④ 인격 ledger 2단계 아카이브(engineer 77KB 등) ⑤ CLAUDE.md 모델 역할표 Opus→Fable 5 격상 검토.
