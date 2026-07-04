@@ -1724,6 +1724,7 @@ entities:
     _augment_of: legal-case
     _augment_note: "Growth-48 RAG MVP adds: partner_id, fts_vector (GIN/pg_bigm), RLS policies"
     columns:
+      # fk-exempt: cross-domain — hr_employee ref, app layer 강제 (augments/legal/02 SQL 마커 미러)
       partner_id:   { type: uuid, nullable: true }
       # fts_vector: postgres tsvector GENERATED ALWAYS — not in neutral catalog; dialect-specific
     constraints: []
@@ -1744,6 +1745,7 @@ entities:
       created_at:      { type: timestamp, nullable: false }
       updated_at:      { type: timestamp, nullable: false }
       source_type:     { type: enum,      values: [precedent, case_document], nullable: false }
+      # fk-exempt: polymorphic — source_type discriminator 와 페어 (precedent/case_document, app layer)
       source_id:       { type: uuid,      nullable: false }
       case_id:         { type: uuid,      nullable: true,
                          fk: { entity: legal-case, column: id, on_delete: cascade } }
@@ -1814,6 +1816,7 @@ entities:
       id:                   { type: uuid,      nullable: false }
       created_at:           { type: timestamp, nullable: false }
       updated_at:           { type: timestamp, nullable: false }
+      # fk-exempt: cross-domain — hr_employee ref, app layer 강제 (augments/legal/07 SQL 마커 미러)
       attorney_id:          { type: uuid,      nullable: false }
       case_id:              { type: uuid,      nullable: true,
                               fk: { entity: legal-case, column: id, on_delete: set_null } }
@@ -1821,6 +1824,7 @@ entities:
       retrieved_chunk_ids:  { type: text,      nullable: true }
       citations_summary:    { type: text,      nullable: true }
       answer_text:          { type: text,      nullable: true }
+      # fk-exempt: external ref — LLM 모델 식별 문자열('gemma-3-27b-it' 등), 엔티티 아님
       model_id:             { type: string,    length: 64, nullable: true }
       tokens_used:          { type: integer,   nullable: true }
       latency_ms:           { type: integer,   nullable: true }
