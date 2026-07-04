@@ -327,3 +327,13 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 **중대 발견(미해소·founder 게이트)**: 홈 디렉터리 전체(C:/Users/cubis)가 **커밋 0개 git repo**(3,813 staged) — 사고성 init 잔재. 홈발 git 명령 전부가 이 repo를 스캔(비용) + `git clean` 오발 시 파괴 위험. `.git` 삭제 권고(커밋 0 = 이력 손실 없음), founder 확인 대기. 이로 인해 ~/.claude 변경분(CLAUDE.md·settings.json)은 버전관리 밖.
 
 **P2 백로그**(다음 세션 후보): ① Bash당 훅 3계층(rtk+output_filter 5s+글로벌 hooks.py 25이벤트) 정리 ② 토큰절약 4종(RTK/token-optimizer/context-mode/headroom) 사용정책 1장 ③ deploy compose Traefik 라벨 템플릿화(3벌 복붙) ④ 인격 ledger 2단계 아카이브(engineer 77KB 등) ⑤ CLAUDE.md 모델 역할표 Opus→Fable 5 격상 검토.
+
+### Growth-144 (2026-07-05) — P2 일괄 해소 상세 (훅 슬림화·토큰정책·deploy 템플릿·G-22)
+
+- **홈 phantom repo**: `C:/Users/cubis/.git` 삭제 전 재확증(rev-list --all --count=0, stash 0) → rm -rf. 이력 손실 0. 홈 하위 git 명령의 가짜 repo 스캔·`git clean` 파괴 리스크 소멸.
+- **P2-1 훅 슬림화**: 글로벌 settings.json에서 hooks.py 등록 **27건** 일괄 제거(잔존 3: rtk PreToolUse / codex login / context-mode cache-heal). 핵심 발견 = 등록 경로가 `${CLAUDE_PROJECT_DIR}` 라 작업 repo에는 파일이 없음 → 27등록 전부가 존재하지 않는 스크립트 spawn(순수 데드 오버헤드). hooks.py 480줄+sounds 6.5MB+config 삭제. **사고 기록**: tar 백업이 `C:` 접두를 원격호스트로 해석해 실패한 채 rm이 진행 — hooks.py/config는 세션 트랜스크립트에서 복원 가능(scratchpad RESTORE-NOTE), wav는 복구 불가(단, 삭제가 지시사항). 교훈: 백업&&삭제는 한 체인으로 묶을 것. 잔존물 스캔에서 weather-agent frontmatter 훅 3건(hooks.py --agent 호출) 추가 적발·제거.
+- **P2-2 토큰정책**: `~/.claude/TOKEN-POLICY.md` 제정 — 활성 2종(RTK=CLI 필터, context-mode=샌드박스·인덱스·세션메모리), 경계규칙, 재도입 3문 게이트. 정리: token-optimizer 플러그인 비활성(per-call 훅 7종 = PreToolUse Read/Bash/Agent + PostToolUse 4종, 캡처·컴팩션복구·read캐시가 context-mode/네이티브와 전부 중복 — /compact 출력에서 이중 복구 실증), headroom MCP 등록 해제(~/.claude.json, compress/retrieve=context-mode와 동일 목적·상주 서버 1개 제거). Bash 툴콜당 훅 프로세스 ~9→~3. 메모리 global-token-stack-slim 박제.
+- **P2-3 deploy 템플릿(DevOps 위임)**: `deploy/templates/traefik-labels.tpl.yml` + README — Variant A(단일 스택)/B(공유 preview 네트워크), ratelimit 서브라우터(priority=100, ipstrategy.depth=1), SLUG 전역 유일성 경고. CTO 독립검증: 3벌(legal-rag/noshow-demo/hanbang-rag) 실라벨 정규화 대조 → 캐논 일치(서브라우터 명명 -api/-login→{{SLUG}}-limited 일반화, certresolver 메인 라우터만 = 실제와 동일). 기존 compose 3벌 무수정(라이브).
+- **P2-4 ledger 2단계 아카이브**: 규약 `docs/learn-logs/README.md`(live 64KB 회전→볼륨, 볼륨 80KB 닫기, 90KB=G-22 FAIL, 경계는 엔트리 단위, `_index*` 제외). 적용: growth-archive.md 265KB(한도 2.6배!) → 볼륨 4개(01: G4-60 78KB / 02: G61-96 80KB / 03: G97-128 78KB / 04: G129-134 20KB 열림) + 인덱스 전환(참조 경로 6곳 무파손), engineer.md 79→22KB(G5d-70 → archive/engineer-01.md). **G-22 신설**(diagnose.py::g22_ledger_size_cap, 17파일 PASS) + §2 행 + §4 counter 23. ledger-index 재생성.
+- **P2-5**: 모델 역할표 Opus 행 유지 — founder 확정, 변경 0.
+- **검증**: 전 가드 스위트 exit 0 (G-22 포함 23종).
