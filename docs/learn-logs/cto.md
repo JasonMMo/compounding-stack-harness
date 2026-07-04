@@ -337,3 +337,20 @@ main 인덱스: [`../../learn-log.md §6`](../../learn-log.md). 이 파일은 CT
 - **P2-4 ledger 2단계 아카이브**: 규약 `docs/learn-logs/README.md`(live 64KB 회전→볼륨, 볼륨 80KB 닫기, 90KB=G-22 FAIL, 경계는 엔트리 단위, `_index*` 제외). 적용: growth-archive.md 265KB(한도 2.6배!) → 볼륨 4개(01: G4-60 78KB / 02: G61-96 80KB / 03: G97-128 78KB / 04: G129-134 20KB 열림) + 인덱스 전환(참조 경로 6곳 무파손), engineer.md 79→22KB(G5d-70 → archive/engineer-01.md). **G-22 신설**(diagnose.py::g22_ledger_size_cap, 17파일 PASS) + §2 행 + §4 counter 23. ledger-index 재생성.
 - **P2-5**: 모델 역할표 Opus 행 유지 — founder 확정, 변경 0.
 - **검증**: 전 가드 스위트 exit 0 (G-22 포함 23종).
+
+
+## Growth-145 (2026-07-05) — 토큰스택 v2 레인 재배치 (founder 지시: 4종 활용 최대화)
+
+- **지시**: "RTK·token-optimizer·headroom·context-mode 활용 최대화 — 각 도구 장점 파악, 이벤트 전후·리소스 접근 유형별 배치."
+- **반론 선제기 (feedback-pushback)**: 전면 원복은 Growth-144에서 측정으로 제거한 중복(Bash 콜당 훅 ~9개)을 되살림 → "전용 레인" 설계로 양립: 같은 레인 이중 개입만 금지, 각 도구 고유가치는 최대화.
+- **도구 해부 (판정 근거)**:
+  - token-optimizer 훅 21종 전수 분석. 고유가치=세션특화 컴팩션 가이던스(`dynamic_compact_instructions`)는 SessionStore 3피더(`read_cache.py` upsert_file_entry / `archive_result.py` insert_tool_output / `context_intel.py` insert_intel_event)에 의존 — 피더 없으면 정적 폴백=무가치. 반면 `bash_hook.py`(store 기여 0, RTK와 Bash 재작성 축 충돌)·`quality-cache --throttle-only`(전 툴콜 매처, per-call 가치 없음)·`checkpoint-trigger`(context-mode 캡처 중복) 3종은 컷.
+  - headroom 0.24.0: 훅 0, deferred schema → 유휴비용 ≈0. 인컨텍스트 압축·회수 레인 전담으로 재등록.
+- **구현**:
+  - **vendored 사본**: `~/.claude/vendored/token-optimizer/` ← 플러그인 cache 5.10.2의 hooks/+scripts/ 3.2MB (scripts는 stdlib-only·트리 외부 참조 0 확인). 플러그인은 **disabled 유지** — cache sweep(`.last_inuse_sweep`)·버전업 경로 파손에 면역, re-enable 시 이중 등록 경고를 정책에 박음.
+  - settings.json에 선별 18/21훅 수동 등록 (`run.py`가 CLAUDE_PLUGIN_ROOT 부재 시 자기 위치로 루트 해석하는 폴백 확인 후).
+  - **결함 적발·수정**: 세션 env의 `CLAUDE_PLUGIN_DATA`가 타 플러그인(codex) 데이터 디렉터리로 누수 → SessionStore 오배송 실측. vendored 런처에서 unset + `TOKEN_OPTIMIZER_PLUGIN_DATA` 고정으로 차단.
+  - headroom을 `~/.claude.json` mcpServers 재등록. 백업 2종(scratchpad: settings.global.pre-rearrange.json / claude.json.pre-headroom-readd).
+- **검증**: vendored 파이프라인 end-to-end — 실세션 id로 PreCompact 훅 실행 → 세션특화 PRESERVE(5 high-value)/DROP(read-once 5) 가이던스 재현(이 세션 /compact 출력과 동일), exit 0.
+- **문서/환류**: TOKEN-POLICY.md v2(레인 소유권 + 리소스→도구 매트릭스 + 재슬림 복원 경로), 글로벌 CLAUDE.md Hooks System 갱신, memory global-token-stack-slim v2 재작성.
+- **주의**: 훅 변경은 다음 세션부터. founder가 token-optimizer를 uninstall하면 `plugins/data/token-optimizer-*` store가 사라져 vendored 가이던스가 정적 폴백으로 퇴화 — uninstall 목록에서 token-optimizer 제외 권고.
