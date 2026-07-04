@@ -33,6 +33,12 @@ from typing import Callable
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# Windows 기본 콘솔(cp949)에서 가드 마크(✓/✗) 출력이 UnicodeEncodeError 로
+# 죽지 않도록 stdout/stderr 를 UTF-8 로 강제 (PYTHONIOENCODING 불필요).
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 
 # ---------------------------------------------------------------------------
 # Result types
