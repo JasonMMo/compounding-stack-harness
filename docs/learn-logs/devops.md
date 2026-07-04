@@ -262,3 +262,18 @@
 - **함정 0건**: 외부 HTTPS(coolify.n9n.co.kr) 503이었으나 localhost:8000 SSH 터널은 살아 있었음 — 공개 Coolify 도메인 접속 시도는 항상 실패(방화벽 8000 차단), localhost 터널이 단일 접점.
 - **비용 노트**: 재배포(이미지 rebuild) $0 추가 인프라 비용, 공유 VPS 귀속.
 - **교훈 (1줄)**: 이미 push 된 변경은 기존 app UUID 에 `GET /start` 한 번으로 rebuild+redeploy 가 완결됨 — compose/domain/env 재설정 불필요, 첫 배포와 달리 단순 재트리거만으로 충분.
+
+### Growth-144 (2026-07-05) — deploy 축 Traefik 라벨 템플릿화 (P2-3, CTO 지시)
+
+- **목적**: `deploy/preview/legal-rag.compose.yml` / `hanbang-rag.compose.yml` / `noshow-demo.compose.yml` 세 라이브 서비스에 거의 동일한 Traefik 라벨 블록(15~18줄)이 복붙되어 있음 — 4번째 본격 서비스가 나오기 전에 복붙 관행을 끊는다.
+- **분석**: 세 파일 + 대표 소형 랜딩/business-system compose 5종(hopwell, gtm-landing, demo-portal, taskflow-demo, lawfirm-demo)을 비교해 실제로는 **4가지 패턴**이 공존함을 확인.
+  - **Variant 0 (라벨 없음)**: 정적 랜딩/단순 앱 ~20종 — 도메인은 Coolify API `PATCH docker_compose_domains` 로 설정, compose 파일엔 `ports: - "80"` 뿐. 이게 실제 다수파.
+  - **Variant A (메인 라우터만)**: self-contained 서비스, 별도 네트워크·path 규칙 불필요.
+  - **Variant A + ratelimit 서브라우터**: legal-rag 패턴 — `/auth/login` 경로만 priority=100 라우터로 분리해 rate-limit 미들웨어 부착.
+  - **Variant B (외부 공유 네트워크)**: hanbang-rag(legal-rag 의 db/embed 재사용) / noshow-demo(공유 preview 네트워크 관행) — `traefik.docker.network={{COOLIFY_NETWORK}}` 라벨 + top-level `networks: coolifynet: external: true` 필요.
+- **산출물**: `deploy/templates/traefik-labels.tpl.yml` (플레이스홀더 기반 canonical 블록, Variant A/A+ratelimit/B 순서로 적층 가능하게 배치) + `deploy/templates/README.md` (variant 표, placeholder 표, 사용 절차, "Variant 0 은 그대로 둔다" 명시).
+- **핵심 설계 판단**: Coolify 는 compose 를 raw YAML 로 그대로 소비 — 배포시 렌더 엔진 없음. 따라서 템플릿 치환은 **빌드타임(사람/agent 가 손으로 복사-치환)** 이며, `.tpl.yml` 은 Coolify 가 직접 참조하지 않는 순수 복사원본이라는 점을 README·템플릿 헤더 양쪽에 명시.
+- **불변 원칙 준수**: 기존 3개 라이브 compose 파일(legal-rag/hanbang-rag/noshow-demo) 은 **무변경** — 라이브 서비스 무변경 원칙(charter). 템플릿은 4번째 서비스부터 적용, 기존 3개를 "백필"하지 않음.
+- **커밋**: 이번 세션에선 커밋하지 않음 — CTO 가 파일별 분리 커밋 예정(CLAUDE.md §9 규약).
+- **함정 0건**: 신규 cross-layer 결합 없음(가드 카탈로그 추가 대상 아님) — 순수 문서/템플릿 신설.
+- **교훈 (1줄)**: "거의 동일해 보이는 3개" 를 실제 diff 하면 4가지 패턴(라벨 없음이 최다수)이 섞여 있었다 — 템플릿화 전엔 항상 표본을 넓혀(소형 compose 포함) 실제 변형 축을 먼저 확정해야 과잉 일반화를 피한다.
