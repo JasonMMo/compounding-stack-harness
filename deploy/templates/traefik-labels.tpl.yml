@@ -1,0 +1,75 @@
+# deploy/templates/traefik-labels.tpl.yml
+# Canonical Traefik label block for Coolify dockercompose preview services
+# (deploy/preview/<slug>.compose.yml). NOT consumed by Coolify directly and
+# NOT a real compose file — Coolify reads compose files as raw YAML with no
+# templating engine at deploy time. Copy the relevant block below into the
+# target service's `labels:` section by hand (or via the scaffolding agent),
+# then replace every {{PLACEHOLDER}}. See README.md in this directory for
+# the full usage table and which variant a new service needs.
+#
+# Placeholders:
+#   {{SLUG}}              router/service name, e.g. legal-rag, hanbang-rag
+#                         (must be unique across the whole Coolify VPS —
+#                         Traefik routers/services/middlewares share one
+#                         namespace regardless of which stack defines them)
+#   {{DOMAIN}}             full external domain, e.g. legal-rag.n9n.co.kr
+#   {{PORT}}               container's internal listen port, e.g. 8000
+#   {{RATELIMIT_PATH}}     path prefix to rate-limit, e.g. /auth/login or /api
+#   {{RATELIMIT_AVERAGE}}  steady-state req/period, e.g. 5 (login) or 10 (public API)
+#   {{RATELIMIT_BURST}}    burst allowance, e.g. 10 or 20
+#   {{RATELIMIT_PERIOD}}   window, e.g. 1m
+#   {{COOLIFY_NETWORK}}    external network name (Variant B only), e.g.
+#                          gwpba3e8j8upf9v0swf96wkt — the shared coolify-proxy
+#                          network. Omit entirely for Variant A.
+
+# ═══════════════════════════════════════════════════════════════════════════
+# VARIANT A — main router only, default Coolify network
+# ═══════════════════════════════════════════════════════════════════════════
+# Use when the service does NOT need to resolve another stack's containers by
+# name and does not need to join the shared preview network explicitly
+# (matches legal-rag's `app` service — a single self-contained stack).
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.{{SLUG}}.rule=Host(`{{DOMAIN}}`)"
+  - "traefik.http.routers.{{SLUG}}.entrypoints=https"
+  - "traefik.http.routers.{{SLUG}}.tls=true"
+  - "traefik.http.routers.{{SLUG}}.tls.certresolver=letsencrypt"
+  - "traefik.http.routers.{{SLUG}}.service={{SLUG}}"
+  - "traefik.http.services.{{SLUG}}.loadbalancer.server.port={{PORT}}"
+
+# ── Ratelimit sub-router (append to labels: above only if a path needs it) ──
+# priority=100 makes this router win over the catch-all Host()-only router
+# above for requests matching {{RATELIMIT_PATH}}. Typical use: gate an
+# unauthenticated write endpoint (public demo abuse) or a login endpoint
+# (credential-stuffing throttle).
+  - "traefik.http.middlewares.{{SLUG}}-ratelimit.ratelimit.average={{RATELIMIT_AVERAGE}}"
+  - "traefik.http.middlewares.{{SLUG}}-ratelimit.ratelimit.burst={{RATELIMIT_BURST}}"
+  - "traefik.http.middlewares.{{SLUG}}-ratelimit.ratelimit.period={{RATELIMIT_PERIOD}}"
+  - "traefik.http.middlewares.{{SLUG}}-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth=1"
+  - "traefik.http.routers.{{SLUG}}-limited.rule=Host(`{{DOMAIN}}`) && PathPrefix(`{{RATELIMIT_PATH}}`)"
+  - "traefik.http.routers.{{SLUG}}-limited.entrypoints=https"
+  - "traefik.http.routers.{{SLUG}}-limited.tls=true"
+  - "traefik.http.routers.{{SLUG}}-limited.service={{SLUG}}"
+  - "traefik.http.routers.{{SLUG}}-limited.priority=100"
+  - "traefik.http.routers.{{SLUG}}-limited.middlewares={{SLUG}}-ratelimit"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# VARIANT B — service joins the external/shared preview network
+# ═══════════════════════════════════════════════════════════════════════════
+# Use when the service must resolve another stack's containers by name (e.g.
+# hanbang-rag reusing legal-rag's db/embed) OR when convention dictates the
+# app attach the shared preview network for consistency (noshow-demo).
+# Add this label to the labels: block ABOVE (Variant A base, with or without
+# the ratelimit sub-router), and declare the network at both the service
+# level and the compose file's top level as shown below.
+  - "traefik.docker.network={{COOLIFY_NETWORK}}"
+
+# Service-level addition (sibling of `build:`, `environment:`, `labels:`):
+#   networks:
+#     - coolifynet
+#
+# Compose-file top-level addition (sibling of `services:`):
+networks:
+  coolifynet:
+    name: {{COOLIFY_NETWORK}}
+    external: true
