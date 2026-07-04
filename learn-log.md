@@ -219,3 +219,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - market-first 기회사냥 폐기, 검증수요-먼저 서비스 온램프. 세션 아크: ①벤치마크 헌트(108 agent)=새 SMB 버티컬 없음+금융 후보는 founder 통찰 "1인 기업에 책임 위임 안 함"으로 사망→**liability-sink-test 지배축 신설**(메모리) ②모바일 현금흐름 헤지=deep-research 하니스 2회 실패(~11M tok, 적대적 verify가 산업추정치 전량 기각)→**추정치 랭킹=구성적 단일 에이전트** 방법론 확정(메모리 deep-research-harness-fit), 한국 셀러 AI 유틸 확정했으나 수요 프로브에서 상세페이지 서브니치 사망(Gency/셀러비서 선점, AI툴 검색수요 미미, 검증수요는 done-for-you 외주) ③founder "3연패면 접근이 틀렸다"+제로우위 프로필(고객·네트워크·도메인 전무, 런웨이 6~12개월) 공개→**새 방법=검증수요-먼저 마켓플레이스 대행**(현금+도메인엣지+후기를 벌어 쌓고 나중에 제품화, 서비스=온램프). 첫 아레나(founder 확정)=SMB AI 자동화 셀업. 그라운딩 1회(단일 에이전트, 크몽/Fiverr/ieumax 직접페치): 범용 "AI 챗봇" 크몽 356리스팅 0리뷰 레드오션 vs 업종명시 "예약·상담 자동화" gig만 5.0★ 전환 → **첫 오퍼=미용실/피부관리실 예약·노쇼 자동화**(셋업 30~50만+월 5~13만, 채널=크몽 니치다운 무료데모+아프니까사장이다 168만). 환류 `knowledge/wiki/sources/smb-ai-services-first-offer-2026-07.md`(+index). 메모리 revenue-approach-reframe(모바일 트랙 흡수종료). legal-rag·hanbang 기존 베팅 유지(병렬 온램프). 잔여: founder 첫 gig 실행(도구 데모 1개→크몽 프로필→관찰 노트), 대행 산출물의 preset 복리 등록.
 ### Growth-142 (2026-07-02) — 노쇼가드 LIVE
 - 첫 서비스 오퍼(미용실 예약·노쇼 자동화)의 공개 데모+영업 킷 end-to-end 구축. founder "demo 잘 만들어 ieumax처럼 공개하고 크몽·숨고 등록" 지시 → 4-인격 병렬(CTO 스펙/CMO gig킷/engineer 앱/CDO 랜딩). **산출**: ①스펙 `docs/business/noshow-demo-spec.md`(30초 시연 시나리오·시뮬 경계·6h 리셋) ②CMO `docs/business/noshow-gig-kit.md`(크몽 제목 3안 전부 업종명시형·3단 티어 셋업 29/39/49만+월 5/8/13만 내장·무료데모 loss-leader·네이버예약 변별 FAQ·숨고 견적템플릿·랜딩 7섹션 실카피) ③engineer `services/noshow-demo/`(FastAPI+SQLite app-only·데모클록 빨리감기·리마인더 dedup·취소→대기 자동채움·노쇼위험 파생판정·pytest 8) ④CDO 랜딩(gig킷 카피 verbatim 조판·카카오옐로우·Playwright 3뷰포트 검증). **CTO 통합 감사 2건 적발**: 노쇼위험 판정규칙 스펙 누락(데모는 응답채널 없어 "무응답" 규칙 불성립→발송완료+슬롯-1h 파생판정으로 재정의), engineer 보정 미배선(grep 실측 engine만 1곳→4파일 배선 재지시, subagent-cross-service-verify 패턴 재확인). **배포**: noshow.n9n.co.kr 수동 compose(hanbang 런북 패턴, ssh키=n9n_preview_ed25519), 시크릿 0·외부의존 0·API비 0. **라이브 검증 PASS**: 4페이지 200, 시드 노쇼위험 뱃지 1건(조노쇼), 예약생성→확인메시지, 빨리감기→리마인더 4건, 취소→대기채움(이대기 fulfilled+offer/filled 2메시지), 422=입력검증 정상. 검증 오염 후 재시작으로 시드 초기화. 23커밋 푸시(파일당). M2/M3보다 앞선 서비스-온램프 트랙(Growth-141) 매출 게이트 기여. 잔여=founder: 크몽/숨고 계정·gig 등록(킷 §A/§B)·30초 시연영상(스펙 §2 시나리오).
+
+### Growth-143 (2026-07-05) — 시스템 위생 감사 + P1 해소: 가드 부패 4종·설정 부채 정리
+
+- **인격**: CTO (감사 subagent 3종: config / repo-systems / 신기능)
+- **Axis touched**: creater (diagnose·learn-log 운영), ddl (catalog fk-exempt 4)
+- **Milestone**: 전 milestone 지원 (내부 효율·가드 신뢰 회복)
+- **Revenue/cost**: 직접 매출 0 / Fable 5 1세션 + 감사 subagent 3
+- **Why (1줄)**: founder "시스템 점검" 요청 — 3방향 감사에서 위생 부채(가드 FAIL 방치·설정 중복·문서-실물 불일치) 발견
+- **상세**: [cto.md#Growth-143](docs/learn-logs/cto.md)
+- **결정**: founder 승인 ("P1부터 해소하자") + 세부 실행 CTO Auto
+- **Open loops**: 홈(C:/Users/cubis) 커밋0 가짜 git repo 삭제(founder 확인), 비활성 플러그인 4종 uninstall(founder), P2 5건(훅 오버헤드·토큰절약 4종 정책·compose 템플릿화·ledger 아카이브·모델 역할표)
