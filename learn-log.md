@@ -244,3 +244,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **결정**: 모델 역할표 "Orchestration/Planning=Opus" 행 유지 (founder 확정)
 - **상세**: [cto.md#Growth-144](docs/learn-logs/cto.md) · [devops.md](docs/learn-logs/devops.md)
 - **Open loops**: 비활성 플러그인 uninstall(founder, token-optimizer 포함 5종으로 증가)
+
+### Growth-145 (2026-07-05) — 토큰스택 v2 레인 재배치: 4종 활용 최대화 (겹침 없는 전용 레인)
+
+- **인격**: CTO
+- **Axis touched**: creater (글로벌 도구 배치 정책)
+- **Milestone**: 전 milestone 지원 (컨텍스트 품질·컴팩션 생존성)
+- **Revenue/cost**: 직접 매출 0 / read형 툴콜당 TO 훅 spawn 2–3회 재도입 (컴팩션 가이던스 피더 대가 — v1 슬림 대비 증가, 원 4종 동시활성 대비 감소: bash_hook·per-call quality-cache·checkpoint 3종 컷 유지)
+- **Why (1줄)**: founder 지시 "4종 각 장점 최대화, 이벤트 전후·리소스 접근 유형별 배치" — v1 전면 슬림과 원 중복활성의 양립해 = 도구별 전용 레인
+- **산출**: TOKEN-POLICY.md v2(레인 소유권 테이블+리소스→도구 매트릭스) / token-optimizer **vendored 사본**(~/.claude/vendored/, 플러그인 disabled 유지·cache sweep 면역) 선별 18/21훅 수동 등록 / headroom MCP(0.24.0) on-demand 재등록 / 런처 env 고정으로 `CLAUDE_PLUGIN_DATA` 타 플러그인 누수(codex 오배송 실측) 차단 / 가이던스 파이프라인 end-to-end 실검증(세션특화 PRESERVE/DROP 재현)
+- **결정**: Bash 재작성 축은 RTK 단독 (TO bash_hook 미등록) — 같은 레인 이중 개입만 금지, 고유가치는 살린다
+- **상세**: [cto.md#Growth-145](docs/learn-logs/cto.md)
+- **Open loops**: 다음 세션 훅 적용 확인(현 세션은 구 등록 유지), 비활성 플러그인 uninstall(founder — 단 token-optimizer는 데이터 디렉터리 유지 필요, uninstall 시 vendored 훅의 store가 사라짐)
