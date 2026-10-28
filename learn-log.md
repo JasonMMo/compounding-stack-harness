@@ -262,7 +262,7 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **인격**: CTO
 - **Axis touched**: creater (판매 자산 생성 스크립트)
 - **Milestone**: M2 (크몽/숨고 gig 등록 마지막 founder 블로커 = 시연 영상 해소)
-- **Revenue/cost**: 직접 매출 0 / API비 0 (Playwright+ffmpeg 로컬, 음성은 founder 측 로컬 TTS)
+- **Revenue/cost**: 직접 매출 0 / API비 0 (Playwright+ffmpeg 로컬, 나레이션 음성은 founder가 VoiceStudio로 제작)
 - **Why (1줄)**: founder 영상 제작 중단 → 재현 가능한 스크립트로 대체, 데모 수정 시 재녹화 1명령
 - **산출**: `scripts/video/record_noshow_demo.py`(0c0575e) — `SCENES` 단일 소스(장면 길이·자막·나레이션), 1920x1080 + body zoom 1.5(device_scale_factor는 녹화가 1/4만 채움 → 금지), 오버레이는 documentElement에 붙여 zoom 면역, 시드 리마인더 lazy 발송 대비 admin API 워밍업. 더빙본 `out/noshow-video/noshow-demo-dubbed.mp4`(37.6s, -16 LUFS): 단일 wav를 무음구간×음절수 대조로 6문장 분할·장면 배치(4번 쉼 압축, 아웃트로 2s 연장)
 - **결정**: 영상 산출물은 gitignored `out/` — 스크립트만 자산화 (재생성 가능)
