@@ -280,3 +280,14 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **결정**: 메모리 레인 두 겹 = 네이티브 memory 디렉터리 + context-mode session-events. RTK=Bash 단독·token-optimizer vendored 18훅·headroom on-demand(v2 레인)는 유지
 - **상세**: `~/.claude/TOKEN-POLICY.md` §이력 v3 · §메모리 레인
 - **Open loops**: 원장 미반영 4개월 공백 = 글로벌 설정 변경이 repo 원장 체크리스트(§7 #3)를 안 거친 탓 — 글로벌 스택 변경 시에도 learn-log 1줄 규칙 유지
+
+### Growth-148 (2026-10-29) — 노쇼가드 크몽·숨고 칸별 등록 확정본 (gig 킷 D절)
+
+- **인격**: CTO (CMO 산출물 A~C 확정·조립)
+- **Axis touched**: customer-facing 판매 자산
+- **Milestone**: M2 (첫 유료 고객 — gig 등록 직전 단계)
+- **Revenue/cost**: 직접 매출 0 / 비용 0
+- **Why (1줄)**: founder "크몽, 숨고에 등록할 내용 작성" — 후보 나열형 킷을 등록 화면 칸별 붙여넣기 시트로 확정
+- **결정**: 외부 링크 노출·월 관리비 플랫폼 외 결제 = 직거래 반려 리스크 → 본문 URL 제거·증거는 시연 영상, 월 관리는 크몽 별도 gig. 정책 최종 확인은 founder
+- **상세**: [noshow-gig-kit.md §D](docs/business/noshow-gig-kit.md)
+- **Open loops**: founder 등록 4건(D-3 체크리스트), 반려 시 URL 없는 아웃트로로 영상 재녹화
