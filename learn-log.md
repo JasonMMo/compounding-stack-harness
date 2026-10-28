@@ -266,4 +266,5 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **Why (1줄)**: founder 영상 제작 중단 → 재현 가능한 스크립트로 대체, 데모 수정 시 재녹화 1명령
 - **산출**: `scripts/video/record_noshow_demo.py`(0c0575e) — `SCENES` 단일 소스(장면 길이·자막·나레이션), 1920x1080 + body zoom 1.5(device_scale_factor는 녹화가 1/4만 채움 → 금지), 오버레이는 documentElement에 붙여 zoom 면역, 시드 리마인더 lazy 발송 대비 admin API 워밍업. 더빙본 `out/noshow-video/noshow-demo-dubbed.mp4`(37.6s, -16 LUFS): 단일 wav를 무음구간×음절수 대조로 6문장 분할·장면 배치(4번 쉼 압축, 아웃트로 2s 연장)
 - **결정**: 영상 산출물은 gitignored `out/` — 스크립트만 자산화 (재생성 가능)
-- **Open loops**: 크몽/숨고 등록·영상 업로드(founder), 장면 길이를 음성 길이에 맞춘 재녹화(선택), 9:16 세로판(숨고, 선택)
+- **9:16 세로판**: `--vertical`(1080x1920, zoom 2.5) + `scripts/video/dub_noshow_demo.py`(VOICE_CUTS를 timeline 실측 장면 시작에 상대 배치 → 재녹화 후 1명령 재더빙) → `noshow-demo-vertical-dubbed.mp4`(37.7s). **함정**: body zoom은 미디어쿼리 판정 폭을 안 바꿔 데스크톱 레이아웃이 확대돼 넘침 → 실효 폭(innerWidth/zoom) 초과 min-width 규칙 삭제로 해결. 이 과정에서 **앱 실결함 적발**: admin 그리드 `1fr` 칸이 넓은 표에 밀려 실제 휴대폰(390px)에서 페이지 659px 가로 넘침 → `minmax(0, fr)`(c0acf90)
+- **Open loops**: 크몽/숨고 등록·영상 업로드(founder), **라이브 데모 Coolify redeploy(founder — c0acf90 모바일 관리자 화면 수정 반영)**, 장면 길이를 음성 길이에 맞춘 재녹화(선택)
