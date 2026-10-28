@@ -25,10 +25,11 @@ from pathlib import Path
 
 from playwright.sync_api import Page, sync_playwright
 
-VIEW_W, VIEW_H = 1920, 1080
-# 앱은 1280 CSS폭 레이아웃 그대로, body zoom 으로 1080p 선명 렌더링.
+# 가로: 앱은 1280 CSS폭 레이아웃 그대로, body zoom 으로 1080p 선명 렌더링.
+# 세로(9:16, 숨고·모바일 피드): 432 CSS폭 = 앱의 모바일 레이아웃.
 # (device_scale_factor 는 Playwright 녹화 프레임에 반영되지 않아 화면 1/4만 찍힘)
-ZOOM = 1.5
+LAYOUTS = {"landscape": (1920, 1080, 1.5), "vertical": (1080, 1920, 2.5)}
+VIEW_W, VIEW_H, ZOOM = LAYOUTS["landscape"]
 
 # 단일 소스: (key, 목표 길이 s, 자막, 나레이션)
 SCENES = [
@@ -48,8 +49,23 @@ SCENES = [
 
 OVERLAY_JS = r"""
 (() => {
+  // zoom 은 미디어쿼리 판정 폭을 안 바꾼다 — 실효 CSS폭(innerWidth/zoom)보다 큰
+  // min-width 규칙을 지워 세로판에서 앱의 모바일 레이아웃이 걸리게 한다.
+  const fitMedia = () => {
+    if (document.body.hasAttribute('data-vid-nozoom')) return;
+    const w = innerWidth / __ZOOM__;
+    for (const sheet of document.styleSheets) {
+      let rules; try { rules = sheet.cssRules; } catch (e) { continue; }
+      for (let i = rules.length - 1; i >= 0; i--) {
+        const m = rules[i] instanceof CSSMediaRule && rules[i].conditionText.match(/min-width:\s*(\d+)px/);
+        if (m && +m[1] > w) sheet.deleteRule(i);
+      }
+    }
+  };
+  addEventListener('load', fitMedia);
   const install = () => {
     if (document.getElementById('__vid_style')) return;
+    fitMedia();
     if (!document.body.hasAttribute('data-vid-nozoom')) document.body.style.zoom = '__ZOOM__';
     const st = document.createElement('style');
     st.id = '__vid_style';
@@ -61,6 +77,8 @@ OVERLAY_JS = r"""
       #__vid_cap.on{opacity:1;transform:translate(-50%,0)}
       #__vid_cap b{display:inline-block;background:#5b4bff;border-radius:999px;font-size:30px;
         padding:4px 18px;margin-right:21px;vertical-align:6px}
+      @media (max-aspect-ratio:1/1){#__vid_cap{bottom:120px;width:max-content;max-width:900px;
+        white-space:normal;text-align:center;border-radius:36px;word-break:keep-all}}
       #__vid_cur{position:fixed;left:960px;top:600px;width:42px;height:42px;z-index:2147483647;
         pointer-events:none;transition:left .55s cubic-bezier(.3,.7,.2,1),top .55s cubic-bezier(.3,.7,.2,1)}
       .__vid_ripple{position:fixed;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;
@@ -108,6 +126,8 @@ p{margin:0;font-size:39px;opacity:.9}
   padding:18px 45px;border-radius:21px}
 .fade{animation:f .7s ease-out both}.d1{animation-delay:.2s}.d2{animation-delay:.45s}
 @keyframes f{from{opacity:0;transform:translateY(14px)}}
+@media (max-aspect-ratio:1/1){h1{font-size:96px;padding:0 60px;word-break:keep-all}
+  p{font-size:42px;padding:0 60px;word-break:keep-all}}
 </style></head><body data-vid-nozoom>__BODY__</body></html>"""
 
 INTRO_BODY = """<div class="brand fade">노쇼가드</div>
@@ -195,8 +215,8 @@ def card(page: Page, body: str) -> None:
     page.evaluate("() => window.__vid && window.__vid.move(-200, -200)")
 
 
-def run(base: str, out_dir: Path) -> tuple[Path, list[dict]]:
-    raw_dir = out_dir / "raw"
+def run(base: str, out_dir: Path, suffix: str = "") -> tuple[Path, list[dict]]:
+    raw_dir = out_dir / f"raw{suffix}"
     shutil.rmtree(raw_dir, ignore_errors=True)
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -256,8 +276,11 @@ def run(base: str, out_dir: Path) -> tuple[Path, list[dict]]:
 
         # ── 4. 취소 → 대기자 자동 채움 ───────────────────────────────────
         d.scene("cancel")
-        d.scroll_to(195, 700)
         row = page.locator("#reservations-tbody tr", has_text="최유진")
+        if VIEW_W > VIEW_H:
+            d.scroll_to(195, 700)
+        else:
+            d.scroll_to_el("#reservations-tbody tr:has-text('최유진')", 700)
         d.click(row.locator(".btn--cancel-row"), pause=600)
         page.locator("#reservations-tbody tr", has_text="이대기").wait_for()
         d.highlight(".waitlist-item--fulfilled")
@@ -277,7 +300,7 @@ def run(base: str, out_dir: Path) -> tuple[Path, list[dict]]:
         ctx.close()
         browser.close()
 
-    (out_dir / "timeline.json").write_text(json.dumps(d.marks, ensure_ascii=False, indent=2), encoding="utf-8")
+    (out_dir / f"timeline{suffix}.json").write_text(json.dumps(d.marks, ensure_ascii=False, indent=2), encoding="utf-8")
     return video, d.marks
 
 
@@ -286,7 +309,7 @@ def fmt_srt(t: float) -> str:
     return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
 
 
-def write_texts(out_dir: Path, marks: list[dict]) -> None:
+def write_texts(out_dir: Path, marks: list[dict], suffix: str = "") -> None:
     starts = {m["key"]: m["start"] for m in marks}
     keys = [m["key"] for m in marks]
     srt, md, txt = [], [], []
@@ -301,9 +324,9 @@ def write_texts(out_dir: Path, marks: list[dict]) -> None:
         srt += [str(i), f"{fmt_srt(start + 0.3)} --> {fmt_srt(end - 0.2)}", narration, ""]
         md.append(f"| {i} | {start:.1f} – {end:.1f} | {end - start:.1f}s | {caption or key} | {narration} |")
         txt.append(f"[{start:.2f}-{end:.2f}] {narration}")
-    (out_dir / "noshow-demo.srt").write_text("\n".join(srt), encoding="utf-8")
-    (out_dir / "narration.md").write_text("\n".join(md) + "\n", encoding="utf-8")
-    (out_dir / "narration.txt").write_text("\n".join(txt) + "\n", encoding="utf-8")
+    (out_dir / f"noshow-demo{suffix}.srt").write_text("\n".join(srt), encoding="utf-8")
+    (out_dir / f"narration{suffix}.md").write_text("\n".join(md) + "\n", encoding="utf-8")
+    (out_dir / f"narration{suffix}.txt").write_text("\n".join(txt) + "\n", encoding="utf-8")
 
 
 def encode(webm: Path, mp4: Path) -> None:
@@ -319,13 +342,18 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="노쇼가드 시연 영상 자동 녹화")
     ap.add_argument("--base-url", default="http://localhost:18765")
     ap.add_argument("--out-dir", default="out/noshow-video")
+    ap.add_argument("--vertical", action="store_true", help="9:16 세로판 (산출물 이름에 -vertical)")
     args = ap.parse_args()
+    global VIEW_W, VIEW_H, ZOOM
+    VIEW_W, VIEW_H, ZOOM = LAYOUTS["vertical" if args.vertical else "landscape"]
+    suffix = "-vertical" if args.vertical else ""
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    webm, marks = run(args.base_url.rstrip("/"), out_dir)
-    encode(webm, out_dir / "noshow-demo.mp4")
-    write_texts(out_dir, marks)
-    print(json.dumps({"mp4": str(out_dir / "noshow-demo.mp4"), "timeline": marks}, ensure_ascii=False))
+    webm, marks = run(args.base_url.rstrip("/"), out_dir, suffix)
+    mp4 = out_dir / f"noshow-demo{suffix}.mp4"
+    encode(webm, mp4)
+    write_texts(out_dir, marks, suffix)
+    print(json.dumps({"mp4": str(mp4), "timeline": marks}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
