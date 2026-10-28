@@ -268,3 +268,15 @@ CTO 의무 (charter §3 #5): 매 Growth 종료 마지막 step 에 위 1줄+point
 - **결정**: 영상 산출물은 gitignored `out/` — 스크립트만 자산화 (재생성 가능)
 - **9:16 세로판**: `--vertical`(1080x1920, zoom 2.5) + `scripts/video/dub_noshow_demo.py`(VOICE_CUTS를 timeline 실측 장면 시작에 상대 배치 → 재녹화 후 1명령 재더빙) → `noshow-demo-vertical-dubbed.mp4`(37.7s). **함정**: body zoom은 미디어쿼리 판정 폭을 안 바꿔 데스크톱 레이아웃이 확대돼 넘침 → 실효 폭(innerWidth/zoom) 초과 min-width 규칙 삭제로 해결. 이 과정에서 **앱 실결함 적발**: admin 그리드 `1fr` 칸이 넓은 표에 밀려 실제 휴대폰(390px)에서 페이지 659px 가로 넘침 → `minmax(0, fr)`(c0acf90)
 - **Open loops**: 크몽/숨고 등록·영상 업로드(founder), **라이브 데모 Coolify redeploy(founder — c0acf90 모바일 관리자 화면 수정 반영)**, 장면 길이를 음성 길이에 맞춘 재녹화(선택)
+
+### Growth-147 (2026-10-28 기록 / 변경일 2026-09-14) — 토큰스택 v3: per-tool-call 빈 spawn 제거 (원장 소급 반영)
+
+- **인격**: CTO
+- **Axis touched**: creater (글로벌 도구 배치 정책)
+- **Milestone**: 전 milestone 지원 (툴콜 지연·컨텍스트 품질)
+- **Revenue/cost**: 직접 매출 0 / 툴콜당 훅 spawn 감소 (hookify·claude-mem 전체 매처 훅 제거), 세션 시작 30s 타임아웃 제거 (serena)
+- **Why (1줄)**: Fable 5.1 업그레이드 정리 시 v2(Growth-145) 이후 남은 per-tool-call 빈 spawn 적발 — hookify는 규칙 파일 0개인데 Pre/PostToolUse 전체 매처, claude-mem은 메모리 레인 중복
+- **산출** (글로벌 `~/.claude/`, repo 밖): TOKEN-POLICY.md v3 / hookify·claude-mem 플러그인 비활성(claude-mem 데이터 `plugins/data/` 보존 → 재활성화 즉시 복구) / serena MCP 제거 / 사고 제어 `effortLevel` 단일화(`CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING`·`maxThinkingTokens`·`fastMode` 삭제) / 백업 `_backups/20260914-model-upgrade/`
+- **결정**: 메모리 레인 두 겹 = 네이티브 memory 디렉터리 + context-mode session-events. RTK=Bash 단독·token-optimizer vendored 18훅·headroom on-demand(v2 레인)는 유지
+- **상세**: `~/.claude/TOKEN-POLICY.md` §이력 v3 · §메모리 레인
+- **Open loops**: 원장 미반영 4개월 공백 = 글로벌 설정 변경이 repo 원장 체크리스트(§7 #3)를 안 거친 탓 — 글로벌 스택 변경 시에도 learn-log 1줄 규칙 유지
