@@ -431,7 +431,7 @@ a {
 
 .admin-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr); /* 0 하한: 넓은 표가 칸을 밀어 모바일 가로 넘침 방지 */
   gap: var(--space-4);
 }
 
@@ -596,7 +596,7 @@ a {
 
 @media (min-width: 860px) {
   .admin-grid {
-    grid-template-columns: 1.4fr 1fr;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   }
 
   .admin-panel--messages {
